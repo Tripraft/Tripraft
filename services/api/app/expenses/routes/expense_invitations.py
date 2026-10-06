@@ -1,27 +1,33 @@
-# Purpose: SQL-based Invitation Routes API endpoints for managing group invitations.
-"""
-SQL-based Invitation Routes
-API endpoints for managing group invitations
-"""
+"""Private invitation lifecycle APIs; every membership transition refreshes all affected caches."""
+from flask import Blueprint, g
 
-import logging
-
-from app.core.apiutils.responses import (created_response, error_response,
-                                     success_response)
+from app.auth.security.decorators import get_current_user_id, require_auth
+from app.core.apiutils.responses import created_response, error_response, success_response
 from app.core.apiutils.validators import validate_schema
 from app.core.config import Config
 from app.core.rate_limiter import limit_api
-from app.auth.security.decorators import (get_current_user_id,
-                                                require_auth)
-from app.core.cache.redis import cache_response, invalidate_cache
 from app.core.schemas.invitations import CreateExpenseInvitationSchema
+from app.expenses.routes.expense_groups import _invalidate_group_caches
+from app.expenses.services.group_access import identifier
+from app.expenses.services.expense_group_service import group_service_sql
 from app.expenses.services.expense_invite_service import invitation_service_sql
-from flask import Blueprint, g, request
 
-logger = logging.getLogger(__name__)
 
-# Use /api/expense/invitations to match frontend expectations
 invitations_sql_bp = Blueprint('invitations_sql', __name__, url_prefix='/api/v1/expenses/invitations')
+
+
+@invitations_sql_bp.after_request
+def private_invitation_response(response):
+    response.headers['Cache-Control'] = 'private, no-store'
+    return response
+
+
+def _response(success, result, *, created=False, mutated=False):
+    if not success:
+        return error_response(result.get('error', 'Invitation operation failed'), result.get('status_code', 400))
+    if mutated:
+        _invalidate_group_caches()
+    return created_response(data=result) if created else success_response(data=result)
 
 
 @invitations_sql_bp.route('', methods=['POST'])
@@ -29,133 +35,52 @@ invitations_sql_bp = Blueprint('invitations_sql', __name__, url_prefix='/api/v1/
 @require_auth
 @validate_schema(CreateExpenseInvitationSchema)
 def send_invitation():
-    """
-    Send invitation to join a group (TripRaft Model - returns complete state)
-    
-    Request body:
-    {
-        "group_id": 1,
-        "invitee_email": "friend@example.com"  # or "invited_email" for compatibility
-    }
-    
-    Response includes:
-    - invitation: the created invitation
-    - invitations: ALL pending invitations sent by this user
-    """
     data = g.validated_data
-    
-    group_id = data['group_id']
-    invitee_email = data.get('invitee_email') or data.get('invited_email') or data.get('email')
-    
     user_id = get_current_user_id()
-    
-    success, result = invitation_service_sql.send_invitation(
-        group_id=group_id,
-        invitee_email=invitee_email,
-        invited_by_user_id=user_id
-    )
-    
+    email = data.get('invitee_email') or data.get('invited_email') or data.get('email')
+    success, result = invitation_service_sql.send_invitation(data['group_id'], email, user_id)
     if success:
-        # TripRaft Model: Get all invitations for this group after sending
-        all_invitations_success, all_invitations_result = invitation_service_sql.get_group_invitations(
-            group_id=group_id,
-            user_id=user_id
-        )
-        
-        response = {
-            **result,
-            'invitations': all_invitations_result.get('invitations', []) if all_invitations_success else []
-        }
-        invalidate_cache('exp_invitations:*')
-        invalidate_cache('auth:bootstrap:*')
-        return created_response(data=response)
-    else:
-        return error_response(result.get('error', 'Failed to send invitation'))
+        listed, invitations = invitation_service_sql.get_group_invitations(data['group_id'], user_id)
+        result['invitations'] = invitations.get('invitations', []) if listed else []
+    return _response(success, result, created=True, mutated=True)
 
 
 @invitations_sql_bp.route('', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
-@cache_response(key_prefix='exp_invitations:list', ttl=Config.CACHE_TTLS['invitations'], vary_on_user=True)
 def get_user_invitations():
-    """Get pending invitations for the current user (for homepage popup)"""
-    from flask import g
-
-    # Get user_id from helper function
-    user_id = get_current_user_id()
-    
-    success, result = invitation_service_sql.get_pending_invitations_for_user(user_id)
-    
-    if success:
-        return success_response(data=result)
-    else:
-        return error_response(result.get('error', 'Failed to get invitations'))
+    return _response(*invitation_service_sql.get_pending_invitations_for_user(get_current_user_id()))
 
 
 @invitations_sql_bp.route('/groups/<group_id>', methods=['GET'])
+@invitations_sql_bp.route('/group/<group_id>', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
-@cache_response(key_prefix='exp_invitations:group', ttl=Config.CACHE_TTLS['invitations'], vary_on_user=True)
 def get_group_invitations(group_id):
-    """List invitations for a group when the requester is an active member."""
-    success, result = invitation_service_sql.get_group_invitations(
-        group_id, get_current_user_id(),
-    )
-    if success:
-        return success_response(data=result)
-    return error_response(result.get('error', 'Access denied'), 403)
+    return _response(*invitation_service_sql.get_group_invitations(identifier(group_id), get_current_user_id()))
 
 
 @invitations_sql_bp.route('/<invitation_id>/accept', methods=['POST'])
 @limit_api(Config.RATE_LIMITS['invitation'])
 @require_auth
 def accept_invitation(invitation_id):
-    """Accept a group invitation and return full group details"""
-    from app.expenses.services.expense_group_service import group_service_sql
-    
     user_id = get_current_user_id()
-    
-    try:
-        iid = invitation_id
-    except (ValueError, TypeError):
-        return error_response('Invalid invitation ID')
-    
-    success, result = invitation_service_sql.accept_invitation(iid, user_id)
-    
+    success, result = invitation_service_sql.accept_invitation(identifier(invitation_id), user_id)
     if success:
-        # Get all user groups to return the complete updated list
-        all_groups_success, all_groups_result = group_service_sql.get_user_groups(user_id)
-        
-        response_data = {
-            **result,
-            'groups': all_groups_result.get('groups', []) if all_groups_success else []
-        }
-        
-        invalidate_cache('exp_invitations:*')
-        invalidate_cache('exp_groups:*')
-        invalidate_cache('auth:bootstrap:*')
-        return success_response(data=response_data)
-    else:
-        return error_response(result.get('error', 'Failed to accept invitation'))
+        listed, groups = group_service_sql.get_user_groups(user_id)
+        result['groups'] = groups.get('groups', []) if listed else []
+    return _response(success, result, mutated=True)
 
 
 @invitations_sql_bp.route('/<invitation_id>/decline', methods=['POST'])
 @limit_api(Config.RATE_LIMITS['invitation'])
 @require_auth
 def decline_invitation(invitation_id):
-    """Decline a group invitation"""
-    user_id = get_current_user_id()
-    
-    try:
-        iid = invitation_id
-    except (ValueError, TypeError):
-        return error_response('Invalid invitation ID')
-    
-    success, result = invitation_service_sql.decline_invitation(iid, user_id)
-    
-    if success:
-        invalidate_cache('exp_invitations:*')
-        invalidate_cache('auth:bootstrap:*')
-        return success_response(data=result)
-    else:
-        return error_response(result.get('error', 'Failed to decline invitation'))
+    return _response(*invitation_service_sql.decline_invitation(identifier(invitation_id), get_current_user_id()), mutated=True)
+
+
+@invitations_sql_bp.route('/<invitation_id>/cancel', methods=['POST'])
+@limit_api(Config.RATE_LIMITS['invitation'])
+@require_auth
+def cancel_invitation(invitation_id):
+    return _response(*invitation_service_sql.cancel_invitation(identifier(invitation_id), get_current_user_id()), mutated=True)

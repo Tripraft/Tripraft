@@ -18,6 +18,8 @@ from app.expenses.models import (Expense, ExpenseHistory, ExpenseSplit,
                                         money_to_json)
 from app.core.db.connection import get_db_session
 from app.core.config import Config
+from app.core.exceptions import AppError
+from app.expenses.services.group_access import access, preserve_former_member_balances
 from app.expenses.services.money_lock import lock_group, lock_money_record
 from sqlalchemy import update
 from sqlalchemy.orm import joinedload, selectinload
@@ -151,13 +153,15 @@ class ExpenseServiceSQL:
                 # Update group balances
                 ExpenseServiceSQL._update_balances(session, group_id, expense_splits, paid_by, amount)
                 
+                session.flush()
                 # Record history
                 history = ExpenseHistory(
                     expense_id=expense.id,
                     group_id=group_id,
                     action='created',
                     changed_by=user_id,
-                    changes_json='{}'
+                    changes_json=[],
+                    after_snapshot=expense.to_dict(),
                 )
                 session.add(history)
                 
@@ -184,6 +188,8 @@ class ExpenseServiceSQL:
         except SplitValidationError as exc:
             logger.info('Rejected invalid expense split: %s', exc)
             return False, {'error': str(exc)}
+        except AppError as exc:
+            return False, {'error': exc.message, 'status_code': exc.status_code}
         except Exception as e:
             logger.error(f"Create expense error: {str(e)}")
             return False, {'error': 'Failed to create expense'}
@@ -257,6 +263,8 @@ class ExpenseServiceSQL:
         except SplitValidationError as exc:
             logger.info('Rejected invalid personal expense: %s', exc)
             return False, {'error': str(exc)}
+        except AppError as exc:
+            return False, {'error': exc.message, 'status_code': exc.status_code}
         except Exception as e:
             logger.error(f"Create personal expense error: {str(e)}")
             return False, {'error': 'Failed to create personal expense'}
@@ -597,6 +605,7 @@ class ExpenseServiceSQL:
                     if expense.created_by != user_id:
                         return False, {'error': 'You can only view your own personal expenses'}
                 else:
+                    access(session, expense.group_id, user_id)
                     # Group expense - verify membership
                     member = session.query(GroupMember).filter(
                         GroupMember.group_id == expense.group_id,
@@ -609,6 +618,8 @@ class ExpenseServiceSQL:
                 
                 return True, {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
                 
+        except AppError as exc:
+            return False, {'error': exc.message, 'status_code': exc.status_code}
         except Exception as e:
             logger.error(f"Get expense error: {str(e)}")
             return False, {'error': 'Failed to get expense'}
@@ -636,6 +647,7 @@ class ExpenseServiceSQL:
         """
         try:
             with get_db_session() as session:
+                access(session, group_id, user_id)
                 # Verify membership
                 member = session.query(GroupMember).filter(
                     GroupMember.group_id == group_id,
@@ -658,7 +670,7 @@ class ExpenseServiceSQL:
                     query = query.filter(Expense.is_deleted == False)
                 
                 # Get expenses
-                expenses = query.order_by(Expense.expense_date.desc()).offset(offset).limit(limit).all()
+                expenses = query.order_by(Expense.expense_date.desc(), Expense.created_at.desc(), Expense.id.desc()).offset(offset).limit(limit).all()
                 
                 # Get total count with same filter
                 count_query = session.query(Expense).filter(
@@ -681,6 +693,8 @@ class ExpenseServiceSQL:
                     'has_more': offset + len(expenses) < total,
                 }
                 
+        except AppError as exc:
+            return False, {'error': exc.message, 'status_code': exc.status_code}
         except Exception as e:
             logger.error(f"Get group expenses error: {str(e)}")
             return False, {'error': 'Failed to get expenses'}
@@ -776,23 +790,14 @@ class ExpenseServiceSQL:
                         session.commit()
                     return True, {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
 
-                # Group expense - verify membership
-                member = session.query(GroupMember).filter(
-                    GroupMember.group_id == expense.group_id,
-                    GroupMember.user_id == user_id,
-                    GroupMember.is_active == True
-                ).first()
-                
-                if not member:
-                    return False, {'error': 'Not a member of this group'}
-                
+                # Always reauthorize against the active group, including former members.
+                group, member = access(session, expense.group_id, user_id)
                 # Check if user can edit (creator or group owner)
-                group = session.get(Group, expense.group_id)
                 is_group_owner = group and group.created_by == user_id
                 is_expense_creator = expense.created_by == user_id
                 
                 if not is_group_owner and not is_expense_creator:
-                    return False, {'error': 'You can only edit expenses you created'}
+                    return False, {'error': 'You can only edit expenses you created', 'status_code': 403}
                 
                 if currency is not _UNSET and currency != expense.currency:
                     raise SplitValidationError('Group expense currency must match the group currency')
@@ -800,6 +805,7 @@ class ExpenseServiceSQL:
                 # Capture the complete old ledger before validating the
                 # replacement.  Validation happens before reversal, so an
                 # invalid edit never leaves a partially-mutated balance.
+                before_snapshot = expense.to_dict()
                 old_amount = expense.amount
                 old_paid_by = expense.paid_by
                 old_description = expense.description
@@ -837,7 +843,10 @@ class ExpenseServiceSQL:
                     GroupMember.user_id == desired_payer,
                     GroupMember.is_active == True,
                 ).first()
-                if payer_member is None:
+                if payer_member is None and (
+                    desired_payer != old_paid_by or desired_amount != old_amount
+                    or desired_split_type != old_split_type or splits is not None
+                ):
                     raise SplitValidationError('Payer must be an active group member')
 
                 amount_changed = desired_amount != old_amount
@@ -907,6 +916,15 @@ class ExpenseServiceSQL:
                     changes.append({'field': 'receipt_url', 'old': expense.receipt_url, 'new': receipt_url})
                     expense.receipt_url = receipt_url
 
+                if not changes and splits is None:
+                    return True, {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
+                old_effects = ExpenseServiceSQL._balance_effects(old_splits, old_paid_by, old_amount)
+                new_effects = ExpenseServiceSQL._balance_effects(new_splits, desired_payer, desired_amount)
+                preserve_former_member_balances(session, expense.group_id, {
+                    uid: new_effects.get(uid, Decimal('0')) - old_effects.get(uid, Decimal('0'))
+                    for uid in old_effects.keys() | new_effects.keys()
+                })
+
                 # The old entry is now valid to reverse; afterwards the new
                 # ledger is applied in the same transaction.
                 ExpenseServiceSQL._reverse_balances(
@@ -931,17 +949,21 @@ class ExpenseServiceSQL:
                     session, expense.group_id, new_splits, expense.paid_by, expense.amount,
                 )
                 
+                session.flush()
+                session.expire(expense, ['splits', 'payer'])
+                expense.is_edited = True
                 # Record history with actual changes
                 history = ExpenseHistory(
                     expense_id=expense_id,
                     group_id=expense.group_id,
                     action='updated',
                     changed_by=user_id,
-                    changes_json=json.dumps(changes, default=str) if changes else '{}'
+                    changes_json=json.loads(json.dumps(changes, default=str)),
+                    before_snapshot=before_snapshot,
+                    after_snapshot=expense.to_dict(),
                 )
                 session.add(history)
                 
-                expense.is_edited = True
                 session.commit()
                 session.refresh(expense)
                 
@@ -962,10 +984,20 @@ class ExpenseServiceSQL:
         except SplitValidationError as exc:
             logger.info('Rejected invalid expense update: %s', exc)
             return False, {'error': str(exc)}
+        except AppError as exc:
+            return False, {'error': exc.message, 'status_code': exc.status_code}
         except Exception as e:
             logger.error(f"Update expense error: {str(e)}")
             return False, {'error': 'Failed to update expense'}
     
+    @staticmethod
+    def _balance_effects(splits, paid_by, amount):
+        effects = {str(paid_by): Decimal(str(amount))}
+        for split in splits:
+            uid = str(split.user_id)
+            effects[uid] = effects.get(uid, Decimal('0')) - Decimal(str(split.amount))
+        return effects
+
     @staticmethod
     def _reverse_balances(
         session,
@@ -1020,29 +1052,22 @@ class ExpenseServiceSQL:
                     if expense.created_by != user_id:
                         return False, {'error': 'You can only delete your own personal expenses'}
                 else:
-                    # Group expense - verify membership
-                    member = session.query(GroupMember).filter(
-                        GroupMember.group_id == expense.group_id,
-                        GroupMember.user_id == user_id,
-                        GroupMember.is_active == True
-                    ).first()
-                    
-                    if not member:
-                        return False, {'error': 'Not a member of this group'}
-                    
+                    group, member = access(session, expense.group_id, user_id)
                     # Check if user can delete (creator or group owner)
-                    group = session.get(Group, expense.group_id)
                     is_group_owner = group and group.created_by == user_id
                     is_expense_creator = expense.created_by == user_id
                     
                     if not is_group_owner and not is_expense_creator:
-                        return False, {'error': 'You can only delete expenses you created'}
+                        return False, {'error': 'You can only delete expenses you created', 'status_code': 403}
                     
                     # Reverse balances for group expenses
                     old_splits = session.query(ExpenseSplit).filter(
                         ExpenseSplit.expense_id == expense_id
                     ).all()
                     
+                    effects = ExpenseServiceSQL._balance_effects(old_splits, expense.paid_by, expense.amount)
+                    preserve_former_member_balances(session, expense.group_id,
+                                                   {uid: -delta for uid, delta in effects.items()})
                     ExpenseServiceSQL._reverse_balances(
                         session, expense.group_id, old_splits, expense.paid_by, expense.amount
                     )
@@ -1085,6 +1110,8 @@ class ExpenseServiceSQL:
                 
                 return True, result
                 
+        except AppError as exc:
+            return False, {'error': exc.message, 'status_code': exc.status_code}
         except Exception as e:
             logger.error(f"Delete expense error: {str(e)}")
             return False, {'error': 'Failed to delete expense'}
@@ -1123,7 +1150,8 @@ class ExpenseServiceSQL:
                     )
                 else:
                     # Get user's groups
-                    memberships = session.query(GroupMember).filter(
+                    memberships = session.query(GroupMember).join(Group).filter(
+                        Group.is_active.is_(True),
                         GroupMember.user_id == user_id,
                         GroupMember.is_active == True
                     ).all()
@@ -1172,6 +1200,8 @@ class ExpenseServiceSQL:
                     'has_more': offset + len(expenses) < total,
                 }
                 
+        except AppError as exc:
+            return False, {'error': exc.message, 'status_code': exc.status_code}
         except Exception as e:
             logger.error(f"Get user expenses error: {str(e)}")
             return False, {'error': 'Failed to get expenses'}
@@ -1207,6 +1237,7 @@ class ExpenseServiceSQL:
                     if expense.created_by != user_id:
                         return False, {'error': 'Not authorized to view this expense history'}
                 else:
+                    access(session, expense.group_id, user_id)
                     # Group expense - verify membership
                     member = session.query(GroupMember).filter(
                         GroupMember.group_id == expense.group_id,
@@ -1230,6 +1261,8 @@ class ExpenseServiceSQL:
                     'count': len(history_list)
                 }
                 
+        except AppError as exc:
+            return False, {'error': exc.message, 'status_code': exc.status_code}
         except Exception as e:
             logger.error(f"Get expense history error: {str(e)}")
             return False, {'error': 'Failed to get expense history'}

@@ -262,6 +262,13 @@ def _register_blueprints(app):
     except Exception as exc:
         _required_startup_failure('Personal finance blueprint', exc)
 
+    # --- Group finance ---
+    try:
+        from app.expenses.routes.group_finance import group_finance_bp
+        app.register_blueprint(group_finance_bp)
+    except Exception as exc:
+        _required_startup_failure('Group finance blueprint', exc)
+
     # --- Settlements ---
     try:
         from app.expenses.routes.settlements import settlements_sql_bp

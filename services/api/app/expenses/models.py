@@ -377,7 +377,7 @@ class Invitation(Base):
     invitee_email = Column(String(255), nullable=False)
     invitee_user_id = Column(Uuid, ForeignKey('users.id'))
     invited_by = Column(Uuid, ForeignKey('users.id'), nullable=False)
-    status = Column(String(20), default='pending')  # pending, accepted, declined, expired
+    status = Column(String(20), default='pending')  # pending, accepted, declined, expired, cancelled
     expires_at = Column(DateTime)
     created_at = Column(DateTime, default=func.now())  # pyright: ignore
     responded_at = Column(DateTime)
@@ -401,6 +401,7 @@ class Invitation(Base):
             'invited_by_name': self.inviter.display_name if self.inviter else None,
             'status': self.status,
             'expires_at': self.expires_at.isoformat() if self.expires_at is not None else None,  # type: ignore
+            'responded_at': self.responded_at.isoformat() if self.responded_at is not None else None,
             'created_at': self.created_at.isoformat() if self.created_at is not None else None  # type: ignore
         }
 

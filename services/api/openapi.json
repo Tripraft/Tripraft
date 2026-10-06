@@ -768,11 +768,201 @@
         }
       }
     },
+    "/api/v1/expenses/analytics/group/{group_id}": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "group_finance_group_analytics_get_api_v1_expenses_analytics_group_group_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/analytics/group/{group_id}/trends": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "group_finance_group_trends_get_api_v1_expenses_analytics_group_group_id_trends",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
     "/api/v1/expenses/analytics/user/{user_id}": {
       "get": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
         "operationId": "personal_finance_user_analytics_get_api_v1_expenses_analytics_user_user_id",
         "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/balances/group/{group_id}": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "group_finance_group_balances_get_api_v1_expenses_balances_group_group_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/balances/group/{group_id}/recalculate": {
+      "post": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "group_finance_recalculate_balances_post_api_v1_expenses_balances_group_group_id_recalculate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/balances/group/{group_id}/simplified": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "group_finance_group_debts_get_api_v1_expenses_balances_group_group_id_simplified",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/balances/user/{user_id}": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "group_finance_user_balances_get_api_v1_expenses_balances_user_user_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/balances/user/{user_id}/group/{group_id}": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "group_finance_member_balance_get_api_v1_expenses_balances_user_user_id_group_group_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "in": "path",
             "name": "user_id",
@@ -894,6 +1084,30 @@
       "get": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
         "operationId": "groups_sql_get_group_get_api_v1_expenses_groups_group_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      },
+      "patch": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "groups_sql_update_group_patch_api_v1_expenses_groups_group_id",
         "parameters": [
           {
             "in": "path",
@@ -1046,6 +1260,38 @@
       "delete": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
         "operationId": "groups_sql_remove_member_delete_api_v1_expenses_groups_group_id_members_member_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      },
+      "patch": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "groups_sql_update_member_role_patch_api_v1_expenses_groups_group_id_members_member_id",
         "parameters": [
           {
             "in": "path",
@@ -1260,6 +1506,32 @@
         }
       }
     },
+    "/api/v1/expenses/invitations/group/{group_id}": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "invitations_sql_get_group_invitations_get_api_v1_expenses_invitations_group_group_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
     "/api/v1/expenses/invitations/groups/{group_id}": {
       "get": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
@@ -1290,6 +1562,32 @@
       "post": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
         "operationId": "invitations_sql_accept_invitation_post_api_v1_expenses_invitations_invitation_id_accept",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invitation_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/invitations/{invitation_id}/cancel": {
+      "post": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "invitations_sql_cancel_invitation_post_api_v1_expenses_invitations_invitation_id_cancel",
         "parameters": [
           {
             "in": "path",

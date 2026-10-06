@@ -1,6 +1,7 @@
 # Purpose: Settlement validation schemas.
 """Settlement validation schemas."""
 from app.core.config import Config
+from decimal import Decimal, ROUND_HALF_UP
 from app.core.schemas.fields import UUIDString
 from marshmallow import (EXCLUDE, Schema, ValidationError, fields, validate,
                          validates)
@@ -15,9 +16,10 @@ class CreateSettlementSchema(Schema):
     from_user = UUIDString(load_default=None, allow_none=True)      # alias
     to_user_id = UUIDString(load_default=None, allow_none=True)
     to_user = UUIDString(load_default=None, allow_none=True)         # alias
-    amount = fields.Float(
+    amount = fields.Decimal(
         required=True,
-        validate=validate.Range(min=0.01, max=Config.MAX_EXPENSE_AMOUNT),
+        places=2, rounding=ROUND_HALF_UP,
+        validate=validate.Range(min=Decimal('0.01'), max=Decimal(str(Config.MAX_EXPENSE_AMOUNT))),
     )
     method = fields.String(
         validate=validate.OneOf(Config.PAYMENT_METHODS),

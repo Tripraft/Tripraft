@@ -405,7 +405,6 @@ def update_user_profile():
 
 @auth_bp.route('/mega-bootstrap', methods=['GET'])
 @require_auth
-@cache_response(key_prefix='auth:bootstrap', ttl=Config.CACHE_TTLS['dashboard'], vary_on_user=True)
 def mega_bootstrap():
     """
     Get all user data in a single call (for quick app loading)
@@ -434,8 +433,6 @@ def mega_bootstrap():
     """
     from app.expenses.services.expense_group_service import group_service_sql
     from app.expenses.services.expense_invite_service import invitation_service_sql
-    from app.expenses.services.expense_service import expense_service_sql
-    from app.expenses.services.settlement_service import settlement_service_sql
     
     user_id = get_current_user_id()
     active_group_id = request.args.get('active_group_id')
@@ -478,9 +475,12 @@ def mega_bootstrap():
             if group_success:
                 group_info = group_result.get('group', {})
                 
-                # Get group members
-                members_success, members_result = group_service_sql.get_group_members(group_id, user_id)
-                members = members_result.get('members', []) if members_success else []
+                # Use the same complete, authorized ledger response as the group screen.
+                full_success, full_result = group_service_sql.get_group_full(group_id, user_id, expense_limit=expenses_limit)
+                if not full_success:
+                    return error_response(full_result.get('error', 'Group unavailable'), full_result.get('status_code', 400))
+                full = full_result['group']
+                members = full['members']
                 
                 # Build all_members_map for quick lookups
                 all_members_map = {}
@@ -494,38 +494,29 @@ def mega_bootstrap():
                         'role': member.get('role')
                     }
                 
-                # Get recent expenses for the group
-                expenses_success, expenses_result = expense_service_sql.get_group_expenses(
-                    group_id, user_id, limit=expenses_limit
-                )
-                expenses = expenses_result.get('expenses', []) if expenses_success else []
-                
-                # Get balances
-                balances_success, balances_result = group_service_sql.get_group_balances(group_id, user_id)
-                balances = balances_result.get('balances', []) if balances_success else []
-                
-                # Get settlements
-                settlements_success, settlements_result = settlement_service_sql.get_group_settlements(
-                    group_id, user_id
-                )
-                settlements = settlements_result.get('settlements', []) if settlements_success else []
-                
                 response_data['active_group'] = {
                     'group': group_info,
                     'members': members,
-                    'balances': balances,
-                    'expenses': expenses,
-                    'settlements': settlements,
-                    'invitations': [],  # Group pending invitations
-                    'all_members_map': all_members_map
+                    'balances': full['balances'],
+                    'expenses': full['expenses'],
+                    'settlements': full['settlements'],
+                    'invitations': full['invitations'],
+                    'simplified_debts': full['simplified_debts'],
+                    'total_expenses': full['total_expenses'],
+                    'expense_pagination': full['expense_pagination'],
+                    'settlement_pagination': full['settlement_pagination'],
+                    'all_members_map': all_members_map,
                 }
         except (ValueError, TypeError) as e:
             logger.error("Error processing active group %s: %s", active_group_id, e)
     
-    return success_response(
+    response, status = success_response(
         data=response_data,
         meta={'source': 'sql_database'}
     )
+    # A cached bootstrap must never outlive membership or invitation changes.
+    response.headers['Cache-Control'] = 'private, no-store'
+    return response, status
 
 
 # NOTE: Invitations endpoint is in invitations_sql_routes.py

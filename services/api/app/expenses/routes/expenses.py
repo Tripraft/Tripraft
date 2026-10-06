@@ -13,7 +13,7 @@ from app.core.config import Config
 from app.core.rate_limiter import limit_api
 from app.auth.security.decorators import (get_current_user_id,
                                                 require_auth)
-from app.core.cache.redis import cache_response, invalidate_cache
+from app.core.cache.redis import invalidate_cache
 from app.core.schemas.common import CreateExpenseSchema, validate_request
 from app.core.schemas.expenses import UpdateExpenseSchema
 from app.expenses.services.expense_service import expense_service_sql
@@ -36,6 +36,8 @@ def prevent_stale_financial_responses(response):
 def _expense_error(result, default):
     message = result.get('error', default)
     lowered = message.lower()
+    if 'status_code' in result:
+        return error_response(message, result['status_code'])
     status = 400
     if 'not found' in lowered:
         status = 404
@@ -50,7 +52,6 @@ def _expense_error(result, default):
 @expenses_sql_bp.route('', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
-@cache_response(key_prefix='expenses:list', ttl=Config.CACHE_TTLS['expense_list'], vary_on_user=True)
 def list_expenses():
     """
     List all expenses for the current user
@@ -193,6 +194,7 @@ def create_expense():
 
 def _invalidate_expense_caches():
     """Invalidate all expense-related caches."""
+    invalidate_cache('exp_groups:*')
     invalidate_cache('expenses:*')
     invalidate_cache('settlements:*')
     invalidate_cache('auth:bootstrap:*')
@@ -201,7 +203,6 @@ def _invalidate_expense_caches():
 @expenses_sql_bp.route('/<expense_id>', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
-@cache_response(key_prefix='expenses:detail', ttl=Config.CACHE_TTLS['expense_list'], vary_on_user=True)
 def get_expense(expense_id):
     """Get expense details"""
     user_id = get_current_user_id()
@@ -334,7 +335,6 @@ def delete_expense(expense_id):
 @expenses_sql_bp.route('/group/<group_id>', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
-@cache_response(key_prefix='expenses:group', ttl=Config.CACHE_TTLS['expense_list'], vary_on_user=True)
 def get_group_expenses(group_id):
     """
     Get expenses for a group
@@ -367,7 +367,6 @@ def get_group_expenses(group_id):
 @expenses_sql_bp.route('/personal', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
-@cache_response(key_prefix='expenses:personal', ttl=Config.CACHE_TTLS['expense_list'], vary_on_user=True)
 def get_personal_expenses():
     """
     Get personal expenses (not associated with any group)
@@ -398,7 +397,6 @@ def get_personal_expenses():
 @expenses_sql_bp.route('/user', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
-@cache_response(key_prefix='expenses:user', ttl=Config.CACHE_TTLS['expense_list'], vary_on_user=True)
 def get_user_expenses_flexible():
     """
     Get user expenses with flexible filtering
@@ -431,7 +429,6 @@ def get_user_expenses_flexible():
 @expenses_sql_bp.route('/<expense_id>/history', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
-@cache_response(key_prefix='expenses:history', ttl=Config.CACHE_TTLS['expense_summary'], vary_on_user=True)
 def get_expense_history(expense_id):
     """
     Get expense edit history
@@ -452,7 +449,6 @@ def get_expense_history(expense_id):
 @expenses_sql_bp.route('/me', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
-@cache_response(key_prefix='expenses:me', ttl=Config.CACHE_TTLS['expense_list'], vary_on_user=True)
 def get_my_expenses():
     """
     Get all expenses involving the current user (personal + group)

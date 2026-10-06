@@ -10,6 +10,8 @@ class _EmailNormalizingSchema(Schema):
 
     @pre_load
     def normalize_email_fields(self, data, **kwargs):
+        if not isinstance(data, dict):
+            return data
         normalized = dict(data or {})
         for key in ('email', 'invitee_email', 'invited_email'):
             value = normalized.get(key)
@@ -36,6 +38,9 @@ class CreateExpenseInvitationSchema(_EmailNormalizingSchema):
                 'One of invitee_email, invited_email, or email is required',
                 field_name='invitee_email',
             )
+        addresses = {data[key] for key in ('invitee_email', 'invited_email', 'email') if data.get(key)}
+        if len(addresses) > 1:
+            raise ValidationError('Invitation email aliases must agree', field_name='invitee_email')
 
 
 class CreateGPInvitationSchema(_EmailNormalizingSchema):

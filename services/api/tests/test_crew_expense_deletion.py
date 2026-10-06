@@ -318,7 +318,13 @@ def test_confirmed_deletion_invalidates_warmed_server_money_caches(ledger_trip, 
         ctx['store'].set(cache_key, json.dumps({'_body': response.get_data(as_text=True)}), ex=60)
         keys.append(cache_key)
         cached = ctx['owner_api'].get(path)
-        assert cached.headers['X-Cache'] == 'HIT'
+        if prefix.startswith('gp_groups:'):
+            assert cached.headers['X-Cache'] == 'HIT'
+        else:
+            # Group ledger routes reauthorize every read; old private snapshots
+            # must not bypass revoked membership checks.
+            assert cached.headers.get('X-Cache') != 'HIT'
+            assert 'no-store' in cached.headers['Cache-Control']
     assert payload(ctx['owner_api'].get(endpoints[0][1]))['total_spent'] == 100
     assert confirm(ctx, prepare(ctx)).status_code == 200
     assert all(ctx['store'].get(key) is None for key in keys)

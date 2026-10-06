@@ -15,15 +15,23 @@ from app.core.config import Config
 from app.core.rate_limiter import limit_api
 from app.auth.security.decorators import (get_current_user_id,
                                                 require_auth)
-from app.core.cache.redis import cache_response, invalidate_cache
+from app.core.cache.redis import invalidate_cache
 from app.core.schemas.common import CreateSettlementSchema, validate_request
 from app.expenses.services.settlement_service import settlement_service_sql
+from app.expenses.services.group_access import identifier
 from flask import Blueprint, request
 
 logger = logging.getLogger(__name__)
 
 # Use /api/expense/settlements to match frontend expectations
 settlements_sql_bp = Blueprint('settlements_sql', __name__, url_prefix='/api/v1/expenses/settlements')
+
+
+@settlements_sql_bp.after_request
+def private_settlement_response(response):
+    response.headers['Cache-Control'] = 'private, no-store'
+    return response
+
 
 
 def parse_id(id_value):
@@ -90,7 +98,7 @@ def create_settlement():
         group_id=group_id,
         from_user_id=from_user_id,
         to_user_id=to_user_id,
-        amount=float(validated['amount']),
+        amount=validated['amount'],
         method=validated.get('method', 'cash'),
         notes=validated.get('notes')
     )
@@ -130,17 +138,17 @@ def _invalidate_settlement_caches():
 @settlements_sql_bp.route('/<settlement_id>', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
-@cache_response(key_prefix='settlements:detail', ttl=Config.CACHE_TTLS['settlements'], vary_on_user=True)
 def get_settlement(settlement_id):
     """Get settlement details"""
     user_id = get_current_user_id()
     
+    settlement_id = identifier(settlement_id)
     success, result = settlement_service_sql.get_settlement(settlement_id, user_id)
     
     if success:
         return success_response(data=result)
     else:
-        return error_response(result.get('error', 'Settlement not found'), 404)
+        return error_response(result.get('error', 'Settlement not found'), result.get('status_code', 404))
 
 
 @settlements_sql_bp.route('/<settlement_id>', methods=['DELETE'])
@@ -157,6 +165,7 @@ def delete_settlement(settlement_id):
     """
     user_id = get_current_user_id()
     
+    settlement_id = identifier(settlement_id)
     success, result = settlement_service_sql.delete_settlement(settlement_id, user_id)
     
     if success:
@@ -184,7 +193,6 @@ def delete_settlement(settlement_id):
 @settlements_sql_bp.route('/group/<group_id>', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
-@cache_response(key_prefix='settlements:group', ttl=Config.CACHE_TTLS['settlements'], vary_on_user=True)
 def get_group_settlements(group_id):
     """
     Get settlements for a group
@@ -211,13 +219,12 @@ def get_group_settlements(group_id):
     if success:
         return success_response(data=result)
     else:
-        return error_response(result.get('error', 'Failed to get settlements'))
+        return error_response(result.get('error', 'Failed to get settlements'), result.get('status_code', 400))
 
 
 @settlements_sql_bp.route('/group/<group_id>/balances', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
-@cache_response(key_prefix='settlements:balances', ttl=Config.CACHE_TTLS['settlements'], vary_on_user=True)
 def get_group_balances(group_id):
     """Get all balances for a group"""
     gid = parse_id(group_id)
@@ -231,13 +238,12 @@ def get_group_balances(group_id):
     if success:
         return success_response(data=result)
     else:
-        return error_response(result.get('error', 'Failed to get balances'))
+        return error_response(result.get('error', 'Failed to get balances'), result.get('status_code', 400))
 
 
 @settlements_sql_bp.route('/group/<group_id>/simplified', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
-@cache_response(key_prefix='settlements:simplified', ttl=Config.CACHE_TTLS['settlements'], vary_on_user=True)
 def get_simplified_debts(group_id):
     """
     Get simplified debts for a group
@@ -254,13 +260,12 @@ def get_simplified_debts(group_id):
     if success:
         return success_response(data=result)
     else:
-        return error_response(result.get('error', 'Failed to get simplified debts'))
+        return error_response(result.get('error', 'Failed to get simplified debts'), result.get('status_code', 400))
 
 
 @settlements_sql_bp.route('/me/balance', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
-@cache_response(key_prefix='settlements:my_balance', ttl=Config.CACHE_TTLS['expense_summary'], vary_on_user=True)
 def get_my_balance():
     """
     Get current user's total balance across all groups
@@ -273,4 +278,4 @@ def get_my_balance():
     if success:
         return success_response(data=result)
     else:
-        return error_response(result.get('error', 'Failed to get balance'))
+        return error_response(result.get('error', 'Failed to get balance'), result.get('status_code', 400))
