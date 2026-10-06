@@ -28,9 +28,8 @@ from app.notifications.email.smtp import email_service
 
 logger = logging.getLogger(__name__)
 
-# Refresh token expiration — derived from Config (seconds → days)
+# Device sessions expire after the same interval as their refresh token.
 _REFRESH_TOKEN_EXPIRES_SECONDS = Config.JWT_REFRESH_TOKEN_EXPIRES
-REFRESH_TOKEN_EXPIRES_DAYS = _REFRESH_TOKEN_EXPIRES_SECONDS // 86400
 
 
 class AuthService:
@@ -61,7 +60,7 @@ class AuthService:
             with get_db_session() as session:
                 # Check if email already exists
                 existing_user = session.query(User).filter(
-                    User.email == email.lower()
+                    User.email == email.strip().lower()
                 ).first()
                 
                 if existing_user:
@@ -98,7 +97,7 @@ class AuthService:
                     user_id=user.id,
                     refresh_token=hash_refresh_token(refresh_token),
                     device_info='Web',
-                    expires_at=datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRES_DAYS)
+                    expires_at=datetime.now(timezone.utc) + timedelta(seconds=_REFRESH_TOKEN_EXPIRES_SECONDS)
                 )
                 session.add(user_session)
                 session.commit()
@@ -143,6 +142,7 @@ class AuthService:
             Tuple of (success, data/error)
         """
         try:
+            email = email.strip().lower()
             # Check lockout before hitting the database
             remaining = check_lockout(email, ip=client_ip)
             if remaining is not None:
@@ -215,7 +215,7 @@ class AuthService:
                     device_info=device_info,
                     ip_address=client_ip,
                     last_used=now,
-                    expires_at=now + timedelta(days=REFRESH_TOKEN_EXPIRES_DAYS),
+                    expires_at=now + timedelta(seconds=_REFRESH_TOKEN_EXPIRES_SECONDS),
                 )
                 session.add(user_session)
                 
@@ -353,6 +353,7 @@ class AuthService:
                 # Update session with new refresh token
                 user_session.refresh_token = hash_refresh_token(new_refresh_token)
                 user_session.last_used = datetime.now(timezone.utc)
+                user_session.expires_at = user_session.last_used + timedelta(seconds=_REFRESH_TOKEN_EXPIRES_SECONDS)
                 
                 session.commit()
                 

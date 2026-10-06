@@ -4,31 +4,25 @@ import { Plane, Shield, AlertCircle, Home } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import QRCode from 'qrcode';
+import { isValidEmail, returnDestination, readAuthStorage, writeAuthStorage } from '../utils/authForms';
 import '../css/Login.css';
 
 const Login = ({ onSwitchToSignup }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, currentUser } = useAuth();
+  const { signIn, currentUser, loading: authLoading } = useAuth();
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isFormValid, setIsFormValid] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragPosition, setDragPosition] = useState(2);
-  const [isSuccess, setIsSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [invitationEmail, setInvitationEmail] = useState('');
   
-  const sliderRef = useRef(null);
-  const handleRef = useRef(null);
   const qrCanvasRef = useRef(null);
-  const startXRef = useRef(0);
-  const currentXRef = useRef(0);
+  const submittingRef = useRef(false);
 
   const currentYear = new Date().getFullYear();
-  const from = location.state?.from?.pathname || '/';
+  const from = returnDestination(location);
 
   // Check for pending invitation - ONLY if redirected from invitation page
   useEffect(() => {
@@ -38,10 +32,10 @@ const Login = ({ onSwitchToSignup }) => {
     
     if (isInvitationRedirect && invitationId) {
       // Store invitation ID for after login
-      localStorage.setItem('pendingInvitation', invitationId);
+      writeAuthStorage('pendingInvitation', invitationId);
       
       // Phase 17.5 Fix: Check localStorage first to avoid duplicate API calls
-      const cachedEmail = localStorage.getItem('invitationEmail');
+      const cachedEmail = readAuthStorage('invitationEmail');
       if (cachedEmail) {
         setInvitationEmail(cachedEmail);
         setEmail(cachedEmail);
@@ -55,7 +49,7 @@ const Login = ({ onSwitchToSignup }) => {
           const response = await expenseApi.getInvitationDetails(invitationId);
           if (response.success && (response.data ?? response).invitation?.invited_email) {
             const invitedEmail = (response.data ?? response).invitation.invited_email;
-            localStorage.setItem('invitationEmail', invitedEmail);
+            writeAuthStorage('invitationEmail', invitedEmail);
             setInvitationEmail(invitedEmail);
             setEmail(invitedEmail);
           }
@@ -71,7 +65,7 @@ const Login = ({ onSwitchToSignup }) => {
     }
     
     // Check for group planner invitation email
-    const groupInvitationEmail = localStorage.getItem('groupInvitationEmail');
+    const groupInvitationEmail = readAuthStorage('groupInvitationEmail');
     if (groupInvitationEmail) {
       setEmail(groupInvitationEmail);
       setInvitationEmail(groupInvitationEmail);
@@ -80,11 +74,11 @@ const Login = ({ onSwitchToSignup }) => {
 
   // Route once after authentication; the accept page owns the mutation.
   useEffect(() => {
-    if (!currentUser || loading) return;
-    const groupInvite = localStorage.getItem('pendingGroupInvitation');
-    const expenseInvite = localStorage.getItem('pendingInvitation');
+    if (!currentUser || loading || authLoading) return;
+    const groupInvite = readAuthStorage('pendingGroupInvitation');
+    const expenseInvite = readAuthStorage('pendingInvitation');
     navigate(groupInvite ? '/invitations/' + groupInvite : expenseInvite ? '/invitation/' + expenseInvite : from, { replace: true });
-  }, [currentUser, loading, navigate, from]);
+  }, [currentUser, loading, authLoading, navigate, from]);
 
   // Generate QR Code
   useEffect(() => {
@@ -96,114 +90,41 @@ const Login = ({ onSwitchToSignup }) => {
           dark: '#000000',
           light: '#FFFFFF'
         }
-      });
+      }).catch(() => {});
     }
   }, []);
 
-  // Email validation
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  // Validate form
-  useEffect(() => {
-    const valid = isValidEmail(email) && password.trim().length > 0;
-    setIsFormValid(valid);
-    if (!valid) {
-      setDragPosition(2);
-      setIsSuccess(false);
-    }
-  }, [email, password]);
-
-  // Drag handlers
-  const handleDragStart = (e) => {
-    if (!isFormValid) return;
-    
-    setIsDragging(true);
-    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-    startXRef.current = clientX - dragPosition;
-  };
-
-  const handleDragMove = (e) => {
-    if (!isDragging || !isFormValid) return;
-
-    const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
-    currentXRef.current = clientX;
-
-    const sliderRect = sliderRef.current.getBoundingClientRect();
-    const handleWidth = 46;
-    const maxDrag = sliderRect.width - handleWidth - 4;
-    
-    let newPosition = clientX - startXRef.current;
-    newPosition = Math.max(2, Math.min(newPosition, maxDrag));
-    
-    setDragPosition(newPosition);
-  };
-
-  const handleDragEnd = () => {
-    if (!isDragging) return;
-    
-    setIsDragging(false);
-
-    const sliderRect = sliderRef.current.getBoundingClientRect();
-    const handleWidth = 46;
-    const maxDrag = sliderRect.width - handleWidth - 4;
-
-    if (dragPosition >= maxDrag - 10) {
-      setIsSuccess(true);
-      setDragPosition(maxDrag);
-      
-      // Submit login
-      setTimeout(async () => {
-        await handleLogin();
-      }, 500);
-    } else {
-      setDragPosition(2);
-    }
-  };
-
   // Handle email/password login
-  const handleLogin = async () => {
-    if (!isFormValid || loading) return;
+  const handleLogin = async event => {
+    event.preventDefault();
+    if (submittingRef.current || authLoading) return;
+    const values = new FormData(event.currentTarget);
+    const submittedEmail = String(values.get('email') || '').trim().toLowerCase();
+    const submittedPassword = String(values.get('password') || '');
+    if (!isValidEmail(submittedEmail) || !submittedPassword) {
+      setError('Enter a valid email address and your password.');
+      return;
+    }
+    submittingRef.current = true;
     
     try {
       setError('');
       setLoading(true);
       
-      const result = await signIn(email.trim().toLowerCase(), password);
+      const result = await signIn(submittedEmail, submittedPassword);
       
       if (result.success) {
         // The authentication effect owns the redirect.
       } else {
         setError(result.error || 'Failed to sign in. Please check your credentials.');
-        setDragPosition(2);
-        setIsSuccess(false);
       }
     } catch (err) {
       setError(err.message || 'An error occurred during sign in.');
-      setDragPosition(2);
-      setIsSuccess(false);
     } finally {
       setLoading(false);
+      submittingRef.current = false;
     }
   };
-
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleDragMove);
-      document.addEventListener('mouseup', handleDragEnd);
-      document.addEventListener('touchmove', handleDragMove);
-      document.addEventListener('touchend', handleDragEnd);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleDragMove);
-      document.removeEventListener('mouseup', handleDragEnd);
-      document.removeEventListener('touchmove', handleDragMove);
-      document.removeEventListener('touchend', handleDragEnd);
-    };
-  }, [isDragging, dragPosition]);
 
   return (
     <div className="login-container">
@@ -284,7 +205,7 @@ const Login = ({ onSwitchToSignup }) => {
               <p className="login-form-subtitle">Present your boarding credentials</p>
             </div>
 
-            <form onSubmit={(e) => e.preventDefault()} className="login-form">
+            <form onSubmit={handleLogin} className="login-form" aria-busy={loading || authLoading}>
               {invitationEmail && (
                 <div style={{
                   padding: '0.75rem',
@@ -303,7 +224,7 @@ const Login = ({ onSwitchToSignup }) => {
 
 
               {error && (
-                <div style={{
+                <div role="alert" style={{
                   padding: '0.75rem',
                   background: '#fee',
                   border: '1px solid #fcc',
@@ -326,8 +247,12 @@ const Login = ({ onSwitchToSignup }) => {
                 <input
                   type="email"
                   id="login-email"
+                  name="email"
+                  autoComplete="username"
+                  required
+                  disabled={loading}
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); setError(''); }}
                   placeholder="passenger@email.com"
                   className={`login-input ${email && !isValidEmail(email) ? 'error' : ''}`}
                 />
@@ -340,73 +265,29 @@ const Login = ({ onSwitchToSignup }) => {
                 <input
                   type="password"
                   id="login-password"
+                  name="password"
+                  autoComplete="current-password"
+                  required
+                  disabled={loading}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && isFormValid && !loading) {
-                      e.preventDefault();
-                      handleLogin();
-                    }
-                  }}
+                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
                   placeholder="Enter your password"
                   className="login-input"
                 />
               </div>
 
-              {/* Beautiful Drag to Login */}
-              <div className="login-slider-wrapper">
-                <div
-                  ref={sliderRef}
-                  className={`login-slider-container ${
-                    isSuccess
-                      ? 'login-slider-success'
-                      : isFormValid
-                      ? 'login-slider-enabled'
-                      : 'login-slider-disabled'
-                  }`}
-                >
-                  {/* Progress bar */}
-                  <div
-                    className="login-slider-progress"
-                    style={{
-                      width: isFormValid && sliderRef.current ? `${(dragPosition / (sliderRef.current.offsetWidth - 50)) * 100}%` : '0%'
-                    }}
-                  ></div>
-
-                  {/* Slide text */}
-                  <div className="login-slider-text">
-                    <span>
-                      {isSuccess ? '✓ Ready for Takeoff!' : isFormValid ? 'Slide to Board ✈' : 'Enter Valid Credentials'}
-                    </span>
-                  </div>
-
-                  {/* Plane handle */}
-                  {isFormValid && (
-                    <div
-                      ref={handleRef}
-                      onMouseDown={handleDragStart}
-                      onTouchStart={handleDragStart}
-                      className={`login-slider-handle ${isDragging ? 'dragging' : ''}`}
-                      style={{ left: `${dragPosition}px` }}
-                    >
-                      <Plane 
-                        className="login-plane-handle-icon"
-                        style={{ transform: isDragging ? 'rotate(12deg)' : 'rotate(0deg)' }}
-                      />
-                    </div>
-                  )}
-                </div>
-                <p className="login-slider-hint">
-                  {isFormValid ? '✈ Drag the plane to the right to board your flight' : '⚠ Please enter a valid email and password'}
-                </p>
-              </div>
+              <button type="submit" className="login-submit-button" disabled={loading || authLoading}>
+                <Plane size={20} aria-hidden="true" />
+                {loading ? 'Signing in...' : authLoading ? 'Checking your session...' : 'Sign In'}
+              </button>
+              <p className="login-submit-hint">You will stay signed in on this device until you sign out or your session expires.</p>
             </form>
 
             <div className="login-footer">
               <p className="login-footer-text">
                 Don't have a ticket?{' '}
                 <button
-                  onClick={() => onSwitchToSignup ? onSwitchToSignup() : navigate('/signup')}
+                  onClick={() => onSwitchToSignup ? onSwitchToSignup() : navigate('/signup' + location.search, { state: location.state })}
                   className="login-footer-link"
                 >
                   Book Your Raft

@@ -25,7 +25,9 @@ def verify_password(password: str, password_hash: str) -> bool:
     """Verify a password against its hash."""
     try:
         return bcrypt.checkpw(
-            password.encode('utf-8'),
+            # Older bcrypt releases truncated at 72 bytes. Keep those existing
+            # accounts usable; new signup rejects overlong passwords explicitly.
+            password.encode('utf-8')[:72],
             password_hash.encode('utf-8'),
         )
     except Exception as e:
@@ -49,6 +51,13 @@ def is_password_strong(password: str) -> tuple[bool, str]:
     """
     if len(password) < Config.PASSWORD_MIN_LENGTH:
         return False, f"Password must be at least {Config.PASSWORD_MIN_LENGTH} characters long"
+
+    if len(password) > Config.PASSWORD_MAX_LENGTH:
+        return False, f"Password must be at most {Config.PASSWORD_MAX_LENGTH} characters long"
+
+    # bcrypt 5 rejects passwords over 72 UTF-8 bytes instead of truncating them.
+    if len(password.encode('utf-8')) > 72:
+        return False, "Password must be at most 72 bytes (72 characters for English text)"
 
     if not any(c.isupper() for c in password):
         return False, "Password must contain at least one uppercase letter"

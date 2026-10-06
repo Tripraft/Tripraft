@@ -1,10 +1,19 @@
 # Purpose: Auth-related validation schemas.
 """Auth-related validation schemas."""
 from app.core.config import Config
-from marshmallow import Schema, ValidationError, fields, validate, validates
+from app.auth.security.password import is_password_strong
+from marshmallow import Schema, ValidationError, fields, pre_load, validate, validates
 
 
-class SignupSchema(Schema):
+class AuthSchema(Schema):
+    @pre_load
+    def normalize_email(self, data, **kwargs):
+        if isinstance(data, dict) and isinstance(data.get('email'), str):
+            return {**data, 'email': data['email'].strip().lower()}
+        return data
+
+
+class SignupSchema(AuthSchema):
     email = fields.Email(required=True, error_messages={'required': 'Email is required'})
     password = fields.String(
         required=True,
@@ -22,13 +31,12 @@ class SignupSchema(Schema):
 
     @validates('password')
     def validate_password_strength(self, value, **kwargs):
-        if value.isdigit():
-            raise ValidationError('Password cannot be all digits')
-        if value.isalpha():
-            raise ValidationError('Password must contain at least one number')
+        valid, message = is_password_strong(value)
+        if not valid:
+            raise ValidationError(message)
 
 
-class LoginSchema(Schema):
+class LoginSchema(AuthSchema):
     email = fields.Email(required=True)
     password = fields.String(required=True, validate=validate.Length(min=1))
 

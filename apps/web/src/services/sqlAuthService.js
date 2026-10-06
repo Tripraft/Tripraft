@@ -18,8 +18,10 @@ class SQLAuthService {
     // Refresh lock to prevent concurrent refresh attempts
     this._refreshPromise = null;
     this._isRefreshing = false;
+    this._initializationPromise = null;
+    this._authVersion = 0;
     
-    // Load tokens from localStorage on init
+    // Load the optional cached profile; cookies carry the device session.
     this._loadStoredAuth();
   }
 
@@ -28,19 +30,18 @@ class SQLAuthService {
    * Tokens are handled by httpOnly cookies -- never stored in localStorage.
    */
   _loadStoredAuth() {
-    // Migrate: remove any tokens previously stored in localStorage
-    localStorage.removeItem(GlobalConfig.STORAGE_KEYS.ACCESS_TOKEN);
-    localStorage.removeItem(GlobalConfig.STORAGE_KEYS.REFRESH_TOKEN);
-
-    const userData = localStorage.getItem(GlobalConfig.STORAGE_KEYS.CURRENT_USER);
-    if (userData) {
-      try {
+    try {
+      // Storage is optional: httpOnly cookies own the device session.
+      localStorage.removeItem(GlobalConfig.STORAGE_KEYS.ACCESS_TOKEN);
+      localStorage.removeItem(GlobalConfig.STORAGE_KEYS.REFRESH_TOKEN);
+      const userData = localStorage.getItem(GlobalConfig.STORAGE_KEYS.CURRENT_USER);
+      if (userData) {
         this.currentUser = JSON.parse(userData);
-        // Tokens are now in httpOnly cookies; set flag so we attempt validation
-        this.accessToken = '__cookie__';
-      } catch (e) {
-        this.currentUser = null;
+        if (this.currentUser?.id) this.accessToken = '__cookie__';
+        else this.currentUser = null;
       }
+    } catch {
+      this.currentUser = null;
     }
   }
 
@@ -54,7 +55,9 @@ class SQLAuthService {
     this.currentUser = user;
 
     // Only store non-sensitive user profile data
-    localStorage.setItem(GlobalConfig.STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+    try {
+      localStorage.setItem(GlobalConfig.STORAGE_KEYS.CURRENT_USER, JSON.stringify(user));
+    } catch { /* Cookie sessions also work when browser storage is unavailable. */ }
   }
 
   /**
@@ -73,11 +76,38 @@ class SQLAuthService {
    * Clear authentication state
    */
   _clearAuth() {
+    this._authVersion += 1;
     this.accessToken = null;
     this.refreshToken = null;
     this.currentUser = null;
 
-    localStorage.removeItem(GlobalConfig.STORAGE_KEYS.CURRENT_USER);
+    try {
+      localStorage.removeItem(GlobalConfig.STORAGE_KEYS.CURRENT_USER);
+    } catch { /* Browser storage may be disabled. */ }
+  }
+
+  _requestError(data, fallback) {
+    const error = data?.error;
+    const details = error?.details;
+    const messages = details && typeof details === 'object'
+      ? Object.values(details).flat().filter(message => typeof message === 'string')
+      : [];
+    return {
+      success: false,
+      error: (typeof error === 'string' ? error : error?.code) || 'auth_failed',
+      message: messages.join(' ') || error?.message || data?.message ||
+        (typeof error === 'string' ? error : fallback),
+    };
+  }
+
+  async _fetch(url, options) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), GlobalConfig.API_TIMEOUT || 30000);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   /**
@@ -98,7 +128,7 @@ class SQLAuthService {
    */
   async signUpWithEmail(email, password, displayName = '') {
     try {
-      const response = await fetch(`${this.baseUrl}/signup`, {
+      const response = await this._fetch(`${this.baseUrl}/signup`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -111,19 +141,17 @@ class SQLAuthService {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        return {
-          success: false,
-          error: data.error || 'signup_failed',
-          message: data.message || data.error || 'Failed to create account'
-        };
+        return this._requestError(data, 'Could not create your account. Please try again.');
       }
 
       const payload = data.data || data;
 
       // Save auth and notify listeners
+      if (!payload.user?.id) return this._requestError(null, 'The server returned an incomplete account. Please try signing in.');
+      this._authVersion += 1;
       this._saveAuth(payload.access_token, payload.refresh_token, payload.user);
       this._notifyAuthStateChange(this._createUserObject(payload.user, payload.access_token));
 
@@ -136,7 +164,7 @@ class SQLAuthService {
       return {
         success: false,
         error: 'network_error',
-        message: error.message || 'Network error during signup'
+        message: 'Unable to connect. Check your connection and try again.'
       };
     }
   }
@@ -146,7 +174,7 @@ class SQLAuthService {
    */
   async signInWithEmail(email, password) {
     try {
-      const response = await fetch(`${this.baseUrl}/login`, {
+      const response = await this._fetch(`${this.baseUrl}/login`, {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -155,19 +183,17 @@ class SQLAuthService {
         body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        return {
-          success: false,
-          error: data.error || 'auth_failed',
-          message: data.message || data.error || 'Invalid email or password'
-        };
+        return this._requestError(data, 'Could not sign in. Please try again.');
       }
 
       const payload = data.data || data;
 
       // Save auth and notify listeners
+      if (!payload.user?.id) return this._requestError(null, 'The server returned an incomplete account. Please try again.');
+      this._authVersion += 1;
       this._saveAuth(payload.access_token, payload.refresh_token, payload.user);
       this._notifyAuthStateChange(this._createUserObject(payload.user, payload.access_token));
 
@@ -180,7 +206,7 @@ class SQLAuthService {
       return {
         success: false,
         error: 'network_error',
-        message: error.message || 'Network error during sign in'
+        message: 'Unable to connect. Check your connection and try again.'
       };
     }
   }
@@ -189,20 +215,19 @@ class SQLAuthService {
    * Sign out
    */
   async signOut() {
+    // Invalidate pending restoration before waiting on the server.
+    this._clearAuth();
+    this._notifyAuthStateChange(null);
     try {
       // Call backend to clear httpOnly auth cookies
-      await fetch(`${this.baseUrl}/logout`, {
+      await this._fetch(`${this.baseUrl}/logout`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json', ...this._csrfHeader() },
       }).catch(() => {});
 
-      this._clearAuth();
-      this._notifyAuthStateChange(null);
       return { success: true };
     } catch (error) {
-      this._clearAuth();
-      this._notifyAuthStateChange(null);
       return {
         success: false,
         error: 'signout_error',
@@ -230,38 +255,34 @@ class SQLAuthService {
     // Set the lock
     this._isRefreshing = true;
     
-    this._refreshPromise = (async () => {
+    const version = this._authVersion;
+    const refresh = async () => {
       try {
-        const response = await fetch(`${this.baseUrl}/refresh`, {
+        if (version !== this._authVersion) return { success: false, error: 'session_changed' };
+        const response = await this._fetch(`${this.baseUrl}/refresh`, {
           method: 'POST',
           credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
             ...this._csrfHeader(),
           },
-          // Only send a body when a token is actually held in memory.
-          // Cookie mode was posting {"refresh_token": null}, which
-          // contradicts the cookie contract.
-          body: JSON.stringify(
-            this.refreshToken ? { refresh_token: this.refreshToken } : {}
-          ),
+          // The browser cookie is shared across tabs and always holds the
+          // latest rotated token; an in-memory token may already be stale.
+          body: '{}',
         });
 
         const data = await response.json().catch(() => ({}));
+        if (version !== this._authVersion) return { success: false, error: 'session_changed' };
 
         if (!response.ok) {
           // Only a rejected session should end it. The previous condition
           // was `if (this._isRefreshing)`, which is always true inside this
           // locked block, so a 500 or a gateway blip logged the user out.
-          if (response.status === 401 || response.status === 403) {
+          if (response.status === 401) {
             this._clearAuth();
             this._notifyAuthStateChange(null);
           }
-          return {
-            success: false,
-            error: data.error || 'refresh_failed',
-            message: data.message || 'Failed to refresh token'
-          };
+          return this._requestError(data, 'Could not restore your session. Please try again.');
         }
         
         // Update in-memory token reference (actual tokens in httpOnly cookies)
@@ -287,7 +308,11 @@ class SQLAuthService {
         this._isRefreshing = false;
         this._refreshPromise = null;
       }
-    })();
+    };
+    // Serialize rotations across tabs on browsers supporting Web Locks.
+    this._refreshPromise = globalThis.navigator?.locks?.request
+      ? navigator.locks.request('tripraft-session-refresh', refresh)
+      : refresh();
 
     return this._refreshPromise;
   }
@@ -296,53 +321,36 @@ class SQLAuthService {
    * Get current user profile from backend
    */
   async getCurrentUserFromBackend() {
-    if (!this.accessToken) {
-      return null;
-    }
-
+    const version = this._authVersion;
     try {
-      const headers = { 'Content-Type': 'application/json' };
-      if (this.accessToken && this.accessToken !== '__cookie__') {
-        headers['Authorization'] = `Bearer ${this.accessToken}`;
-      }
-
-      const response = await fetch(`${this.baseUrl}/me`, {
-        method: 'GET',
-        credentials: 'include',
-        headers,
+      const loadProfile = () => this._fetch(`${this.baseUrl}/me`, {
+        method: 'GET', credentials: 'include',
+        headers: this.accessToken && this.accessToken !== '__cookie__'
+          ? { Authorization: `Bearer ${this.accessToken}` } : {},
       });
-
-      if (!response.ok) {
-        // Try to refresh token if 401
-        if (response.status === 401) {
-          const refreshResult = await this.refreshAccessToken();
-          if (refreshResult.success) {
-            // Retry with new token
-            const retryHeaders = { 'Content-Type': 'application/json' };
-            if (this.accessToken && this.accessToken !== '__cookie__') {
-              retryHeaders['Authorization'] = `Bearer ${this.accessToken}`;
-            }
-            const retryResponse = await fetch(`${this.baseUrl}/me`, {
-              method: 'GET',
-              credentials: 'include',
-              headers: retryHeaders,
-            });
-            if (retryResponse.ok) {
-              const retryData = await retryResponse.json();
-              const retryPayload = retryData.data || retryData;
-              return this._createUserObject(retryPayload.user, this.accessToken);
-            }
-          }
+      let response = await loadProfile();
+      if (version !== this._authVersion) return this.getCurrentUser();
+      if (response.status === 401) {
+        const refreshed = await this.refreshAccessToken();
+        if (version !== this._authVersion) return this.getCurrentUser();
+        if (!refreshed.success) return this.getCurrentUser();
+        response = await loadProfile();
+        if (version !== this._authVersion) return this.getCurrentUser();
+      }
+      if (response.ok) {
+        const data = await response.json();
+        if (version !== this._authVersion) return this.getCurrentUser();
+        const payload = data.data || data;
+        if (payload.user?.id) {
+          this._saveAuth(this.accessToken, this.refreshToken, payload.user);
+          return this.getCurrentUser();
         }
+      } else if (response.status === 401 || response.status === 403) {
+        this._clearAuth();
         return null;
       }
-
-      const data = await response.json();
-      const payload = data.data || data;
-      return this._createUserObject(payload.user, this.accessToken);
-    } catch (error) {
-      return null;
-    }
+    } catch { /* Temporary outages must not erase this device's saved session. */ }
+    return this.getCurrentUser();
   }
 
   /**
@@ -386,23 +394,15 @@ class SQLAuthService {
     // Add listener
     this.authStateListeners.push(callback);
 
-    // Immediately call with current state
-    // Use setTimeout to ensure async execution
-    setTimeout(async () => {
-      if (this.accessToken && this.currentUser) {
-        // Verify token is still valid
-        const user = await this.getCurrentUserFromBackend();
-        if (user) {
-          callback(user);
-        } else {
-          // Token invalid, clear auth
-          this._clearAuth();
-          callback(null);
-        }
-      } else {
-        callback(null);
-      }
-    }, 0);
+    // Cookies can survive without a cached profile. Share initialization across
+    // subscribers (including React StrictMode), and ignore unsubscribed listeners.
+    if (!this._initializationPromise) {
+      this._initializationPromise = this.getCurrentUserFromBackend();
+      this._initializationPromise.finally(() => { this._initializationPromise = null; });
+    }
+    this._initializationPromise.then(() => {
+      if (this.authStateListeners.includes(callback)) callback(this.getCurrentUser());
+    });
 
     // Return unsubscribe function
     return () => {

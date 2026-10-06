@@ -13,6 +13,17 @@ import expenseApi from '../services/expenseApi';
 
 const AuthContext = createContext(null);
 
+const accountState = async (user) => ({
+  uid: user.uid,
+  email: user.email,
+  displayName: user.displayName || '',
+  photoURL: user.photoURL || '',
+  emailVerified: user.emailVerified,
+  is_admin: Boolean(user.is_admin),
+  token: await user.getIdToken(),
+  _sqlUser: user,
+});
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -28,44 +39,29 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    let unsubscribe;
+    let active = true;
+    let revision = 0;
     
     // Listen to SQL auth state changes
-    unsubscribe = authService.onAuthStateChanged(async (user) => {
+    const unsubscribe = authService.onAuthStateChanged(async (user) => {
+      const eventRevision = ++revision;
       try {
-        if (user) {
-          // User is signed in
-          const token = await user.getIdToken();
-          
-          // Create user object with profile data
-          const userData = {
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName || '',
-            photoURL: user.photoURL || '',
-            emailVerified: user.emailVerified,
-            is_admin: Boolean(user.is_admin),
-            token: token,
-            // Keep reference to user object for token refresh
-            _sqlUser: user
-          };
-          
+        const userData = user ? await accountState(user) : null;
+        if (active && revision === eventRevision) {
           setCurrentUser(userData);
-        } else {
-          // User is signed out
-          setCurrentUser(null);
+          setError(null);
         }
       } catch (err) {
-        setError(err.message);
+        if (active && revision === eventRevision) setError(err.message);
       } finally {
-        setLoading(false);
+        if (active && revision === eventRevision) setLoading(false);
       }
     });
 
-    return () => unsubscribe();
+    return () => { active = false; unsubscribe(); };
   }, []);
 
-  // InactivityTracker owns the warning and logout timer.
+  // Device cookies persist until logout or server session expiry/revocation.
 
   // Sign in with email and password
   const signIn = useCallback(async (email, password) => {
@@ -82,17 +78,7 @@ export const AuthProvider = ({ children }) => {
       // Set currentUser directly so it's available before navigate() fires.
       // The async onAuthStateChanged listener would set it too late.
       if (result.user) {
-        const token = await result.user.getIdToken();
-        setCurrentUser({
-          uid: result.user.uid,
-          email: result.user.email,
-          displayName: result.user.displayName || '',
-          photoURL: result.user.photoURL || '',
-          emailVerified: result.user.emailVerified,
-          is_admin: Boolean(result.user.is_admin),
-          token,
-          _sqlUser: result.user,
-        });
+        setCurrentUser(await accountState(result.user));
       }
       
       return { success: true, user: result.user };
@@ -114,6 +100,8 @@ export const AuthProvider = ({ children }) => {
       if (!result.success) {
         throw new Error(result.message || 'Failed to sign up');
       }
+
+      if (result.user) setCurrentUser(await accountState(result.user));
       
       return { success: true, user: result.user };
     } catch (err) {

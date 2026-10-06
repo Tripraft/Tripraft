@@ -47,7 +47,7 @@ export default function useChatSocket(groupId, userId) {
     const connect = async () => {
       const token = await sqlAuthService.getIdToken();
       // Derive base URL from API base (strip /api suffix)
-      const baseUrl = (GlobalConfig.API_BASE_URL || '').replace(/\/api\/?$/, '') || 'http://localhost:5000';
+      const baseUrl = (GlobalConfig.API_BASE_URL || '/api').replace(/\/api\/?$/, '') || window.location.origin;
 
       const opts = {
         transports: ['websocket', 'polling'],

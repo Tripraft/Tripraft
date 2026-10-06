@@ -21,7 +21,6 @@ const SmartInvitationHandler = lazy(() => import('./pages/SmartInvitationHandler
 const PlaceSearchPage = lazy(() => import('./features/discover/jsx/PlaceSearchPage'));
 
 // These are lightweight wrappers, loaded eagerly
-import InactivityTracker from './features/auth/jsx/InactivityTracker';
 import FeatureErrorBoundary from './components/common/jsx/FeatureErrorBoundary';
 import PageSkeleton from './components/common/jsx/PageSkeleton';
 
@@ -31,8 +30,6 @@ const GroupPlannerPage = lazy(() => import('./features/trips/jsx/GroupPlannerPag
 export default function App() {
   return (
     <AuthProvider>
-        {/* Inactivity tracker for security - logs out after 15 min inactive */}
-        <InactivityTracker />
         <Suspense fallback={<PageSkeleton />}>
         <Routes>
         {/* Public routes */}

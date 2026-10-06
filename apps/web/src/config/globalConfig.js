@@ -15,7 +15,7 @@ const GlobalConfig = {
   APP_TAGLINE: import.meta.env.VITE_APP_TAGLINE || 'Discover. Plan. Explore.',
   
   // API Configuration
-  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api',
+  API_BASE_URL: import.meta.env.VITE_API_BASE_URL || '/api',
   API_TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),
   API_MAX_RETRIES: 2,
   RETRY_BACKOFF_BASE_MS: 500,

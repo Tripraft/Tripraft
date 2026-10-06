@@ -210,7 +210,7 @@ def refresh_token():
     # Accept refresh token from body, cookie, or header (in priority order)
     refresh = data.get('refresh_token') or request.cookies.get('refresh_token')
     if not refresh:
-        return error_response('Refresh token required')
+        return error_response('Refresh token required', 401)
     
     success, result = auth_service.refresh_tokens(refresh)
     

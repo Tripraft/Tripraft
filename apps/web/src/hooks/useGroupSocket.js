@@ -24,7 +24,7 @@ import { gpKeys } from './useGroupPlannerQuery';
 
 // Derive socket URL from API base (strip /api suffix)
 const SOCKET_URL =
-  (GlobalConfig.API_BASE_URL || 'http://localhost:5000/api').replace(/\/api\/?$/, '');
+  (GlobalConfig.API_BASE_URL || '/api').replace(/\/api\/?$/, '') || window.location.origin;
 const PRESENCE_HEARTBEAT_MS = 60_000;
 
 /**
