@@ -8,6 +8,8 @@ real ID with a 422. ``UUIDString`` is the one place that contract is defined,
 so the validation and the error message are identical everywhere.
 """
 from uuid import UUID
+from datetime import datetime
+import re
 
 from marshmallow import ValidationError, fields
 
@@ -52,4 +54,32 @@ class UUIDString(fields.Field):
             raise self.make_error('invalid_uuid') from None
 
 
-__all__ = ['UUIDString']
+class CurrencyCode(fields.String):
+    """Normalize three-letter currency codes before persistence."""
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        value = super()._deserialize(value, attr, data, **kwargs).strip().upper()
+        if not re.fullmatch(r'[A-Z]{3}', value):
+            raise ValidationError('Currency must be a three-letter code.')
+        return value
+
+
+class CalendarDate(fields.String):
+    """Accept an ISO calendar date or timestamp, preserving its calendar day."""
+
+    def _deserialize(self, value, attr, data, **kwargs):
+        value = super()._deserialize(value, attr, data, **kwargs)
+        if not re.match(r'^\d{4}-\d{2}-\d{2}(?:$|T| )', value):
+            raise ValidationError('Must be an ISO-8601 date or timestamp.')
+        try:
+            return datetime.fromisoformat(value.replace('Z', '+00:00')).date().isoformat()
+        except ValueError:
+            raise ValidationError('Must be an ISO-8601 date or timestamp.') from None
+
+
+class TrimmedString(fields.String):
+    def _deserialize(self, value, attr, data, **kwargs):
+        return super()._deserialize(value, attr, data, **kwargs).strip()
+
+
+__all__ = ['UUIDString', 'CurrencyCode', 'CalendarDate', 'TrimmedString']

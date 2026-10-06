@@ -3,7 +3,7 @@
 
 from sqlalchemy import update
 
-from app.expenses.models import Expense, Group, Settlement
+from app.expenses.models import Expense, Group, Income, Settlement
 
 
 def lock_group(session, group_id):
@@ -19,12 +19,12 @@ def lock_group(session, group_id):
 
 def lock_money_record(session, model, record_id):
     """Reload after locking so concurrent edits cannot reverse stale money."""
-    if model not in (Expense, Settlement):
+    if model not in (Expense, Settlement, Income):
         raise ValueError('Unsupported money record')
     record = session.get(model, record_id)
     if record is None:
         return None
-    if record.group_id is not None:
+    if model is not Income and record.group_id is not None:
         lock_group(session, record.group_id)
     elif session.get_bind().dialect.name == 'sqlite':
         session.execute(

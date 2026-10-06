@@ -226,7 +226,7 @@ def test_fresh_install_sql_can_be_generated_without_a_database(url, monkeypatch)
     config = _config(url, monkeypatch, output)
     command.upgrade(config, 'head', sql=True)
     sql = output.getvalue()
-    assert sql.count('CREATE TABLE ') == 30  # 29 application tables plus Alembic version.
+    assert sql.count('CREATE TABLE ') == 32  # 31 application tables plus Alembic version.
     assert 'CREATE TABLE gp_vault_documents' in sql
     assert 'suggested_time VARCHAR(10)' in sql
     assert 'CREATE MATERIALIZED VIEW' not in sql

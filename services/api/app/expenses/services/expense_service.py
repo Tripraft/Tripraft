@@ -7,14 +7,17 @@ Like Splitwise - tracks who paid and who owes
 
 import json
 import logging
+import re
 from datetime import date, datetime, timezone
 from decimal import ROUND_DOWN, ROUND_HALF_UP, Decimal
 from typing import Any, Dict, List, Optional, Tuple
+from uuid import UUID
 
 from app.expenses.models import (Expense, ExpenseHistory, ExpenseSplit,
                                         Group, GroupBalance, GroupMember, User,
                                         money_to_json)
 from app.core.db.connection import get_db_session
+from app.core.config import Config
 from app.expenses.services.money_lock import lock_group, lock_money_record
 from sqlalchemy import update
 from sqlalchemy.orm import joinedload, selectinload
@@ -22,6 +25,7 @@ from sqlalchemy.orm import joinedload, selectinload
 logger = logging.getLogger(__name__)
 
 _CENT = Decimal('0.01')
+_UNSET = object()
 
 
 class SplitValidationError(ValueError):
@@ -67,7 +71,13 @@ class ExpenseServiceSQL:
             Tuple of (success, expense_data/error)
         """
         try:
-            amount = ExpenseServiceSQL._money(amount, 'Expense amount')
+            user_id = ExpenseServiceSQL._identifier(user_id)
+            paid_by = ExpenseServiceSQL._identifier(paid_by)
+            if group_id is not None:
+                group_id = ExpenseServiceSQL._identifier(group_id)
+            amount = ExpenseServiceSQL._positive_money(amount)
+            ExpenseServiceSQL._validate_text(description, category, notes)
+            currency = ExpenseServiceSQL._currency(currency)
             with get_db_session() as session:
                 # For personal expenses (no group)
                 if group_id is None:
@@ -197,7 +207,7 @@ class ExpenseServiceSQL:
             # direct service callers too; the HTTP route is not the security
             # boundary for a money mutation (audit P1-4).
             paid_by = user_id
-            amount = ExpenseServiceSQL._money(amount, 'Expense amount')
+            amount = ExpenseServiceSQL._positive_money(amount)
             exp_date = ExpenseServiceSQL._parse_expense_date(expense_date)
             
             # Create expense without group
@@ -224,6 +234,7 @@ class ExpenseServiceSQL:
                 amount=amount
             )
             session.add(split)
+            session.flush()
             
             # Record history - for personal expenses, group_id is None
             history = ExpenseHistory(
@@ -231,7 +242,8 @@ class ExpenseServiceSQL:
                 group_id=None,  # Personal expenses have no group
                 action='created',
                 changed_by=user_id,
-                changes_json='{}'
+                changes_json=[],
+                after_snapshot=expense.to_dict(),
             )
             session.add(history)
             
@@ -412,11 +424,45 @@ class ExpenseServiceSQL:
         )
 
     @staticmethod
+    def _positive_money(value):
+        value = ExpenseServiceSQL._money(value, 'Expense amount')
+        if not Decimal('0.01') <= value <= Decimal(str(Config.MAX_EXPENSE_AMOUNT)):
+            raise SplitValidationError('Expense amount must be positive and within the allowed limit')
+        return value
+
+    @staticmethod
+    def _identifier(value):
+        try:
+            return value if isinstance(value, UUID) else UUID(value)
+        except (ValueError, TypeError, AttributeError):
+            raise SplitValidationError('Record ID must be a UUID') from None
+
+    @staticmethod
+    def _currency(value):
+        if not isinstance(value, str) or not re.fullmatch(r'[A-Z]{3}', value.strip().upper()):
+            raise SplitValidationError('Currency must be a three-letter code')
+        return value.strip().upper()
+
+    @staticmethod
+    def _validate_text(description=None, category=_UNSET, notes=_UNSET):
+        if description is not None and (
+            not isinstance(description, str) or not 1 <= len(description.strip()) <= 500
+        ):
+            raise SplitValidationError('Description must contain 1 to 500 characters')
+        for field, value, maximum in [('Category', category, 50), ('Notes', notes, 1000)]:
+            if value is not _UNSET and value is not None and (
+                not isinstance(value, str) or len(value) > maximum
+            ):
+                raise SplitValidationError('%s must be at most %s characters' % (field, maximum))
+
+    @staticmethod
     def _parse_expense_date(value: Optional[str]) -> date:
         """Parse a user-supplied ISO date without silently changing it."""
         if not value:
             return datetime.now(timezone.utc).date()
         try:
+            if not isinstance(value, str) or not re.match(r'^\d{4}-\d{2}-\d{2}(?:$|T| )', value):
+                raise ValueError()
             return datetime.fromisoformat(value.replace('Z', '+00:00')).date()
         except (AttributeError, TypeError, ValueError):
             raise SplitValidationError('expense_date must be an ISO-8601 date')
@@ -534,6 +580,8 @@ class ExpenseServiceSQL:
             Tuple of (success, expense_data/error)
         """
         try:
+            expense_id = ExpenseServiceSQL._identifier(expense_id)
+            user_id = ExpenseServiceSQL._identifier(user_id)
             with get_db_session() as session:
                 expense = session.get(Expense, expense_id, options=[
                     joinedload(Expense.payer),
@@ -629,7 +677,8 @@ class ExpenseServiceSQL:
                     'expenses': expense_list,
                     'total': total,
                     'limit': limit,
-                    'offset': offset
+                    'offset': offset,
+                    'has_more': offset + len(expenses) < total,
                 }
                 
         except Exception as e:
@@ -645,9 +694,11 @@ class ExpenseServiceSQL:
         paid_by: Optional[str] = None,
         split_type: Optional[str] = None,
         splits: Optional[List[Dict]] = None,
-        category: Optional[str] = None,
+        category: Optional[str] = _UNSET,
         expense_date: Optional[str] = None,
-        notes: Optional[str] = None
+        notes: Optional[str] = _UNSET,
+        receipt_url: Optional[str] = _UNSET,
+        currency: Optional[str] = _UNSET,
     ) -> Tuple[bool, Dict[str, Any]]:
         """
         Update an expense (personal or group)
@@ -661,6 +712,13 @@ class ExpenseServiceSQL:
             Tuple of (success, expense_data/error)
         """
         try:
+            expense_id = ExpenseServiceSQL._identifier(expense_id)
+            user_id = ExpenseServiceSQL._identifier(user_id)
+            if paid_by is not None:
+                paid_by = ExpenseServiceSQL._identifier(paid_by)
+            ExpenseServiceSQL._validate_text(description, category, notes)
+            if currency is not _UNSET:
+                currency = ExpenseServiceSQL._currency(currency)
             with get_db_session() as session:
                 expense = lock_money_record(session, Expense, expense_id)
                 
@@ -673,99 +731,51 @@ class ExpenseServiceSQL:
                     if expense.created_by != user_id:
                         return False, {'error': 'You can only edit your own personal expenses'}
                     
-                    logger.debug(f"Updating personal expense {expense_id}")
-                    # A personal expense cannot be reassigned to somebody
-                    # else through a direct service call (audit P1-4).
-                    expense.paid_by = user_id
-                    
-                    # Track changes for history
-                    changes = []
-                    
-                    # Update personal expense fields and track changes
+                    before = expense.to_dict()
+                    updates = {'paid_by': user_id, 'split_type': 'none'}
                     if description is not None:
-                        new_desc = description.strip()
-                        if new_desc != expense.description:
-                            changes.append({
-                                'field': 'description',
-                                'old': expense.description,
-                                'new': new_desc
-                            })
-                        expense.description = new_desc
+                        updates['description'] = description.strip()
                     if amount is not None:
-                        new_amount = ExpenseServiceSQL._money(amount, 'Expense amount')
-                    else:
-                        new_amount = expense.amount
-                    if new_amount != expense.amount:
-                        changes.append({
-                            'field': 'amount',
-                            'old': str(expense.amount),
-                            'new': str(new_amount),
-                        })
-                        expense.amount = new_amount
-                        # Personal expenses have exactly one split.  Keeping
-                        # the old value made the expense and its detail view
-                        # disagree after an edit (audit P1-5).
-                        split = session.query(ExpenseSplit).filter(
-                            ExpenseSplit.expense_id == expense_id,
-                        ).first()
-                        if split is None:
-                            split = ExpenseSplit(
-                                expense_id=expense_id,
-                                user_id=user_id,
-                            )
-                            session.add(split)
-                        split.user_id = user_id
-                        split.amount = expense.amount
-                        expense.paid_by = user_id
-                    if category is not None:
-                        if category != expense.category:
-                            changes.append({
-                                'field': 'category',
-                                'old': expense.category,
-                                'new': category
-                            })
-                        expense.category = category
-                    if expense_date:
-                        new_date = ExpenseServiceSQL._parse_expense_date(expense_date)
-                        old_date_str = expense.expense_date.strftime('%Y-%m-%d') if expense.expense_date else None
-                        new_date_str = new_date.strftime('%Y-%m-%d')
-                        if old_date_str != new_date_str:
-                            changes.append({
-                                'field': 'expense_date',
-                                'old': old_date_str,
-                                'new': new_date_str,
-                            })
-                        expense.expense_date = new_date
-                    if notes is not None:
-                        new_notes = notes.strip() if notes else None
-                        if new_notes != expense.notes:
-                            changes.append({
-                                'field': 'notes',
-                                'old': expense.notes,
-                                'new': new_notes
-                            })
-                        expense.notes = new_notes
-                    
-                    expense.is_edited = True
-                    expense.updated_at = datetime.now(timezone.utc)
-                    
-                    logger.debug(f"Personal expense {expense_id}: {len(changes)} changes tracked")
-                    
-                    # Record history for personal expense with actual changes
-                    history = ExpenseHistory(
-                        expense_id=expense_id,
-                        group_id=None,
-                        action='updated',
-                        changed_by=user_id,
-                        changes_json=json.dumps(changes, default=str) if changes else '{}'
-                    )
-                    session.add(history)
-                    
-                    session.commit()
-                    session.refresh(expense)
-                    
+                        updates['amount'] = ExpenseServiceSQL._positive_money(amount)
+                    if category is not _UNSET:
+                        updates['category'] = category
+                    if notes is not _UNSET:
+                        updates['notes'] = notes.strip() if notes else None
+                    if expense_date is not None:
+                        updates['expense_date'] = ExpenseServiceSQL._parse_expense_date(expense_date)
+                    if receipt_url is not _UNSET:
+                        updates['receipt_url'] = receipt_url
+                    if currency is not _UNSET:
+                        updates['currency'] = currency
+                    for field, value in updates.items():
+                        setattr(expense, field, value)
+                    # Repair legacy personal splits as well as changed amounts.
+                    owner_split = next((row for row in expense.splits if row.user_id == user_id), None)
+                    for row in list(expense.splits):
+                        if row is not owner_split:
+                            expense.splits.remove(row)
+                    if owner_split is None:
+                        owner_split = ExpenseSplit(user_id=user_id, amount=expense.amount)
+                        expense.splits.append(owner_split)
+                    owner_split.amount = expense.amount
+                    owner_split.percentage = None
+                    owner_split.shares = None
+                    session.flush()
+                    after = expense.to_dict()
+                    changes = [{'field': key, 'old': before.get(key), 'new': value}
+                               for key, value in after.items()
+                               if before.get(key) != value and key != 'updated_at']
+                    if changes:
+                        expense.is_edited = True
+                        expense.updated_at = datetime.now(timezone.utc)
+                        session.add(ExpenseHistory(
+                            expense_id=expense.id, group_id=None, action='updated',
+                            changed_by=user_id, changes_json=changes,
+                            before_snapshot=before, after_snapshot=expense.to_dict(),
+                        ))
+                        session.commit()
                     return True, {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
-                
+
                 # Group expense - verify membership
                 member = session.query(GroupMember).filter(
                     GroupMember.group_id == expense.group_id,
@@ -784,6 +794,9 @@ class ExpenseServiceSQL:
                 if not is_group_owner and not is_expense_creator:
                     return False, {'error': 'You can only edit expenses you created'}
                 
+                if currency is not _UNSET and currency != expense.currency:
+                    raise SplitValidationError('Group expense currency must match the group currency')
+
                 # Capture the complete old ledger before validating the
                 # replacement.  Validation happens before reversal, so an
                 # invalid edit never leaves a partially-mutated balance.
@@ -811,7 +824,7 @@ class ExpenseServiceSQL:
                     )
 
                 desired_amount = (
-                    ExpenseServiceSQL._money(amount, 'Expense amount')
+                    ExpenseServiceSQL._positive_money(amount)
                     if amount is not None else old_amount
                 )
                 desired_payer = paid_by if paid_by is not None else old_paid_by
@@ -874,9 +887,9 @@ class ExpenseServiceSQL:
                 if split_type_changed:
                     changes.append({'field': 'split_type', 'old': old_split_type, 'new': desired_split_type})
                 expense.split_type = desired_split_type
-                if category is not None and category != old_category:
+                if category is not _UNSET and category != old_category:
                     changes.append({'field': 'category', 'old': old_category, 'new': category})
-                if category is not None:
+                if category is not _UNSET:
                     expense.category = category
                 if expense_date:
                     new_date = ExpenseServiceSQL._parse_expense_date(expense_date)
@@ -884,11 +897,15 @@ class ExpenseServiceSQL:
                     if old_date != new_date_str:
                         changes.append({'field': 'expense_date', 'old': old_date, 'new': new_date_str})
                     expense.expense_date = new_date
-                if notes is not None:
+                if notes is not _UNSET:
                     new_notes = notes.strip() if notes else None
                     if new_notes != old_notes:
                         changes.append({'field': 'notes', 'old': old_notes, 'new': new_notes})
                     expense.notes = new_notes
+
+                if receipt_url is not _UNSET and receipt_url != expense.receipt_url:
+                    changes.append({'field': 'receipt_url', 'old': expense.receipt_url, 'new': receipt_url})
+                    expense.receipt_url = receipt_url
 
                 # The old entry is now valid to reverse; afterwards the new
                 # ledger is applied in the same transaction.
@@ -984,6 +1001,8 @@ class ExpenseServiceSQL:
             Tuple of (success, message/error)
         """
         try:
+            expense_id = ExpenseServiceSQL._identifier(expense_id)
+            user_id = ExpenseServiceSQL._identifier(user_id)
             with get_db_session() as session:
                 expense = lock_money_record(session, Expense, expense_id)
                 
@@ -1031,6 +1050,8 @@ class ExpenseServiceSQL:
                 # Store group_id before delete for balance retrieval
                 group_id_for_balances = expense.group_id
                 
+                before_snapshot = expense.to_dict()
+
                 # Soft delete
                 expense.is_deleted = True
                 expense.deleted_by = user_id
@@ -1043,7 +1064,9 @@ class ExpenseServiceSQL:
                     group_id=expense.group_id,
                     action='deleted',
                     changed_by=user_id,
-                    changes_json='{}'
+                    changes_json=[],
+                    before_snapshot=before_snapshot,
+                    after_snapshot=expense.to_dict(),
                 )
                 session.add(history)
                 
@@ -1071,7 +1094,9 @@ class ExpenseServiceSQL:
         user_id: str,
         limit: int = 50,
         offset: int = 0,
-        personal_only: bool = False
+        personal_only: bool = False,
+        include_deleted: bool = False,
+        **filters,
     ) -> Tuple[bool, Dict[str, Any]]:
         """
         Get all expenses involving a user (both personal and group)
@@ -1086,11 +1111,12 @@ class ExpenseServiceSQL:
             Tuple of (success, expenses_list/error)
         """
         try:
+            user_id = ExpenseServiceSQL._identifier(user_id)
             with get_db_session() as session:
                 from sqlalchemy import or_
                 
                 if personal_only:
-                    # Only personal expenses (include deleted to show faded)
+                    # Personal expenses are scoped to their creator.
                     query = session.query(Expense).filter(
                         Expense.group_id.is_(None),
                         Expense.created_by == user_id
@@ -1113,16 +1139,24 @@ class ExpenseServiceSQL:
                             )
                         )
                     else:
-                        # Only personal expenses (no groups, include deleted)
+                        # Users without groups have only their personal ledger.
                         query = session.query(Expense).filter(
                             Expense.group_id.is_(None),
                             Expense.created_by == user_id
                         )
                 
+                from app.expenses.services.personal_finance_service import _filter
+                if not include_deleted:
+                    query = query.filter(Expense.is_deleted.is_(False))
+                query = _filter(query, Expense.expense_date, Expense.currency, Expense.category,
+                                Expense.description, **filters)
+                query = query.options(joinedload(Expense.payer),
+                                      selectinload(Expense.splits).joinedload(ExpenseSplit.user))
+
                 total = query.count()
                 
                 expenses = query.order_by(
-                    Expense.expense_date.desc()
+                    Expense.expense_date.desc(), Expense.created_at.desc(), Expense.id.desc()
                 ).offset(offset).limit(limit).all()
                 
                 expense_list = [
@@ -1134,7 +1168,8 @@ class ExpenseServiceSQL:
                     'expenses': expense_list,
                     'total': total,
                     'limit': limit,
-                    'offset': offset
+                    'offset': offset,
+                    'has_more': offset + len(expenses) < total,
                 }
                 
         except Exception as e:
@@ -1157,6 +1192,8 @@ class ExpenseServiceSQL:
             Tuple of (success, history_list/error)
         """
         try:
+            expense_id = ExpenseServiceSQL._identifier(expense_id)
+            user_id = ExpenseServiceSQL._identifier(user_id)
             with get_db_session() as session:
                 # Get expense first
                 expense = session.get(Expense, expense_id)
@@ -1183,7 +1220,7 @@ class ExpenseServiceSQL:
                 # Get history entries
                 history_entries = session.query(ExpenseHistory).filter(
                     ExpenseHistory.expense_id == expense_id
-                ).order_by(ExpenseHistory.created_at.desc()).all()
+                ).order_by(ExpenseHistory.created_at.desc(), ExpenseHistory.id.desc()).all()
                 
                 history_list = [entry.to_dict() for entry in history_entries]
                 

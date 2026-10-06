@@ -14,7 +14,7 @@ from app.auth.models import User, UserSession
 from app.core.db.base import Base
 from app.core.db.uuid7 import CoercingUuid as Uuid
 from app.core.db.uuid7 import uuid7
-from sqlalchemy import (JSON, Boolean, Column, Date, DateTime, ForeignKey,
+from sqlalchemy import (JSON, Boolean, CheckConstraint, Column, Date, DateTime, ForeignKey,
                         Index, Integer, Numeric, String, Text,
                         UniqueConstraint)
 from sqlalchemy.orm import relationship
@@ -125,6 +125,7 @@ class Expense(Base):
         Index('idx_expenses_group', 'group_id', 'is_deleted', 'expense_date'),
         Index('idx_expenses_paid_by', 'paid_by'),
         Index('idx_expenses_paid_by_date', 'paid_by', 'created_at'),
+        Index('idx_expenses_personal_user', 'created_by', 'group_id', 'is_deleted', 'expense_date'),
     )
 
     id = Column(Uuid, primary_key=True, default=uuid7)
@@ -170,6 +171,8 @@ class Expense(Base):
             'receipt_url': self.receipt_url,
             'is_deleted': self.is_deleted,
             'is_edited': self.is_edited,
+            'deleted_at': self.deleted_at.isoformat() if self.deleted_at else None,
+            'deleted_by': str(self.deleted_by) if self.deleted_by else None,
             'created_by': str(self.created_by),
             'created_at': self.created_at.isoformat() if self.created_at is not None else None,  # type: ignore
             'updated_at': self.updated_at.isoformat() if self.updated_at is not None else None  # type: ignore
@@ -177,6 +180,68 @@ class Expense(Base):
         if include_splits and self.splits:
             data['splits'] = [s.to_dict() for s in self.splits]
         return data
+
+
+class Income(Base):
+    """A personal inflow, independent of shared expense and settlement ledgers."""
+    __tablename__ = 'incomes'
+    __table_args__ = (
+        Index('idx_incomes_user_date', 'user_id', 'is_deleted', 'income_date'),
+        CheckConstraint('amount > 0', name='ck_income_positive_amount'),
+    )
+
+    id = Column(Uuid, primary_key=True, default=uuid7)
+    user_id = Column(Uuid, ForeignKey('users.id'), nullable=False)
+    description = Column(String(500), nullable=False)
+    amount = Column(Numeric(12, 2), nullable=False)
+    currency = Column(String(3), nullable=False, default='USD')
+    category = Column(String(50))
+    notes = Column(Text)
+    income_date = Column(Date, nullable=False, default=date.today)
+    is_deleted = Column(Boolean, nullable=False, default=False)
+    is_edited = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, default=func.now())
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+    deleted_at = Column(DateTime)
+    deleted_by = Column(Uuid, ForeignKey('users.id'))
+    history = relationship('IncomeHistory', back_populates='income', cascade='all, delete-orphan')
+
+    def to_dict(self):
+        return {
+            'id': str(self.id), 'user_id': str(self.user_id),
+            'description': self.description, 'amount': money_to_json(self.amount),
+            'currency': self.currency, 'category': self.category, 'notes': self.notes,
+            'income_date': self.income_date.isoformat(),
+            'is_deleted': self.is_deleted, 'is_edited': self.is_edited,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'deleted_at': self.deleted_at.isoformat() if self.deleted_at else None,
+            'deleted_by': str(self.deleted_by) if self.deleted_by else None,
+        }
+
+
+class IncomeHistory(Base):
+    __tablename__ = 'income_history'
+    __table_args__ = (Index('idx_income_history_income', 'income_id', 'created_at'),)
+
+    id = Column(Uuid, primary_key=True, default=uuid7)
+    income_id = Column(Uuid, ForeignKey('incomes.id', ondelete='CASCADE'), nullable=False)
+    action = Column(String(20), nullable=False)
+    changed_by = Column(Uuid, ForeignKey('users.id'), nullable=False)
+    changes_json = Column(JSON)
+    before_snapshot = Column(JSON)
+    after_snapshot = Column(JSON)
+    created_at = Column(DateTime, default=func.now())
+    income = relationship('Income', back_populates='history')
+
+    def to_dict(self):
+        return {
+            'id': str(self.id), 'income_id': str(self.income_id),
+            'action': self.action, 'changed_by': str(self.changed_by),
+            'changes': self.changes_json, 'before_snapshot': self.before_snapshot,
+            'after_snapshot': self.after_snapshot,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+        }
 
 
 class ExpenseSplit(Base):

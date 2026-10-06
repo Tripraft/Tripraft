@@ -17,12 +17,34 @@ from app.core.cache.redis import cache_response, invalidate_cache
 from app.core.schemas.common import CreateExpenseSchema, validate_request
 from app.core.schemas.expenses import UpdateExpenseSchema
 from app.expenses.services.expense_service import expense_service_sql
+from app.expenses.services.personal_finance_service import personal_summary, record_uuid
+from app.expenses.routes.personal_finance import finance_filters, parse_boolean
 from flask import Blueprint, g, request
 
 logger = logging.getLogger(__name__)
 
 # Use /api/expense/expenses to match frontend expectations  
 expenses_sql_bp = Blueprint('expenses_sql', __name__, url_prefix='/api/v1/expenses')
+
+
+@expenses_sql_bp.after_request
+def prevent_stale_financial_responses(response):
+    response.headers['Cache-Control'] = 'private, no-store'
+    return response
+
+
+def _expense_error(result, default):
+    message = result.get('error', default)
+    lowered = message.lower()
+    status = 400
+    if 'not found' in lowered:
+        status = 404
+    elif any(part in lowered for part in ('only edit', 'only delete', 'only view',
+                                         'permission', 'not authorized', 'not a member')):
+        status = 403
+    elif lowered.startswith('failed to'):
+        status = 500
+    return error_response(message, status)
 
 
 @expenses_sql_bp.route('', methods=['GET'])
@@ -41,6 +63,8 @@ def list_expenses():
     """
     user_id = get_current_user_id()
     group_id = request.args.get('group_id')
+    if group_id:
+        group_id = record_uuid(group_id)
     limit = parse_query_int('limit', Config.EXPENSE_DEFAULT_LIMIT, minimum=1, maximum=100)
     offset = parse_query_int('offset', 0, minimum=0)
     
@@ -50,20 +74,24 @@ def list_expenses():
             group_id=group_id,
             user_id=user_id,
             limit=limit,
-            offset=offset
+            offset=offset,
+            include_deleted=parse_boolean('include_deleted'),
         )
     else:
         # Get all user expenses (personal + group)
         success, result = expense_service_sql.get_user_expenses(
             user_id=user_id,
             limit=limit,
-            offset=offset
+            offset=offset,
+            personal_only=parse_boolean('personal_only'),
+            include_deleted=parse_boolean('include_deleted'),
+            **finance_filters(),
         )
     
     if success:
         return success_response(data=result)
     else:
-        return error_response(result.get('error', 'Failed to fetch expenses'))
+        return _expense_error(result, 'Failed to fetch expenses')
 
 
 @expenses_sql_bp.route('', methods=['POST'])
@@ -71,7 +99,7 @@ def list_expenses():
 @require_auth
 def create_expense():
     """
-    Create a new expense (TripRaft Model - returns complete state)
+    Create a new expense and return a paginated recent-expense snapshot.
     
     Request body:
     {
@@ -92,7 +120,8 @@ def create_expense():
     
     Response includes:
     - expense: newly created expense
-    - expenses: ALL user's expenses (personal + group)
+    - expenses: up to 100 recent user expenses (personal + group)
+    - expenses_total / expenses_has_more: list pagination metadata
     - group_balances: updated balances if group expense
     """
     data = request.get_json(silent=True)
@@ -135,7 +164,7 @@ def create_expense():
     )
     
     if success:
-        # Get ALL user expenses to return complete state
+        # Include the first page plus metadata for subsequent list requests.
         all_expenses_success, all_expenses_result = expense_service_sql.get_user_expenses(
             user_id=user_id,
             limit=100,
@@ -145,17 +174,21 @@ def create_expense():
         response_data = {
             'expense': result.get('expense'),
             'expenses': all_expenses_result.get('expenses', []) if all_expenses_success else [],
+            'expenses_total': all_expenses_result.get('total', 0) if all_expenses_success else 0,
+            'expenses_has_more': all_expenses_result.get('has_more', False) if all_expenses_success else False,
             'group_id': group_id
         }
         
         # If group expense, include updated balances
         if group_id and 'balances' in result:
             response_data['group_balances'] = result.get('balances', [])
+        if group_id is None:
+            response_data['personal_summary'] = personal_summary(user_id)
         
         _invalidate_expense_caches()
         return created_response(data=response_data, message='Expense created')
     else:
-        return error_response(result.get('error', 'Failed to create expense'))
+        return _expense_error(result, 'Failed to create expense')
 
 
 def _invalidate_expense_caches():
@@ -172,22 +205,23 @@ def _invalidate_expense_caches():
 def get_expense(expense_id):
     """Get expense details"""
     user_id = get_current_user_id()
+    expense_id = record_uuid(expense_id)
     
     success, result = expense_service_sql.get_expense(expense_id, user_id)
     
     if success:
         return success_response(data=result)
     else:
-        return error_response(result.get('error', 'Expense not found'), 404)
+        return _expense_error(result, 'Expense not found')
 
 
-@expenses_sql_bp.route('/<expense_id>', methods=['PUT'])
+@expenses_sql_bp.route('/<expense_id>', methods=['PUT', 'PATCH'])
 @limit_api(Config.RATE_LIMITS['update'])
 @require_auth
 @validate_schema(UpdateExpenseSchema)
 def update_expense(expense_id):
     """
-    Update an expense (TripRaft Model - returns complete state)
+    Update supplied fields and return a recent-expense snapshot.
     
     Request body: (all fields optional)
     {
@@ -203,13 +237,14 @@ def update_expense(expense_id):
     
     Response includes:
     - expense: updated expense
-    - expenses: ALL user's expenses
+    - expenses: up to 100 recent user expenses with pagination metadata
     - group_balances: updated balances if group expense
     """
     data = g.validated_data
     user_id = get_current_user_id()
     
-    logger.info("UPDATE EXPENSE %s - Request data: %s", expense_id, data)
+    expense_id = record_uuid(expense_id)
+    logger.info('Updating expense %s', expense_id)
     
     # UUID string straight through; int() here raised ValueError on every
     # real payer id and surfaced as an unhandled 500.
@@ -223,13 +258,12 @@ def update_expense(expense_id):
         paid_by=paid_by_value,
         split_type=data.get('split_type'),
         splits=data.get('splits'),
-        category=data.get('category'),
-        expense_date=data.get('expense_date'),
-        notes=data.get('notes')
+        expense_date=data.get('expense_date') or data.get('date'),
+        **{key: data[key] for key in ('category', 'notes', 'receipt_url', 'currency') if key in data},
     )
     
     if success:
-        # Get ALL user expenses to return complete state
+        # Include the first page plus metadata for subsequent list requests.
         all_expenses_success, all_expenses_result = expense_service_sql.get_user_expenses(
             user_id=user_id,
             limit=100,
@@ -238,21 +272,21 @@ def update_expense(expense_id):
         
         response_data = {
             'expense': result.get('expense'),
-            'expenses': all_expenses_result.get('expenses', []) if all_expenses_success else []
+            'expenses': all_expenses_result.get('expenses', []) if all_expenses_success else [],
+            'expenses_total': all_expenses_result.get('total', 0) if all_expenses_success else 0,
+            'expenses_has_more': all_expenses_result.get('has_more', False) if all_expenses_success else False,
         }
         
         # Include updated balances if available
         if 'balances' in result:
             response_data['group_balances'] = result.get('balances', [])
+        if result.get('expense', {}).get('group_id') is None:
+            response_data['personal_summary'] = personal_summary(user_id)
         
         _invalidate_expense_caches()
         return success_response(data=response_data, message='Expense updated')
     else:
-        # Return 403 for permission errors
-        error_msg = result.get('error', '')
-        if 'only edit' in error_msg.lower() or 'permission' in error_msg.lower() or 'not authorized' in error_msg.lower():
-            return error_response(error_msg, 403)
-        return error_response(error_msg or 'Failed to update expense')
+        return _expense_error(result, 'Failed to update expense')
 
 
 @expenses_sql_bp.route('/<expense_id>', methods=['DELETE'])
@@ -260,19 +294,20 @@ def update_expense(expense_id):
 @require_auth
 def delete_expense(expense_id):
     """
-    Delete an expense (TripRaft Model - returns complete state)
+    Soft-delete an expense and return a recent-expense snapshot.
     
     Response includes:
     - message: confirmation message
-    - expenses: remaining expenses (ALL user's expenses)
+    - expenses: up to 100 remaining user expenses with pagination metadata
     - group_balances: updated balances if group expense
     """
     user_id = get_current_user_id()
+    expense_id = record_uuid(expense_id)
     
     success, result = expense_service_sql.delete_expense(expense_id, user_id)
     
     if success:
-        # Get remaining expenses to return complete state
+        # Include the first page of remaining expenses and pagination metadata.
         all_expenses_success, all_expenses_result = expense_service_sql.get_user_expenses(
             user_id=user_id,
             limit=100,
@@ -280,7 +315,10 @@ def delete_expense(expense_id):
         )
         
         response_data = {
-            'expenses': all_expenses_result.get('expenses', []) if all_expenses_success else []
+            'expenses': all_expenses_result.get('expenses', []) if all_expenses_success else [],
+            'expenses_total': all_expenses_result.get('total', 0) if all_expenses_success else 0,
+            'expenses_has_more': all_expenses_result.get('has_more', False) if all_expenses_success else False,
+            'personal_summary': personal_summary(user_id),
         }
         
         # Include updated balances if available
@@ -290,11 +328,7 @@ def delete_expense(expense_id):
         _invalidate_expense_caches()
         return success_response(data=response_data, message=result.get('message', 'Expense deleted'))
     else:
-        # Return 403 for permission errors
-        error_msg = result.get('error', '')
-        if 'only delete' in error_msg.lower() or 'permission' in error_msg.lower() or 'not authorized' in error_msg.lower():
-            return error_response(error_msg, 403)
-        return error_response(error_msg or 'Failed to delete expense')
+        return _expense_error(result, 'Failed to delete expense')
 
 
 @expenses_sql_bp.route('/group/<group_id>', methods=['GET'])
@@ -311,9 +345,10 @@ def get_group_expenses(group_id):
     - include_deleted: Include deleted expenses (default false)
     """
     user_id = get_current_user_id()
+    group_id = record_uuid(group_id)
     limit = parse_query_int('limit', Config.EXPENSE_DEFAULT_LIMIT, minimum=1, maximum=100)
     offset = parse_query_int('offset', 0, minimum=0)
-    include_deleted = request.args.get('include_deleted', 'false').lower() == 'true'
+    include_deleted = parse_boolean('include_deleted')
     
     success, result = expense_service_sql.get_group_expenses(
         group_id=group_id,
@@ -326,7 +361,7 @@ def get_group_expenses(group_id):
     if success:
         return success_response(data=result)
     else:
-        return error_response(result.get('error', 'Failed to get group expenses'))
+        return _expense_error(result, 'Failed to get group expenses')
 
 
 @expenses_sql_bp.route('/personal', methods=['GET'])
@@ -349,7 +384,9 @@ def get_personal_expenses():
         user_id=user_id,
         limit=limit,
         offset=offset,
-        personal_only=True
+        personal_only=True,
+        include_deleted=parse_boolean('include_deleted'),
+        **finance_filters(),
     )
     
     if success:
@@ -372,7 +409,7 @@ def get_user_expenses_flexible():
     - offset: Pagination offset (default 0)
     """
     user_id = get_current_user_id()
-    personal_only = request.args.get('personal_only', 'false').lower() == 'true'
+    personal_only = parse_boolean('personal_only')
     limit = parse_query_int('limit', Config.EXPENSE_DEFAULT_LIMIT, minimum=1, maximum=100)
     offset = parse_query_int('offset', 0, minimum=0)
     
@@ -380,7 +417,9 @@ def get_user_expenses_flexible():
         user_id=user_id,
         limit=limit,
         offset=offset,
-        personal_only=personal_only
+        personal_only=personal_only,
+        include_deleted=parse_boolean('include_deleted'),
+        **finance_filters(),
     )
     
     if success:
@@ -400,13 +439,14 @@ def get_expense_history(expense_id):
     Returns list of all changes made to this expense
     """
     user_id = get_current_user_id()
+    expense_id = record_uuid(expense_id)
     
     success, result = expense_service_sql.get_expense_history(expense_id, user_id)
     
     if success:
         return success_response(data=result)
     else:
-        return error_response(result.get('error', 'Failed to get expense history'), 404)
+        return _expense_error(result, 'Failed to get expense history')
 
 
 @expenses_sql_bp.route('/me', methods=['GET'])
@@ -428,7 +468,9 @@ def get_my_expenses():
     success, result = expense_service_sql.get_user_expenses(
         user_id=user_id,
         limit=limit,
-        offset=offset
+        offset=offset,
+        include_deleted=parse_boolean('include_deleted'),
+        **finance_filters(),
     )
     
     if success:

@@ -768,6 +768,32 @@
         }
       }
     },
+    "/api/v1/expenses/analytics/user/{user_id}": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "personal_finance_user_analytics_get_api_v1_expenses_analytics_user_user_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
     "/api/v1/expenses/group/{group_id}": {
       "get": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
@@ -1050,6 +1076,160 @@
         }
       }
     },
+    "/api/v1/expenses/incomes": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "personal_finance_list_incomes_get_api_v1_expenses_incomes",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      },
+      "post": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "personal_finance_create_income_post_api_v1_expenses_incomes",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/incomes/{income_id}": {
+      "delete": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "personal_finance_delete_income_delete_api_v1_expenses_incomes_income_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "income_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      },
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "personal_finance_get_income_get_api_v1_expenses_incomes_income_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "income_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      },
+      "patch": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "personal_finance_update_income_patch_api_v1_expenses_incomes_income_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "income_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      },
+      "put": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "personal_finance_update_income_put_api_v1_expenses_incomes_income_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "income_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/incomes/{income_id}/history": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "personal_finance_income_history_get_api_v1_expenses_incomes_income_id_history",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "income_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
     "/api/v1/expenses/invitations": {
       "get": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
@@ -1178,6 +1358,54 @@
       "get": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
         "operationId": "expenses_sql_get_personal_expenses_get_api_v1_expenses_personal",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/personal/analytics": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "personal_finance_personal_analytics_get_api_v1_expenses_personal_analytics",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/personal/summary": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "personal_finance_personal_summary_get_api_v1_expenses_personal_summary",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/personal/transactions": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "personal_finance_personal_transactions_get_api_v1_expenses_personal_transactions",
         "responses": {
           "default": {
             "content": {
@@ -1394,6 +1622,30 @@
       "get": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
         "operationId": "expenses_sql_get_expense_get_api_v1_expenses_expense_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "expense_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      },
+      "patch": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "expenses_sql_update_expense_patch_api_v1_expenses_expense_id",
         "parameters": [
           {
             "in": "path",
