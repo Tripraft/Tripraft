@@ -12,6 +12,7 @@ from app.core.schemas.invitations import InviteMemberSchema
 from marshmallow import ValidationError as SchemaError
 from app.expenses.models import Group, GroupMember, Invitation, User
 from app.expenses.services.group_access import access, active_group, admin, identifier, join_member, service_result
+from app.notifications.email.links import expense_invitation_link
 
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ def _invitation_dict(invitation):
     data = invitation.to_dict()
     data['group_currency'] = invitation.group.currency
     data['is_expired'] = _expired(invitation)
+    data['invitation_link'] = expense_invitation_link(invitation.id)
     return data
 
 
@@ -67,12 +69,13 @@ class InvitationServiceSQL:
         from app.notifications.services.email_service import email_service
         if not email_service.enabled:
             return 'disabled'
-        try:
-            from app.core.workers.tasks.email_tasks import send_invitation_email
-            send_invitation_email.delay(invitee_email, inviter_name, group_name, str(invitation_id))
-            return 'queued'
-        except Exception:
-            logger.warning('Invitation email queue unavailable; trying synchronous delivery')
+        if Config.CELERY_BROKER_URL:
+            try:
+                from app.core.workers.tasks.email_tasks import send_invitation_email
+                send_invitation_email.delay(invitee_email, inviter_name, group_name, str(invitation_id))
+                return 'queued'
+            except Exception:
+                logger.warning('Invitation email queue unavailable; trying synchronous delivery')
         try:
             sent = email_service.send_group_invitation(
                 to_email=invitee_email, inviter_name=inviter_name,
@@ -123,7 +126,7 @@ class InvitationServiceSQL:
             invitee_email, inviter_name, group_name, invitation_id,
         )
         return {'invitation': data, 'email_status': email_status,
-                'invitation_link': Config.FRONTEND_URL + '/expenses?invitation=' + invitation_id,
+                'invitation_link': expense_invitation_link(invitation_id),
                 'message': 'Invitation saved successfully'}
 
     @staticmethod

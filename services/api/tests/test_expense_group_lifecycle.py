@@ -330,11 +330,13 @@ def test_concurrent_acceptance_reuses_one_membership(expense_group, bob, monkeyp
 
 @pytest.mark.parametrize('state', ['disabled', 'queued', 'sent', 'failed'])
 def test_saved_invitation_reports_email_delivery_state(expense_group, monkeypatch, state):
+    from app.core.config import Config
     from app.notifications.services.email_service import email_service
     from app.core.workers.tasks.email_tasks import send_invitation_email
     api, _, gid = expense_group
     monkeypatch.setattr(InvitationServiceSQL, '_send_invitation_email', staticmethod(DELIVER_EMAIL))
     monkeypatch.setattr(email_service, 'enabled', state != 'disabled')
+    monkeypatch.setattr(Config, 'CELERY_BROKER_URL', 'memory://')
     attempts = []
 
     def queue(*args):
@@ -348,9 +350,42 @@ def test_saved_invitation_reports_email_delivery_state(expense_group, monkeypatc
     assert response.status_code == 201, response.get_json()
     data = payload(response)
     assert data['email_status'] == state
+    from app.notifications.email.links import expense_invitation_link
+    assert data['invitation_link'] == expense_invitation_link(data['invitation']['id'])
+    assert data['invitation']['invitation_link'] == data['invitation_link']
+    listed = payload(api.get('/api/v1/expenses/invitations/group/%s' % gid))['invitations']
+    assert listed[0]['invitation_link'] == data['invitation_link']
     assert bool(attempts) == (state != 'disabled')
     with get_db_session() as session:
         assert session.get(Invitation, UUID(data['invitation']['id'])).status == 'pending'
+
+
+def test_invitation_email_uses_registered_expense_route(monkeypatch):
+    from app.core.config import Config
+    from app.notifications.services.email_service import email_service
+    monkeypatch.setattr(Config, 'FRONTEND_URL', 'https://tripraft.example/')
+    delivered = []
+    monkeypatch.setattr(email_service, 'send_email', lambda *args: delivered.append(args) or True)
+    assert email_service.send_group_invitation('friend@example.test', 'Alice', 'Weekend', 'invite-id')
+    expected = 'https://tripraft.example/invitation/invite-id'
+    assert expected in delivered[0][2]
+    assert expected in delivered[0][3]
+    assert '/invitations?id=' not in delivered[0][2]
+
+
+def test_native_invitation_email_uses_smtp_without_a_task_broker(monkeypatch):
+    from app.core.config import Config
+    from app.notifications.services.email_service import email_service
+    from app.core.workers.tasks.email_tasks import send_invitation_email
+    monkeypatch.setattr(Config, 'CELERY_BROKER_URL', '')
+    monkeypatch.setattr(email_service, 'enabled', True)
+    queued, sent = [], []
+    monkeypatch.setattr(send_invitation_email, 'delay', lambda *args: queued.append(args))
+    monkeypatch.setattr(email_service, 'send_group_invitation', lambda **kwargs: sent.append(kwargs) or True)
+    assert DELIVER_EMAIL('friend@example.test', 'Alice', 'Weekend', 'invite-id') == 'sent'
+    assert not queued
+    assert sent == [{'to_email': 'friend@example.test', 'inviter_name': 'Alice',
+                     'group_name': 'Weekend', 'invitation_id': 'invite-id'}]
 
 
 def test_concurrent_invites_create_one_pending_row(expense_group, monkeypatch):

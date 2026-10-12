@@ -15,6 +15,7 @@ from typing import Optional
 import pybreaker
 from app.core.config import Config
 from app.core.resilience import smtp_breaker
+from app.notifications.email.links import expense_invitation_link
 # Load environment variables at module import
 from dotenv import load_dotenv
 
@@ -119,8 +120,7 @@ class EmailService:
         Returns:
             True if sent successfully, False otherwise
         """
-        frontend_url = Config.FRONTEND_URL
-        invitation_link = f"{frontend_url}/invitations?id={invitation_id}"
+        invitation_link = expense_invitation_link(invitation_id)
         safe_inviter_name = escape(inviter_name, quote=True)
         safe_group_name = escape(group_name, quote=True)
         safe_invitation_link = escape(invitation_link, quote=True)

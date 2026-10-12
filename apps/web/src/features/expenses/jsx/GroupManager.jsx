@@ -4,6 +4,10 @@ import { Users, Plus, Mail, Trash2, Clock } from 'lucide-react';
 import { formatDateLocal } from '../../../utils/timezoneUtils';
 import expenseApi from '../../../services/expenseApi';
 
+const unwrapEnvelope = response => response?.data ?? response;
+const invitationLink = invitation => invitation.invitation_link ||
+  `${window.location.origin}/invitation/${encodeURIComponent(invitation.invitation_id || invitation.id)}`;
+
 const currencies = {
   USD: { code: 'USD', symbol: '$', name: 'US Dollar' },
   EUR: { code: 'EUR', symbol: '\u20ac', name: 'Euro' },
@@ -46,9 +50,12 @@ const GroupManager = ({
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [inviting, setInviting] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [invitationDelivery, setInvitationDelivery] = useState(null);
   const [pendingInvitations, setPendingInvitations] = useState([]);
   const [loadingInvitations, setLoadingInvitations] = useState(false);
   const [activeTab, setActiveTab] = useState('members'); // 'members' or 'pending'
+
+  useEffect(() => { setInvitationDelivery(null); }, [activeGroupId]);
 
   //  PHASE 16: Use invitations from parent (mega-bootstrap) if available
   useEffect(() => {
@@ -139,7 +146,7 @@ const GroupManager = ({
       // CRITICAL FIX: Add cache-busting timestamp to force fresh API call
       // includeAll=true to show declined invitations to owner
       const timestamp = Date.now();
-      const response = await expenseApi.getGroupInvitations(activeGroupId, true, timestamp);
+      const response = unwrapEnvelope(await expenseApi.getGroupInvitations(activeGroupId, timestamp));
       // PHASE 17 FIX: Filter for pending AND declined invitations (to show owner who declined)
       const relevantStatuses = ['pending', 'PENDING', 'declined', 'DECLINED'];
       const relevantInvitations = (response.invitations || []).filter(
@@ -211,34 +218,24 @@ const GroupManager = ({
     setInviting(true);
     try {
       // Direct API call - simple and clean
-      const response = await expenseApi.sendInvitation({
+      const response = unwrapEnvelope(await expenseApi.sendInvitation({
         group_id: activeGroupId,
         invitee_email: invitedEmail
-      });
+      }));
       
       // Reload invitations to get updated list
       loadPendingInvitations();
       
-      // Check email status: 'sending', 'sent', 'disabled', or 'not_sent'
-      if (response.email_status === 'sending' || response.email_status === 'sent') {
-        const action = isResend ? 'resent' : 'sent';
-        showAlert(`Invitation email ${action} to ${invitedEmail}!\n\nThey'll receive an email with a link to join the group.`);
-      } else if (response.email_status === 'disabled') {
-        // Email service disabled - show link to copy
-        if (navigator.clipboard) {
-          try {
-            await navigator.clipboard.writeText(response.invitation_link);
-            showAlert(`Invitation link copied to clipboard!\n\nEmail service is currently disabled.\nPlease share this link with ${invitedEmail} manually.`);
-          } catch (err) {
-            showAlert(`Invitation created but email service disabled.\n\nPlease share this link:\n${response.invitation_link}`);
-          }
-        } else {
-          showAlert(`Invitation created but email service disabled.\n\nPlease share this link:\n${response.invitation_link}`);
-        }
-      } else {
-        // Fallback for 'not_sent' or other cases
-        showAlert(`Invitation created for ${invitedEmail}!`);
-      }
+      const messages = {
+        sent: `Invitation email sent to ${invitedEmail}.`,
+        queued: `Invitation saved for ${invitedEmail}. Email is queued for delivery.`,
+        disabled: `Invitation saved for ${invitedEmail}. Email was not sent because email delivery is disabled. Share the invitation link below.`,
+        failed: `Invitation saved for ${invitedEmail}, but the email could not be sent. Share the invitation link below.`,
+      };
+      const message = messages[response.email_status] ||
+        `Invitation saved for ${invitedEmail}. Email delivery is unconfirmed. Share the invitation link below.`;
+      setInvitationDelivery({ message, link: response.invitation_link || invitationLink(response.invitation) });
+      showAlert(message);
       
       if (onMemberAdd) await onMemberAdd();
       
@@ -250,6 +247,17 @@ const GroupManager = ({
       showAlert(`Failed to send invitation: ${error.message}`);
     } finally {
       setInviting(false);
+    }
+  };
+
+  const handleCopyInvitation = async invitation => {
+    const link = invitationLink(invitation);
+    try {
+      await navigator.clipboard.writeText(link);
+      showAlert('Invitation link copied. Share it with the invited person.');
+    } catch {
+      setInvitationDelivery({ message: 'Copy and share this invitation link.', link });
+      showAlert(`Please copy this invitation link: ${link}`);
     }
   };
 
@@ -393,6 +401,13 @@ const GroupManager = ({
             </h2>
             
             {/* Tab Navigation */}
+            {invitationDelivery && (
+              <div role="status" style={{ marginBottom: '1rem' }}>
+                <p>{invitationDelivery.message}</p>
+                <input aria-label="Invitation link" readOnly value={invitationDelivery.link}
+                  onFocus={event => event.target.select()} style={{ width: '100%' }} />
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', borderBottom: '2px solid #f0f0f0' }}>
               <button
                 onClick={() => setActiveTab('members')}
@@ -538,15 +553,20 @@ const GroupManager = ({
                             </div>
                             <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
                               <Clock size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.25rem' }} />
-                              Invited {formatDateLocal(new Date(invitation.created_at), { year: 'numeric', month: 'short', day: 'numeric' })}
+                              Invited {formatDateLocal(invitation.created_at, { year: 'numeric', month: 'short', day: 'numeric' })}
                               {invitation.expires_at && (
                                 <span style={{ marginLeft: '0.5rem', color: isExpired ? '#e74c3c' : '#999' }}>
-                                  {isExpired ? '(Expired)' : `• Expires ${formatDateLocal(new Date(invitation.expires_at), { year: 'numeric', month: 'short', day: 'numeric' })}`}
+                                  {isExpired ? '(Expired)' : `• Expires ${formatDateLocal(invitation.expires_at, { year: 'numeric', month: 'short', day: 'numeric' })}`}
                                 </span>
                               )}
                             </div>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            {!isDeclined && !isExpired && (
+                              <button type="button" onClick={() => handleCopyInvitation(invitation)}>
+                                Copy invite link
+                              </button>
+                            )}
                             {canResend && (
                               <button
                                 onClick={(e) => handleInviteMember(e, true, invitation.invited_email)}
