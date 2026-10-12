@@ -48,3 +48,15 @@ it('stops an externally cancelled request without retries',async()=>{
  fetch.mockImplementation((_url,opts)=> opts.signal.aborted ? Promise.reject(new DOMException('Aborted','AbortError')) : Promise.resolve(response(200)));
  await expect(client.get('/v1/places',{signal:controller.signal})).rejects.toThrow('Request aborted');expect(fetch).toHaveBeenCalledTimes(1);
 });
+it('preserves structured validation errors and displays field reasons',async()=>{
+ const details={name:['Length must be between 1 and 100.'],currency:['Currency must be a three-letter code.']};
+ fetch.mockResolvedValue(response(422,JSON.stringify({error:{message:'Validation failed',details}})));
+ await expect(client.post('/v1/expenses/groups',{})).rejects.toMatchObject({
+  status:422,errors:details,message:'name: Length must be between 1 and 100. currency: Currency must be a three-letter code.',
+ });
+ expect(fetch).toHaveBeenCalledTimes(1);expect(auth.refreshAccessToken).not.toHaveBeenCalled();
+});
+it('falls back to the server message when validation details are absent',async()=>{
+ fetch.mockResolvedValue(response(422,JSON.stringify({error:{message:'Invalid request body'}})));
+ await expect(client.post('/v1/expenses/groups',{})).rejects.toMatchObject({status:422,message:'Invalid request body'});
+});

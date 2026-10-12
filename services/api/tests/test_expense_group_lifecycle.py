@@ -42,6 +42,38 @@ def balances(api, gid):
     return {row['user_id']: row['balance'] for row in payload(response)['balances']}
 
 
+def test_create_group_form_contract_and_authenticated_owner(alice):
+    api, owner_id, email = alice
+    form = {'name': 'Weekend trip', 'description': 'Created by Alice', 'currency': 'EUR'}
+    # The old UI sent these obsolete fields, causing the reported 422.
+    rejected = api.post('/api/v1/expenses/groups', json={
+        **form, 'user_email': email, 'user_display_name': 'Alice',
+    })
+    assert rejected.status_code == 422
+    assert set(rejected.get_json()['error']['details']) == {'user_email', 'user_display_name'}
+    assert payload(api.get('/api/v1/expenses/groups'))['groups'] == []
+
+    created = api.post('/api/v1/expenses/groups', json=form)
+    assert created.status_code == 201, created.get_json()
+    data = payload(created)
+    group = data['group']
+    gid = group['id']
+    assert group['created_by'] == owner_id
+    assert group['my_role'] == 'owner'
+    assert group['currency'] == 'EUR'
+    assert group['members'][0]['user_id'] == owner_id
+    assert group['balances'] == {owner_id: 0}
+    assert data['group_id'] == gid
+    assert [row['id'] for row in data['groups']] == [gid]
+    assert [row['id'] for row in payload(api.get('/api/v1/expenses/groups'))['groups']] == [gid]
+    detail = payload(api.get('/api/v1/expenses/groups/%s/full' % gid))['group']
+    assert detail['name'] == form['name']
+    assert detail['expenses'] == []
+    with get_db_session() as session:
+        assert session.query(GroupMember).filter_by(group_id=UUID(gid), user_id=UUID(owner_id)).count() == 1
+        assert session.query(GroupBalance).filter_by(group_id=UUID(gid), user_id=UUID(owner_id)).count() == 1
+
+
 def test_invitation_acceptance_contains_existing_ledger_and_members(group_of_two, make_user):
     api, alice, _, bob, gid = group_of_two
     friend, friend_id, email = make_user('friend')

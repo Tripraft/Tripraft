@@ -159,6 +159,7 @@ const GroupManager = ({
 
   const handleCreateGroup = async (e) => {
     e.preventDefault();
+    if (creating) return;
     if (!newGroupName.trim()) {
       showAlert('Please enter a group name');
       return;
@@ -169,10 +170,7 @@ const GroupManager = ({
       await onGroupCreate({
         name: newGroupName.trim(),
         description: `Created by ${currentUser.displayName || currentUser.email}`,
-        currency: newGroupCurrency,
-        // Phase 21: Pass user info for extreme API
-        user_email: currentUser.email,
-        user_display_name: currentUser.displayName || currentUser.email?.split('@')[0] || 'Unknown'
+        currency: newGroupCurrency
       });
       setNewGroupName('');
       setNewGroupCurrency('USD');
@@ -364,6 +362,7 @@ const GroupManager = ({
               type="text" 
               placeholder="New group name..." 
               value={newGroupName}
+              maxLength={100}
               onChange={(e) => setNewGroupName(e.target.value)}
               required
               disabled={creating}

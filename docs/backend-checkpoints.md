@@ -4,6 +4,7 @@
 | --- | --- |
 | `personal-finance-backend` | Personal income, expense edits/deletion, balances and analytics; `43990e456750` |
 | `group-expenses-backend` | Descendant checkpoint for group lifecycle, invitations, permissions and group ledger/reporting |
+| `group-expenses-create-fix` | Fix expense group creation HTTP 422, show validation details, and verify form/API contracts; [findings](reports/expense-group-creation-fix.md) |
 
 Each checkpoint has an explanatory commit message. API contracts are documented
 in [personal finance](personal-finance-api.md) and [group finance](group-finance-api.md).

@@ -64,8 +64,14 @@ export class APIClient {
             if (refreshed.success) return this.request(method, endpoint, { ...options, _retried401: true });
             throw Object.assign(new Error(data?.message || 'Please sign in again'), { status: 401, data });
           } else {
-            throw Object.assign(new Error(data?.error?.message || data?.message || (typeof data?.error === 'string' ? data.error : null) || 'Request failed with status ' + response.status), {
-              status: response.status, errors: data?.errors || null, data,
+            const errors = data?.error?.details || data?.errors || null;
+            const validationMessage = response.status === 422 && errors && typeof errors === 'object'
+              ? Object.entries(errors).flatMap(([field, messages]) =>
+                [messages].flat().filter(message => typeof message === 'string')
+                  .map(message => `${field}: ${message}`)).join(' ')
+              : '';
+            throw Object.assign(new Error(validationMessage || data?.error?.message || data?.message || (typeof data?.error === 'string' ? data.error : null) || 'Request failed with status ' + response.status), {
+              status: response.status, errors, data,
             });
           }
         } else return data;
