@@ -26,8 +26,11 @@ inviting people on other devices.
 Saving an invitation and sending its email are separate operations. The API
 reports `disabled`, `queued`, `sent`, or `failed` in `data.email_status`.
 `sent` means the SMTP server accepted it; it does not prove inbox delivery.
-The expense group screen displays this result and keeps a selectable link.
-Existing pending invitations also have a **Copy invite link** action.
+The expense group screen offers **Copy invite link** for pending invitations.
+It does not display a persistent delivery banner or raw URL box. If the clipboard
+is unavailable, requesting a copy shows the link in an alert.
 
 Expense invitation links use `/invitation/{id}`. The recipient must sign in with
-the invited email address before accepting.
+the invited email address before accepting. A signed-out visitor goes directly
+to sign-in, and the same invitation resumes after login or signup. Private details
+are not fetched before authentication.

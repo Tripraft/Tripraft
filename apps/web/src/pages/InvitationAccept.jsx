@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import expenseApi from '../services/expenseApi';
+import { rememberExpenseInvitation, removeAuthStorage } from '../features/auth/utils/authForms';
 
 export default function InvitationAccept() {
   const { invitationId: pathInvitationId } = useParams();
@@ -14,11 +15,9 @@ export default function InvitationAccept() {
   const [status, setStatus] = useState('loading');
   const [message, setMessage] = useState('');
   const [invitationDetails, setInvitationDetails] = useState(null);
-  const [invitationInfo, setInvitationInfo] = useState(null);
   const [showWrongUserWarning, setShowWrongUserWarning] = useState(false);
   
   // Prevent duplicate API calls
-  const fetchInProgress = useRef(false);
   const acceptInProgress = useRef(false);
   const initialized = useRef(false);
 
@@ -32,7 +31,7 @@ export default function InvitationAccept() {
 
     // Prevent duplicate execution - only run once
     const requestKey = invitationId + ':' + (currentUser?.uid || 'signed-out');
-    if (initialized.current === requestKey || fetchInProgress.current || acceptInProgress.current) {
+    if (initialized.current === requestKey || acceptInProgress.current) {
       return;
     }
     
@@ -42,57 +41,18 @@ export default function InvitationAccept() {
     if (currentUser) {
       handleAcceptInvitation();
     } else {
-      // If not logged in, load details and redirect to login
-      loadInvitationDetails();
+      redirectToSignIn();
     }
   }, [invitationId, currentUser, authLoading]);
 
-  const loadInvitationDetails = async () => {
-    if (fetchInProgress.current) return;
-    fetchInProgress.current = true;
-    
-    try {
-      setStatus('loading');
-      setMessage('Preparing your invitation...');
-
-      const envelope = await expenseApi.getInvitationDetails(invitationId);
-      const response = { ...envelope, ...(envelope.data || {}) };
-      
-      if (response.success && response.invitation) {
-        setInvitationInfo(response.invitation);
-        
-        // Store invitation info
-        localStorage.setItem('pendingInvitation', invitationId);
-        
-        // Store email if available
-        if (response.invitation.invited_email) {
-          localStorage.setItem('invitationEmail', response.invitation.invited_email);
-        }
-        
-        // Redirect to login with invitation ID in URL
-        navigate(`/login?redirect=invitation&invitationId=${invitationId}`, { replace: true });
-      } else {
-        // Even if invitation details fail, still redirect to login
-        // The backend will validate the invitation when accepting
-        localStorage.setItem('pendingInvitation', invitationId);
-        navigate(`/login?redirect=invitation&invitationId=${invitationId}`, { replace: true });
-      }
-    } catch (error) {
-      // Even on error, redirect to login - let the user try to log in
-      localStorage.setItem('pendingInvitation', invitationId);
-      navigate(`/login?redirect=invitation&invitationId=${invitationId}`, { replace: true });
-    } finally {
-      fetchInProgress.current = false;
-    }
+  const redirectToSignIn = () => {
+    rememberExpenseInvitation(invitationId);
+    navigate(`/login?redirect=invitation&invitationId=${encodeURIComponent(invitationId)}`, { replace: true });
   };
 
   const handleLogoutAndRetry = async () => {
     await signOut();
-    localStorage.setItem('pendingInvitation', invitationId);
-    if (invitationInfo) {
-      localStorage.setItem('invitationEmail', invitationInfo.invited_email);
-    }
-    navigate(`/login?redirect=invitation&invitationId=${invitationId}`);
+    redirectToSignIn();
   };
 
   const handleAcceptInvitation = async () => {
@@ -104,23 +64,19 @@ export default function InvitationAccept() {
       setMessage('Processing invitation...');
       setShowWrongUserWarning(false);
 
-      // SKIP validation call - backend will validate email match
-      // This prevents duplicate getInvitationDetails() calls
-      // If we already have invitationInfo from loadInvitationDetails(), use it for display only
-      
       const response = await expenseApi.acceptInvitation(invitationId);
 
       if (response.success) {
         setStatus('success');
-        const joinedName = response.group_name || response.data?.group_name;
+        const joinedName = response.data?.group?.name || response.group_name || response.data?.group_name;
         setMessage(joinedName
           ? `You've successfully joined the group "${joinedName}"!`
           : "You've successfully joined the group!");
         setInvitationDetails(response);
 
         // Clear the pending invitation from localStorage
-        localStorage.removeItem('pendingInvitation');
-        localStorage.removeItem('invitationEmail');
+        removeAuthStorage('pendingInvitation');
+        removeAuthStorage('invitationEmail');
 
         setTimeout(() => {
           navigate('/expenses');
@@ -132,31 +88,21 @@ export default function InvitationAccept() {
     } catch (error) {
       setStatus('error');
 
-      if (error.status === 404 || error.message.includes('404')) {
+      if (error.status === 401) {
+        redirectToSignIn();
+      } else if (error.status === 404 || error.status === 410 || error.message.includes('404')) {
         setMessage('This invitation link is invalid or has expired.');
-        localStorage.removeItem('pendingInvitation');
-        localStorage.removeItem('invitationEmail');
+        removeAuthStorage('pendingInvitation');
+        removeAuthStorage('invitationEmail');
       } else if (error.message.includes('already accepted')) {
         setMessage('You have already accepted this invitation.');
-        localStorage.removeItem('pendingInvitation');
-        localStorage.removeItem('invitationEmail');
+        removeAuthStorage('pendingInvitation');
+        removeAuthStorage('invitationEmail');
         setTimeout(() => {
           navigate('/expenses');
         }, 2000);
       } else if (error.status === 403 || error.message.includes('403')) {
-        // Load invitation details to show proper message
-        try {
-          const envelope = await expenseApi.getInvitationDetails(invitationId);
-          const detailsResponse = { ...envelope, ...(envelope.data || {}) };
-          if (detailsResponse.success && detailsResponse.invitation) {
-            setInvitationInfo(detailsResponse.invitation);
-            setMessage(`This invitation is for ${detailsResponse.invitation.invited_email}, but you're logged in as ${currentUser?.email}.`);
-          } else {
-            setMessage('This invitation is not for your account. Please log in with the correct email address.');
-          }
-        } catch {
-          setMessage('This invitation is not for your account. Please log in with the correct email address.');
-        }
+        setMessage('This invitation is not for your account. Please log in with the invited email address.');
         setShowWrongUserWarning(true);
       } else {
         setMessage(`Failed to accept invitation: ${error.message}`);
@@ -217,7 +163,7 @@ export default function InvitationAccept() {
                 className="btn-primary"
                 onClick={handleLogoutAndRetry}
               >
-                Log out and sign in as {invitationInfo?.invited_email}
+                Sign in with the invited email
               </button>
               <button 
                 className="btn-secondary"

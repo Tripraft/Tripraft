@@ -5,7 +5,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import QRCode from 'qrcode';
 import '../css/Signup.css';
-import { isValidEmail, signupErrors, returnDestination, readAuthStorage, writeAuthStorage } from '../utils/authForms';
+import { isValidEmail, signupErrors, returnDestination, rememberExpenseInvitation, invitationDestination } from '../utils/authForms';
 
 const Signup = ({ onSwitchToLogin }) => {
   const navigate = useNavigate();
@@ -38,34 +38,14 @@ const Signup = ({ onSwitchToLogin }) => {
     const invitationId = searchParams.get('invitationId');
     
     if (isInvitationRedirect && invitationId) {
-      // Store invitation ID for after signup
-      writeAuthStorage('pendingInvitation', invitationId);
-      
-      // Phase 17.5 Fix: Check localStorage first to avoid duplicate API calls
-      const cachedEmail = readAuthStorage('invitationEmail');
+      const cachedEmail = rememberExpenseInvitation(invitationId);
       if (cachedEmail) {
         setInvitationEmail(cachedEmail);
         setFormData(prev => ({ ...prev, email: cachedEmail }));
         return; // Skip API call - email already cached from InvitationAccept
       }
       
-      // Only fetch if not cached (fallback for direct navigation)
-      const fetchInvitationEmail = async () => {
-        try {
-          const expenseApi = (await import('../../../services/expenseApi')).default;
-          const response = await expenseApi.getInvitationDetails(invitationId);
-          if (response.success && (response.data ?? response).invitation?.invited_email) {
-            const invitedEmail = (response.data ?? response).invitation.invited_email;
-            writeAuthStorage('invitationEmail', invitedEmail);
-            setInvitationEmail(invitedEmail);
-            setFormData(prev => ({ ...prev, email: invitedEmail }));
-          }
-        } catch (error) {
-          setError('Invitation details could not be loaded. Sign in to open the invitation.');
-        }
-      };
-      
-      fetchInvitationEmail();
+      setInvitationEmail('');
     } else if (!isInvitationRedirect) {
       // Not from invitation, clear any old invitation data
       setInvitationEmail('');
@@ -75,10 +55,8 @@ const Signup = ({ onSwitchToLogin }) => {
   // The invitation accept page owns validation and acceptance.
   useEffect(() => {
     if (!currentUser || loading || authLoading) return;
-    const groupInvite = readAuthStorage('pendingGroupInvitation');
-    const expenseInvite = readAuthStorage('pendingInvitation');
-    navigate(groupInvite ? '/invitations/' + groupInvite : expenseInvite ? '/invitation/' + expenseInvite : from, { replace: true });
-  }, [currentUser, loading, authLoading, navigate, from]);
+    navigate(invitationDestination(location.search) || from, { replace: true });
+  }, [currentUser, loading, authLoading, navigate, from, location.search]);
 
   useEffect(() => {
     if (qrCanvasRef.current) {

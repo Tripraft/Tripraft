@@ -98,6 +98,31 @@ def test_invitation_acceptance_contains_existing_ledger_and_members(group_of_two
     assert 'no-store' in accepted.headers['Cache-Control']
 
 
+def test_invitation_details_require_auth_and_authorized_account(expense_group, bob, make_user, client):
+    api, _, gid = expense_group
+    recipient, _, email = bob
+    outsider, _, _ = make_user('unrelated')
+    invitation = invite(api, gid, email)
+    path = '/api/v1/expenses/invitations/%s/details' % invitation['id']
+    assert client.get(path).status_code == 401
+    assert outsider.get(path).status_code == 403
+    for viewer in (api, recipient):
+        response = viewer.get(path)
+        assert response.status_code == 200, response.get_json()
+        assert payload(response)['invitation']['id'] == invitation['id']
+        assert payload(response)['invitation']['invitee_email'] == email
+        assert 'no-store' in response.headers['Cache-Control']
+    with get_db_session() as session:
+        row = session.get(Invitation, UUID(invitation['id']))
+        row.expires_at = datetime.utcnow() - timedelta(seconds=1)
+        session.commit()
+    assert payload(recipient.get(path))['invitation']['is_expired']
+    with get_db_session() as session:
+        assert session.get(Invitation, UUID(invitation['id'])).status == 'pending'
+    missing = '/api/v1/expenses/invitations/00000000-0000-7000-8000-000000000000/details'
+    assert recipient.get(missing).status_code == 404
+
+
 def test_recipient_check_precedes_expiry_mutation(expense_group, bob, make_user):
     api, _, gid = expense_group
     recipient, _, email = bob

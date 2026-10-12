@@ -29,18 +29,20 @@ beforeEach(() => {
 });
 
 it.each([
-  ['disabled', 'Email was not sent because email delivery is disabled'],
-  ['failed', 'the email could not be sent'],
-  ['queued', 'Email is queued for delivery'],
-  ['sent', 'Invitation email sent to friend@example.test'],
-])('shows the actual %s delivery state from the API envelope and a shareable link', async (email_status, text) => {
+  ['disabled', 'Invitation created.'],
+  ['failed', 'Invitation created.'],
+  ['queued', 'Invitation created.'],
+  ['sent', 'Invitation email sent.'],
+])('offers copying after %s delivery without a persistent delivery message or URL box', async (email_status, text) => {
   expenseApi.sendInvitation.mockResolvedValue({ success: true, data: { invitation, email_status, invitation_link: link } });
   const showAlert = setup();
   fireEvent.change(screen.getByPlaceholderText('Email address to invite...'), { target: { value: 'friend@example.test' } });
   fireEvent.click(screen.getByRole('button', { name: 'Invite Member' }));
-  await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent(text));
-  expect(screen.getByLabelText('Invitation link')).toHaveValue(link);
-  expect(showAlert).toHaveBeenCalledWith(expect.stringContaining(text));
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Copy invite link' })).toBeInTheDocument());
+  expect(screen.queryByRole('status')).toBeNull();
+  expect(screen.queryByLabelText('Invitation link')).toBeNull();
+  expect(screen.queryByText(/Email was not sent/)).toBeNull();
+  expect(showAlert).toHaveBeenCalledWith(text);
   expect(expenseApi.getGroupInvitations).toHaveBeenCalledWith('group-uuid', expect.any(Number));
   if (email_status !== 'sent') expect(showAlert).not.toHaveBeenCalledWith(expect.stringContaining('Invitation email sent'));
 });
@@ -53,13 +55,14 @@ it('can copy an existing pending invitation without creating or sending another'
   expect(expenseApi.sendInvitation).not.toHaveBeenCalled();
 });
 
-it('keeps a selectable invitation link when clipboard access fails', async () => {
+it('shows the link only on request if clipboard access fails', async () => {
   navigator.clipboard.writeText.mockRejectedValue(new Error('Clipboard blocked'));
-  setup([{ ...invitation, invitation_link: undefined }]);
+  const showAlert = setup([{ ...invitation, invitation_link: undefined }]);
   fireEvent.click(screen.getByRole('button', { name: /Pending/ }));
   fireEvent.click(screen.getByRole('button', { name: 'Copy invite link' }));
-  await waitFor(() => expect(screen.getByLabelText('Invitation link')).toHaveValue(
-    `${window.location.origin}/invitation/invite-uuid`,
+  await waitFor(() => expect(showAlert).toHaveBeenCalledWith(
+    `Please copy this invitation link: ${window.location.origin}/invitation/invite-uuid`,
   ));
+  expect(screen.queryByLabelText('Invitation link')).toBeNull();
   expect(expenseApi.sendInvitation).not.toHaveBeenCalled();
 });

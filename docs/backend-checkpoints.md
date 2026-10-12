@@ -6,6 +6,7 @@
 | `group-expenses-backend` | Descendant checkpoint for group lifecycle, invitations, permissions and group ledger/reporting |
 | `group-expenses-create-fix` | Fix expense group creation HTTP 422, show validation details, and verify form/API contracts; [findings](reports/expense-group-creation-fix.md) |
 | `group-invitation-email-fix` | Report actual email status, expose copyable invitation links, and align email links with the registered route; [findings](reports/expense-invitation-email-fix.md) |
+| `group-invitation-link-fix` | Fix the missing details endpoint and copied-link sign-in flow; remove the delivery banner and keep copy-link controls; [findings](reports/expense-invitation-link-fix.md) |
 
 Each checkpoint has an explanatory commit message. API contracts are documented
 in [personal finance](personal-finance-api.md) and [group finance](group-finance-api.md).

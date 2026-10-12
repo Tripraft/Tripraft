@@ -9,6 +9,28 @@ export const writeAuthStorage = (key, value) => {
   try { localStorage.setItem(key, value); } catch { /* Invitations can also use the return URL. */ }
 };
 
+export const removeAuthStorage = key => {
+  try { localStorage.removeItem(key); } catch { /* The invitation ID also lives in the URL. */ }
+};
+
+export const rememberExpenseInvitation = invitationId => {
+  const cachedEmail = readAuthStorage('pendingInvitation') === invitationId
+    ? readAuthStorage('invitationEmail') || '' : '';
+  writeAuthStorage('pendingInvitation', invitationId);
+  writeAuthStorage('invitationEmail', cachedEmail);
+  return cachedEmail;
+};
+
+export const invitationDestination = search => {
+  const params = new URLSearchParams(search);
+  const directExpenseInvite = params.get('redirect') === 'invitation' && params.get('invitationId');
+  if (directExpenseInvite) return '/invitation/' + encodeURIComponent(directExpenseInvite);
+  const groupInvite = readAuthStorage('pendingGroupInvitation');
+  if (groupInvite) return '/invitations/' + encodeURIComponent(groupInvite);
+  const expenseInvite = readAuthStorage('pendingInvitation');
+  return expenseInvite ? '/invitation/' + encodeURIComponent(expenseInvite) : null;
+};
+
 export const passwordError = password => {
   if (password.length < 8) return 'Use at least 8 characters.';
   if (new TextEncoder().encode(password).length > 72) return 'Use a password of at most 72 bytes (72 characters for English text).';

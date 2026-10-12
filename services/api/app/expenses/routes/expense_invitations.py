@@ -52,6 +52,15 @@ def get_user_invitations():
     return _response(*invitation_service_sql.get_pending_invitations_for_user(get_current_user_id()))
 
 
+@invitations_sql_bp.route('/<invitation_id>/details', methods=['GET'])
+@limit_api(Config.RATE_LIMITS['read_light'])
+@require_auth
+def get_invitation_details(invitation_id):
+    return _response(*invitation_service_sql.get_invitation_details(
+        identifier(invitation_id), get_current_user_id(),
+    ))
+
+
 @invitations_sql_bp.route('/groups/<group_id>', methods=['GET'])
 @invitations_sql_bp.route('/group/<group_id>', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])

@@ -50,12 +50,9 @@ const GroupManager = ({
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [inviting, setInviting] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [invitationDelivery, setInvitationDelivery] = useState(null);
   const [pendingInvitations, setPendingInvitations] = useState([]);
   const [loadingInvitations, setLoadingInvitations] = useState(false);
   const [activeTab, setActiveTab] = useState('members'); // 'members' or 'pending'
-
-  useEffect(() => { setInvitationDelivery(null); }, [activeGroupId]);
 
   //  PHASE 16: Use invitations from parent (mega-bootstrap) if available
   useEffect(() => {
@@ -226,16 +223,13 @@ const GroupManager = ({
       // Reload invitations to get updated list
       loadPendingInvitations();
       
-      const messages = {
-        sent: `Invitation email sent to ${invitedEmail}.`,
-        queued: `Invitation saved for ${invitedEmail}. Email is queued for delivery.`,
-        disabled: `Invitation saved for ${invitedEmail}. Email was not sent because email delivery is disabled. Share the invitation link below.`,
-        failed: `Invitation saved for ${invitedEmail}, but the email could not be sent. Share the invitation link below.`,
-      };
-      const message = messages[response.email_status] ||
-        `Invitation saved for ${invitedEmail}. Email delivery is unconfirmed. Share the invitation link below.`;
-      setInvitationDelivery({ message, link: response.invitation_link || invitationLink(response.invitation) });
-      showAlert(message);
+      if (response.invitations) setPendingInvitations(response.invitations);
+      else if (response.invitation) setPendingInvitations(previous => [
+        ...previous.filter(inv => (inv.id || inv.invitation_id) !== (response.invitation.id || response.invitation.invitation_id)),
+        response.invitation,
+      ]);
+      setActiveTab('pending');
+      showAlert(response.email_status === 'sent' ? 'Invitation email sent.' : 'Invitation created.');
       
       if (onMemberAdd) await onMemberAdd();
       
@@ -256,7 +250,6 @@ const GroupManager = ({
       await navigator.clipboard.writeText(link);
       showAlert('Invitation link copied. Share it with the invited person.');
     } catch {
-      setInvitationDelivery({ message: 'Copy and share this invitation link.', link });
       showAlert(`Please copy this invitation link: ${link}`);
     }
   };
@@ -401,13 +394,6 @@ const GroupManager = ({
             </h2>
             
             {/* Tab Navigation */}
-            {invitationDelivery && (
-              <div role="status" style={{ marginBottom: '1rem' }}>
-                <p>{invitationDelivery.message}</p>
-                <input aria-label="Invitation link" readOnly value={invitationDelivery.link}
-                  onFocus={event => event.target.select()} style={{ width: '100%' }} />
-              </div>
-            )}
             <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', borderBottom: '2px solid #f0f0f0' }}>
               <button
                 onClick={() => setActiveTab('members')}

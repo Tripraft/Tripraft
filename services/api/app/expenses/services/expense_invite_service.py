@@ -64,6 +64,24 @@ class InvitationServiceSQL:
     INVITATION_EXPIRY_DAYS = Config.INVITATION_EXPIRY_DAYS
 
     @staticmethod
+    @service_result
+    def get_invitation_details(invitation_id, user_id):
+        """Read a private invitation without accepting it or changing its expiry state."""
+        with get_db_session() as session:
+            invitation = session.get(Invitation, identifier(invitation_id))
+            if invitation is None:
+                raise NotFoundError('Invitation not found')
+            user = session.get(User, identifier(user_id))
+            if user is None:
+                raise NotFoundError('User not found')
+            if user.email.lower() != invitation.invitee_email.lower() and user.id != invitation.invited_by:
+                group, member = access(session, invitation.group_id, user.id)
+                if not admin(group, member):
+                    raise AuthorizationError('Invitation is not for this user')
+            active_group(session, invitation.group_id)
+            return {'invitation': _invitation_dict(invitation)}
+
+    @staticmethod
     def _send_invitation_email(invitee_email, inviter_name, group_name, invitation_id):
         """Email failure does not undo a saved invitation; report its delivery state accurately."""
         from app.notifications.services.email_service import email_service

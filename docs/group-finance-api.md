@@ -68,6 +68,7 @@ mutations. Archival preserves stored history.
 | --- | --- | --- |
 | POST | `/invitations` | Send/save invitation with `group_id` and email |
 | GET | `/invitations` | Caller's unexpired pending invitations for active groups |
+| GET | `/invitations/{id}/details` | Private read for the recipient, inviter or group admin; does not accept or mutate expiry |
 | GET | `/invitations/group/{id}` | Group invitation history; `/invitations/groups/{id}` is also supported |
 | POST | `/invitations/{id}/accept` | Recipient joins and receives actual group details |
 | POST | `/invitations/{id}/decline` | Recipient declines a pending invitation |
@@ -93,7 +94,8 @@ captured before commit, so failure to build it also rolls back the join.
 
 The saved invitation survives email transport failure. `email_status` reports
 `disabled`, `queued`, `sent` or `failed`, and `invitation_link` remains available.
-Configured delivery first tries the worker queue, then synchronous fallback.
+Configured delivery uses SMTP directly without a broker; otherwise it first
+tries the worker queue, then synchronous fallback.
 Tests mock both transports and send no real invitations.
 
 ## Expenses, settlements and balances
