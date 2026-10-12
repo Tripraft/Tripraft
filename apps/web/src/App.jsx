@@ -17,6 +17,7 @@ const Pricing = lazy(() => import('./pages/Pricing'));
 const Login = lazy(() => import('./features/auth/jsx/Login'));
 const Signup = lazy(() => import('./features/auth/jsx/Signup'));
 const AuthPage = lazy(() => import('./features/auth/jsx/AuthPage'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const SmartInvitationHandler = lazy(() => import('./pages/SmartInvitationHandler'));
 const PlaceSearchPage = lazy(() => import('./features/discover/jsx/PlaceSearchPage'));
 
@@ -40,6 +41,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/verify-email/:token?" element={<VerifyEmail />} />
 
         {/* Public: Place Search & Trip Planner (read-only, no auth) */}
         <Route path="/places" element={

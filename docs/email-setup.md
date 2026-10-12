@@ -46,3 +46,13 @@ are not fetched before authentication.
 After joining, recipients open `/expenses/{userId}/group?groupId={groupId}` for
 the exact joined group. Opening an already accepted invitation opens that same
 group again.
+
+Signup also sends an account verification email. Its `/verify-email/{token}`
+link opens a public page that confirms ownership through
+`GET /api/v1/auth/verify-email?token=...`; signing in is not required to use it.
+Verification links expire after 24 hours. Invalid/expired links offer sign-in
+and an explicit resend action for the signed-in account. Network failures offer
+retry, and already verified links display success. A signed-in account's profile
+is refreshed after verification; pending group invitations remain available
+through the continue action. The current application records verification but
+does not require it for login or group membership.

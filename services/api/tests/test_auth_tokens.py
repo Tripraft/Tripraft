@@ -2,6 +2,9 @@
 """Step 3 — refresh tokens must never be readable in the database."""
 import hashlib
 import uuid
+from datetime import timedelta
+
+import pytest
 
 from conftest import ApiClient, payload
 
@@ -11,6 +14,12 @@ from app.auth.security.jwt import (create_email_verification_token,
                                          hash_refresh_token)
 from app.core.db.connection import get_db_session
 from app.auth.services.auth_service import AuthService
+
+
+@pytest.fixture(autouse=True)
+def no_real_verification_mail(monkeypatch):
+    from app.auth.services.auth_service import email_service
+    monkeypatch.setattr(email_service, 'send_verification', lambda *args: True)
 
 
 def _sessions_for(user_id):
@@ -113,3 +122,36 @@ def test_email_verification_persists_its_audit_timestamp(app):
         assert user is not None
         assert user.email_verified
         assert user.email_verified_at is not None
+
+
+def test_public_verification_route_accepts_link_and_can_be_reopened(app):
+    _, user_id, email, _ = _signup(app, 'public_verify')
+    public = ApiClient(app)
+    token = create_email_verification_token(user_id, email)
+    path = '/api/v1/auth/verify-email'
+    first = public.get(path, query_string={'token': token})
+    assert first.status_code == 200, first.get_json()
+    assert payload(first)['message'] == 'Email verified successfully'
+    second = public.get(path, query_string={'token': token})
+    assert second.status_code == 200
+    assert payload(second)['message'] == 'Email already verified'
+    with get_db_session() as session:
+        assert session.get(User, user_id).email_verified
+
+
+@pytest.mark.parametrize('kind', ['missing', 'invalid', 'expired', 'refresh'])
+def test_verification_rejects_bad_links_without_changing_account(app, monkeypatch, kind):
+    _, user_id, email, refresh = _signup(app, 'bad_verify')
+    from app.auth.security import jwt as tokens
+    token = 'invalid-token'
+    if kind == 'expired':
+        monkeypatch.setattr(tokens, '_EMAIL_VERIFY_EXPIRES', timedelta(seconds=-1))
+        token = create_email_verification_token(user_id, email)
+    elif kind == 'refresh':
+        token = refresh
+    response = ApiClient(app).get('/api/v1/auth/verify-email', query_string={} if kind == 'missing' else {'token': token})
+    assert response.status_code == 400
+    with get_db_session() as session:
+        user = session.get(User, user_id)
+        assert not user.email_verified
+        assert user.email_verified_at is None

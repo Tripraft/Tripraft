@@ -212,6 +212,32 @@ class SQLAuthService {
   }
 
   /**
+   * Confirm ownership using the public verification endpoint; no session required.
+   */
+  async verifyEmail(token) {
+    const response = await this._fetch(`${this.baseUrl}/verify-email?${new URLSearchParams({ token })}`, {
+      method: 'GET', credentials: 'omit', cache: 'no-store',
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.success !== true) {
+      return { success: false, status: response.ok ? 502 : response.status,
+        message: data.error?.message || data.message || 'This verification link is invalid or has expired.' };
+    }
+    if (this.currentUser) await this.getCurrentUserFromBackend();
+    return { success: true, message: data.data?.message || data.message || 'Email verified successfully' };
+  }
+
+  async resendVerificationEmail() {
+    const response = await this._fetch(`${this.baseUrl}/resend-verification`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json', ...this._csrfHeader() },
+    });
+    const data = await response.json().catch(() => ({}));
+    return { success: response.ok && data.success === true,
+      message: data.error?.message || data.data?.message || data.message || 'Could not send a verification email. Please try again.' };
+  }
+
+  /**
    * Sign out
    */
   async signOut() {

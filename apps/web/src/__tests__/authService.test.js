@@ -2,6 +2,23 @@
 jest.mock('../config/globalConfig',()=>({__esModule:true,default:{API_BASE_URL:'http://localhost/api',ENDPOINTS:{AUTH:'/v1/auth'},STORAGE_KEYS:{ACCESS_TOKEN:'accessToken',REFRESH_TOKEN:'refreshToken',CURRENT_USER:'currentUser'}}}));
 import auth from '../services/sqlAuthService';
 const response=(status,data)=>({ok:status<400,status,json:async()=>data});
+it('verifies an email without authentication or token persistence', async () => {
+ fetch.mockResolvedValue(response(200,{success:true,data:{message:'Email verified successfully'}}));
+ await expect(auth.verifyEmail('token+with/special=characters')).resolves.toEqual({success:true,message:'Email verified successfully'});
+ expect(fetch.mock.calls[0][0]).toContain('/verify-email?token=token%2Bwith%2Fspecial%3Dcharacters');
+ expect(fetch.mock.calls[0][1]).toMatchObject({method:'GET',credentials:'omit',cache:'no-store'});
+ expect(localStorage.getItem('accessToken')).toBeNull();
+});
+it('does not claim email verification for malformed responses', async () => {
+ fetch.mockResolvedValue(response(200,{}));
+ await expect(auth.verifyEmail('token')).resolves.toMatchObject({success:false,status:502});
+});
+it('resends verification with the current session and CSRF protection', async () => {
+ fetch.mockResolvedValue(response(200,{success:true,data:{message:'Verification email sent'}}));
+ await expect(auth.resendVerificationEmail()).resolves.toMatchObject({success:true,message:'Verification email sent'});
+ expect(fetch.mock.calls[0][0]).toMatch(/\/resend-verification$/);
+ expect(fetch.mock.calls[0][1]).toMatchObject({method:'POST',credentials:'include',headers:{'X-CSRF-Token':'csrf'}});
+});
 beforeEach(()=>{localStorage.clear();auth._clearAuth();auth._isRefreshing=false;auth._refreshPromise=null;auth._initializationPromise=null;auth.authStateListeners=[];global.fetch=jest.fn();document.cookie='csrf_token=csrf; path=/';});
 it('refreshes with only cookies when there is no readable access token',async()=>{
  fetch.mockResolvedValue(response(200,{success:true,data:{}}));await expect(auth.refreshAccessToken()).resolves.toMatchObject({success:true});
