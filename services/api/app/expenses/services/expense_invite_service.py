@@ -149,6 +149,29 @@ class InvitationServiceSQL:
 
     @staticmethod
     @service_result
+    def resend_invitation(invitation_id, user_id):
+        """Retry delivery of a pending invitation without duplicating it or extending expiry."""
+        with get_db_session() as session:
+            invitation = session.get(Invitation, identifier(invitation_id))
+            if invitation is None:
+                raise NotFoundError('Invitation not found')
+            group, member = access(session, invitation.group_id, user_id)
+            if member.user_id != invitation.invited_by and not admin(group, member):
+                raise AuthorizationError('Only the inviter or a group admin can resend this invitation')
+            if invitation.status != 'pending':
+                raise ConflictError('Only pending invitations can be resent')
+            if _expired(invitation):
+                raise GoneError('Invitation has expired; create a new invitation')
+            data = _invitation_dict(invitation)
+            inviter_name = invitation.inviter.display_name or invitation.inviter.email.split('@')[0]
+            group_name = group.name
+        email_status = InvitationServiceSQL._send_invitation_email(
+            data['invitee_email'], inviter_name, group_name, data['id'],
+        )
+        return {'invitation': data, 'email_status': email_status}
+
+    @staticmethod
+    @service_result
     def get_invitations(user_id, group_id=None):
         with get_db_session() as session:
             user = session.get(User, identifier(user_id))

@@ -71,6 +71,7 @@ mutations. Archival preserves stored history.
 | GET | `/invitations/{id}/details` | Private read for the recipient, inviter or group admin; does not accept or mutate expiry |
 | GET | `/invitations/group/{id}` | Group invitation history; `/invitations/groups/{id}` is also supported |
 | POST | `/invitations/{id}/accept` | Recipient joins and receives actual group details |
+| POST | `/invitations/{id}/resend` | Inviter or group admin retries email delivery for an unexpired pending invitation |
 | POST | `/invitations/{id}/decline` | Recipient declines a pending invitation |
 | POST | `/invitations/{id}/cancel` | Inviter or group admin cancels a pending invitation |
 
@@ -97,6 +98,12 @@ The saved invitation survives email transport failure. `email_status` reports
 Configured delivery uses SMTP directly without a broker; otherwise it first
 tries the worker queue, then synchronous fallback.
 Tests mock both transports and send no real invitations.
+
+Retrying delivery through `/resend` preserves the invitation ID, link, original
+inviter and expiry, and returns `invitation` and `email_status`. Anonymous callers
+receive 401; other members or outsiders receive 403. Non-pending invitations
+return 409 and expired pending invitations return 410. This endpoint is subject
+to the existing invitation rate limit and does not change membership.
 
 ## Expenses, settlements and balances
 

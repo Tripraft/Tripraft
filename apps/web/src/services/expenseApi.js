@@ -116,6 +116,10 @@ class ExpenseApiService {
     return apiClient.post(`${BASE}/invitations/${invitationId}/accept`);
   }
 
+  async resendInvitation(invitationId) {
+    return apiClient.post(`${BASE}/invitations/${invitationId}/resend`);
+  }
+
   async declineInvitation(invitationId) {
     return apiClient.post(`${BASE}/invitations/${invitationId}/decline`);
   }

@@ -49,6 +49,7 @@ const GroupManager = ({
   const [newGroupCurrency, setNewGroupCurrency] = useState('USD');
   const [newMemberEmail, setNewMemberEmail] = useState('');
   const [inviting, setInviting] = useState(false);
+  const [resendingInvitationId, setResendingInvitationId] = useState(null);
   const [creating, setCreating] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState([]);
   const [loadingInvitations, setLoadingInvitations] = useState(false);
@@ -241,6 +242,26 @@ const GroupManager = ({
       showAlert(`Failed to send invitation: ${error.message}`);
     } finally {
       setInviting(false);
+    }
+  };
+
+  const handleResendInvitation = async invitation => {
+    if (resendingInvitationId) return;
+    const id = invitation.invitation_id || invitation.id;
+    setResendingInvitationId(id);
+    try {
+      const result = unwrapEnvelope(await expenseApi.resendInvitation(id));
+      const messages = {
+        sent: 'Invitation email sent.',
+        queued: 'Invitation email queued.',
+        disabled: 'Email delivery is unavailable. You can copy the invite link.',
+        failed: 'Email could not be sent. Try again shortly or copy the invite link.',
+      };
+      showAlert(messages[result.email_status] || 'Email delivery could not be confirmed.');
+    } catch (error) {
+      showAlert(`Failed to resend invitation: ${error.message}`);
+    } finally {
+      setResendingInvitationId(null);
     }
   };
 
@@ -530,6 +551,9 @@ const GroupManager = ({
                       const statusColor = isDeclined ? '#e74c3c' : isExpired ? '#999' : '#f39c12';
                       const statusText = isDeclined ? 'Declined' : isExpired ? 'Expired' : 'Pending';
                       const canResend = isDeclined || isExpired;
+                      const canRetryEmail = invitation.invited_by === (currentUser?.uid || currentUser?.id) ||
+                        activeGroup?.permissions?.can_update_group ||
+                        activeGroup?.created_by === (currentUser?.uid || currentUser?.id);
                       
                       return (
                         <li key={invitation.invitation_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: bgColor, padding: '0.75rem', borderRadius: '6px', marginBottom: '0.5rem' }}>
@@ -551,6 +575,12 @@ const GroupManager = ({
                             {!isDeclined && !isExpired && (
                               <button type="button" onClick={() => handleCopyInvitation(invitation)}>
                                 Copy invite link
+                              </button>
+                            )}
+                            {!isDeclined && !isExpired && canRetryEmail && (
+                              <button type="button" disabled={Boolean(resendingInvitationId)}
+                                onClick={() => handleResendInvitation(invitation)}>
+                                {resendingInvitationId === (invitation.invitation_id || invitation.id) ? 'Sending...' : 'Resend email'}
                               </button>
                             )}
                             {canResend && (

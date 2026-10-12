@@ -20,6 +20,17 @@ export default function InvitationAccept() {
   // Prevent duplicate API calls
   const acceptInProgress = useRef(false);
   const initialized = useRef(false);
+  const redirectTimer = useRef(null);
+
+  useEffect(() => () => clearTimeout(redirectTimer.current), []);
+
+  const openJoinedGroup = (groupId) => {
+    const userId = currentUser?.uid || currentUser?.user_id;
+    const query = new URLSearchParams({ groupId });
+    redirectTimer.current = setTimeout(() => {
+      navigate(`/expenses/${userId}/group?${query}`, { replace: true });
+    }, 2000);
+  };
 
   useEffect(() => {
     if (authLoading) return;
@@ -67,6 +78,8 @@ export default function InvitationAccept() {
       const response = await expenseApi.acceptInvitation(invitationId);
 
       if (response.success) {
+        const groupId = response.data?.group?.id || response.data?.group?.group_id;
+        if (!groupId) throw new Error('The joined group could not be loaded. Please try the invitation again.');
         setStatus('success');
         const joinedName = response.data?.group?.name || response.group_name || response.data?.group_name;
         setMessage(joinedName
@@ -78,9 +91,7 @@ export default function InvitationAccept() {
         removeAuthStorage('pendingInvitation');
         removeAuthStorage('invitationEmail');
 
-        setTimeout(() => {
-          navigate('/expenses');
-        }, 2000);
+        openJoinedGroup(groupId);
       } else {
         setStatus('error');
         setMessage(response.message || 'Failed to accept invitation');
@@ -95,12 +106,18 @@ export default function InvitationAccept() {
         removeAuthStorage('pendingInvitation');
         removeAuthStorage('invitationEmail');
       } else if (error.message.includes('already accepted')) {
-        setMessage('You have already accepted this invitation.');
-        removeAuthStorage('pendingInvitation');
-        removeAuthStorage('invitationEmail');
-        setTimeout(() => {
-          navigate('/expenses');
-        }, 2000);
+        try {
+          const details = await expenseApi.getInvitationDetails(invitationId);
+          const groupId = details.data?.invitation?.group_id;
+          if (!groupId) throw new Error('Group unavailable');
+          setStatus('success');
+          setMessage('You have already accepted this invitation. Opening your group...');
+          removeAuthStorage('pendingInvitation');
+          removeAuthStorage('invitationEmail');
+          openJoinedGroup(groupId);
+        } catch {
+          setMessage('Your group could not be loaded. Please try the invitation again.');
+        }
       } else if (error.status === 403 || error.message.includes('403')) {
         setMessage('This invitation is not for your account. Please log in with the invited email address.');
         setShowWrongUserWarning(true);
@@ -153,7 +170,7 @@ export default function InvitationAccept() {
 
           {status === 'success' && invitationDetails && (
             <div className="invitation-details">
-              <p>Redirecting you to the expense tracker...</p>
+              <p>Opening your group expenses...</p>
             </div>
           )}
 

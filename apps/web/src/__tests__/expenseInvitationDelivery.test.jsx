@@ -5,7 +5,7 @@ import expenseApi from '../services/expenseApi';
 
 jest.mock('../services/expenseApi', () => ({
   __esModule: true,
-  default: { sendInvitation: jest.fn(), getGroupInvitations: jest.fn() },
+  default: { sendInvitation: jest.fn(), getGroupInvitations: jest.fn(), resendInvitation: jest.fn() },
 }));
 
 const link = 'http://localhost:5173/invitation/invite-uuid';
@@ -13,6 +13,7 @@ const invitation = {
   id: 'invite-uuid', invitation_id: 'invite-uuid', invited_email: 'friend@example.test',
   status: 'pending', created_at: '2026-10-12T18:46:04', expires_at: '2099-10-19T18:46:04',
   invitation_link: link,
+  invited_by: 'owner-uuid',
 };
 
 function setup(pendingInvitations = []) {
@@ -65,4 +66,27 @@ it('shows the link only on request if clipboard access fails', async () => {
   ));
   expect(screen.queryByLabelText('Invitation link')).toBeNull();
   expect(expenseApi.sendInvitation).not.toHaveBeenCalled();
+});
+
+it.each([
+  ['sent', 'Invitation email sent.'],
+  ['queued', 'Invitation email queued.'],
+  ['disabled', 'Email delivery is unavailable. You can copy the invite link.'],
+  ['failed', 'Email could not be sent. Try again shortly or copy the invite link.'],
+])('retries the existing invitation and accurately reports %s delivery', async (email_status, message) => {
+  expenseApi.resendInvitation.mockResolvedValue({ success: true, data: { invitation, email_status } });
+  const showAlert = setup([invitation]);
+  fireEvent.click(screen.getByRole('button', { name: /Pending/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Resend email' }));
+  await waitFor(() => expect(showAlert).toHaveBeenCalledWith(message));
+  expect(expenseApi.resendInvitation).toHaveBeenCalledWith('invite-uuid');
+  expect(expenseApi.sendInvitation).not.toHaveBeenCalled();
+  expect(screen.getAllByRole('button', { name: 'Copy invite link' })).toHaveLength(1);
+  expect(screen.queryByLabelText('Invitation link')).toBeNull();
+});
+
+it('does not offer resending another member’s invitation to a regular member', () => {
+  setup([{ ...invitation, invited_by: 'other-user' }]);
+  fireEvent.click(screen.getByRole('button', { name: /Pending/ }));
+  expect(screen.queryByRole('button', { name: 'Resend email' })).toBeNull();
 });

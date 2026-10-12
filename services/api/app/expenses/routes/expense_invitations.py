@@ -81,6 +81,13 @@ def accept_invitation(invitation_id):
     return _response(success, result, mutated=True)
 
 
+@invitations_sql_bp.route('/<invitation_id>/resend', methods=['POST'])
+@limit_api(Config.RATE_LIMITS['invitation'])
+@require_auth
+def resend_invitation(invitation_id):
+    return _response(*invitation_service_sql.resend_invitation(identifier(invitation_id), get_current_user_id()))
+
+
 @invitations_sql_bp.route('/<invitation_id>/decline', methods=['POST'])
 @limit_api(Config.RATE_LIMITS['invitation'])
 @require_auth

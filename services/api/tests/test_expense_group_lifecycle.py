@@ -123,6 +123,68 @@ def test_invitation_details_require_auth_and_authorized_account(expense_group, b
     assert recipient.get(missing).status_code == 404
 
 
+@pytest.mark.parametrize('delivery_status', ['sent', 'queued', 'disabled', 'failed'])
+def test_resend_pending_invitation_preserves_link_and_reports_delivery(group_of_two, make_user, client, monkeypatch, delivery_status):
+    api, _, member, _, gid = group_of_two
+    recipient, _, email = make_user('resend_recipient')
+    outsider, _, _ = make_user('resend_outsider')
+    invitation = invite(api, gid, email)
+    path = '/api/v1/expenses/invitations/%s/resend' % invitation['id']
+    calls = []
+
+    def deliver(*args):
+        calls.append(args)
+        return delivery_status
+
+    monkeypatch.setattr(InvitationServiceSQL, '_send_invitation_email', deliver)
+    assert client.post(path).status_code == 401
+    for forbidden in (outsider, recipient, member):
+        assert forbidden.post(path).status_code == 403
+    assert calls == []
+    response = api.post(path)
+    assert response.status_code == 200, response.get_json()
+    assert payload(response)['email_status'] == delivery_status
+    assert payload(response)['invitation']['invitation_link'] == invitation['invitation_link']
+    assert len(calls) == 1 and calls[0][0] == email and calls[0][3] == invitation['id']
+    assert 'no-store' in response.headers['Cache-Control']
+    with get_db_session() as session:
+        row = session.get(Invitation, UUID(invitation['id']))
+        assert row.status == 'pending'
+        assert row.expires_at.isoformat() == invitation['expires_at']
+        assert session.query(Invitation).filter_by(group_id=UUID(gid)).count() == 1
+
+
+def test_inviter_and_group_owner_can_retry_delivery(group_of_two, make_user):
+    api, _, member, _, gid = group_of_two
+    _, _, email = make_user('member_invited')
+    invitation = invite(member, gid, email)
+    path = '/api/v1/expenses/invitations/%s/resend' % invitation['id']
+    assert member.post(path).status_code == 200
+    assert api.post(path).status_code == 200
+
+
+@pytest.mark.parametrize('status, expired, expected', [
+    ('accepted', False, 409), ('declined', False, 409), ('cancelled', False, 409), ('pending', True, 410),
+])
+def test_resend_rejects_inactive_or_expired_invitations(expense_group, bob, monkeypatch, status, expired, expected):
+    api, _, gid = expense_group
+    _, _, email = bob
+    invitation = invite(api, gid, email)
+    with get_db_session() as session:
+        row = session.get(Invitation, UUID(invitation['id']))
+        row.status = status
+        if expired:
+            row.expires_at = datetime.utcnow() - timedelta(seconds=1)
+        session.commit()
+
+    def no_delivery(*args):
+        pytest.fail('An inactive invitation must not send email')
+
+    monkeypatch.setattr(InvitationServiceSQL, '_send_invitation_email', no_delivery)
+    response = api.post('/api/v1/expenses/invitations/%s/resend' % invitation['id'])
+    assert response.status_code == expected, response.get_json()
+
+
 def test_recipient_check_precedes_expiry_mutation(expense_group, bob, make_user):
     api, _, gid = expense_group
     recipient, _, email = bob

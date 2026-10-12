@@ -1,9 +1,9 @@
 import React, { StrictMode } from 'react';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import expenseApi from '../services/expenseApi';
-import InvitationAccept from '../pages/InvitationAccept';
+import SmartInvitationHandler from '../pages/SmartInvitationHandler';
 import Login from '../features/auth/jsx/Login';
 import Signup from '../features/auth/jsx/Signup';
 
@@ -12,25 +12,34 @@ jest.mock('../services/expenseApi', () => ({ __esModule: true, default: {
   getInvitationDetails: jest.fn(), acceptInvitation: jest.fn(),
 } }));
 jest.mock('qrcode', () => ({ toCanvas: jest.fn().mockResolvedValue() }));
+jest.mock('../services/groupPlannerApi', () => ({ getInvitationDetails: jest.fn() }));
+jest.mock('../features/trips/jsx/InvitationAcceptPage', () => () => <p>Trip invitation</p>);
 
 let auth;
+function Destination() {
+  const location = useLocation();
+  return <p>{location.pathname}{location.search}</p>;
+}
 function Flow({ entry = '/invitation/invite-uuid' }) {
   return <StrictMode><MemoryRouter initialEntries={[entry]}><Routes>
-    <Route path="/invitation/:invitationId" element={<InvitationAccept />} />
+    <Route path="/invitation/:invitationId" element={<SmartInvitationHandler />} />
     <Route path="/login" element={<Login />} />
     <Route path="/signup" element={<Signup />} />
-    <Route path="/expenses" element={<p>Expense dashboard</p>} />
+    <Route path="/expenses/:userId?/:mode?" element={<Destination />} />
     <Route path="/invitations/:invitationId" element={<p>Other invitation</p>} />
   </Routes></MemoryRouter></StrictMode>;
 }
 
 beforeEach(() => {
   localStorage.clear();
+  jest.useFakeTimers();
   auth = { currentUser: null, loading: false, signIn: jest.fn(), signUp: jest.fn(), signOut: jest.fn() };
   useAuth.mockImplementation(() => auth);
-  expenseApi.acceptInvitation.mockReset().mockResolvedValue({ success: true, data: { group: { name: 'Weekend' } } });
+  expenseApi.acceptInvitation.mockReset().mockResolvedValue({ success: true, data: { group: { id: 'joined-group', name: 'Weekend' } } });
   expenseApi.getInvitationDetails.mockReset().mockRejectedValue(new Error('Private details'));
 });
+
+afterEach(() => jest.useRealTimers());
 
 it('opens a copied link at sign-in without requesting private details or accepting', async () => {
   render(<Flow />);
@@ -50,6 +59,8 @@ it('resumes the same invitation after sign-in and accepts only once', async () =
   expect(expenseApi.acceptInvitation).toHaveBeenCalledTimes(1);
   expect(expenseApi.acceptInvitation).toHaveBeenCalledWith('invite-uuid');
   expect(expenseApi.getInvitationDetails).not.toHaveBeenCalled();
+  act(() => jest.advanceTimersByTime(2000));
+  expect(screen.getByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
 });
 
 it.each(['/login', '/signup'])('keeps %s usable for an invitation without browser storage', async path => {
@@ -64,6 +75,8 @@ it.each(['/login', '/signup'])('keeps %s usable for an invitation without browse
     view.rerender(<Flow entry={entry} />);
     expect(await screen.findByText('You\'ve successfully joined the group "Weekend"!')).toBeInTheDocument();
     expect(expenseApi.getInvitationDetails).not.toHaveBeenCalled();
+    act(() => jest.advanceTimersByTime(2000));
+    expect(screen.getByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
   } finally { storage.mockRestore(); write.mockRestore(); }
 });
 
@@ -99,4 +112,14 @@ it('waits for session restoration before redirecting or accepting', async () => 
   auth = { ...auth, loading: false };
   view.rerender(<Flow />);
   await screen.findByRole('button', { name: 'Sign In' });
+});
+
+it('reopens an already accepted invitation at the same group', async () => {
+  auth.currentUser = { uid: 'friend-uuid' };
+  expenseApi.acceptInvitation.mockRejectedValue(Object.assign(new Error('Invitation is already accepted'), { status: 409 }));
+  expenseApi.getInvitationDetails.mockResolvedValue({ success: true, data: { invitation: { group_id: 'joined-group' } } });
+  render(<Flow />);
+  await screen.findByText('You have already accepted this invitation. Opening your group...');
+  act(() => jest.advanceTimersByTime(2000));
+  expect(screen.getByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
 });

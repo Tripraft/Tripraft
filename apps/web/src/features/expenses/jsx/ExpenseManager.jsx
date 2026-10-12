@@ -21,7 +21,7 @@
  * - Single source of truth
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import ExpenseSummary from './ExpenseSummary';
 
@@ -57,7 +57,9 @@ const unwrapEnvelope = (r) => (r && typeof r === 'object' && 'success' in r && '
 const ExpenseManager = () => {
   const navigate = useNavigate();
   const { userId: routeUserId, mode: routeMode } = useParams();
-  const [, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
+  const mode = routeMode === 'group' || (!routeMode && searchParams.get('view') === 'group') ? 'group' : 'personal';
+  const activeGroupId = mode === 'group' ? searchParams.get('groupId') : null;
   
   // Auth state
   const { isAuthenticated, currentUser, loading: authLoading } = useAuth();
@@ -72,8 +74,6 @@ const ExpenseManager = () => {
   } = useGroups();
   
   const [state, setState] = useState({
-    mode: 'personal',
-    activeGroupId: null,
     editingTransactionId: null,
     filter: { type: 'all', sortBy: 'date-desc' }
   });
@@ -92,7 +92,7 @@ const ExpenseManager = () => {
     updateExpensesAndBalances,  // INSTANT UPDATE helper
     updateSettlementsAndBalances,  // INSTANT UPDATE helper for settlements
     updateMembers  // INSTANT UPDATE helper
-  } = useGroupDetail(state.activeGroupId);
+  } = useGroupDetail(activeGroupId);
   
   // Invitations for current user - with INSTANT UPDATE helpers
   const {
@@ -124,29 +124,28 @@ const ExpenseManager = () => {
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [mutationLoading, setMutationLoading] = useState(false);
 
-  // Initialize mode from URL path on mount
-  useEffect(() => {
-    if (routeMode === 'group') {
-      setState(prev => ({ ...prev, mode: 'group' }));
-    } else if (routeMode === 'personal') {
-      setState(prev => ({ ...prev, mode: 'personal' }));
-    }
-  }, []); // run once on mount
+  const setExpenseView = useCallback((nextMode, groupId, options = {}) => {
+    const userId = currentUser?.uid || currentUser?.user_id;
+    if (!userId) return;
+    const query = nextMode === 'group' && groupId
+      ? `?${new URLSearchParams({ groupId })}` : '';
+    navigate(`/expenses/${userId}/${nextMode}${query}`, options);
+  }, [currentUser, navigate]);
 
-  // Keep URL path in sync: /expenses/<userId>/<mode>
+  // Canonicalize legacy URLs without losing the selected invitation group.
   useEffect(() => {
     if (authLoading || !currentUser) return;
-    const userId = currentUser?.uid || currentUser?.user_id || '';
-    if (!userId) return;
-    navigate(`/expenses/${userId}/${state.mode}`, { replace: true });
-  }, [state.mode, currentUser, authLoading, navigate]);
-
-  // Auto-select first group if in group mode and no group selected
-  useEffect(() => {
-    if (state.mode === 'group' && !state.activeGroupId && groups && groups.length > 0) {
-      setState(prev => ({ ...prev, activeGroupId: groups[0].id || groups[0].group_id }));
+    if (routeMode !== mode || routeUserId !== (currentUser.uid || currentUser.user_id)) {
+      setExpenseView(mode, activeGroupId, { replace: true });
     }
-  }, [state.mode, state.activeGroupId, groups]);
+  }, [routeMode, routeUserId, mode, activeGroupId, currentUser, authLoading, setExpenseView]);
+
+  // A deep link selects its requested group even if another group is listed first.
+  useEffect(() => {
+    if (!authLoading && mode === 'group' && !activeGroupId && groups?.length > 0) {
+      setExpenseView('group', groups[0].id || groups[0].group_id, { replace: true });
+    }
+  }, [authLoading, mode, activeGroupId, groups, setExpenseView]);
 
   // Helper functions
   const showAlert = (message) => {
@@ -171,17 +170,17 @@ const ExpenseManager = () => {
 
   // Get current transactions based on mode
   const getCurrentTransactions = () => {
-    if (state.mode === 'personal') {
+    if (mode === 'personal') {
       return personalExpenses || [];
     }
-    if (!state.activeGroupId) return [];
+    if (!activeGroupId) return [];
     return activeGroupExpenses || [];
   };
   
   // Get current balances
   const getCurrentBalances = () => {
-    if (state.mode === 'personal') return null;
-    if (!state.activeGroupId) return null;
+    if (mode === 'personal') return null;
+    if (!activeGroupId) return null;
     
     let balances = activeGroupBalances || [];
     
@@ -234,16 +233,16 @@ const ExpenseManager = () => {
 
   // Event Handlers
   const handleModeToggle = () => {
-    setState(prev => ({ ...prev, mode: prev.mode === 'personal' ? 'group' : 'personal' }));
+    setExpenseView(mode === 'personal' ? 'group' : 'personal', activeGroupId);
   };
 
   const handleGroupChange = (groupId) => {
-    setState(prev => ({ ...prev, activeGroupId: groupId }));
+    setExpenseView('group', groupId);
   };
 
   const handleOpenModal = () => {
-    if (state.mode === 'group') {
-      if (!state.activeGroupId) {
+    if (mode === 'group') {
+      if (!activeGroupId) {
         showAlert('Please select a group first.');
         return;
       }
@@ -263,9 +262,9 @@ const ExpenseManager = () => {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      if (state.mode === 'personal') {
+      if (mode === 'personal') {
         await refetchPersonalExpenses();
-      } else if (state.activeGroupId) {
+      } else if (activeGroupId) {
         await refetchGroupDetail();
       }
       await refetchGroups();
@@ -297,8 +296,7 @@ const ExpenseManager = () => {
       // Switch to the newly created group
       const newGroupId = result?.group?.group_id || result?.group?.id || result?.group_id;
       if (newGroupId) {
-        setState(prev => ({ ...prev, activeGroupId: newGroupId, mode: 'group' }));
-        setSearchParams({ view: 'group', groupId: newGroupId });
+        setExpenseView('group', newGroupId);
       }
       
       return result;
@@ -325,8 +323,8 @@ const ExpenseManager = () => {
       showToast('Group deleted successfully!', 'success');
       
       // Clear active group AFTER successful deletion
-      if (state.activeGroupId === groupId) {
-        setState(prev => ({ ...prev, activeGroupId: null, mode: 'personal' }));
+      if (activeGroupId === groupId) {
+        setExpenseView('personal');
       }
       
       // Refetch groups
@@ -347,7 +345,7 @@ const ExpenseManager = () => {
     try {
       setMutationLoading(true);
       
-      if (state.mode === 'personal') {
+      if (mode === 'personal') {
         let result;
         if (state.editingTransactionId) {
           result = await expenseApi.updateExpense(state.editingTransactionId, transactionData);
@@ -374,7 +372,7 @@ const ExpenseManager = () => {
           : null;
         if (state.editingTransactionId && !editingExpense) throw new Error('This expense is no longer available. Refresh the group before editing.');
         const expenseData = expensePayload(transactionData, {
-          groupId: state.activeGroupId, editingExpense,
+          groupId: activeGroupId, editingExpense,
           currency: transactionData.currency || activeGroupData?.currency || 'USD',
         });
 
@@ -434,16 +432,16 @@ const ExpenseManager = () => {
       setMutationLoading(true);
       showToast('Deleting transaction...', 'info');
       
-      if (state.mode === 'personal') {
+      if (mode === 'personal') {
         markPersonalAsDeleted(id);
       }
       
       const result = unwrapEnvelope(await expenseApi.deleteExpense(id));
       
       // INSTANT UPDATE: Use returned data if available
-      if (state.mode === 'group' && (result?.expenses || result?.group_balances)) {
+      if (mode === 'group' && (result?.expenses || result?.group_balances)) {
         updateExpensesAndBalances(result.expenses, result.group_balances);
-      } else if (state.mode === 'personal') {
+      } else if (mode === 'personal') {
         await refetchPersonalExpenses();
       } else {
         await refetchGroupDetail();
@@ -451,7 +449,7 @@ const ExpenseManager = () => {
       
       showToast('Transaction deleted!', 'success');
     } catch (error) {
-      if (state.mode === 'personal') {
+      if (mode === 'personal') {
         rollbackPersonalDelete(id);
       }
       showToast(`Failed to delete: ${error.message}`, 'error');
@@ -496,13 +494,13 @@ const ExpenseManager = () => {
       showToast('Generating PDF report...', 'info');
       
       generateExpensePDF({
-        mode: state.mode,
-        groupName: state.mode === 'group' ? (activeGroupData?.name || 'Group') : 'Personal',
+        mode,
+        groupName: mode === 'group' ? (activeGroupData?.name || 'Group') : 'Personal',
         expenses: getCurrentTransactions().filter(t => !t.is_deleted),
         settlements: activeGroupSettlements || [],
         members: activeGroupMembers || [],
         balances: getCurrentBalances() || [],
-        currency: state.mode === 'group' ? (activeGroupData?.currency || 'USD') : 'USD',
+        currency: mode === 'group' ? (activeGroupData?.currency || 'USD') : 'USD',
         userName: currentUser?.display_name || currentUser?.email || 'User'
       });
       
@@ -556,7 +554,7 @@ const ExpenseManager = () => {
           >
             <RefreshCw size={20} className={refreshing ? 'spinning' : ''} />
           </button>
-          <ModeToggle mode={state.mode} onToggle={handleModeToggle} />
+          <ModeToggle mode={mode} onToggle={handleModeToggle} />
           <button className="btn-add-transaction" onClick={handleOpenModal} disabled={mutationLoading}>
             <PlusCircle size={20} />
             <span>Add Transaction</span>
@@ -569,49 +567,23 @@ const ExpenseManager = () => {
         invitationsFromParent={invitations}
         onRefreshInvitations={refetchInvitations}
         onGroupsUpdate={updateGroupsFromResponse}
-        onInvitationAccepted={async (result) => {
-          // INSTANT UPDATE: Use groups from response if available
-          if (result?.groups && Array.isArray(result.groups)) {
-            updateGroupsFromResponse(result.groups);
-            
-            // Select the newly joined group
-            const newGroup = result.groups.find(g => g.id === result?.group?.id || g.group_id === result?.group?.group_id) || result.groups[0];
-            const groupId = newGroup?.group_id || newGroup?.id;
-            
-            if (groupId) {
-              setState(prev => ({ ...prev, mode: 'group', activeGroupId: groupId }));
-              setSearchParams({ view: 'group', groupId: groupId });
-              showToast('Welcome to the group!', 'success');
-            } else {
-              setState(prev => ({ ...prev, mode: 'group' }));
-              showToast('Invitation accepted!', 'success');
-            }
-          } else {
-            // Fallback: Refetch if no data returned
-            await refetchGroups();
-            await refetchInvitations();
-            
-            if (groups && groups.length > 0) {
-              const newGroup = groups[0];
-              const groupId = newGroup.group_id || newGroup.id;
-              setState(prev => ({ ...prev, mode: 'group', activeGroupId: groupId }));
-              setSearchParams({ view: 'group', groupId: groupId });
-              showToast('Welcome to the group!', 'success');
-            } else {
-              setState(prev => ({ ...prev, mode: 'group' }));
-              showToast('Invitation accepted!', 'success');
-            }
-          }
+        onInvitationAccepted={async (response) => {
+          const result = unwrapEnvelope(response);
+          if (Array.isArray(result?.groups)) updateGroupsFromResponse(result.groups);
+          else await refetchGroups();
+          const groupId = result?.group?.id || result?.group?.group_id;
+          setExpenseView('group', groupId);
+          showToast('Welcome to the group!', 'success');
         }}
         currentUser={currentUser}
       />
 
       {/* Group Management Section */}
-      {state.mode === 'group' && (
+      {mode === 'group' && (
         <GroupManager
           groups={(groups || []).filter(g => g && (g.id || g.group_id))}
-          activeGroupId={state.activeGroupId}
-          activeGroup={state.activeGroupId ? activeGroupData : null}
+          activeGroupId={activeGroupId}
+          activeGroup={activeGroupId ? activeGroupData : null}
           members={activeGroupMembers || []}
           loading={groupsLoading || groupDetailLoading}
           onGroupChange={handleGroupChange}
@@ -628,16 +600,16 @@ const ExpenseManager = () => {
       )}
 
       {/* Personal Expense Summary */}
-      {state.mode === 'personal' && (
+      {mode === 'personal' && (
         <ExpenseSummary 
           transactions={getCurrentTransactions()}
-          mode={state.mode}
+          mode={mode}
           currency='USD'
         />
       )}
 
       {/* Group Summary Cards */}
-      {state.mode === 'group' && state.activeGroupId && (() => {
+      {mode === 'group' && activeGroupId && (() => {
         const transactions = getCurrentTransactions() || [];
         const activeExpenses = transactions.filter(t => !t.is_deleted);
         const totalAmount = activeExpenses.reduce((sum, t) => sum + (t.amount || 0), 0);
@@ -695,9 +667,9 @@ const ExpenseManager = () => {
       })()}
 
       {/* Group View with Tabs (Balances, Settle Up, Spending, Transactions, Analytics) */}
-      {state.mode === 'group' && state.activeGroupId && activeGroupData && (
+      {mode === 'group' && activeGroupId && activeGroupData && (
         <TabbedGroupView
-          key={`tabbed-${state.activeGroupId}-${(getCurrentBalances() || []).length}`}
+          key={`tabbed-${activeGroupId}-${(getCurrentBalances() || []).length}`}
           group={activeGroupData}
           balances={getCurrentBalances() || []}
           members={activeGroupMembers || []}
@@ -720,7 +692,7 @@ const ExpenseManager = () => {
       )}
 
       {/* Personal Mode - Tabbed View (Transaction History + Analytics) */}
-      {state.mode === 'personal' && (
+      {mode === 'personal' && (
         <PersonalTabbedView
           key={`personal-${(getCurrentTransactions() || []).length}`}
           transactions={getCurrentTransactions()}
@@ -740,11 +712,11 @@ const ExpenseManager = () => {
       {/* Transaction Modal */}
       {showTransactionModal && (
         <TransactionModal
-          mode={state.mode}
+          mode={mode}
           activeGroup={activeGroupData}
           members={activeGroupMembers || []}
           editingTransaction={editingTransaction}
-          currency={state.mode === 'group' ? activeGroupData?.currency : 'USD'}
+          currency={mode === 'group' ? activeGroupData?.currency : 'USD'}
           currentUser={currentUser}
           onSave={handleSaveTransaction}
           onClose={() => setShowTransactionModal(false)}
