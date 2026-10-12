@@ -1,0 +1,39 @@
+import React from 'react';
+import { renderHook, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import expenseApi from '../services/expenseApi';
+import { queryKeys, useGroupDetail } from '../hooks/useExpenseQuery';
+
+jest.mock('../services/expenseApi', () => ({ __esModule: true, default: { getGroupFull: jest.fn() } }));
+jest.mock('../services/sqlAuthService', () => ({ __esModule: true, default: {} }));
+
+function setup() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+  const wrapper = ({ children }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
+  return { client, wrapper };
+}
+
+it('hides cached ledger and controls when the server revokes membership', async () => {
+  const { client, wrapper } = setup();
+  client.setQueryData(queryKeys.group('group'), { group: { id: 'group', members: [{ user_id: 'member' }],
+    expenses: [{ id: 'private' }], settlements: [{ id: 'payment' }], balances: [{ balance: 5 }] } });
+  expenseApi.getGroupFull.mockRejectedValue(Object.assign(new Error('Not a member'), { status: 403 }));
+  const { result, unmount } = renderHook(() => useGroupDetail('group'), { wrapper });
+  await waitFor(() => expect(result.current.error).toBe('Not a member'));
+  expect(result.current.group).toBeNull();
+  for (const key of ['members', 'expenses', 'settlements', 'balances', 'invitations']) expect(result.current[key]).toEqual([]);
+  expect(expenseApi.getGroupFull).toHaveBeenCalledTimes(1);
+  unmount(); client.clear();
+});
+
+it('never carries the previous group ledger into a newly selected group', async () => {
+  const { client, wrapper } = setup();
+  expenseApi.getGroupFull.mockReset().mockImplementation(id => id === 'first'
+    ? Promise.resolve({ group: { id, expenses: [{ id: 'first-private' }] } }) : new Promise(() => {}));
+  const { result, rerender, unmount } = renderHook(({ id }) => useGroupDetail(id), { wrapper, initialProps: { id: 'first' } });
+  await waitFor(() => expect(result.current.group?.id).toBe('first'));
+  rerender({ id: 'second' });
+  expect(result.current.group).toBeNull();
+  expect(result.current.expenses).toEqual([]);
+  unmount(); client.clear();
+});

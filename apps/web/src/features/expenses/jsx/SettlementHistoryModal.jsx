@@ -1,10 +1,33 @@
 // Purpose: Renders the Settlement History Modal interface within apps\web\src\features\expenses\jsx.
-import React from 'react';
+import React, { useState } from 'react';
 import { X, CheckCircle, Clock, AlertCircle, ArrowRight, Calendar, DollarSign } from 'lucide-react';
 import { formatDateLocal } from '../../../utils/timezoneUtils';
 import '../css/SettlementHistoryModal.css';
+import { canDeleteSettlement } from '../utils/groupPermissions';
 
-const SettlementHistoryModal = ({ isOpen, onClose, settlements = [], currency = 'USD' }) => {
+const SettlementHistoryModal = ({ isOpen, onClose, settlements = [], currency = 'USD', group, currentUserId, onDelete }) => {
+  const [confirming, setConfirming] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState('');
+  const close = () => {
+    if (deleting) return;
+    setConfirming(null);
+    setError('');
+    onClose();
+  };
+  const deleteSettlement = async () => {
+    if (deleting || !confirming) return;
+    setDeleting(true);
+    setError('');
+    try {
+      await onDelete(confirming.settlement_id || confirming.id);
+      setConfirming(null);
+    } catch (err) {
+      setError(err.message || 'Could not delete this settlement. Please try again.');
+    } finally {
+      setDeleting(false);
+    }
+  };
   if (!isOpen) return null;
 
   const formatCurrency = (amount) => {
@@ -85,7 +108,7 @@ const SettlementHistoryModal = ({ isOpen, onClose, settlements = [], currency = 
 
   return (
     <>
-      <div className="settlement-modal-overlay" onClick={onClose} />
+      <div className="settlement-modal-overlay" onClick={close} />
       <div className="settlement-history-modal-new">
         {/* Header */}
         <div className="shm-header">
@@ -98,7 +121,7 @@ const SettlementHistoryModal = ({ isOpen, onClose, settlements = [], currency = 
               <p>Track all payments between group members</p>
             </div>
           </div>
-          <button className="shm-close-btn" onClick={onClose}>
+          <button className="shm-close-btn" onClick={close} aria-label="Close settlement history" disabled={deleting}>
             <X size={20} />
           </button>
         </div>
@@ -118,6 +141,14 @@ const SettlementHistoryModal = ({ isOpen, onClose, settlements = [], currency = 
 
         {/* Settlement List */}
         <div className="shm-body">
+          {confirming && (
+            <div role="alertdialog" aria-label="Delete settlement" className="shm-delete-confirm">
+              <p>Delete this {formatCurrency(confirming.amount)} settlement record? This restores the outstanding balances. It does not refund or transfer money. To correct a payment, delete the record and add its replacement.</p>
+              {error && <p role="alert">{error}</p>}
+              <button type="button" disabled={deleting} onClick={deleteSettlement}>{deleting ? 'Deleting...' : 'Confirm deletion'}</button>
+              <button type="button" disabled={deleting} onClick={() => { setConfirming(null); setError(''); }}>Cancel</button>
+            </div>
+          )}
           {settlements.length === 0 ? (
             <div className="shm-empty">
               <div className="shm-empty-icon">
@@ -157,6 +188,11 @@ const SettlementHistoryModal = ({ isOpen, onClose, settlements = [], currency = 
                     </div>
                     <div className="shm-item-right">
                       <span className="shm-amount">{formatCurrency(settlement.amount)}</span>
+                      {onDelete && canDeleteSettlement(settlement, group, currentUserId) && (
+                        <button type="button" disabled={deleting} onClick={() => { setConfirming(settlement); setError(''); }}>
+                          Delete settlement
+                        </button>
+                      )}
                       <span 
                         className="shm-status"
                         style={{ 

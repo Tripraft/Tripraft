@@ -76,8 +76,38 @@ class ExpenseApiService {
   }
 
   async getGroupFull(groupId, bypassCache = false) {
-    const params = bypassCache ? `?_t=${Date.now()}` : '';
-    return apiClient.get(`${BASE}/groups/${groupId}/full${params}`);
+    // Full-page summaries and exports need the entire ledger, not the default first 50 rows.
+    let expenseOffset = 0;
+    let settlementOffset = 0;
+    let combined;
+    for (;;) {
+      const params = new URLSearchParams({ expense_limit: 100, settlement_limit: 100,
+        expense_offset: expenseOffset, settlement_offset: settlementOffset });
+      if (bypassCache) params.set('_t', Date.now());
+      const response = await apiClient.get(`${BASE}/groups/${groupId}/full?${params}`);
+      const data = response?.data ?? response;
+      const page = data.group;
+      if (!page) throw new Error('Group details are unavailable.');
+      if (!combined) combined = { ...page, expenses: [], settlements: [] };
+      const expenses = page.expenses || [];
+      const settlements = page.settlements || [];
+      combined.expenses.push(...expenses);
+      combined.settlements.push(...settlements);
+      expenseOffset += expenses.length;
+      settlementOffset += settlements.length;
+      const moreExpenses = page.expense_pagination?.has_more;
+      const moreSettlements = page.settlement_pagination?.has_more;
+      if (!moreExpenses && !moreSettlements) break;
+      if ((moreExpenses && !expenses.length) || (moreSettlements && !settlements.length)) {
+        throw new Error('Group history changed while loading. Please refresh.');
+      }
+    }
+    // Offsets advance independently; exhausted lists return no rows on later requests.
+    combined.expenses = [...new Map(combined.expenses.map(row => [row.id || row.expense_id, row])).values()];
+    combined.settlements = [...new Map(combined.settlements.map(row => [row.id || row.settlement_id, row])).values()];
+    combined.expense_pagination = { total: combined.expenses.length, offset: 0, limit: combined.expenses.length, has_more: false };
+    combined.settlement_pagination = { total: combined.settlements.length, offset: 0, limit: combined.settlements.length, has_more: false };
+    return { success: true, data: { group: combined } };
   }
 
   async updateGroup(groupId, updates) {
@@ -94,6 +124,14 @@ class ExpenseApiService {
 
   async addGroupMember(groupId, memberData) {
     return apiClient.post(`${BASE}/groups/${groupId}/members`, memberData);
+  }
+
+  async updateGroupMemberRole(groupId, userId, role) {
+    return apiClient.patch(`${BASE}/groups/${groupId}/members/${userId}`, { role });
+  }
+
+  async leaveGroup(groupId) {
+    return apiClient.post(`${BASE}/groups/${groupId}/leave`);
   }
 
   async removeGroupMember(groupId, userId) {
@@ -118,6 +156,10 @@ class ExpenseApiService {
 
   async resendInvitation(invitationId) {
     return apiClient.post(`${BASE}/invitations/${invitationId}/resend`);
+  }
+
+  async cancelInvitation(invitationId) {
+    return apiClient.post(`${BASE}/invitations/${invitationId}/cancel`);
   }
 
   async declineInvitation(invitationId) {
@@ -179,6 +221,10 @@ class ExpenseApiService {
 
   async createSettlement(settlementData) {
     return apiClient.post(`${BASE}/settlements`, settlementData);
+  }
+
+  async deleteSettlement(settlementId) {
+    return apiClient.delete(`${BASE}/settlements/${settlementId}`);
   }
 
   async getSettlement(settlementId) {

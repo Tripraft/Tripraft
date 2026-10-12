@@ -13,7 +13,9 @@ const GroupBalances = ({
   totalExpensesAmount = 0,
   settlementHistory = [],     // PHASE 2: Receive from parent
   loadingSettlements = false, // PHASE 2: Receive from parent
-  onSettlementSuccess         // PHASE 2: Callback to parent
+  onSettlementSuccess,
+  onSettlementDelete,
+  currentUserId
 }) => {
   const [selectedSettlement, setSelectedSettlement] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -81,7 +83,7 @@ const GroupBalances = ({
 
   // Filter out settled balances (very close to zero)
   const significantBalances = (balances || []).filter(balance => 
-    balance && Math.abs(balance.net_balance || 0) > 0.01
+    balance && Math.abs(balance.net_balance || 0) >= 0.01
   );
 
   // Calculate who owes whom for simplified display
@@ -100,7 +102,7 @@ const GroupBalances = ({
     // Simple greedy algorithm to minimize transactions
     creditors.forEach(creditor => {
       debtors.forEach(debtor => {
-        if (Math.abs(debtor.net_balance) > 0.01 && Math.abs(creditor.net_balance) > 0.01) {
+        if (Math.abs(debtor.net_balance) >= 0.01 && Math.abs(creditor.net_balance) >= 0.01) {
           const amount = Math.min(creditor.net_balance, Math.abs(debtor.net_balance));
           
           settlements.push({
@@ -112,8 +114,8 @@ const GroupBalances = ({
           });
           
           // Now we can safely mutate the COPIES
-          creditor.net_balance -= amount;
-          debtor.net_balance += amount;
+          creditor.net_balance = Math.round((creditor.net_balance - amount) * 100) / 100;
+          debtor.net_balance = Math.round((debtor.net_balance + amount) * 100) / 100;
         }
       });
     });
@@ -151,6 +153,9 @@ const GroupBalances = ({
           isOpen={isHistoryModalOpen}
           onClose={() => setIsHistoryModalOpen(false)}
           settlements={settlementHistory}
+          group={group}
+          currentUserId={currentUserId}
+          onDelete={onSettlementDelete}
           currency={currency}
         />
 
@@ -161,7 +166,9 @@ const GroupBalances = ({
             setSelectedSettlement(null);
           }}
           settlement={selectedSettlement}
-          groupId={group?.group_id}
+          groupId={group?.group_id || group?.id}
+          group={group}
+          currentUserId={currentUserId}
           members={members}
           onSuccess={handleSettlementSuccess}
         />
@@ -250,6 +257,9 @@ const GroupBalances = ({
         isOpen={isHistoryModalOpen}
         onClose={() => setIsHistoryModalOpen(false)}
         settlements={settlementHistory}
+        group={group}
+        currentUserId={currentUserId}
+        onDelete={onSettlementDelete}
         currency={currency}
       />
 
@@ -261,7 +271,9 @@ const GroupBalances = ({
           setSelectedSettlement(null);
         }}
         settlement={selectedSettlement}
-        groupId={group?.group_id}
+        groupId={group?.group_id || group?.id}
+        group={group}
+        currentUserId={currentUserId}
         members={members}
         balances={balances || []}
         currency={group?.currency || 'USD'}

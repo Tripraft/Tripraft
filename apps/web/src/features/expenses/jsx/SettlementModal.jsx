@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { formatMoney, settlementCap } from '../../../utils/money';
 import '../css/SettlementModal.css';
+import { canRecordSettlement } from '../utils/groupPermissions';
 
-const SettlementModal = ({ isOpen, onClose, settlement, groupId, members, balances = [], currency = 'USD', onSuccess }) => {
+const SettlementModal = ({ isOpen, onClose, settlement, groupId, members, balances = [], currency = 'USD', group, currentUserId, onSuccess }) => {
   const [fromUser, setFromUser] = useState(settlement?.from || '');
   const [toUser, setToUser] = useState(settlement?.to || '');
   const [amount, setAmount] = useState(settlement?.amount || 0);
@@ -43,6 +44,11 @@ const SettlementModal = ({ isOpen, onClose, settlement, groupId, members, balanc
 
       if (finalFromUser === finalToUser) {
         setError('Payer and recipient cannot be the same person');
+        return;
+      }
+
+      if (!canRecordSettlement(group, currentUserId, finalFromUser, finalToUser)) {
+        setError('You can only record a payment involving yourself. Owners and admins can record any group payment.');
         return;
       }
 

@@ -66,6 +66,12 @@ def require_admin(group, member):
         raise AuthorizationError('Admin access required')
 
 
+def can_delete_settlement(group, member, settlement):
+    return not settlement.is_deleted and (admin(group, member) or member.user_id in {
+        settlement.from_user_id, settlement.to_user_id, settlement.recorded_by,
+    })
+
+
 def require_owner(group, user_id):
     if not owner(group, user_id):
         raise AuthorizationError('Only the group owner may perform this operation')

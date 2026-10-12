@@ -17,6 +17,8 @@ DELIVER_EMAIL = InvitationServiceSQL._send_invitation_email
 
 @pytest.fixture(autouse=True)
 def no_invitation_delivery(monkeypatch):
+    from app.auth.services.auth_service import email_service
+    monkeypatch.setattr(email_service, 'send_verification', lambda *args: True)
     # State-transition tests never send mail or contact a task broker.
     monkeypatch.setattr(InvitationServiceSQL, '_send_invitation_email', lambda *args: 'disabled')
 
@@ -582,3 +584,45 @@ def test_acceptance_response_failure_rolls_back_join(expense_group, bob, monkeyp
         assert session.get(Invitation, UUID(invitation['id'])).status == 'pending'
         assert session.query(GroupMember).filter_by(group_id=UUID(gid), user_id=UUID(bob_id)).count() == 0
         assert session.query(GroupBalance).filter_by(group_id=UUID(gid), user_id=UUID(bob_id)).count() == 0
+
+
+@pytest.mark.parametrize('actor', ['owner', 'admin', 'payer', 'recipient', 'bystander', 'outsider'])
+def test_settlement_permissions_match_serialized_controls_and_reversal(group_of_two, make_user, actor):
+    api, owner_id, payer, payer_id, gid = group_of_two
+    admin_api, admin_id, admin_email = make_user('ledger_admin')
+    recipient, recipient_id, recipient_email = make_user('ledger_recipient')
+    bystander, bystander_id, bystander_email = make_user('ledger_bystander')
+    outsider, _, _ = make_user('ledger_outsider')
+    for email, role in [(admin_email, 'admin'), (recipient_email, 'member'), (bystander_email, 'member')]:
+        assert api.post('/api/v1/expenses/groups/%s/members' % gid, json={'email': email, 'role': role}).status_code == 201
+    original = expense(api, gid, recipient_id, amount='10', split_type='exact', splits=[
+        {'user_id': payer_id, 'amount': '10'},
+    ])
+    before = balances(api, gid)
+    payment = {'group_id': gid, 'from_user_id': payer_id, 'to_user_id': recipient_id, 'amount': '3'}
+    assert bystander.post('/api/v1/expenses/settlements', json=payment).status_code == 403
+    assert outsider.post('/api/v1/expenses/settlements', json=payment).status_code == 403
+    viewers = {'owner': api, 'admin': admin_api, 'payer': payer, 'recipient': recipient, 'bystander': bystander, 'outsider': outsider}
+    caller = viewers[actor]
+    allowed = actor not in ('bystander', 'outsider')
+    created = (caller if allowed else payer).post('/api/v1/expenses/settlements', json=payment)
+    assert created.status_code == 201, created.get_json()
+    sid = payload(created)['settlement']['id']
+    assert payload(created)['settlement']['permissions']['can_delete']
+    detail = caller.get('/api/v1/expenses/settlements/%s' % sid)
+    if actor == 'outsider':
+        assert detail.status_code == 403
+    else:
+        assert payload(detail)['settlement']['permissions']['can_delete'] == allowed
+        full = payload(caller.get('/api/v1/expenses/groups/%s/full' % gid))['group']
+        assert full['settlements'][0]['permissions']['can_delete'] == allowed
+        rows = payload(caller.get('/api/v1/expenses/settlements/group/%s' % gid))['settlements']
+        assert rows[0]['permissions']['can_delete'] == allowed
+    after_payment = balances(api, gid)
+    deleted = caller.delete('/api/v1/expenses/settlements/%s' % sid)
+    assert deleted.status_code == (200 if allowed else 403), deleted.get_json()
+    assert balances(api, gid) == (before if allowed else after_payment)
+    # Payer status does not grant permission over an expense created by someone else.
+    path = '/api/v1/expenses/%s' % original['id']
+    assert payer.put(path, json={'description': 'Unauthorized payer edit'}).status_code == 403
+    assert payer.delete(path).status_code == 403

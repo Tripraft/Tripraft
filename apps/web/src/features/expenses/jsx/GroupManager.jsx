@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, Plus, Mail, Trash2, Clock } from 'lucide-react';
 import { formatDateLocal } from '../../../utils/timezoneUtils';
 import expenseApi from '../../../services/expenseApi';
+import { groupPermissions } from '../utils/groupPermissions';
 
 const unwrapEnvelope = response => response?.data ?? response;
 const invitationLink = invitation => invitation.invitation_link ||
@@ -35,6 +36,8 @@ const GroupManager = ({
   onGroupChange, 
   onGroupCreate,
   onGroupDelete,
+  onGroupUpdated,
+  onGroupLeave,
   onMemberAdd,
   onMemberRemove,
   showAlert,
@@ -45,6 +48,28 @@ const GroupManager = ({
 }) => {
   // Simplified: No complex prefetch or mutation hooks
   
+  const userId = currentUser?.uid || currentUser?.user_id || currentUser?.id;
+  const canViewGroup = Boolean(activeGroup);
+  const permissions = groupPermissions(activeGroup, userId);
+  const [confirmation, setConfirmation] = useState(null);
+  const [actionBusy, setActionBusy] = useState(false);
+  const [actionError, setActionError] = useState('');
+  const [editingGroup, setEditingGroup] = useState(false);
+  const [groupName, setGroupName] = useState('');
+  const [groupDescription, setGroupDescription] = useState('');
+  useEffect(() => { setConfirmation(null); setActionError(''); setEditingGroup(false); }, [activeGroupId, canViewGroup]);
+  const runAction = async (action) => {
+    if (actionBusy) return;
+    setActionBusy(true);
+    setActionError('');
+    try {
+      await action();
+      setConfirmation(null);
+    } catch (error) { setActionError(error.message || 'Could not complete this action.'); }
+    finally { setActionBusy(false); }
+  };
+  const confirm = (message, action) => { setActionError(''); setConfirmation({ message, action }); };
+  const refreshGroup = async () => { if (onGroupUpdated) await onGroupUpdated(); else if (onMemberAdd) await onMemberAdd(); };
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupCurrency, setNewGroupCurrency] = useState('USD');
   const [newMemberEmail, setNewMemberEmail] = useState('');
@@ -277,26 +302,13 @@ const GroupManager = ({
 
   const handleRemoveMember = async (memberId) => {
     if (!activeGroupId) return;
-
-    try {
-      await expenseApi.removeGroupMember(activeGroupId, memberId);
-      showAlert('Member removed successfully!');
-      if (onMemberRemove) await onMemberRemove(memberId);
-    } catch (error) {
-      showAlert(error.message || 'Cannot remove member');
-    }
+    await expenseApi.removeGroupMember(activeGroupId, memberId);
+    showAlert('Member removed successfully!');
+    if (onMemberRemove) await onMemberRemove(memberId);
   };
 
   const handleDeleteGroup = async () => {
-    if (!activeGroupId) return;
-
-    try {
-      await onGroupDelete(activeGroupId);
-      // Success message is shown by parent (ExpenseManager)
-    } catch (error) {
-      // Error is already shown by parent, but show here too for clarity
-      showAlert(error.message || 'Cannot delete group');
-    }
+    if (activeGroupId) await onGroupDelete(activeGroupId);
   };
 
   const handleGroupSelect = (e) => {
@@ -342,7 +354,7 @@ const GroupManager = ({
               <div className="group-info-header">
                 <h3>
                   {activeGroup.name}
-                  {(activeGroup.created_by === currentUser.id || String(activeGroup.created_by) === currentUser.uid) && (
+                  {(permissions.can_delete_group) && (
                     <span style={{ 
                       marginLeft: '0.5rem', 
                       fontSize: '0.75rem', 
@@ -356,10 +368,10 @@ const GroupManager = ({
                     </span>
                   )}
                 </h3>
-                {(activeGroup.created_by === currentUser.id || String(activeGroup.created_by) === currentUser.uid) && (
+                {(permissions.can_delete_group) && (
                   <button 
                     className="btn-icon-delete" 
-                    onClick={handleDeleteGroup}
+                    onClick={() => confirm('Delete this group? All balances must be settled. The group will be archived and pending invitations cancelled.', handleDeleteGroup)}
                     title="Delete Group (Owner Only)"
                   >
                     <Trash2 size={16} />
@@ -378,6 +390,33 @@ const GroupManager = ({
               </div>
             </div>
           )}
+
+          {activeGroup && permissions.can_update_group && !editingGroup && <button type="button" onClick={() => {
+            setGroupName(activeGroup.name); setGroupDescription(activeGroup.description || ''); setEditingGroup(true);
+          }}>Edit group</button>}
+          {activeGroup && editingGroup && permissions.can_update_group && <form onSubmit={event => {
+            event.preventDefault();
+            runAction(async () => {
+              await expenseApi.updateGroup(activeGroupId, { name: groupName.trim(), description: groupDescription.trim() || null });
+              await refreshGroup(); setEditingGroup(false);
+            });
+          }}>
+            <label>Group name<input value={groupName} maxLength={100} required onChange={event => setGroupName(event.target.value)} /></label>
+            <label>Description<textarea value={groupDescription} maxLength={1000} onChange={event => setGroupDescription(event.target.value)} /></label>
+            <button disabled={actionBusy || !groupName.trim()}>Save group</button>
+            <button type="button" disabled={actionBusy} onClick={() => setEditingGroup(false)}>Cancel edit</button>
+          </form>}
+          {activeGroup && permissions.can_leave_group && <button type="button" disabled={actionBusy} onClick={() => confirm(
+            'Leave this group? Your balance must be zero. Your existing expense and payment history will be retained.', async () => {
+              await expenseApi.leaveGroup(activeGroupId); if (onGroupLeave) await onGroupLeave();
+            },
+          )}>Leave group</button>}
+          {confirmation && <div role="alertdialog" aria-label="Confirm group action">
+            <p>{confirmation.message}</p>
+            <button disabled={actionBusy} onClick={() => runAction(confirmation.action)}>{actionBusy ? 'Saving...' : 'Confirm'}</button>
+            <button disabled={actionBusy} onClick={() => { setConfirmation(null); setActionError(''); }}>Cancel</button>
+          </div>}
+          {actionError && <p role="alert">{actionError}</p>}
 
           <form className="create-group-form" onSubmit={handleCreateGroup}>
             <input 
@@ -407,7 +446,7 @@ const GroupManager = ({
           </form>
         </div>
 
-        {activeGroupId && (
+        {activeGroupId && activeGroup && (
           <div className="card">
             <h2>
               <Users size={20} />
@@ -473,11 +512,11 @@ const GroupManager = ({
                       // NaN === NaN is false, so none of these was ever true.
                       const memberId = member.user_id != null ? String(member.user_id) : null;
                       const groupOwnerId = activeGroup?.created_by != null ? String(activeGroup.created_by) : null;
-                      const currentUserId = currentUser?.uid != null ? String(currentUser.uid) : null;
+                      const currentUserId = userId != null ? String(userId) : null;
 
                       const isCreator = memberId !== null && memberId === groupOwnerId;
                       const isCurrentUser = memberId !== null && memberId === currentUserId;
-                      const canRemove = groupOwnerId !== null && groupOwnerId === currentUserId && !isCurrentUser;
+                      const canRemove = permissions.can_remove_members && !isCreator && !isCurrentUser;
                       
                       return (
                         <li key={member.user_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -496,11 +535,18 @@ const GroupManager = ({
                                 Owner
                               </span>
                             )}
+                            {!isCreator && <span style={{ marginLeft: '0.5rem' }}>{member.role === 'admin' ? 'Admin' : 'Member'}</span>}
                             {isCurrentUser && <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#666' }}>(You)</span>}
                           </span>
+                          {permissions.can_manage_roles && !isCreator && <button type="button" disabled={actionBusy} onClick={() => confirm(
+                            `${member.role === 'admin' ? 'Remove admin access from' : 'Make admin:'} ${displayName}?`, async () => {
+                              await expenseApi.updateGroupMemberRole(activeGroupId, memberId, member.role === 'admin' ? 'member' : 'admin');
+                              await refreshGroup();
+                            },
+                          )}>{member.role === 'admin' ? 'Make member' : 'Make admin'}</button>}
                           {canRemove && (
                             <button 
-                              onClick={() => handleRemoveMember(member.user_id)}
+                              onClick={() => confirm(`Remove ${displayName}? Their balance must be zero. Their existing history will be retained.`, () => handleRemoveMember(member.user_id))}
                               style={{ padding: '0.25rem', background: 'transparent', border: 'none', cursor: 'pointer', color: '#e74c3c' }}
                               title="Remove member (Owner Only)"
                             >
@@ -551,10 +597,7 @@ const GroupManager = ({
                       const statusColor = isDeclined ? '#e74c3c' : isExpired ? '#999' : '#f39c12';
                       const statusText = isDeclined ? 'Declined' : isExpired ? 'Expired' : 'Pending';
                       const canResend = isDeclined || isExpired;
-                      const canRetryEmail = invitation.invited_by === (currentUser?.uid || currentUser?.id) ||
-                        activeGroup?.permissions?.can_update_group ||
-                        activeGroup?.created_by === (currentUser?.uid || currentUser?.id);
-                      
+                      const canRetryEmail = String(invitation.invited_by) === String(userId) || permissions.can_update_group;
                       return (
                         <li key={invitation.invitation_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: bgColor, padding: '0.75rem', borderRadius: '6px', marginBottom: '0.5rem' }}>
                           <div>
@@ -583,6 +626,11 @@ const GroupManager = ({
                                 {resendingInvitationId === (invitation.invitation_id || invitation.id) ? 'Sending...' : 'Resend email'}
                               </button>
                             )}
+                            {!isDeclined && canRetryEmail && <button type="button" disabled={actionBusy} onClick={() => confirm('Cancel this invitation? Its link will no longer allow joining.', async () => {
+                              await expenseApi.cancelInvitation(invitation.invitation_id || invitation.id);
+                              setPendingInvitations(previous => previous.filter(row => (row.invitation_id || row.id) !== (invitation.invitation_id || invitation.id)));
+                              await refreshGroup();
+                            })}>Cancel invitation</button>}
                             {canResend && (
                               <button
                                 onClick={(e) => handleInviteMember(e, true, invitation.invited_email)}

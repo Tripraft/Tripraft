@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { Scale, TrendingUp, Receipt, Handshake, BarChart3 } from 'lucide-react';
 import GroupBalances from './GroupBalances';
+import { canRecordSettlement } from '../utils/groupPermissions';
 import MemberSpending from './MemberSpending';
 import TransactionList from './TransactionList';
 import ExpenseAnalytics from './ExpenseAnalytics';
@@ -20,7 +21,9 @@ const SettleUpTab = ({
   members,
   allMembersMap,
   settlementHistory,
-  onSettlementSuccess, 
+  onSettlementSuccess,
+  onSettlementDelete,
+  currentUserId,
   currency = 'USD' 
 }) => {
   const [selectedSettlement, setSelectedSettlement] = useState(null);
@@ -53,7 +56,7 @@ const SettleUpTab = ({
 
   // Filter significant balances
   const significantBalances = (balances || []).filter(balance => 
-    balance && Math.abs(balance.net_balance || 0) > 0.01
+    balance && Math.abs(balance.net_balance || 0) >= 0.01
   );
 
   // Calculate suggested settlements
@@ -68,7 +71,7 @@ const SettleUpTab = ({
     
     creditors.forEach(creditor => {
       debtors.forEach(debtor => {
-        if (Math.abs(debtor.net_balance) > 0.01 && Math.abs(creditor.net_balance) > 0.01) {
+        if (Math.abs(debtor.net_balance) >= 0.01 && Math.abs(creditor.net_balance) >= 0.01) {
           const amount = Math.min(creditor.net_balance, Math.abs(debtor.net_balance));
           settlements.push({
             from: debtor.user_id,
@@ -77,8 +80,8 @@ const SettleUpTab = ({
             toName: getMemberName(creditor.user_id),
             amount: amount
           });
-          creditor.net_balance -= amount;
-          debtor.net_balance += amount;
+          creditor.net_balance = Math.round((creditor.net_balance - amount) * 100) / 100;
+          debtor.net_balance = Math.round((debtor.net_balance + amount) * 100) / 100;
         }
       });
     });
@@ -229,7 +232,7 @@ const SettleUpTab = ({
                 }}>
                   {formatCurrency(settlement.amount)}
                 </div>
-                <button
+                {canRecordSettlement(group, currentUserId, settlement.from, settlement.to) ? <button
                   onClick={() => handleSettleUp(settlement)}
                   style={{
                     background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
@@ -253,7 +256,7 @@ const SettleUpTab = ({
                   }}
                 >
                   Settle Up
-                </button>
+                </button> : <span>View only</span>}
               </div>
             ))}
           </div>
@@ -265,6 +268,9 @@ const SettleUpTab = ({
         isOpen={isHistoryModalOpen}
         onClose={() => setIsHistoryModalOpen(false)}
         settlements={settlementHistory}
+        group={group}
+        currentUserId={currentUserId}
+        onDelete={onSettlementDelete}
         currency={currency}
       />
 
@@ -276,7 +282,9 @@ const SettleUpTab = ({
           setSelectedSettlement(null);
         }}
         settlement={selectedSettlement}
-        groupId={group?.group_id}
+        groupId={group?.group_id || group?.id}
+        group={group}
+        currentUserId={currentUserId}
         members={members}
         balances={balances || []}
         currency={group?.currency || 'USD'}
@@ -294,6 +302,7 @@ const TabbedGroupView = ({
   onBalanceUpdate,
   settlementHistory,
   onSettlementSuccess,
+  onSettlementDelete,
   transactions,
   filter,
   onFilterChange,
@@ -400,6 +409,8 @@ const TabbedGroupView = ({
               onBalanceUpdate={onBalanceUpdate}
               settlementHistory={settlementHistory}
               onSettlementSuccess={onSettlementSuccess}
+              onSettlementDelete={onSettlementDelete}
+              currentUserId={currentUserId}
               showSettleUp={false}
             />
           </div>
@@ -415,6 +426,8 @@ const TabbedGroupView = ({
               allMembersMap={allMembersMap}
               settlementHistory={settlementHistory}
               onSettlementSuccess={onSettlementSuccess}
+              onSettlementDelete={onSettlementDelete}
+              currentUserId={currentUserId}
               currency={group?.currency || 'USD'}
             />
           </div>

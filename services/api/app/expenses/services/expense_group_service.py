@@ -258,7 +258,7 @@ class GroupServiceSQL:
         settlements = query.options(joinedload(Settlement.from_user), joinedload(Settlement.to_user)).order_by(
             Settlement.settlement_date.desc(), Settlement.created_at.desc(), Settlement.id.desc(),
         ).offset(settlement_offset).limit(settlement_limit).all()
-        data['settlements'] = [SettlementServiceSQL._get_settlement_dict(session, row) for row in settlements]
+        data['settlements'] = [SettlementServiceSQL._get_settlement_dict(session, row, group, member) for row in settlements]
         data['settlement_pagination'] = {'total': total, 'limit': settlement_limit, 'offset': settlement_offset,
                                          'has_more': settlement_offset + len(settlements) < total}
         data['balances'] = member_balances(session, group)

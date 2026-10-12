@@ -5,7 +5,7 @@ import expenseApi from '../services/expenseApi';
 
 jest.mock('../services/expenseApi', () => ({
   __esModule: true,
-  default: { sendInvitation: jest.fn(), getGroupInvitations: jest.fn(), resendInvitation: jest.fn() },
+  default: { sendInvitation: jest.fn(), getGroupInvitations: jest.fn(), resendInvitation: jest.fn(), cancelInvitation: jest.fn() },
 }));
 
 const link = 'http://localhost:5173/invitation/invite-uuid';
@@ -19,6 +19,7 @@ const invitation = {
 function setup(pendingInvitations = []) {
   const showAlert = jest.fn();
   render(<GroupManager groups={[]} activeGroupId="group-uuid" members={[]}
+    activeGroup={{ id: 'group-uuid', name: 'Trip', created_by: 'actual-owner', my_role: 'member' }}
     currentUser={{ uid: 'owner-uuid' }} showAlert={showAlert}
     pendingInvitationsFromParent={pendingInvitations} usingMegaBootstrap />);
   return showAlert;
@@ -89,4 +90,16 @@ it('does not offer resending another member’s invitation to a regular member',
   setup([{ ...invitation, invited_by: 'other-user' }]);
   fireEvent.click(screen.getByRole('button', { name: /Pending/ }));
   expect(screen.queryByRole('button', { name: 'Resend email' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Cancel invitation' })).toBeNull();
+});
+
+it('lets the inviter cancel with confirmation and removes the unusable link', async () => {
+  expenseApi.cancelInvitation.mockResolvedValue({ success: true });
+  setup([invitation]);
+  fireEvent.click(screen.getByRole('button', { name: /Pending/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel invitation' }));
+  expect(expenseApi.cancelInvitation).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByText('Confirm'));
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Copy invite link' })).toBeNull());
+  expect(expenseApi.cancelInvitation).toHaveBeenCalledWith('invite-uuid');
 });

@@ -87,6 +87,7 @@ const ExpenseManager = () => {
     settlements: activeGroupSettlements,
     invitations: groupInvitations,
     loading: groupDetailLoading,
+    error: groupDetailError,
     refetch: refetchGroupDetail,
     updateFromResponse: updateGroupDetailFromResponse,  // INSTANT UPDATE helper
     updateExpensesAndBalances,  // INSTANT UPDATE helper
@@ -139,6 +140,23 @@ const ExpenseManager = () => {
       setExpenseView(mode, activeGroupId, { replace: true });
     }
   }, [routeMode, routeUserId, mode, activeGroupId, currentUser, authLoading, setExpenseView]);
+
+  // A pending action belongs to the group where it was opened.
+  useEffect(() => {
+    setShowTransactionModal(false);
+    setShowConfirmModal(false);
+    setIsHistoryModalOpen(false);
+    setState(previous => ({ ...previous, editingTransactionId: null }));
+  }, [activeGroupId, mode]);
+
+  useEffect(() => {
+    if (mode === 'group' && groupDetailError && !activeGroupData) {
+      setShowTransactionModal(false);
+      setShowConfirmModal(false);
+      setIsHistoryModalOpen(false);
+      setState(previous => ({ ...previous, editingTransactionId: null }));
+    }
+  }, [mode, groupDetailError, activeGroupData]);
 
   // A deep link selects its requested group even if another group is listed first.
   useEffect(() => {
@@ -440,7 +458,8 @@ const ExpenseManager = () => {
       
       // INSTANT UPDATE: Use returned data if available
       if (mode === 'group' && (result?.expenses || result?.group_balances)) {
-        updateExpensesAndBalances(result.expenses, result.group_balances);
+        updateExpensesAndBalances(activeGroupExpenses.filter(item => (item.id || item.expense_id) !== id), result.group_balances);
+        await refetchGroupDetail();
       } else if (mode === 'personal') {
         await refetchPersonalExpenses();
       } else {
@@ -464,23 +483,26 @@ const ExpenseManager = () => {
       setMutationLoading(true);
       showToast('Creating settlement...', 'info');
       
-      const result = unwrapEnvelope(await expenseApi.createSettlement(settlementData));
-      
-      // INSTANT UPDATE: Use returned settlements and balances from API response
-      if (result?.settlements || result?.balances) {
-        updateSettlementsAndBalances(result.settlements, result.balances);
-        showToast('Settlement recorded successfully', 'success');
-      } else {
-        // Fallback: Refetch group data
-        await refetchGroupDetail();
-        showToast('Settlement recorded successfully', 'success');
-      }
+      await expenseApi.createSettlement(settlementData);
+      // Mutation responses may contain only the default first page of history.
+      await refetchGroupDetail();
+      showToast('Settlement recorded successfully', 'success');
     } catch (error) {
       showToast(error.message || 'Failed to record settlement', 'error');
       throw error;
     } finally {
       setMutationLoading(false);
     }
+  };
+
+  const handleSettlementDelete = async (settlementId) => {
+    const result = unwrapEnvelope(await expenseApi.deleteSettlement(settlementId));
+    updateSettlementsAndBalances(
+      activeGroupSettlements.filter(item => (item.id || item.settlement_id) !== settlementId),
+      result.balances,
+    );
+    await refetchGroupDetail();
+    showToast('Settlement deleted. Outstanding balances restored.', 'success');
   };
 
   // Get editing transaction
@@ -555,7 +577,7 @@ const ExpenseManager = () => {
             <RefreshCw size={20} className={refreshing ? 'spinning' : ''} />
           </button>
           <ModeToggle mode={mode} onToggle={handleModeToggle} />
-          <button className="btn-add-transaction" onClick={handleOpenModal} disabled={mutationLoading}>
+          <button className="btn-add-transaction" onClick={handleOpenModal} disabled={mutationLoading || (mode === 'group' && (!activeGroupData || groupDetailLoading))}>
             <PlusCircle size={20} />
             <span>Add Transaction</span>
           </button>
@@ -589,6 +611,8 @@ const ExpenseManager = () => {
           onGroupChange={handleGroupChange}
           onGroupCreate={handleCreateGroup}
           onGroupDelete={handleDeleteGroup}
+          onGroupUpdated={async () => { await refetchGroupDetail(); await refetchGroups(); }}
+          onGroupLeave={async () => { setExpenseView('personal'); await refetchGroups(); }}
           onMemberAdd={async () => await refetchGroupDetail()}
           onMemberRemove={async () => await refetchGroupDetail()}
           showAlert={showAlert}
@@ -621,7 +645,7 @@ const ExpenseManager = () => {
         let currentOwed = 0;
         if (Array.isArray(balances)) {
           currentOwed = balances
-            .filter(b => Math.abs(b.net_balance || 0) > 0.01)
+            .filter(b => Math.abs(b.net_balance || 0) >= 0.01)
             .reduce((sum, b) => sum + Math.abs(b.net_balance || 0), 0) / 2;
         }
         
@@ -660,11 +684,16 @@ const ExpenseManager = () => {
               isOpen={isHistoryModalOpen}
               onClose={() => setIsHistoryModalOpen(false)}
               settlements={activeGroupSettlements || []}
+              group={activeGroupData}
+              currentUserId={currentUser?.uid || currentUser?.user_id || currentUser?.id}
+              onDelete={handleSettlementDelete}
               currency={activeGroupData?.currency || 'USD'}
             />
           </>
         );
       })()}
+
+      {mode === 'group' && groupDetailError && <p role="alert">Unable to open this group: {groupDetailError}</p>}
 
       {/* Group View with Tabs (Balances, Settle Up, Spending, Transactions, Analytics) */}
       {mode === 'group' && activeGroupId && activeGroupData && (
@@ -677,6 +706,7 @@ const ExpenseManager = () => {
           onBalanceUpdate={refetchGroupDetail}
           settlementHistory={activeGroupSettlements || []}
           onSettlementSuccess={handleSettlementSuccess}
+          onSettlementDelete={handleSettlementDelete}
           transactions={getCurrentTransactions()}
           filter={state.filter}
           onFilterChange={(filterType, value) => setState(prev => ({

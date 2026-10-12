@@ -4,6 +4,7 @@ import { Edit2, Trash2, FolderOpen, Info, ChevronLeft, ChevronRight, History, Re
 import { formatMoney } from '../../../utils/money';
 import { formatDateLocal } from '../../../utils/timezoneUtils';
 import ExpenseHistoryModal from './ExpenseHistoryModal';
+import { expensePermissions } from '../utils/groupPermissions';
 
 // Category icon mapping with colors
 const CATEGORY_CONFIG = {
@@ -174,32 +175,6 @@ const TransactionList = ({
     return false;
   };
 
-  // Check if current user can edit/delete this expense
-  // Role-based permissions:
-  // - Personal mode: always allow (expenses are already filtered to the current user)
-  // - Group owner can edit/delete ANY expense
-  // - Members can edit/delete expenses they CREATED or PAID FOR
-  const canUserEditDelete = (transaction) => {
-    if (mode !== 'group') {
-      // Personal mode: all fetched expenses belong to the current user
-      return true;
-    }
-
-    // Group mode: normalize IDs to strings for safe UUID comparison
-    const transactionCreatedBy = String(transaction.created_by || '');
-    const transactionPaidBy = String(transaction.paid_by || '');
-    const userId = String(currentUserId || '');
-
-    if (!userId) return false;
-
-    // Group owner can edit/delete ANY expense
-    const groupOwnerId = String(activeGroup?.created_by || '');
-    if (groupOwnerId && groupOwnerId === userId) return true;
-
-    // Members can edit/delete expenses they created OR paid for
-    return transactionCreatedBy === userId || transactionPaidBy === userId;
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     
@@ -354,7 +329,7 @@ const TransactionList = ({
                 const isIncomeTransaction = isIncome(t.category);
                 const addedByName = mode === 'group' ? getMemberName(t.paid_by) : '';
                 const splitType = mode === 'group' ? (t.split_type || 'EQUAL') : '';
-                const canEditDelete = canUserEditDelete(t);
+                const permissions = expensePermissions(t, activeGroup, currentUserId, mode);
                 const isEdited = wasEdited(t);
                 const isDeleted = t.is_deleted === true;
                 const isSyncing = t._optimistic === true; // Phase 17.5: Show syncing indicator
@@ -467,16 +442,16 @@ const TransactionList = ({
                         <span className="deleted-indicator">
                           <Trash2 size={14} />
                         </span>
-                      ) : canEditDelete ? (
+                      ) : permissions.can_edit || permissions.can_delete ? (
                         <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}>
-                          <button 
+                          {permissions.can_edit && <button
                             className="btn-icon btn-edit"
                             onClick={() => onEdit(t)}
                             title="Edit transaction"
                           >
                             <Edit2 size={12} />
-                          </button>
-                          <button 
+                          </button>}
+                          {permissions.can_delete && <button
                             className="btn-icon btn-delete"
                             onClick={() => {
                               const expenseId = t.id || t.expense_id;
@@ -487,7 +462,7 @@ const TransactionList = ({
                             title="Delete transaction"
                           >
                             <Trash2 size={12} />
-                          </button>
+                          </button>}
                         </div>
                       ) : mode === 'group' ? (
                         <span style={{ fontSize: '0.75rem', color: '#999' }}>

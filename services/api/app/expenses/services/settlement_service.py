@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from app.core.config import Config
 from app.core.exceptions import AppError
-from app.expenses.services.group_access import access, identifier, preserve_former_member_balances, service_result
+from app.expenses.services.group_access import access, admin, can_delete_settlement, identifier, preserve_former_member_balances, service_result
 from app.expenses.services.ledger_math import member_balances, simplified_debts
 from app.expenses.models import (Group, GroupBalance, GroupMember,
                                         Settlement, User, money_to_json)
@@ -82,10 +82,7 @@ class SettlementServiceSQL:
                 # A member cannot record payments between two other people.
                 # Owners/admins are the explicit exception for bookkeeping.
                 requester = memberships[str(user_id)]
-                is_group_admin = (
-                    requester.role in {'owner', 'admin'}
-                    or str(group.created_by) == str(user_id)
-                )
+                is_group_admin = admin(group, requester)
                 if (
                     str(user_id) not in {str(from_user_id), str(to_user_id)}
                     and not is_group_admin
@@ -144,7 +141,7 @@ class SettlementServiceSQL:
                 
                 logger.info(f"Settlement created: {settlement.id} in group {group_id}")
                 
-                return True, {'settlement': SettlementServiceSQL._get_settlement_dict(session, settlement)}
+                return True, {'settlement': SettlementServiceSQL._get_settlement_dict(session, settlement, group, requester)}
                 
         except AppError as exc:
             return False, {'error': exc.message, 'status_code': exc.status_code}
@@ -153,7 +150,7 @@ class SettlementServiceSQL:
             return False, {'error': 'Failed to create settlement'}
     
     @staticmethod
-    def _get_settlement_dict(session, settlement: Settlement) -> Dict[str, Any]:
+    def _get_settlement_dict(session, settlement: Settlement, group=None, member=None) -> Dict[str, Any]:
         """
         Get settlement as dictionary with user info.
         
@@ -161,6 +158,8 @@ class SettlementServiceSQL:
         Falls back to individual queries if not loaded.
         """
         data = settlement.to_dict()
+        if group is not None and member is not None:
+            data['permissions'] = {'can_delete': can_delete_settlement(group, member, settlement)}
         
         from_user = settlement.from_user or session.get(User, settlement.from_user_id)
         to_user = settlement.to_user or session.get(User, settlement.to_user_id)
@@ -206,20 +205,9 @@ class SettlementServiceSQL:
                 if not settlement or settlement.is_deleted:
                     return False, {'error': 'Settlement not found'}
                 
-                access(session, settlement.group_id, user_id)
-                # Settlement details are visible to active group members.
-                # Destructive authorization is enforced separately in
-                # ``delete_settlement`` below.
-                member = session.query(GroupMember).filter(
-                    GroupMember.group_id == settlement.group_id,
-                    GroupMember.user_id == user_id,
-                    GroupMember.is_active == True
-                ).first()
-                
-                if not member:
-                    return False, {'error': 'Not a member of this group'}
+                group, member = access(session, settlement.group_id, user_id)
 
-                return True, {'settlement': SettlementServiceSQL._get_settlement_dict(session, settlement)}
+                return True, {'settlement': SettlementServiceSQL._get_settlement_dict(session, settlement, group, member)}
                 
         except AppError as exc:
             return False, {'error': exc.message, 'status_code': exc.status_code}
@@ -248,7 +236,7 @@ class SettlementServiceSQL:
         """
         try:
             with get_db_session() as session:
-                access(session, group_id, user_id)
+                group, member = access(session, group_id, user_id)
                 # Verify membership
                 member = session.query(GroupMember).filter(
                     GroupMember.group_id == group_id,
@@ -273,7 +261,7 @@ class SettlementServiceSQL:
                 ).count()
                 
                 settlement_list = [
-                    SettlementServiceSQL._get_settlement_dict(session, s)
+                    SettlementServiceSQL._get_settlement_dict(session, s, group, member)
                     for s in settlements
                 ]
                 
@@ -322,22 +310,7 @@ class SettlementServiceSQL:
                 if not member:
                     return False, {'error': 'Not a member of this group'}
 
-                # Reversing a settlement is a money mutation.  The recorder,
-                # either party, and group owner/admin are trusted to do it;
-                # every other active member is deliberately excluded.
-                group = session.get(Group, settlement.group_id)
-                is_group_admin = (
-                    member.role in {'owner', 'admin'}
-                    or (group is not None and str(group.created_by) == str(user_id))
-                )
-                if (
-                    str(user_id) not in {
-                        str(settlement.recorded_by),
-                        str(settlement.from_user_id),
-                        str(settlement.to_user_id),
-                    }
-                    and not is_group_admin
-                ):
+                if not can_delete_settlement(group, member, settlement):
                     return False, {
                         'error': 'Only a settlement party, recorder, or group admin may delete it',
                         'status_code': 403,

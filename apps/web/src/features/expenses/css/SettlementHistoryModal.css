@@ -685,3 +685,14 @@
     padding: 14px 16px;
   }
 }
+.shm-delete-confirm {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  border-radius: 8px;
+}
+
+.shm-delete-confirm button {
+  margin: 0.5rem 0.5rem 0 0;
+}

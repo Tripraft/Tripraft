@@ -152,8 +152,6 @@ export function useGroupsQuery() {
  * Fetches a single group with full details. Fallback only when mega-bootstrap cache is empty.
  */
 export function useGroupQuery(groupId, options = {}) {
-  const queryClient = useQueryClient();
-
   return useQuery({
     queryKey: queryKeys.group(groupId),
     queryFn: async () => unwrapEnvelope(await expenseApi.getGroupFull(groupId, false)),
@@ -161,9 +159,8 @@ export function useGroupQuery(groupId, options = {}) {
     staleTime: 0,
     gcTime: 5 * 60 * 1000,
     refetchOnMount: true,
-    refetchOnWindowFocus: false,
-    placeholderData: keepPreviousData,
-    retry: 2,
+    refetchOnWindowFocus: true,
+    retry: (count, error) => ![401, 403, 404].includes(error?.status || error?.statusCode) && count < 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
 }
@@ -1150,12 +1147,15 @@ export function useGroupDetail(groupId) {
   const queryClient = useQueryClient();
   const { data, isLoading, error, refetch } = useGroupQuery(groupId, { enabled: !!groupId });
 
-  const group = data?.group || null;
-  const members = data?.members || group?.members || [];
-  const expenses = data?.expenses || group?.expenses || [];
-  const balances = data?.balances || group?.balances || [];
-  const settlements = data?.settlements || group?.settlements || [];
-  const invitations = data?.invitations || group?.invitations || [];
+  const denied = [401, 403, 404].includes(error?.status || error?.statusCode);
+  const candidate = data?.group;
+  const visibleData = !denied && candidate && String(candidate.id || candidate.group_id) === String(groupId) ? data : null;
+  const group = visibleData?.group || null;
+  const members = visibleData?.members || group?.members || [];
+  const expenses = visibleData?.expenses || group?.expenses || [];
+  const balances = visibleData?.balances || group?.balances || [];
+  const settlements = visibleData?.settlements || group?.settlements || [];
+  const invitations = visibleData?.invitations || group?.invitations || [];
 
   const updateFromResponse = useCallback((responseData) => {
     if (!responseData || !groupId) return;

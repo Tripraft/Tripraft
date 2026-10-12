@@ -30,6 +30,24 @@ Group responses expose `my_role` and `permissions`. Full details include
 `permissions.can_edit` and `permissions.can_delete` on each expense. The API
 enforces these rules independently of the frontend.
 
+Settlement creation, detail, group listing and full-group responses also expose
+`permissions.can_delete`, calculated with the same rule as the DELETE endpoint.
+This flag grants authorization; a later ledger conflict (for example recreating
+debt for a former member) can still reject deletion without changing balances.
+
+The web expense dashboard exposes metadata editing for owners/admins, role
+changes and member removal for owners, member leave, invitation cancellation
+for the inviter/owner/admin, and settlement deletion for authorized users.
+Group/member/settlement deletion and role changes require confirmation.
+Settlement history is visible to every active member; unrelated members see
+other people's suggested payments as view-only. The expense payer has no extra
+edit/delete rights unless they are also the creator or owner.
+
+The dashboard reads all independently paginated expense and settlement pages
+for complete history, spending, analytics and PDF export. One-cent debts remain
+visible. Switching groups clears pending actions; revoked membership hides
+cached financial data after the authorization failure.
+
 ## Groups and members
 
 | Method | Path | Behavior |
