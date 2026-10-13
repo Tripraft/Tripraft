@@ -1,6 +1,9 @@
 # Seed data
 
-The existing read-only travel catalog is preserved in `../catalog/travel_data_complete.db`.
-This directory is for reviewed state seed SQL files when supplied. No fabricated seed
-records are loaded. Schema migrations live in `services/api/migrations`; personal
-application data belongs in the ignored `data/runtime` directory or PostgreSQL.
+The travel-data source of truth is `../catalog/tripraft-canonical.db`, created empty
+from `services/api/schema/tripraft-canonical-schema.sql`, including its extensions.
+See [catalog setup](../catalog/README.md). This directory and `sql_database/` contain
+candidate seed SQL; none is automatically imported. The older populated catalog
+is preserved as a legacy reference. Application-data migrations remain in
+`services/api/migrations`; private account/trip/expense data belongs in the ignored
+`data/runtime` directory or PostgreSQL.

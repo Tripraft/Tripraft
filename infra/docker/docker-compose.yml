@@ -24,7 +24,8 @@ services:
       retries: 10
   api:
     build:
-      context: ../../services/api
+      context: ../..
+      dockerfile: services/api/Dockerfile
     ports: ["127.0.0.1:5000:5000"]
     environment:
       FLASK_ENV: development
@@ -32,12 +33,10 @@ services:
       DATABASE_URL: postgresql://tripraft:${POSTGRES_PASSWORD:-local-development-only}@postgres:5432/tripraft
       REDIS_URL: redis://redis:6379/0
       TRAVEL_DATABASE_DIR: /app/catalog
-      CATALOG_SEED_PATH: /data/catalog/travel_data_complete.db
       CORS_ORIGINS: http://localhost:5173,http://localhost:5174
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
       GUNICORN_WORKERS: "1"
     volumes:
-      - ../../data/catalog:/data/catalog:ro
       - catalog-data:/app/catalog
       - uploads:/app/uploads
     depends_on:
@@ -46,7 +45,8 @@ services:
   worker:
     profiles: ["workers"]
     build:
-      context: ../../services/api
+      context: ../..
+      dockerfile: services/api/Dockerfile
     environment:
       FLASK_ENV: development
       SECRET_KEY: ${SECRET_KEY:-local-development-only-change-before-deployment}

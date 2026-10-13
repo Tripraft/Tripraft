@@ -23,7 +23,7 @@ RUN apt-get update && \
 # ---------------------------------------------------------------------------
 FROM base AS deps
 
-COPY requirements.txt .
+COPY services/api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # ---------------------------------------------------------------------------
@@ -36,7 +36,8 @@ COPY --from=deps /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.
 COPY --from=deps /usr/local/bin /usr/local/bin
 
 # Copy application code
-COPY . .
+COPY services/api/ .
+COPY sql_database/tripraft-global-schema-v2.1.sql ./sql_database/
 
 # Create non-root user
 RUN groupadd -r tripraft && useradd -r -g tripraft tripraft && \

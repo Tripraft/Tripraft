@@ -1,0 +1,168 @@
+﻿file,line,kind,table,row_id,detail
+tripraft-india-36-states-combined-seed (1).sql,65,alter_in_seed,places,,ADD COLUMN google_place_id; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,66,alter_in_seed,places,,ADD COLUMN category; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,67,alter_in_seed,places,,ADD COLUMN cuisine; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,68,alter_in_seed,places,,ADD COLUMN price_band; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,69,alter_in_seed,places,,ADD COLUMN veg_flag; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,70,alter_in_seed,places,,ADD COLUMN source; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,71,alter_in_seed,places,,ADD COLUMN updated_at; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,72,alter_in_seed,places,,ADD COLUMN verification_status; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,73,alter_in_seed,places,,ADD COLUMN verification_notes; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,74,alter_in_seed,places,,ADD COLUMN verified_at; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,75,alter_in_seed,cities,,ADD COLUMN tier; not in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,76,alter_in_seed,photos,,ADD COLUMN thumbnail_url; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,77,alter_in_seed,photos,,ADD COLUMN photo_url; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,78,alter_in_seed,photos,,ADD COLUMN photo_author; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,79,alter_in_seed,photos,,ADD COLUMN photo_license; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,80,alter_in_seed,photos,,ADD COLUMN photo_source_url; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,81,alter_in_seed,photos,,ADD COLUMN photo_status; already in canonical schema
+tripraft-india-36-states-combined-seed (1).sql,1289,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,1293,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,1297,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,1647,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,1651,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,1655,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,2418,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,2421,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,2424,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,2893,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,2897,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,2901,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,3379,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,3382,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,3385,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,3389,extra_table_definition,tripraft_place_external_ids,,tripraft_place_external_ids
+tripraft-india-36-states-combined-seed (1).sql,3391,extra_table_definition,tripraft_restaurant_meta,,tripraft_restaurant_meta
+tripraft-india-36-states-combined-seed (1).sql,3395,extra_table_definition,tripraft_restaurant_external_ids,,tripraft_restaurant_external_ids
+tripraft-india-36-states-combined-seed (1).sql,3502,invalid_sql_prefix,,,"real TripRaft schema . INSERT OR IGNORE INTO countries ( id , country_name ) VALUES ( 31 ,"
+tripraft-india-36-states-combined-seed (1).sql,8671,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,8674,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,8677,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,8681,extra_table_definition,tripraft_place_external_ids,,tripraft_place_external_ids
+tripraft-india-36-states-combined-seed (1).sql,8683,extra_table_definition,tripraft_restaurant_meta,,tripraft_restaurant_meta
+tripraft-india-36-states-combined-seed (1).sql,8687,extra_table_definition,tripraft_restaurant_external_ids,,tripraft_restaurant_external_ids
+tripraft-india-36-states-combined-seed (1).sql,8751,invalid_sql_prefix,,,"real TripRaft schema . INSERT OR IGNORE INTO countries ( id , country_name ) VALUES ( 31 ,"
+tripraft-india-36-states-combined-seed (1).sql,19475,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,19485,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,19495,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,20247,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,20251,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,21105,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,21110,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,21115,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,21606,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,21609,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,21612,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,21616,extra_table_definition,tripraft_place_external_ids,,tripraft_place_external_ids
+tripraft-india-36-states-combined-seed (1).sql,21618,extra_table_definition,tripraft_restaurant_meta,,tripraft_restaurant_meta
+tripraft-india-36-states-combined-seed (1).sql,21622,extra_table_definition,tripraft_restaurant_external_ids,,tripraft_restaurant_external_ids
+tripraft-india-36-states-combined-seed (1).sql,21689,invalid_sql_prefix,,,safe to run on a fresh or existing DB . real TripRaft schema . INSERT OR IGNORE INTO
+tripraft-india-36-states-combined-seed (1).sql,23840,invalid_sql_prefix,,,"real TripRaft schema . INSERT OR IGNORE INTO countries ( id , country_name ) VALUES ( 31 ,"
+tripraft-india-36-states-combined-seed (1).sql,27085,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,27088,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,27091,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,27095,extra_table_definition,tripraft_place_external_ids,,tripraft_place_external_ids
+tripraft-india-36-states-combined-seed (1).sql,27097,extra_table_definition,tripraft_restaurant_meta,,tripraft_restaurant_meta
+tripraft-india-36-states-combined-seed (1).sql,27101,extra_table_definition,tripraft_restaurant_external_ids,,tripraft_restaurant_external_ids
+tripraft-india-36-states-combined-seed (1).sql,27177,invalid_sql_prefix,,,safe to run on a fresh or existing DB . real TripRaft schema . INSERT OR IGNORE INTO
+tripraft-india-36-states-combined-seed (1).sql,29096,invalid_sql_prefix,,,"real TripRaft schema . INSERT OR IGNORE INTO countries ( id , country_name ) VALUES ( 31 ,"
+tripraft-india-36-states-combined-seed (1).sql,32198,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,32201,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,32204,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,32208,extra_table_definition,tripraft_place_external_ids,,tripraft_place_external_ids
+tripraft-india-36-states-combined-seed (1).sql,32210,extra_table_definition,tripraft_restaurant_meta,,tripraft_restaurant_meta
+tripraft-india-36-states-combined-seed (1).sql,32214,extra_table_definition,tripraft_restaurant_external_ids,,tripraft_restaurant_external_ids
+tripraft-india-36-states-combined-seed (1).sql,37045,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,37048,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,37051,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,37055,extra_table_definition,tripraft_place_external_ids,,tripraft_place_external_ids
+tripraft-india-36-states-combined-seed (1).sql,37057,extra_table_definition,tripraft_restaurant_meta,,tripraft_restaurant_meta
+tripraft-india-36-states-combined-seed (1).sql,37061,extra_table_definition,tripraft_restaurant_external_ids,,tripraft_restaurant_external_ids
+tripraft-india-36-states-combined-seed (1).sql,37233,invalid_sql_prefix,,,"real TripRaft schema . INSERT OR IGNORE INTO countries ( id , country_name ) VALUES ( 31 ,"
+tripraft-india-36-states-combined-seed (1).sql,46979,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,46983,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,46987,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,47177,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,47180,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,47183,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,47527,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,47531,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,47535,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,47747,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,47751,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,47755,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,47954,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,47958,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,47962,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,48718,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,48721,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,48724,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,50474,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,50484,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,50494,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,52682,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,52686,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,52690,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,53151,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,53154,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,53157,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,53161,extra_table_definition,tripraft_place_external_ids,,tripraft_place_external_ids
+tripraft-india-36-states-combined-seed (1).sql,53163,extra_table_definition,tripraft_restaurant_meta,,tripraft_restaurant_meta
+tripraft-india-36-states-combined-seed (1).sql,53167,extra_table_definition,tripraft_restaurant_external_ids,,tripraft_restaurant_external_ids
+tripraft-india-36-states-combined-seed (1).sql,53277,invalid_sql_prefix,,,safe to run on a fresh or existing DB . real TripRaft schema . INSERT OR IGNORE INTO
+tripraft-india-36-states-combined-seed (1).sql,55306,invalid_sql_prefix,,,"real TripRaft schema . INSERT OR IGNORE INTO countries ( id , country_name ) VALUES ( 31 ,"
+tripraft-india-36-states-combined-seed (1).sql,58554,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,58558,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,58562,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,58902,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,58906,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,58910,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,59106,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,59109,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,59112,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,60795,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,60805,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,60810,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,62555,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,62560,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,62565,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,63440,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,63443,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,63446,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,63450,extra_table_definition,tripraft_place_external_ids,,tripraft_place_external_ids
+tripraft-india-36-states-combined-seed (1).sql,63452,extra_table_definition,tripraft_restaurant_meta,,tripraft_restaurant_meta
+tripraft-india-36-states-combined-seed (1).sql,63456,extra_table_definition,tripraft_restaurant_external_ids,,tripraft_restaurant_external_ids
+tripraft-india-36-states-combined-seed (1).sql,63480,invalid_sql_prefix,,,"real TripRaft schema . INSERT OR IGNORE INTO countries ( id , country_name ) VALUES ( 31 ,"
+tripraft-india-36-states-combined-seed (1).sql,65156,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,65166,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,65176,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,65388,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,65391,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,65394,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,65398,extra_table_definition,tripraft_place_external_ids,,tripraft_place_external_ids
+tripraft-india-36-states-combined-seed (1).sql,65400,extra_table_definition,tripraft_restaurant_meta,,tripraft_restaurant_meta
+tripraft-india-36-states-combined-seed (1).sql,65404,extra_table_definition,tripraft_restaurant_external_ids,,tripraft_restaurant_external_ids
+tripraft-india-36-states-combined-seed (1).sql,67765,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,67769,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,67773,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,68920,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,68923,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,68926,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,69794,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,69797,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,69800,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,70135,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,70138,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,70141,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,70145,extra_table_definition,tripraft_place_external_ids,,tripraft_place_external_ids
+tripraft-india-36-states-combined-seed (1).sql,70147,extra_table_definition,tripraft_restaurant_meta,,tripraft_restaurant_meta
+tripraft-india-36-states-combined-seed (1).sql,70151,extra_table_definition,tripraft_restaurant_external_ids,,tripraft_restaurant_external_ids
+tripraft-india-36-states-combined-seed (1).sql,70172,invalid_sql_prefix,,,"real TripRaft schema . INSERT OR IGNORE INTO countries ( id , country_name ) VALUES ( 31 ,"
+tripraft-india-36-states-combined-seed (1).sql,70899,extra_table_definition,tripraft_state_meta,,tripraft_state_meta
+tripraft-india-36-states-combined-seed (1).sql,70902,extra_table_definition,tripraft_city_meta,,tripraft_city_meta
+tripraft-india-36-states-combined-seed (1).sql,70905,extra_table_definition,tripraft_place_meta,,tripraft_place_meta
+tripraft-india-36-states-combined-seed (1).sql,70909,extra_table_definition,tripraft_place_external_ids,,tripraft_place_external_ids
+tripraft-india-36-states-combined-seed (1).sql,70911,extra_table_definition,tripraft_restaurant_meta,,tripraft_restaurant_meta
+tripraft-india-36-states-combined-seed (1).sql,70915,extra_table_definition,tripraft_restaurant_external_ids,,tripraft_restaurant_external_ids
+tripraft-india-36-states-combined-seed (1).sql,70980,invalid_sql_prefix,,,"real TripRaft schema . INSERT OR IGNORE INTO countries ( id , country_name ) VALUES ( 31 ,"
+tripraft-india-36-states-combined-seed (1).sql,70990,invalid_sql_prefix,,,"reusing it . INSERT OR IGNORE INTO places ( id , city_id , place_name , name_english , ai_summary"

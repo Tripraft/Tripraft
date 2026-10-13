@@ -214,7 +214,8 @@ Every published source/configuration file is listed below. Legal source formats 
 | `apps/web/tests/viteEnvTransform.cjs` | Test fixture/configuration helper for vite Env Transform. |
 | `apps/web/tsconfig.json` | Selects TypeScript compiler options and checked source for apps\web. |
 | `apps/web/vite.config.js` | Configures the React build and local API proxy for apps\web. |
-| `data/catalog/travel_data_complete.db` | Reference place/location catalog used for travel search; preserve the binary dataset without source comments. |
+| `data/catalog/README.md` | Documents the canonical travel schema, empty initialization, configuration and legacy catalog. |
+| `data/catalog/travel_data_complete.db` | Preserved legacy travel catalog; the active source is the ignored tripraft-canonical.db. |
 | `data/seeds/README.md` | Documents README for data\seeds. |
 | `docs/api.md` | Explains API envelopes, cookie authentication, generated client use and remaining schema coverage. |
 | `docs/architecture.md` | Explains app/service/package boundaries, data ownership, auth and deployment architecture. |
@@ -285,7 +286,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/app/core/db/base.py` | Shared Declarative Base Every ORM model in the application MUST import Base from here. |
 | `services/api/app/core/db/connection.py` | SQLAlchemy Connection Manager SINGLE SOURCE OF TRUTH for the ORM database connection. |
 | `services/api/app/core/db/migration_checks.py` | Read-only checks that reject unsupported legacy identifier storage. |
-| `services/api/app/core/db/travel_db.py` | Travel Data Database — travel_data_complete.db Connection manager for the travel reference database. |
+| `services/api/app/core/db/travel_db.py` | Manages canonical travel database connections and audited writes. |
 | `services/api/app/core/db/uuid7.py` | UUIDv7 Generator (RFC 9562) Time-ordered, globally unique, cryptographically random identifiers. |
 | `services/api/app/core/exceptions.py` | Custom Exception Hierarchy Framework-agnostic exception classes for the entire backend. |
 | `services/api/app/core/external/__init__.py` | Third-party API clients. |
@@ -409,7 +410,10 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/app/trips/services/travel_group_service.py` | Group Service for Group Planner Handles all group operations using unified SQL database (pateldeep.db). |
 | `services/api/app/trips/services/trip_invite_service.py` | Invitation Service for Group Planner Handles group invitations using unified SQL database (tripraft.db). |
 | `services/api/app/trips/services/vault_service.py` | Vault Service for Group Planner Handles file upload/download for the logistics vault. |
-| `services/api/docker-entrypoint.sh` | Copies the seed catalog only when needed, applies API migrations and starts the supplied server/worker command. |
+| `services/api/docker-entrypoint.sh` | Initializes the empty canonical catalog, applies API migrations and starts the supplied server/worker command. |
+| `services/api/init_travel_db.py` | Creates and validates the canonical travel database without loading seed data or overwriting existing databases. |
+| `services/api/schema/tripraft-canonical-schema.sql` | Preserved older schema reference; initialization uses sql_database/tripraft-global-schema-v2.1.sql. |
+| `services/api/tests/test_canonical_catalog.py` | Verifies empty creation, existing-data preservation, rejection of incompatible schemas and shared connection settings. |
 | `services/api/gunicorn.conf.py` | Gunicorn Configuration Production server settings with graceful shutdown and worker recycling. |
 | `services/api/migrations/README` | Configures README for services\api\migrations. |
 | `services/api/migrations/env.py` | Alembic Environment Configuration Connects Alembic to the app's SQLAlchemy metadata and database URL. |

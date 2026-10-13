@@ -10,7 +10,8 @@ assert {'api', 'postgres', 'redis', 'worker'} <= compose['services'].keys()
 for name, service in compose['services'].items():
     if 'build' in service:
         context = (compose_file.parent / service['build']['context']).resolve()
-        assert (context / 'Dockerfile').is_file(), f'Invalid build context: {name}'
+        dockerfile = service['build'].get('dockerfile', 'Dockerfile')
+        assert (context / dockerfile).is_file(), f'Invalid build context: {name}'
     for dependency in service.get('depends_on', {}):
         assert dependency in compose['services'], f'Missing dependency: {dependency}'
     for volume in service.get('volumes', []):

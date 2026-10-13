@@ -1,6 +1,6 @@
-# Purpose: Travel Data Database — travel_data_complete.db Connection manager for the travel reference database.
+# Purpose: Manages canonical travel database connections and audited writes.
 """
-Travel Data Database — travel_data_complete.db
+Travel Data Database — tripraft-canonical.db
 ================================================
 Connection manager for the travel reference database.
 
@@ -23,9 +23,8 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-# Resolve database path — travel DB lives in web/database/, not services/api/data/
+# Resolve the canonical database path shared by search, ingestion and ORM reads.
 from app.core.config import Config
-DATA_DIR = Config.DATABASE_DIR
 
 # Allowlisted tables and columns for write operations (SQL injection prevention)
 _ALLOWED_TABLES: frozenset = frozenset({
@@ -74,14 +73,14 @@ def _validate_identifier(value: str, allowed: frozenset, kind: str) -> str:
 
 class TravelDatabase:
     """
-    Connection manager for travel_data_complete.db.
+    Connection manager for the configured canonical travel database.
 
     Thread-safe: each call opens and closes its own connection.
     Row factory set to sqlite3.Row so results can be accessed by column name.
     """
 
     def __init__(self, db_path: Optional[Path] = None):
-        self.db_path = db_path or (DATA_DIR / 'travel_data_complete.db')
+        self.db_path = Path(db_path) if db_path is not None else Config.TRAVEL_DATABASE_PATH
         self._validated = False
 
     def _validate(self):
@@ -109,6 +108,7 @@ class TravelDatabase:
             check_same_thread=False,
         )
         conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA foreign_keys = ON")
         if read_only:
             conn.execute("PRAGMA query_only = ON")
         return conn
@@ -126,6 +126,7 @@ class TravelDatabase:
         try:
             conn = sqlite3.connect(str(self.db_path))
             conn.row_factory = sqlite3.Row
+            conn.execute("PRAGMA foreign_keys = ON")
             yield conn
         except sqlite3.Error as e:
             logger.error("Travel DB error: %s", e)

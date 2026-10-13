@@ -11,12 +11,15 @@ __pycache__/
 htmlcov/
 .venv/
 .tripraft/
+wikidata/data/
 .env
 .env.*
 !.env.example
 *.log
 logs/
 data/runtime/
+data/catalog/tripraft-canonical.db*
+data/catalog/.catalog-*.db
 services/api/uploads/
 extra/
 *.rar

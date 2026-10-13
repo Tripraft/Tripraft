@@ -1,0 +1,214 @@
+﻿city_id,country_name,country_code,state_name,state_code,city_key,city_hash,_file,_line,_derived,_numeric_text_coerced,_country
+19001,India,IN,Arunachal Pradesh,AR,IN|AR|tawang,d0fbdac25512e407d105d4b5c797027b8d0dd6179ae2ea56ed06994cb0546a0c,tripraft-india-36-states-combined-seed (1).sql,1321,False,[],India
+19002,India,IN,Arunachal Pradesh,AR,IN|AR|bomdila,806066c067410445920a35d6f09b7848281844aa57ba9b10e1cd61d739c795f7,tripraft-india-36-states-combined-seed (1).sql,1323,False,[],India
+18001,India,IN,Assam,AS,IN|AS|guwahati,8105e987075b0b421bb6ac42ec18bf7f19a8f4c514d97378949d64cf56f7c0dc,tripraft-india-36-states-combined-seed (1).sql,1679,False,[],India
+18002,India,IN,Assam,AS,IN|AS|kaziranga,5a1fdb69366b8bc07db3a5d6061c24ff41ab632970a2ddbdac9ee6acd67031b1,tripraft-india-36-states-combined-seed (1).sql,1681,False,[],India
+18003,India,IN,Assam,AS,IN|AS|tezpur,6f37601c9395fbe0e63248b735ba60c2ecd798fd125153842c31396459dadc4f,tripraft-india-36-states-combined-seed (1).sql,1683,False,[],India
+18004,India,IN,Assam,AS,IN|AS|sivasagar,238b6e5310c865159d74e324e42e74ee1f3c3b2a274f6ddd7bc38fd04a960ea7,tripraft-india-36-states-combined-seed (1).sql,1685,False,[],India
+18005,India,IN,Assam,AS,IN|AS|majuli,e65b95de3bc398b2edbc5524df992b5e8cf981a823f248135e5737ad5ad64ebe,tripraft-india-36-states-combined-seed (1).sql,1687,False,[],India
+12001,India,IN,Bihar,BR,IN|BR|patna,73dbfa52970e90173452933b3f97048846506ef4cf02bfc7f60cd2f9c0e8083f,tripraft-india-36-states-combined-seed (1).sql,2446,False,[],India
+12002,India,IN,Bihar,BR,IN|BR|bodh-gaya,ef42d256948141d403401f24f73b8c295ca563c81577a6bcd6a17ce2458783af,tripraft-india-36-states-combined-seed (1).sql,2448,False,[],India
+12003,India,IN,Bihar,BR,IN|BR|rajgir,a7be28f77c554bcf65f22a636255c8a5234cb0654326af74674649966337ef60,tripraft-india-36-states-combined-seed (1).sql,2450,False,[],India
+16001,India,IN,Chhattisgarh,CG,IN|CG|raipur,e69d6725a9c32557846bae9abb15844b6d63cd55ee4110dcac96eb97941344dd,tripraft-india-36-states-combined-seed (1).sql,2925,False,[],India
+16002,India,IN,Chhattisgarh,CG,IN|CG|jagdalpur,ec2f452624605db5cf8c91e22221dd090b873b155361bf06f782fd84fe067a21,tripraft-india-36-states-combined-seed (1).sql,2927,False,[],India
+16003,India,IN,Chhattisgarh,CG,IN|CG|bilaspur,431e5564fafc88ffce906ca39e806ed8c444c1536ceaee447cd0e97d827229c8,tripraft-india-36-states-combined-seed (1).sql,2929,False,[],India
+331001,India,IN,Goa,GA,IN|GA|panaji,ec96333e76ca073afb17008b5dcacda1a145ec5f0f3ee2cacb498560d626afa2,tripraft-india-36-states-combined-seed (1).sql,7353,False,[],India
+331002,India,IN,Goa,GA,IN|GA|margao,060d20d70f173409cc93090c771b51b46850d1ec4224ba1ea10e3de1b6a9b348,tripraft-india-36-states-combined-seed (1).sql,7355,False,[],India
+331003,India,IN,Goa,GA,IN|GA|vasco-da-gama,4f3d79b4b0a310583588e120b833f3654cc4d1ce83492be27b80316137a90807,tripraft-india-36-states-combined-seed (1).sql,7357,False,[],India
+331004,India,IN,Goa,GA,IN|GA|mapusa,b0b52a8f41e8f778c22996a528c6eeb41fcb088b76d94d5030ded0c83c8edec7,tripraft-india-36-states-combined-seed (1).sql,7359,False,[],India
+331005,India,IN,Goa,GA,IN|GA|ponda,f67465934f230fe0c1a2b866729f3913cc4e63b38b2797ec27cbe31cfac814eb,tripraft-india-36-states-combined-seed (1).sql,7361,False,[],India
+331006,India,IN,Goa,GA,IN|GA|calangute,eb79f78b9e295e9f3bfcc6afef900f72870cb26242d66d9375973b02371935a4,tripraft-india-36-states-combined-seed (1).sql,7363,False,[],India
+331007,India,IN,Goa,GA,IN|GA|anjuna,a35f82a3dbb43cd091ec726ea1fa82b68bd7d1c507cd3a201f37bbfeaae19dc0,tripraft-india-36-states-combined-seed (1).sql,7365,False,[],India
+331008,India,IN,Goa,GA,IN|GA|palolem,5d05d66899bf44c1621968d6bf6a7b333ca4abd32b2226d17c558a0aee08d371,tripraft-india-36-states-combined-seed (1).sql,7367,False,[],India
+331009,India,IN,Goa,GA,IN|GA|old-goa,ba3bcf8433c3135e1c69ce9e1935cf4599f03ca511c0436108a961a69c658ed1,tripraft-india-36-states-combined-seed (1).sql,7369,False,[],India
+331010,India,IN,Goa,GA,IN|GA|colva,03489e832f4936922541b52709a9ebbf5e182111466aa9b8e032a76ed45fcb2a,tripraft-india-36-states-combined-seed (1).sql,7371,False,[],India
+332001,India,IN,Gujarat,GJ,IN|GJ|ahmedabad,89a2930c0a8ce174d2506f2edf409d1336bd5542aff8fed73f317a024cd7755c,tripraft-india-36-states-combined-seed (1).sql,16878,False,[],India
+332002,India,IN,Gujarat,GJ,IN|GJ|surat,a66da7b39f06c5adb322a3e19fff1f4ba54663719002cfad4f638c192af85c7c,tripraft-india-36-states-combined-seed (1).sql,16880,False,[],India
+332003,India,IN,Gujarat,GJ,IN|GJ|vadodara,8c689419b91a73fe747eeb48bec1932f5f671f763f177882c382ee1324f4b1e3,tripraft-india-36-states-combined-seed (1).sql,16882,False,[],India
+332004,India,IN,Gujarat,GJ,IN|GJ|rajkot,d28934d23e159d914ddfe2bd91c0ce939714726df05b5632c058c59127e60b9b,tripraft-india-36-states-combined-seed (1).sql,16884,False,[],India
+332005,India,IN,Gujarat,GJ,IN|GJ|gandhinagar,19bfd0d0912b23dd7edb9f034b5bc882c191dba12e68e79dd30c5cab5266971e,tripraft-india-36-states-combined-seed (1).sql,16886,False,[],India
+332006,India,IN,Gujarat,GJ,IN|GJ|bhavnagar,ca74a6f1f4a783ea4e16bfc89d4fff75d306aaf9743beb360a3d71cb15abfa7b,tripraft-india-36-states-combined-seed (1).sql,16888,False,[],India
+332007,India,IN,Gujarat,GJ,IN|GJ|jamnagar,774a4786f39b594b866aa0e8bdfe11846c92c58a238fb8a2d6243a37ad3732d5,tripraft-india-36-states-combined-seed (1).sql,16890,False,[],India
+332008,India,IN,Gujarat,GJ,IN|GJ|junagadh,fd1dbd5eeee7e0361efdfafd1074532d48dcb01430f86a885d61aeaff6e8580e,tripraft-india-36-states-combined-seed (1).sql,16892,False,[],India
+332009,India,IN,Gujarat,GJ,IN|GJ|porbandar,ae96466ca707b2e228dbb35dfdcc7942818b735f33676636840223159aeef4e7,tripraft-india-36-states-combined-seed (1).sql,16894,False,[],India
+332010,India,IN,Gujarat,GJ,IN|GJ|patan,da3db79263761a5f7cbe945bd87a6221b1b93a7dd5e9386b75708cf449cf6503,tripraft-india-36-states-combined-seed (1).sql,16896,False,[],India
+332011,India,IN,Gujarat,GJ,IN|GJ|bharuch,1d9527c0d6b2823de3278cc9dcfd1db44b5a14344dd1c19fd7b174c2b454b9c6,tripraft-india-36-states-combined-seed (1).sql,16898,False,[],India
+332012,India,IN,Gujarat,GJ,IN|GJ|anand,f9cb1c09694a48c491a7138a484fcab6c21c89046e52ff9dbf5754898d69a643,tripraft-india-36-states-combined-seed (1).sql,16900,False,[],India
+332013,India,IN,Gujarat,GJ,IN|GJ|mandvi,bfd0087b910c31bc10af57600614f891f6caef46b379c291b9e8d2ee6f5df74b,tripraft-india-36-states-combined-seed (1).sql,16902,False,[],India
+332014,India,IN,Gujarat,GJ,IN|GJ|pavagadh,903efb485c1bcc134d7b09b8ffafcc76e5e126a672fcf5a82072c0063331cbbb,tripraft-india-36-states-combined-seed (1).sql,16904,False,[],India
+332015,India,IN,Gujarat,GJ,IN|GJ|champaner,cea0191314e96e7aeded75f8f4b1bda8f89bf56d3494a73f88c321e90f0cec97,tripraft-india-36-states-combined-seed (1).sql,16906,False,[],India
+332016,India,IN,Gujarat,GJ,IN|GJ|bardoli,ade1f995699cf703b07a08d23e16de1256a75d2d6e164649e98cae35a56a1ab0,tripraft-india-36-states-combined-seed (1).sql,16908,False,[],India
+332017,India,IN,Gujarat,GJ,IN|GJ|dwarka,86e834e652a1ffd12b1a35712bd502cc4ee89cc6bde72132fe49fc1462b547ab,tripraft-india-36-states-combined-seed (1).sql,16910,False,[],India
+332018,India,IN,Gujarat,GJ,IN|GJ|somnath,1907207b4b2fc7e8cf2432c22cba73b250997e487427785cd7462f1cfa79f91d,tripraft-india-36-states-combined-seed (1).sql,16912,False,[],India
+332019,India,IN,Gujarat,GJ,IN|GJ|bhuj,90427cbe936ae60604d03e93111badd259d4e43ad6e456935c364fa82dd1771d,tripraft-india-36-states-combined-seed (1).sql,16914,False,[],India
+332020,India,IN,Gujarat,GJ,IN|GJ|kevadia,4cad4dbf2e492b7faa67ef89aa49c43358cb53ea42605aa6bad820ce1fa7b31d,tripraft-india-36-states-combined-seed (1).sql,16916,False,[],India
+5001,India,IN,Haryana,HR,IN|HR|gurugram,8bdf58a8327c376dde615146e46d00cb1d1ac677a1d7447b0984d5f0ad3b7a6d,tripraft-india-36-states-combined-seed (1).sql,19526,False,[],India
+5002,India,IN,Haryana,HR,IN|HR|faridabad,964b1d4607759420ad1ce17239a33a89365e9310b2673c3cfc45a4c39c6f1903,tripraft-india-36-states-combined-seed (1).sql,19528,False,[],India
+5003,India,IN,Haryana,HR,IN|HR|kurukshetra,e943dd5c05b8a54eef09cd5354f06b5a62195dcba7586f842cd5c1114ec201d2,tripraft-india-36-states-combined-seed (1).sql,19530,False,[],India
+5004,India,IN,Haryana,HR,IN|HR|panchkula,f78bf481b510bd38ec476dd50bb66baa9971323d2924f21f32298f7b7b608c33,tripraft-india-36-states-combined-seed (1).sql,19532,False,[],India
+5005,India,IN,Haryana,HR,IN|HR|hisar,3295ff322669b36603063cbb26feeddae8e63af6f1a8a9f618630a8658e23f22,tripraft-india-36-states-combined-seed (1).sql,19534,False,[],India
+2001,India,IN,Himachal Pradesh,HP,IN|HP|shimla,c14700eec9dae43d8860f859c1750f7629d9ef851222b3f70745238a23943c86,tripraft-india-36-states-combined-seed (1).sql,20309,False,[],India
+2002,India,IN,Himachal Pradesh,HP,IN|HP|manali,491de9cf0431d02f9fca6b31918547d7020bdcbf22a9baf1a211682683495e38,tripraft-india-36-states-combined-seed (1).sql,20310,False,[],India
+2003,India,IN,Himachal Pradesh,HP,IN|HP|dharamshala,b54dcb84ba4bd65f7c856964efa9c2218fc52d2a6126abc43915a2541e95210c,tripraft-india-36-states-combined-seed (1).sql,20311,False,[],India
+2004,India,IN,Himachal Pradesh,HP,IN|HP|dalhousie,5ab0a8a35bc8a194296dce8972a639bf41b1e3a89ddb2aaa90848d7644a5ce56,tripraft-india-36-states-combined-seed (1).sql,20312,False,[],India
+2005,India,IN,Himachal Pradesh,HP,IN|HP|kullu,f8145ba7ebaf026a40ba8da0b4268deab817c30b3246a51d2763047c3df7021c,tripraft-india-36-states-combined-seed (1).sql,20313,False,[],India
+13001,India,IN,Jharkhand,JH,IN|JH|ranchi,c701ef1a8a88fb44d312ff90cc0cea00b26b9830d6e7ad6e4cc960766e8ed223,tripraft-india-36-states-combined-seed (1).sql,21139,False,[],India
+13002,India,IN,Jharkhand,JH,IN|JH|jamshedpur,0e94fba952eb4c62e346b5b84e8b77be8f283d1ead5282ce5fd02972a59bd0d7,tripraft-india-36-states-combined-seed (1).sql,21141,False,[],India
+13003,India,IN,Jharkhand,JH,IN|JH|deoghar,477d40febd54a3ec013240b379d48b5b6e9e1bc2abd5beebbbdff6bdcc324555,tripraft-india-36-states-combined-seed (1).sql,21143,False,[],India
+838001,India,IN,Karnataka,KA,IN|KA|bengaluru,e1fbcd412e1f6c2a01bb9929499c4df9a31224979bc59e8daf855679b78d10ed,tripraft-india-36-states-combined-seed (1).sql,25763,False,[],India
+838002,India,IN,Karnataka,KA,IN|KA|mysuru,67d79b9864f8d61d0f1450b3a98d02debdf5820462a87e3c0cb9224d76d24234,tripraft-india-36-states-combined-seed (1).sql,25765,False,[],India
+838003,India,IN,Karnataka,KA,IN|KA|hampi,82352fe99d9bac44f79bd226b90fd4df1233710880859d690c19a5c9f266d6cd,tripraft-india-36-states-combined-seed (1).sql,25767,False,[],India
+838004,India,IN,Karnataka,KA,IN|KA|madikeri,c3342fd6d492ba446a2c5bd99540bce9d4ea9f47a9c633c840c9b8c478c95fd9,tripraft-india-36-states-combined-seed (1).sql,25769,False,[],India
+838005,India,IN,Karnataka,KA,IN|KA|gokarna,3c732f6f3203e2cd474ca5249381ed2c560a31124d9ded57c7cae7997ee9b033,tripraft-india-36-states-combined-seed (1).sql,25771,False,[],India
+838006,India,IN,Karnataka,KA,IN|KA|udupi,ac895ad7b024a9747b21485fbbbb52a2469f9cca62b9d26b445310c7bb754dcf,tripraft-india-36-states-combined-seed (1).sql,25773,False,[],India
+838007,India,IN,Karnataka,KA,IN|KA|chikmagalur,e80ec9791ae608e9b5f20a5c890dd75cc778c6da910d3c4c567ac931dc7d393a,tripraft-india-36-states-combined-seed (1).sql,25775,False,[],India
+838008,India,IN,Karnataka,KA,IN|KA|badami,4a62db89abdcaa2c9ccefb9513149927c85ae7827a85456f0507f4256c47f7ad,tripraft-india-36-states-combined-seed (1).sql,25777,False,[],India
+838009,India,IN,Karnataka,KA,IN|KA|shivamogga,1b7aef681525cd08575e530f74392cb67d20076838fd0d868aecd9499acb76ae,tripraft-india-36-states-combined-seed (1).sql,25779,False,[],India
+838010,India,IN,Karnataka,KA,IN|KA|beluru,e0d5f0e541511ca0a0f2b25affddf11d2d701cadd90adf14dc6c8c3076f2ebd4,tripraft-india-36-states-combined-seed (1).sql,25781,False,[],India
+840001,India,IN,Kerala,KL,IN|KL|kochi,7053f2f71a673fda2d176dfe88f36c63ce37fd86bf0f097af4cea53b0352ab8f,tripraft-india-36-states-combined-seed (1).sql,30864,False,[],India
+840002,India,IN,Kerala,KL,IN|KL|thiruvananthapuram,f5a83c0821db13b94f9fad331bc4fce1e48a07001068c3a63988880bdd388657,tripraft-india-36-states-combined-seed (1).sql,30866,False,[],India
+840003,India,IN,Kerala,KL,IN|KL|munnar,a26de90d36fa2b78dbdc60c42ba6f1b85a3cc333e47c4017bdb8c92e9fb07c29,tripraft-india-36-states-combined-seed (1).sql,30868,False,[],India
+840004,India,IN,Kerala,KL,IN|KL|alappuzha,0b95c3ad6a442941fa0820039ec8a587527d2cedf1c6633edd3cc28990013063,tripraft-india-36-states-combined-seed (1).sql,30870,False,[],India
+840005,India,IN,Kerala,KL,IN|KL|kozhikode,a430657c5e409788626f21bfbe301f97852b3dec2ce4f8bc697a14086d179582,tripraft-india-36-states-combined-seed (1).sql,30872,False,[],India
+840006,India,IN,Kerala,KL,IN|KL|kumily,974daf807303fe578de6558e725d583691a66dfc7be9d61214e85111d9e4ee31,tripraft-india-36-states-combined-seed (1).sql,30874,False,[],India
+840007,India,IN,Kerala,KL,IN|KL|kalpetta,8a0f52d78d0ab35c74293da4f88076ee14fa860ed4ae0fcb46f1affed480c42e,tripraft-india-36-states-combined-seed (1).sql,30876,False,[],India
+840008,India,IN,Kerala,KL,IN|KL|thrissur,914db4e0294792805554e6a8fa23bb85790e1412d85e626ed57b2c3db7e4c0c3,tripraft-india-36-states-combined-seed (1).sql,30878,False,[],India
+840009,India,IN,Kerala,KL,IN|KL|varkala,ca0b642b41f74cfa574dc7b142166b2d0567929cf504ca4718d4d744e8fb7a37,tripraft-india-36-states-combined-seed (1).sql,30880,False,[],India
+842001,India,IN,Madhya Pradesh,MP,IN|MP|bhopal,99dc01e5eed11f2882dcbaa973ef88ad47ec807ee395a2c86ef676e7f7febacc,tripraft-india-36-states-combined-seed (1).sql,32241,True,[],India
+842002,India,IN,Madhya Pradesh,MP,IN|MP|indore,3ad471ec49583b3c2b7fdc30051991577fa0b9f0e7dbde776c90360272247301,tripraft-india-36-states-combined-seed (1).sql,32260,True,[],India
+842003,India,IN,Madhya Pradesh,MP,IN|MP|gwalior,f0788894fe2da221856a42c2719152b879bc90bfbdfaf22bf52ad763a4047cf9,tripraft-india-36-states-combined-seed (1).sql,32279,True,[],India
+842004,India,IN,Madhya Pradesh,MP,IN|MP|jabalpur,a2da16b2d7d93218828430a0fae5f3cc9707283916cf40985166996f78c19803,tripraft-india-36-states-combined-seed (1).sql,32298,True,[],India
+842005,India,IN,Madhya Pradesh,MP,IN|MP|ujjain,82151b60f28299717ffec9843c7dac47970b00287e59cd6fd4c1295441c2306e,tripraft-india-36-states-combined-seed (1).sql,32317,True,[],India
+842006,India,IN,Madhya Pradesh,MP,IN|MP|khajuraho,edb7084a769878f04053312c02102cad3f67de4a15594197a4b720ee432d1b87,tripraft-india-36-states-combined-seed (1).sql,32336,True,[],India
+841001,India,IN,Maharashtra,MH,IN|MH|mumbai,edd263eb63c1c1b0b13a4c7022585bf3b1e90cf0494c277db50f360ca4a63bac,tripraft-india-36-states-combined-seed (1).sql,44539,False,[],India
+841002,India,IN,Maharashtra,MH,IN|MH|pune,2e5f96e057647dc7eb127e6908741139b150e47e7cfb421a9dfb473c1f4e4467,tripraft-india-36-states-combined-seed (1).sql,44541,False,[],India
+841003,India,IN,Maharashtra,MH,IN|MH|nagpur,4d894012e92d13eedeccaf18554bce8358ca900720ed14f95c0a4b73fe8c6f4a,tripraft-india-36-states-combined-seed (1).sql,44543,False,[],India
+841004,India,IN,Maharashtra,MH,IN|MH|nashik,d1119987daa7e7e3b21e5b44c0b43fe10c0d272a2a29d0ca61e9914dd0d4d47f,tripraft-india-36-states-combined-seed (1).sql,44545,False,[],India
+841005,India,IN,Maharashtra,MH,IN|MH|aurangabad,d08a8a39ef9c4052fca3baba6fefde34af89bb289d1797bfaa4ec17ade0f0f83,tripraft-india-36-states-combined-seed (1).sql,44547,False,[],India
+841006,India,IN,Maharashtra,MH,IN|MH|thane,f080c82b25ad9df02f436f687e245e9d2d604e274ed3cc66529d5ec265533bd6,tripraft-india-36-states-combined-seed (1).sql,44549,False,[],India
+841007,India,IN,Maharashtra,MH,IN|MH|kolhapur,96b54e92dc88e6294ebcfb21521f5c8cc98e1b53037c41e6774608477ff0e77f,tripraft-india-36-states-combined-seed (1).sql,44551,False,[],India
+841008,India,IN,Maharashtra,MH,IN|MH|solapur,620cf8e73e042092e460a531ae62f92ccd151896d8755a8bcfb55af0320eb54a,tripraft-india-36-states-combined-seed (1).sql,44553,False,[],India
+841009,India,IN,Maharashtra,MH,IN|MH|amravati,b150bf8d94816bc45e19d1eeb7e3801f44387241dd9874fbb531c21d15c10112,tripraft-india-36-states-combined-seed (1).sql,44555,False,[],India
+841010,India,IN,Maharashtra,MH,IN|MH|shirdi,c6782d423a702d276bd2bc5a864030d401150f86e43cea29e806e098b65441e2,tripraft-india-36-states-combined-seed (1).sql,44557,False,[],India
+841011,India,IN,Maharashtra,MH,IN|MH|lonavala,43a4eb82c06dc8f5093bd29c5f2906d433b3de2334b69a0fffd9e3500b0f32ab,tripraft-india-36-states-combined-seed (1).sql,44559,False,[],India
+841012,India,IN,Maharashtra,MH,IN|MH|mahabaleshwar,5e9cc23b337b24fc459d43b60d0f5e6115b6143da791bfa91368d78aff7bb03d,tripraft-india-36-states-combined-seed (1).sql,44561,False,[],India
+841013,India,IN,Maharashtra,MH,IN|MH|alibaug,29a086084eeffbbc4477bc30d2dc004c4f92513cc6517d5b47d65bedf65dfdb9,tripraft-india-36-states-combined-seed (1).sql,44563,False,[],India
+841014,India,IN,Maharashtra,MH,IN|MH|matheran,9a0651f0cd47f5eaab7e22ca49635583209bd368c65a0050a737ab41f446fd37,tripraft-india-36-states-combined-seed (1).sql,44565,False,[],India
+841015,India,IN,Maharashtra,MH,IN|MH|ratnagiri,9ba223cda7e392840e831e4eb8154bb254333509ca5d61cac1aad049518e0290,tripraft-india-36-states-combined-seed (1).sql,44567,False,[],India
+841016,India,IN,Maharashtra,MH,IN|MH|malvan,a2a401af46b4e06a5230f4282a79958b73b2e8b87edf307988f7e851c43918e8,tripraft-india-36-states-combined-seed (1).sql,44569,False,[],India
+841017,India,IN,Maharashtra,MH,IN|MH|bhandardara,d65fa318ce1e2e1badacfaa670a83d08d3d26597841a08e64c004bbf20101f93,tripraft-india-36-states-combined-seed (1).sql,44571,False,[],India
+841018,India,IN,Maharashtra,MH,IN|MH|igatpuri,0c56269dd647661188adeddf619782cfe9ff2e93ed3ff106a95b076a1b171969,tripraft-india-36-states-combined-seed (1).sql,44573,False,[],India
+841019,India,IN,Maharashtra,MH,IN|MH|ajanta,22a4aeee0f78ef61488db20cad05a2968f1586babbbc5469844d7a8fe984d2f0,tripraft-india-36-states-combined-seed (1).sql,44575,False,[],India
+841020,India,IN,Maharashtra,MH,IN|MH|ellora,d34f587c9f768c6daaa7e98d2f0c08383074bc34554d04e89053f1ed39b50236,tripraft-india-36-states-combined-seed (1).sql,44577,False,[],India
+22001,India,IN,Manipur,MN,IN|MN|imphal,79fd2a3d5c65ac21217de365b1a4f03ac2c1b4b6734ac2e5df521c4a37d7243b,tripraft-india-36-states-combined-seed (1).sql,47010,False,[],India
+20001,India,IN,Meghalaya,ML,IN|ML|shillong,d917c0f3ee8434612acb8277921b343cbc2863c85abd2fcdfcc60a4f33798514,tripraft-india-36-states-combined-seed (1).sql,47205,False,[],India
+20002,India,IN,Meghalaya,ML,IN|ML|sohra,09100134f89780b635b5eaccc5763516796086c9dbd6001f6346d51cbc9989af,tripraft-india-36-states-combined-seed (1).sql,47207,False,[],India
+23001,India,IN,Mizoram,MZ,IN|MZ|aizawl,139e47c97083dc0976edc95aeb5eb8eddc4d5f2d38df4fcc02aa3ffcbabb7c2a,tripraft-india-36-states-combined-seed (1).sql,47558,False,[],India
+21001,India,IN,Nagaland,NL,IN|NL|kohima,ed94d4544b71a4667e62962c08d0b94c22d43d9c95d83a2ff5b2e30ba9bff921,tripraft-india-36-states-combined-seed (1).sql,47778,False,[],India
+15001,India,IN,Odisha,OD,IN|OD|bhubaneswar,d4a9c440584c498a0d1a74886ad5823a70031ad7f1c28b19f708e23403b0ee2b,tripraft-india-36-states-combined-seed (1).sql,47986,False,[],India
+15002,India,IN,Odisha,OD,IN|OD|puri,b49a2cd0219640d2572af6d673ab1226eac78882207f7afe79e130ec2fb14155,tripraft-india-36-states-combined-seed (1).sql,47988,False,[],India
+15003,India,IN,Odisha,OD,IN|OD|cuttack,724318a25d35ecc542e7d330099b22243c7fd6b49a54d0aace10923c2d268811,tripraft-india-36-states-combined-seed (1).sql,47990,False,[],India
+15004,India,IN,Odisha,OD,IN|OD|sambalpur,4163faca418c1fd4bbd7b13f8d1f661d177cdc2b726c68ac416945708bf51b14,tripraft-india-36-states-combined-seed (1).sql,47992,False,[],India
+15005,India,IN,Odisha,OD,IN|OD|gopalpur,98662c563b251cb9c7ebc319ab5890a6dcafddb44ff6e1a4fa26afa7fd82e156,tripraft-india-36-states-combined-seed (1).sql,47994,False,[],India
+4001,India,IN,Punjab,PB,IN|PB|amritsar,885783e09612622471a3d93edf089ba62224ba23bba95f7e3196dc10d26a39d8,tripraft-india-36-states-combined-seed (1).sql,48748,False,[],India
+4002,India,IN,Punjab,PB,IN|PB|patiala,f96759ad6a8693e21a2839a8511f0f4a27d31a216bd81d1ef42142548aefdf11,tripraft-india-36-states-combined-seed (1).sql,48750,False,[],India
+4003,India,IN,Punjab,PB,IN|PB|ludhiana,532fef77adea50794cfaf36a5b60b3dbd03d50c380b2403edc12aafdeb5abe69,tripraft-india-36-states-combined-seed (1).sql,48752,False,[],India
+4004,India,IN,Punjab,PB,IN|PB|jalandhar,12c1afb1dc26cb97557783c2cf062c56aac183672777cb9fa559ed0d984fa15e,tripraft-india-36-states-combined-seed (1).sql,48754,False,[],India
+4005,India,IN,Punjab,PB,IN|PB|bathinda,014d5d7e0241cd4cdd45bb7e15cb1cae027a21f7f1dcbe3b0f03e12a272524de,tripraft-india-36-states-combined-seed (1).sql,48756,False,[],India
+4006,India,IN,Punjab,PB,IN|PB|anandpur-sahib,d5f590ecb9127733ec89faef999b503f6eadbb6eabe2a59a495c13b8cad3cb3c,tripraft-india-36-states-combined-seed (1).sql,48758,False,[],India
+4007,India,IN,Punjab,PB,IN|PB|kapurthala,88781e2e29881ca8d986d7fab6a0f3c6c8b555409f1ac1dc5c9d3f58060705ec,tripraft-india-36-states-combined-seed (1).sql,48760,False,[],India
+4008,India,IN,Punjab,PB,IN|PB|pathankot,e789ea12f52cf9e863ed6acad832b0415b9447ed0b61f2f70b5ee0b1d448055f,tripraft-india-36-states-combined-seed (1).sql,48762,False,[],India
+4009,India,IN,Punjab,PB,IN|PB|hoshiarpur,bc7d912fb91372615b92d3ff31cbcd76614485fe264db559527b4ada7d4b0b1b,tripraft-india-36-states-combined-seed (1).sql,48764,False,[],India
+4010,India,IN,Punjab,PB,IN|PB|firozpur,0262b6684599a13dcec0a58bd1d7985132b0cef8c46114184e1efd8558e46879,tripraft-india-36-states-combined-seed (1).sql,48766,False,[],India
+4011,India,IN,Punjab,PB,IN|PB|gurdaspur,27a311a51ee97853cbdcd05ced1f7742f31fd4ec45ace4c1229df313ea63dd75,tripraft-india-36-states-combined-seed (1).sql,48768,False,[],India
+4012,India,IN,Punjab,PB,IN|PB|rupnagar,15c01cb42f68e4e69abe250c2441e6ea8e3ec08fa7d6b315797bcc8fa39f09b1,tripraft-india-36-states-combined-seed (1).sql,48770,False,[],India
+6001,India,IN,Rajasthan,RJ,IN|RJ|jaipur,f4106998f242f79736fd259a995f60b3828a1698dbaa04de26f84d811f0534bf,tripraft-india-36-states-combined-seed (1).sql,50525,False,[],India
+6002,India,IN,Rajasthan,RJ,IN|RJ|udaipur,2c1ec7de3065ce9c414555cf84dec99c4a3a16172265b97e1e58df1a65914ee0,tripraft-india-36-states-combined-seed (1).sql,50527,False,[],India
+6003,India,IN,Rajasthan,RJ,IN|RJ|jodhpur,9e97306c3ce67de0cf282fab81d73b03f86cf7a2e68e7adb4015c5a0e833fe58,tripraft-india-36-states-combined-seed (1).sql,50529,False,[],India
+6004,India,IN,Rajasthan,RJ,IN|RJ|jaisalmer,1c4c61d8bed5495bbdff194b141e41e0d1178e258789fc50ab7786e79a6712d3,tripraft-india-36-states-combined-seed (1).sql,50531,False,[],India
+6005,India,IN,Rajasthan,RJ,IN|RJ|ajmer,0dc92ea0e6ca0ebb0eedd078ece632531a6f2c0c9fff49e7aae67ae9ee39c89b,tripraft-india-36-states-combined-seed (1).sql,50533,False,[],India
+6006,India,IN,Rajasthan,RJ,IN|RJ|pushkar,c6f82e88b512f029c9e2b07220c64ad6bae38f31575f9c73d74f4cda4ff233d6,tripraft-india-36-states-combined-seed (1).sql,50535,False,[],India
+6007,India,IN,Rajasthan,RJ,IN|RJ|bikaner,da06638b130c51d79c6abb8bbed171fc3eb8e34f1e812e52ecb0aef8e2cc0c1b,tripraft-india-36-states-combined-seed (1).sql,50537,False,[],India
+6008,India,IN,Rajasthan,RJ,IN|RJ|mount-abu,910413ed48fc178ef174beec9a22861fddfed4ed315989060e1e3c2b2f72e001,tripraft-india-36-states-combined-seed (1).sql,50539,False,[],India
+6009,India,IN,Rajasthan,RJ,IN|RJ|chittorgarh,58c5f01fc26533cf714e55a8b1708826df772d58c96e198f4519e350100633b8,tripraft-india-36-states-combined-seed (1).sql,50541,False,[],India
+6010,India,IN,Rajasthan,RJ,IN|RJ|bundi,cabf512ef42a99a97772c1d346f5fcbb30632dfb7258070208c4dd529d2f194a,tripraft-india-36-states-combined-seed (1).sql,50543,False,[],India
+6011,India,IN,Rajasthan,RJ,IN|RJ|kota,14bc87980d173ee80dd37ce276b745525ca0d55b9ee0947b95b4e747f6264718,tripraft-india-36-states-combined-seed (1).sql,50545,False,[],India
+6012,India,IN,Rajasthan,RJ,IN|RJ|bharatpur,32df407e8d4f55bfcecd2ea0bf449d825171c7c5e17fea2e46650338e0183c5c,tripraft-india-36-states-combined-seed (1).sql,50547,False,[],India
+6013,India,IN,Rajasthan,RJ,IN|RJ|alwar,12aa6f714f6d5646dabf7b921660acb82a06f487ea54508a6b29562b2eb40708,tripraft-india-36-states-combined-seed (1).sql,50549,False,[],India
+6014,India,IN,Rajasthan,RJ,IN|RJ|sawai-madhopur,19284543357c8e8dc705e29bdd8bf048342ce7fd99e2873b3a6a851c20e5f9ae,tripraft-india-36-states-combined-seed (1).sql,50551,False,[],India
+6015,India,IN,Rajasthan,RJ,IN|RJ|rajsamand,7a1f2d8b78e167c6e450fabeba9b86d1a83c63c86ae16d19d57f0a7a95f2b455,tripraft-india-36-states-combined-seed (1).sql,50553,False,[],India
+17001,India,IN,Sikkim,SK,IN|SK|gangtok,3146218d1bce616ba06b978b3aa5db7f1bcd5aa586054f102b5fbd8c2737c1a9,tripraft-india-36-states-combined-seed (1).sql,52714,False,[],India
+17002,India,IN,Sikkim,SK,IN|SK|pelling,bef50ead8aa8ecf3e0072a950b4c9dadc274c9d31f3045019161c75d8f5eed0d,tripraft-india-36-states-combined-seed (1).sql,52716,False,[],India
+17003,India,IN,Sikkim,SK,IN|SK|namchi,6a2f08853c94aa3b43174efe929e2e25fb1eeec6a33bbb8bb667cb8b43cef81d,tripraft-india-36-states-combined-seed (1).sql,52718,False,[],India
+839001,India,IN,Tamil Nadu,TN,IN|TN|chennai,6c3d3b24b8a97950f72104fe6f60f3bbaa72da13a52e4e638d5febe3fc1bc68e,tripraft-india-36-states-combined-seed (1).sql,57222,False,[],India
+839002,India,IN,Tamil Nadu,TN,IN|TN|madurai,5327ea3e2d617a2d3e519ca2137e8f37acec53da9530a65efb6ad8ea283703bd,tripraft-india-36-states-combined-seed (1).sql,57224,False,[],India
+839003,India,IN,Tamil Nadu,TN,IN|TN|coimbatore,0355bbb41c43c21de4941f3e4b4934c210085e90e7e50eef251365bf0a0c33fd,tripraft-india-36-states-combined-seed (1).sql,57226,False,[],India
+839004,India,IN,Tamil Nadu,TN,IN|TN|tiruchirappalli,a5d88d65693afaad4a85f2cd04e9c6bc895a4f848f5d8d0e0754cfad0acc51d8,tripraft-india-36-states-combined-seed (1).sql,57228,False,[],India
+839005,India,IN,Tamil Nadu,TN,IN|TN|kanyakumari,af187a6bf33397ab77c19c25a257f596eeba7ea507cad634377507533d92df2d,tripraft-india-36-states-combined-seed (1).sql,57230,False,[],India
+839006,India,IN,Tamil Nadu,TN,IN|TN|rameswaram,4feee2fd34d48834154e5389865a3226d1e491fb11788d4605913720d3dbe764,tripraft-india-36-states-combined-seed (1).sql,57232,False,[],India
+839007,India,IN,Tamil Nadu,TN,IN|TN|thanjavur,28fc2a9881577bc6db4d194c155778614fce9504d854934ff77630512d0d2a0c,tripraft-india-36-states-combined-seed (1).sql,57234,False,[],India
+839008,India,IN,Tamil Nadu,TN,IN|TN|udhagamandalam,a5c9bb84801409f0d8303933c04af646bb1bd5f7a1ea0928fd56bb6653dc19cc,tripraft-india-36-states-combined-seed (1).sql,57236,False,[],India
+839009,India,IN,Tamil Nadu,TN,IN|TN|kodaikanal,dd221aa625bd00ec5f6aec48c556d4a600946e2ef6f0c022a92ab8cb012af79d,tripraft-india-36-states-combined-seed (1).sql,57238,False,[],India
+839010,India,IN,Tamil Nadu,TN,IN|TN|mahabalipuram,4a5cc0727ea1ff8fbbf1f4e190ee7c1292a5be0da451d6265fd133c69e13169a,tripraft-india-36-states-combined-seed (1).sql,57240,False,[],India
+25001,India,IN,Telangana,TS,IN|TS|hyderabad,1e88ad98a2baf754a8c86301dbd149676432ba0c8060e3c4846014e86416d581,tripraft-india-36-states-combined-seed (1).sql,58586,False,[],India
+25002,India,IN,Telangana,TS,IN|TS|warangal,5462e17498b6e399970e0332429e54ea111c805e45776095cb894932aaeb4dc7,tripraft-india-36-states-combined-seed (1).sql,58588,False,[],India
+24001,India,IN,Tripura,TR,IN|TR|agartala,573515ac1211c91f02fa5b2820e66716fcbbaa46e4d1ed20d8af2ddd147d11fa,tripraft-india-36-states-combined-seed (1).sql,58933,False,[],India
+8001,India,IN,Uttar Pradesh,UP,IN|UP|agra,bd2d7a5c1bd5c45148b3d77eef3f6f42f5c4280c452977366fadb811973cc162,tripraft-india-36-states-combined-seed (1).sql,59135,False,[],India
+8002,India,IN,Uttar Pradesh,UP,IN|UP|varanasi,9099e732c5a1b1eeb08b74666101c99b0f191d184fb6c2cc2cdd95b341c5eb22,tripraft-india-36-states-combined-seed (1).sql,59137,False,[],India
+8003,India,IN,Uttar Pradesh,UP,IN|UP|lucknow,287f8752fde70e5aab14d3f0c91d69e1cf578af4e344f3f1110a1903ecb330d5,tripraft-india-36-states-combined-seed (1).sql,59139,False,[],India
+8004,India,IN,Uttar Pradesh,UP,IN|UP|ayodhya,e3bdd03503a7b55c4e19eaa367d49cdd2a9949d3e68d7e9e87d9d3055c8542aa,tripraft-india-36-states-combined-seed (1).sql,59141,False,[],India
+8005,India,IN,Uttar Pradesh,UP,IN|UP|prayagraj,11db8999d9e2f6e7f126de62d8d50a9ff82d1ec19fb59302f355f2ed91407e54,tripraft-india-36-states-combined-seed (1).sql,59143,False,[],India
+8006,India,IN,Uttar Pradesh,UP,IN|UP|mathura,d02812fbb84cf5e642d0a8f71d8c17c8cb8f6f78a2dfff724f8f5805da65797f,tripraft-india-36-states-combined-seed (1).sql,59145,False,[],India
+8007,India,IN,Uttar Pradesh,UP,IN|UP|vrindavan,1eb32fbf7661b38d64885a389862ccf5d2d6f15b52ae80d16f38226d7b9a8f1f,tripraft-india-36-states-combined-seed (1).sql,59147,False,[],India
+8008,India,IN,Uttar Pradesh,UP,IN|UP|jhansi,f618eb6a4b2cef0c8910072041bba2952ca528471402ed0d6d6e95c8f3619721,tripraft-india-36-states-combined-seed (1).sql,59149,False,[],India
+8009,India,IN,Uttar Pradesh,UP,IN|UP|noida,4acb76f3147ed0e28d8908ba260220f677c8070697237b1fdd13608fc76bf4dd,tripraft-india-36-states-combined-seed (1).sql,59151,False,[],India
+8010,India,IN,Uttar Pradesh,UP,IN|UP|kanpur,6ec6e1823030d7ba0ea47c95c2a9244018deda8809792267d9e9c3c9fafa512d,tripraft-india-36-states-combined-seed (1).sql,59153,False,[],India
+8011,India,IN,Uttar Pradesh,UP,IN|UP|gorakhpur,c563f3b9b17ff867c709908fda7a48f88ae63614cd600613167e40ee48be7843,tripraft-india-36-states-combined-seed (1).sql,59155,False,[],India
+8012,India,IN,Uttar Pradesh,UP,IN|UP|kushinagar,a58c9cef6e7a4f81acd222db8941e0e907697f7889e842ed58e7f9b545d5d302,tripraft-india-36-states-combined-seed (1).sql,59157,False,[],India
+3001,India,IN,Uttarakhand,UK,IN|UK|dehradun,df0310b7c03ccf57445ea26f0865eedaabe6c401d5a231cb6de261b8c0ac2354,tripraft-india-36-states-combined-seed (1).sql,60837,False,[],India
+3002,India,IN,Uttarakhand,UK,IN|UK|mussoorie,b2fc793b5f448105226243e78d4eb388f99bf75be9115face29ceaf63f6571ce,tripraft-india-36-states-combined-seed (1).sql,60839,False,[],India
+3003,India,IN,Uttarakhand,UK,IN|UK|rishikesh,8b80e7f39a3966d1ccb3f1fb5f3c0c587b1bfafa1cf424df1f930b0c239ffdcf,tripraft-india-36-states-combined-seed (1).sql,60841,False,[],India
+3004,India,IN,Uttarakhand,UK,IN|UK|haridwar,ef500f7d96c88d4d815f44cbfaf4717b5b9c823abc306dd8d47a887818062fbf,tripraft-india-36-states-combined-seed (1).sql,60843,False,[],India
+3005,India,IN,Uttarakhand,UK,IN|UK|nainital,9025ec2e2ed25cbf425dbfd6bbfd1fdb84435a6f728ce2989e75e33e0a25ddf8,tripraft-india-36-states-combined-seed (1).sql,60845,False,[],India
+3006,India,IN,Uttarakhand,UK,IN|UK|bhimtal,e4625b9ec50902a3c233ea1bbdb43a4bd97fde09239067111b45b3169db5afe7,tripraft-india-36-states-combined-seed (1).sql,60847,False,[],India
+3007,India,IN,Uttarakhand,UK,IN|UK|almora,5f7ec9dfe7cf1bed1d84ce96522dfad941b2dde87bd9dc0492055808545e05c6,tripraft-india-36-states-combined-seed (1).sql,60849,False,[],India
+3008,India,IN,Uttarakhand,UK,IN|UK|ranikhet,1a4a8d48070f0d9b1c0647328fd10cb19160cfd253607f99a070cc27d57aa1b9,tripraft-india-36-states-combined-seed (1).sql,60851,False,[],India
+3009,India,IN,Uttarakhand,UK,IN|UK|kausani,fad46da22047da92bd40669e1072100a03b6c6b3a5bcb800f86a718b02dc3edb,tripraft-india-36-states-combined-seed (1).sql,60853,False,[],India
+3010,India,IN,Uttarakhand,UK,IN|UK|ramnagar,6402f3ee18f13b1ebef977438c5ce9481c989ec0687ac96ccc9b183189b8cde4,tripraft-india-36-states-combined-seed (1).sql,60855,False,[],India
+3011,India,IN,Uttarakhand,UK,IN|UK|lansdowne,9505c54cb6cfa16d68f0040414c8fa541e533c3c0fe0d43f09f1dbb570c8c27f,tripraft-india-36-states-combined-seed (1).sql,60857,False,[],India
+3012,India,IN,Uttarakhand,UK,IN|UK|new-tehri,470a5ae7f16afb53ef3e482611acbc589748f15abb86301e69e090ebcd62bd1b,tripraft-india-36-states-combined-seed (1).sql,60859,False,[],India
+14001,India,IN,West Bengal,WB,IN|WB|kolkata,2a949a07558a95ded40ba178f829d2889554029e505feb178c651dbd62d4240b,tripraft-india-36-states-combined-seed (1).sql,62589,False,[],India
+14002,India,IN,West Bengal,WB,IN|WB|darjeeling,bd9fa34c45581cf75bc4818eb8030d4699bf5bab10b7f6639d2aded56889c657,tripraft-india-36-states-combined-seed (1).sql,62591,False,[],India
+14003,India,IN,West Bengal,WB,IN|WB|kalimpong,0796fe62b87b6a7e4270363823f27c17086f82363da96f5b2d8c1706d695ae96,tripraft-india-36-states-combined-seed (1).sql,62593,False,[],India
+14004,India,IN,West Bengal,WB,IN|WB|digha,28790f4eb51d1a77510315cfde9ca4f3e2ead23d56f0e88469715e5a493cc0b3,tripraft-india-36-states-combined-seed (1).sql,62595,False,[],India
+14005,India,IN,West Bengal,WB,IN|WB|santiniketan,93ddeeabace9d92923692a05858d9725d8fa00c8c2dfbd469cb16e420f30ed59,tripraft-india-36-states-combined-seed (1).sql,62597,False,[],India
+14006,India,IN,West Bengal,WB,IN|WB|murshidabad,9d4ef2386de8ebe967cd7dad9a716eacafbc7ba50d34d106210c3a447c3cc007,tripraft-india-36-states-combined-seed (1).sql,62599,False,[],India
+320001,India,IN,Andaman and Nicobar Islands,AN,IN|AN|sri-vijaya-puram,35db658b9ddb61e8bd1a8a795abae05de776da2e9cf09ee48455b2365272ef53,tripraft-india-36-states-combined-seed (1).sql,64738,False,[],India
+320002,India,IN,Andaman and Nicobar Islands,AN,IN|AN|swaraj-dweep,1ddeda4fc57d2c95039bd67e53ed021e1f58c9419da014b3ca950284c4aa3f62,tripraft-india-36-states-combined-seed (1).sql,64740,False,[],India
+320003,India,IN,Andaman and Nicobar Islands,AN,IN|AN|shaheed-dweep,de334ae01d6b2a25bf8b2405bb46470adcf8a8ede3a49646cdf21a19c4c25474,tripraft-india-36-states-combined-seed (1).sql,64742,False,[],India
+11001,India,IN,Chandigarh,CH,IN|CH|chandigarh,5b1bb1d17d5505528986fa6fcda2d793520bc871f6f8b9cabc5fd8280be7e875,tripraft-india-36-states-combined-seed (1).sql,65207,False,[],India
+843001,India,IN,Dadra and Nagar Haveli and Daman and Diu,DH,IN|DH|silvassa,eaf17f34ab909dc8d2ca0c09f6e087ee21dec598d47d4ef5bcb090f326f5384d,tripraft-india-36-states-combined-seed (1).sql,65430,True,[],India
+843002,India,IN,Dadra and Nagar Haveli and Daman and Diu,DH,IN|DH|daman,74429a98d648ba47de01434e8cf96c4b6a348047ad0f9e59a8ea0efeea5999be,tripraft-india-36-states-combined-seed (1).sql,65447,True,[],India
+843003,India,IN,Dadra and Nagar Haveli and Daman and Diu,DH,IN|DH|diu,56ad4144273394718f3c32854c0d49f4cc64346e0f00f7f1ba43e7bfae4270bc,tripraft-india-36-states-combined-seed (1).sql,65464,True,[],India
+7001,India,IN,Delhi,DL,IN|DL|old-delhi,4364f8f671b053e2fd7ae84a526fdce8d21d8281ef134cdfaada70f3d9256f27,tripraft-india-36-states-combined-seed (1).sql,67797,False,[],India
+7002,India,IN,Delhi,DL,IN|DL|central-delhi,0285399567b3ab8650e06a87b56b6e99140ff3a922b97f17068e1399ecbea128,tripraft-india-36-states-combined-seed (1).sql,67799,False,[],India
+7003,India,IN,Delhi,DL,IN|DL|new-delhi,05db15c41ef259e16534c1540457e381f7ec8fc5c60f955d0ceb495775466bf8,tripraft-india-36-states-combined-seed (1).sql,67801,False,[],India
+7004,India,IN,Delhi,DL,IN|DL|south-delhi,bd19e489954fef9f79a7583ece79b4891814edb58bbc8f5d380162352f9c74b6,tripraft-india-36-states-combined-seed (1).sql,67803,False,[],India
+7005,India,IN,Delhi,DL,IN|DL|mehrauli,3e4ed35029a8fb9c366dce5465bca1de13ce778dbff10e777fb525de70a8ccf9,tripraft-india-36-states-combined-seed (1).sql,67805,False,[],India
+7006,India,IN,Delhi,DL,IN|DL|hauz-khas,d6f60d81afc25588456e0965cdf0f9a1917f103ae923d5ec57e5e01ccf91119c,tripraft-india-36-states-combined-seed (1).sql,67807,False,[],India
+7007,India,IN,Delhi,DL,IN|DL|east-delhi,e7c38116ba629bbfcd20e27e415186684463ca1b56ae5b79ac262a4fec822226,tripraft-india-36-states-combined-seed (1).sql,67809,False,[],India
+7008,India,IN,Delhi,DL,IN|DL|west-delhi,d5b24b9500d79908cac8f33126c2d0ab0690d0bd9e1b30173fc2f9054095c272,tripraft-india-36-states-combined-seed (1).sql,67811,False,[],India
+9001,India,IN,Jammu and Kashmir,JK,IN|JK|srinagar,4c4f3bc1f9cf34ee5397c090cf36a6c15a4bbf47cdae571841cdb2daacf44645,tripraft-india-36-states-combined-seed (1).sql,68949,False,[],India
+9002,India,IN,Jammu and Kashmir,JK,IN|JK|gulmarg,7012695370e50ea53e9d316920b3925e6d4c581ce3a66a9b932948bc5b38342e,tripraft-india-36-states-combined-seed (1).sql,68951,False,[],India
+9003,India,IN,Jammu and Kashmir,JK,IN|JK|pahalgam,cb904cd280df3dadb199fb6749b46868246345c35a177d3ca687e0c306656d9a,tripraft-india-36-states-combined-seed (1).sql,68953,False,[],India
+9004,India,IN,Jammu and Kashmir,JK,IN|JK|jammu,d9f471a8217e82330f2f6ffed50c8da94fd3b614442195f9fe1fcfa64fc92c67,tripraft-india-36-states-combined-seed (1).sql,68955,False,[],India
+9005,India,IN,Jammu and Kashmir,JK,IN|JK|katra,afa209cb08b325a6e2cc0837d746e29f0243ccef7ff9d29e61deea06f0042355,tripraft-india-36-states-combined-seed (1).sql,68957,False,[],India
+9006,India,IN,Jammu and Kashmir,JK,IN|JK|patnitop,14d6edc188c2d2267709a7675a483a2ced4e400107557f8de875baaf6d1f29bd,tripraft-india-36-states-combined-seed (1).sql,68959,False,[],India
+10001,India,IN,Ladakh,LA,IN|LA|leh,13cbb070c59fa8b4039bd7d94f90f8d370cf3062acdf406f06333059419a580a,tripraft-india-36-states-combined-seed (1).sql,69822,False,[],India
+10002,India,IN,Ladakh,LA,IN|LA|kargil,d2ba26c6e80463e41517f25f6e2f61ebb12aa3b3e17e5c08d5ea7c6247aadee9,tripraft-india-36-states-combined-seed (1).sql,69824,False,[],India
+342001,India,IN,Lakshadweep,LD,IN|LD|kavaratti,a7d145d1bfa4331a081c2d502c055e32cdd42aa7b713a750cddec0cdb8adca47,tripraft-india-36-states-combined-seed (1).sql,70701,False,[],India
+342002,India,IN,Lakshadweep,LD,IN|LD|agatti,0543faf4e094169cf28f361814bcad8735754c80af563e7d3c901844f8790372,tripraft-india-36-states-combined-seed (1).sql,70703,False,[],India
+354001,India,IN,Puducherry,PY,IN|PY|puducherry,f51092b4917de39ebd1d70bead1dbc198b72f5add3450cc1207420b18d8be5f9,tripraft-india-36-states-combined-seed (1).sql,72552,False,[],India
+354002,India,IN,Puducherry,PY,IN|PY|karaikal,abdc95aa36d21f5bc8821cbaa18515b24e1ec32b365e5cbc173a1450c02a7ec1,tripraft-india-36-states-combined-seed (1).sql,72554,False,[],India
+354003,India,IN,Puducherry,PY,IN|PY|mahe,02cc4a2aa02ef02da8de5d542d69b666280cff7c27cb51496d2a9fefbbe299d8,tripraft-india-36-states-combined-seed (1).sql,72556,False,[],India
+354004,India,IN,Puducherry,PY,IN|PY|yanam,fbec16d20b16c3b16402e6a43617243875a319c1f23d8650768d97f077e73432,tripraft-india-36-states-combined-seed (1).sql,72558,False,[],India

@@ -13,7 +13,7 @@ packages/ui/           Shared React components
 packages/api-client/   OpenAPI-generated declarations and cookie-auth client
 packages/types/        Shared TypeScript contracts
 packages/config/       ESLint, TypeScript, Prettier presets
-data/catalog/          Preserved reference travel catalog
+data/catalog/          Canonical travel database and preserved legacy catalog
 data/runtime/          Private local SQLite data (ignored)
 data/seeds/            Reviewed SQL seeds when supplied
 infra/docker/          Local API + PostgreSQL + Redis, optional worker
@@ -43,6 +43,11 @@ See [startup](docs/startup.md) for prerequisites, preserved data and integration
 and [the runbook](docs/runbook.md) for backups and releases.
 
 ## Verify
+
+Travel data uses the empty `data/catalog/tripraft-canonical.db`, built from the
+[global schema v2.1](sql_database/tripraft-global-schema-v2.1.sql). Startup creates
+it when missing; seed SQL is not loaded automatically.
+See [database setup](data/catalog/README.md).
 
 `pnpm verify` checks structure, syntax lint, TypeScript entry points/contracts,
 backend/frontend regressions, and both production frontend builds. Python must

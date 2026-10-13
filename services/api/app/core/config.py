@@ -70,14 +70,14 @@ class Config:
         'DATABASE_URL',
         f"sqlite:///{DATA_DIR / 'runtime' / 'tripraft.db'}"
     )
-    TRAVEL_DATABASE_PATH: Path = Path(os.getenv('TRAVEL_DATABASE_PATH', str(DATABASE_DIR / 'travel_data_complete.db')))
+    TRAVEL_DATABASE_PATH: Path = Path(os.getenv('TRAVEL_DATABASE_PATH', str(DATABASE_DIR / 'tripraft-canonical.db')))
     DATABASE_PATH: Path = TRAVEL_DATABASE_PATH  # Alias for backward compatibility
     SEARCH_INDEX_PATH: Path = DATA_DIR / 'search-index.json'
 
     # Travel Data URL (read replica in production)
     TRAVEL_DATA_URL: str = os.getenv(
         'TRAVEL_DATA_URL',
-        f'sqlite:///{DATABASE_DIR}/travel_data_complete.db'
+        f'sqlite:///{TRAVEL_DATABASE_PATH.as_posix()}'
     )
 
     # PostgreSQL Pool Settings (overridable via env)

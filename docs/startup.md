@@ -23,6 +23,12 @@ processes. Logs live in ignored `.tripraft/logs`.
 
 ## Data and integrations
 
+Both startup modes initialize the empty canonical travel database from
+`sql_database/tripraft-global-schema-v2.1.sql`. Native mode uses
+`data/catalog/tripraft-canonical.db`; Docker uses its persistent catalog volume.
+No seed files are imported. Existing canonical data is preserved and validated.
+See [database setup](../data/catalog/README.md) for manual creation and checks.
+
 Native mode generates `services/api/.env` only when absent, with its own development
 database at `data/runtime/dev/tripraft.db`. It does not overwrite an existing `.env`
 or migrate the older, unversioned `data/runtime/tripraft.db`. Sign up to create an

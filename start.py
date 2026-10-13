@@ -250,6 +250,7 @@ def start(node, docker, smoke, no_browser):
             run(compose + ['up', '--build', '--detach', '--wait', '--wait-timeout', '180'])
             wait_ready('http://127.0.0.1:5000/api/health/live', None)
         else:
+            run([str(venv_python()), str(API / 'init_travel_db.py')], cwd=API, env=env)
             print('Applying database migrations; existing configuration is respected.', flush=True)
             run([str(venv_python()), '-m', 'alembic', 'upgrade', 'head'], cwd=API, env=env)
             api_process = launch('api', [str(venv_python()), str(API / 'run.py')], API)

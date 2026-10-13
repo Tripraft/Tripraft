@@ -1,0 +1,4589 @@
+{
+  "snapshot_tree": "26a9cae26c7dba5dd82905195bcf7bccd04bc6e3",
+  "base_commit": "6965bf0af0e3e691ff42b92e0746af858cad4a8d",
+  "verified_files": 654,
+  "actions": {
+    "restored_discarded_edit": 15,
+    "restored_missing_file": 639
+  },
+  "files": [
+    {
+      "path": ".gitignore",
+      "git_blob": "656abffdb318a52752594bb926a9ec395427c988",
+      "sha256": "6d5fe15716dd92aeecf5d3c0071d40f8806928fe59c84ba31f2d1651a0842752",
+      "bytes": 465,
+      "action": "restored_discarded_edit"
+    },
+    {
+      "path": "README.md",
+      "git_blob": "449f4a0341f3de2de6a3ddd8d6b69492d7cd335f",
+      "sha256": "84dafa187e6d8f08f3b08b0dff2032e86e8d815fcda575de05cf9114724d453c",
+      "bytes": 3187,
+      "action": "restored_discarded_edit"
+    },
+    {
+      "path": "data/catalog/README.md",
+      "git_blob": "febfcf1e12988fc0e8ebd3d5abf797af95611a79",
+      "sha256": "2009e8a00adb5fdf37ed67d5a969223ab266c2ae772c06862346d9ae45dde39c",
+      "bytes": 3202,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/all_places.md",
+      "git_blob": "9aed49c457d5ebd986c72e3a19f9104c5e5e54d4",
+      "sha256": "78cc2fc2400661e2045986c4f6e1ca3cd451e3b82e7a2c3494a5059b5f5d20bc",
+      "bytes": 1137834,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/cities.md",
+      "git_blob": "ba145ab311eadad545d2ec0d8bbdbaa9b1cd165c",
+      "sha256": "3ce3a68a68b566dea0e9ce8de48ba4513b9d4873be7e38a7531cffa71e8bbc92",
+      "bytes": 232538,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/countries.md",
+      "git_blob": "093dcde786bbd8e48a337b1a62a486f6af734902",
+      "sha256": "f0e3aafb108ddb08f3799120003bd9caece261129e0fb85da19568d50e00d260",
+      "bytes": 4411,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/countries.sql",
+      "git_blob": "39d9a3141396c0ab6533a744f5d65d607313deff",
+      "sha256": "dd4fedfaee5ec6256edfca82cfb1141e73ca06d17512d1d8efae5f41beac60c2",
+      "bytes": 54861,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/geography-pending.md",
+      "git_blob": "8d8230e273a36ae37b7c0e37455168daa5eab606",
+      "sha256": "4624818926de68be89559ec341b81e95d9b28afee8812e4de454c2c6da57c228",
+      "bytes": 477,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/README.md",
+      "git_blob": "fb8c5f478f50b7b774298918fe784f5c39b82692",
+      "sha256": "d0b7bf3f2160c45faf79d092a8e2605266bba0b5314ce43d0214e9da0758a1e6",
+      "bytes": 11146,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/afghanistan.md",
+      "git_blob": "6d12d5706b2f66083ce7feb4795dc226cbf83c50",
+      "sha256": "cdcf08d8ef7828288694fce6ba44636536cb19a56bf87906794fa9f90ca0b694",
+      "bytes": 3388,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/albania.md",
+      "git_blob": "ceedc07f15cbffccda05f6b9e2ace353d9fe6bce",
+      "sha256": "d094cfae8d4ec63ab3646dc5fd7220b0d7d091dd8eaa8746227a323453a799b8",
+      "bytes": 9536,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/algeria.md",
+      "git_blob": "acdedc76472b3aaf80d7bee86e4f0b82fa5eef91",
+      "sha256": "401ec25fb6afe4dfac405c80dd61980cf02e4eb2206b1e3abf1cd3a033f73495",
+      "bytes": 2615,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/andorra.md",
+      "git_blob": "ba5ec5e2553d2c69d7b2cc1239013844a0afd9e1",
+      "sha256": "b4b4c48909e7be93a316fd6a5b88833178f721328caed3ea2ed8e5541f69ffa7",
+      "bytes": 3959,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/angola.md",
+      "git_blob": "5f995b6f660fca38a4df64658b6f5bdc02a093bf",
+      "sha256": "e73ffddf18ad4dcde43ee25d022e9187fbb7c445b0f7fd6b1d0394f3f0bba1c1",
+      "bytes": 3770,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/antigua-and-barbuda.md",
+      "git_blob": "201109c9989508e5f971c7c145e0d3d1258de60b",
+      "sha256": "bcadcac2b420d93d24e753bd106c832d41b0e545a4834ecc4e1037dcdec6fa15",
+      "bytes": 922,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/argentina.md",
+      "git_blob": "32ee96cad9d87ea4418b5d3292493c0ba7f3dd07",
+      "sha256": "25084b5a61e162c3b75b6063ecf2353a4362992a2e9ad3b45e45a3ddce28b3b7",
+      "bytes": 5093,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/armenia.md",
+      "git_blob": "f1f71689b3f3ce0cfe2265e7f8d628a8b0abc43f",
+      "sha256": "0ef08401bb3073c2f886c11426be3fe3a0939b6b54e5ad212c9bf464e2cd9062",
+      "bytes": 8955,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/australia.md",
+      "git_blob": "edd84a78e5317c0a4673a707b69c0caf938f689f",
+      "sha256": "888e7364505cfad6999cc0ab567dfd9565dfe3da91863a4bf8e848e9ea9db49b",
+      "bytes": 12570,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/austria.md",
+      "git_blob": "c4bb424745c79a2b2de1f9dd65206fcf1b7f0d7d",
+      "sha256": "9256da0e549b1bc39e0e165bd46f7f2a00894bada7b0e003aaa28517f0056ed6",
+      "bytes": 37107,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/azerbaijan.md",
+      "git_blob": "a64b00570aadafd62d8ceeb88c690db82cd3a132",
+      "sha256": "c4c7f9ad85cb7c315f4fb325cd791af787b23692634a384d2effefdb26e12964",
+      "bytes": 10945,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/bahamas.md",
+      "git_blob": "c493e52c73309a40f82936c06ea4e8a10e709546",
+      "sha256": "e52296d6cbc3706fc36ece2566c54a7b1ca13fbd761b2b695fa6c02bfdea1b27",
+      "bytes": 1233,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/bahrain.md",
+      "git_blob": "c8f3c61dc68681e6ae93c22170d846054228df7e",
+      "sha256": "ae139c3b0052bd94e79008abf8d64d92591065eff8b52caf6ec2265e5dd83cd2",
+      "bytes": 3738,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/barbados.md",
+      "git_blob": "7922c6723a75da2fccf292f5114b64114021b87d",
+      "sha256": "16310fd05f1d237e5e4b3b457636586546d964ace0ca4ce3c5f85088130173cb",
+      "bytes": 1300,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/belarus.md",
+      "git_blob": "aa36c6b64068247ff0a45423e81d5db5ede1846b",
+      "sha256": "d51c36cc9f4099ff03e0d0ff00ccb1832a3dd3523fd7e41f85cc3f691aa433a2",
+      "bytes": 4346,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/belgium.md",
+      "git_blob": "d4b9136e7b120f82406aec32353f260885a46593",
+      "sha256": "c6d0c6b61f1a3e179e1a65272ab571d6eab023915bccab49d756d710d607495e",
+      "bytes": 17476,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/belize.md",
+      "git_blob": "1dffba9f54f065f06ad6cf08bfd02f230bb55a2d",
+      "sha256": "b48c0ab83cdedb8543ce16082f0ea18446e3842672e7d1cb46dd9171846f537c",
+      "bytes": 1663,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/benin.md",
+      "git_blob": "d675e11ac3512901048b6df84613abed2a037916",
+      "sha256": "73e2a1f17966594152c8628a851e3b63a75b2371cb55c94019020a921a911b59",
+      "bytes": 2808,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/bhutan.md",
+      "git_blob": "9b241729bcd0621cbab9c350a845e94d4e4ce654",
+      "sha256": "b7c700c6de0c65c9215faae9f8c0fb860ebd5753212a6c42112600c75e21dc77",
+      "bytes": 7339,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/bolivia.md",
+      "git_blob": "00235fd1a39828e4ac3b124ad5344c1e86d63db8",
+      "sha256": "f2f6546ce4b30bb2c6f05935bf1e3830020d7e8d26371debe9a7740912c0e8ca",
+      "bytes": 3560,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/botswana.md",
+      "git_blob": "26108d9f71d60341a5e0609c2f23e2404552257f",
+      "sha256": "8f7d2c93d330d237fb8824001b4895073eb738257b335ec1fe0683e3807b83ba",
+      "bytes": 2156,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/brazil.md",
+      "git_blob": "3549840f7a3528444a83f0bff8e4f83a60695f63",
+      "sha256": "2118b0e75606a4308a83743249eea64c33b44f5f1e920b6f732ec1be0dce7303",
+      "bytes": 4709,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/brunei.md",
+      "git_blob": "ee6487f96d6766ece83816698fd30f7d228c7f71",
+      "sha256": "8c6c768b1df3fc3057d2298ec1e20283ce45cb6da6c56d94ce75d45d673e2237",
+      "bytes": 5509,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/bulgaria.md",
+      "git_blob": "bc3dde9b56e879a3f8de91232c6a8ab832e497d1",
+      "sha256": "952152a59f57779795845e1ec65cb89d707c855b50be6a40bce109ac5b376fb1",
+      "bytes": 12208,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/burkina-faso.md",
+      "git_blob": "1ec62830e944237720c9261e54614bef7bfa6811",
+      "sha256": "2996df586172b06676b360813ba9b8cce69e17119b9749b42a2851b3a41dda05",
+      "bytes": 2659,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/burundi.md",
+      "git_blob": "f9c7468d56887d5a0468814778d18209f333a086",
+      "sha256": "bf5217183b3ca3fc042dc6e128b5e305d3cbb697a25efa74a8ad1c873c2f7b92",
+      "bytes": 1099,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/cabo-verde.md",
+      "git_blob": "74efa4fee2ed4579f0ce4faa7e33589df0c4f282",
+      "sha256": "da8533ae6f791e988325486846d9463322b121098fbc270b3e1c6ff9e220386e",
+      "bytes": 526,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/cambodia.md",
+      "git_blob": "8bd7c843cc1e5f992ddb144ef43834ccfb954856",
+      "sha256": "113eecdfead762a0c1c18668f3677f7747415d397f7d0ce2d5df40353324b320",
+      "bytes": 8465,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/cameroon.md",
+      "git_blob": "a8eeeb9fc22f26619844b3b14f7fbc0982a4553c",
+      "sha256": "e61b5c778cf876df6c80b19c8804f8420e04475025b68dc06e235e4fe396b155",
+      "bytes": 485,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/canada.md",
+      "git_blob": "885255db1e419b0ed0e1432484b5ade078e6716a",
+      "sha256": "7f325ba31fafb93c15ce65c461bae4bf6b911bca960a36cd9fccc217cb598453",
+      "bytes": 3474,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/central-african-republic.md",
+      "git_blob": "1a182d386c93148d2eae4b078b2b6d0fcf5038e2",
+      "sha256": "2c0e60308fd58326bbd0bca8034a837abe79cfd6adde2b294da0c32c84c87083",
+      "bytes": 589,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/chad.md",
+      "git_blob": "529806a07551629ddb96b3628e26e2dafd3b684a",
+      "sha256": "8f2d6d6d16f1f12d785d17e5aace6090f81dac65cce5a321427d3095cad5b15c",
+      "bytes": 490,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/chile.md",
+      "git_blob": "ab207bc977246e3c39176a9b86fcc851b1ad6d11",
+      "sha256": "f30657303bc5e1c09584c5fad0cfbaa6d44ca4b406b9a63793a8d71c60c346bc",
+      "bytes": 4341,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/china.md",
+      "git_blob": "c4e432ac8dc34d90d37b8d31b16efde62f3cbe86",
+      "sha256": "37646d3ea36215ed31951872f51addff4d56f92694c17a75ed1ee8a9f2943fc6",
+      "bytes": 35398,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/colombia.md",
+      "git_blob": "1c29b0d683d577659775ef636cc03be9da250fcf",
+      "sha256": "e217335b0dd4f9e4b59b2f37869d32f6e2b39a7d7b73ac06de1bd0b4ff89173a",
+      "bytes": 4881,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/comoros.md",
+      "git_blob": "783c48b9979cad33fbb8827ee0fd328fdc7ed82e",
+      "sha256": "724f5601ae469c3a7018862de2b4c56e5f7aec22e804de05160cc0c91dac5f0b",
+      "bytes": 458,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/costa-rica.md",
+      "git_blob": "fd120422b80060fccd0abea6524bf1d67f648823",
+      "sha256": "636307abeb104f32c2c1f3880b594a3348524dc261dfa0ac4e2f63aadffc322a",
+      "bytes": 2021,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/croatia.md",
+      "git_blob": "287e96b351ef58033d3b1fd888a76fa1d118ab53",
+      "sha256": "87565786d6ab882470c13778fe6ea969b501c7c887a4ba0f5db0e668c3b909b6",
+      "bytes": 18427,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/cuba.md",
+      "git_blob": "1f8c5b554c6d02ce2f70abe04866934072cbb802",
+      "sha256": "b3012872784aaf0f29373fed08b61250d3a429c7ce2a164074826cca7bff5770",
+      "bytes": 1589,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/cyprus.md",
+      "git_blob": "96c27283ee5de1e0aecea3befe1d9364db384134",
+      "sha256": "e16420ef8ac975ab60e5d1cec8e5303fe80756bc8a0d99be1059f67e9d6a14af",
+      "bytes": 7777,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/czechia.md",
+      "git_blob": "4db395999ab30820bda227ee76171a97f6c4c731",
+      "sha256": "082ffbe361e21e0ee32df8319fc7983acf2afee9ac25a4dbc8d2f2fbbad5a942",
+      "bytes": 19252,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/c\u00f4te-divoire.md",
+      "git_blob": "23d888392eecbaccb69d09708acbb0ee07e901c2",
+      "sha256": "41a88d5a3cc464172d5a9bae0b2779da053580b95fdedf1c4794b9bc67b8c549",
+      "bytes": 517,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/democratic-republic-of-the-congo.md",
+      "git_blob": "995fc55a01177becca1a508349a9ec8eac153965",
+      "sha256": "45aa5172eeb687fff38dbf4fda238e0b79f0eb258a07f93239c3f8cfbc08843b",
+      "bytes": 487,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/denmark.md",
+      "git_blob": "e5c34abba055929cfdaf48e75c38da8351bf73a6",
+      "sha256": "dafd420169648abc9f2176f75c23f515c2f9f653763b2b939dbedd8c8c7084d6",
+      "bytes": 19184,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/djibouti.md",
+      "git_blob": "b2de5d1f740b9f6eaa0478aee962c7e692bd80e5",
+      "sha256": "ac8b0d118fc3ea10935ae7b105c79c420d7f5d081b34f83ec07ff2f74590deef",
+      "bytes": 544,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/dominica.md",
+      "git_blob": "588ae1025721ed4d9b1a40a7367436fe19936f6c",
+      "sha256": "87db58202d8eed0bd69ceb3c631332c76d6ac09e7bc666b540d2662875f5bd8a",
+      "bytes": 1376,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/dominican-republic.md",
+      "git_blob": "01dfdc83424e31478eab5afb2db989386b261525",
+      "sha256": "1822eb698e50a7b3b81c8b0bc6891ab3a4babec5c626ecec1dcda78aa8c0f71d",
+      "bytes": 2336,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/ecuador.md",
+      "git_blob": "0dcb8951a633da7b9b3c1c151ab050a85a5a5188",
+      "sha256": "7481c695f76e116356a6d0dc4a689ebfd0f82acac9076568631f54145110f287",
+      "bytes": 6756,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/egypt.md",
+      "git_blob": "789905844dc226dc5d532655869a0d5b96ade765",
+      "sha256": "2ee08630ae9bfc14ff1ed452389d9721155c2e8d372a7596a34e07e9315345d0",
+      "bytes": 461,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/el-salvador.md",
+      "git_blob": "77c8161473c7eeb6aad81d01772c1646f0789d4d",
+      "sha256": "2d4669f5faf13149ee53244adafe08664a4f95f4d39267bd07f8332354a18656",
+      "bytes": 2110,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/equatorial-guinea.md",
+      "git_blob": "1fba506c382010144d2fc775bb4ea27b90f64937",
+      "sha256": "21e7d913e9e2821ff9cdf9e223b60a4c4142b7ff8008b163e0500db554cb7d8f",
+      "bytes": 528,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/eritrea.md",
+      "git_blob": "c7f6785ec8907f70c0d997587c189e05fdf4ee95",
+      "sha256": "64a477b3b714674af022c68d5eec7c2dcd70d5314e8ed807881787265c6e31b6",
+      "bytes": 397,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/estonia.md",
+      "git_blob": "8eae35b8eecdcf34cc7c3cb980f9d56cd7d5abd2",
+      "sha256": "39dd6a8c05d2114ad984009992c32a4de11a62cebe7c2d951042832daad366a7",
+      "bytes": 15050,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/eswatini.md",
+      "git_blob": "4eef1c6083441d9ca0870dfa7acd9b8d8d036380",
+      "sha256": "4a809bed4bf0b33cafbf7eb45d3b655c5f49ac1ed47c3163d55ece4a67cac77d",
+      "bytes": 475,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/ethiopia.md",
+      "git_blob": "e30b9755d457da675c0724d6d39c72270365b38b",
+      "sha256": "3e64e370f78bb88ac6009b1529e2a13f9bf75b91685efbebff6f4b7952bbeb7c",
+      "bytes": 484,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/fiji.md",
+      "git_blob": "4fc2a980a2c10e41baa8cb0904a8f2eac24a8db6",
+      "sha256": "abeae258ae24d540f05c062b6b5580ae9896e11b0762ebf1c3a65e6168399e28",
+      "bytes": 5476,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/finland.md",
+      "git_blob": "3a32a9354b19a31f16fc1d97cd651cb910d61ccf",
+      "sha256": "cf87b259d0f6ca18c3c2926934774a5df81e7f4534af47185f1052ab2cbac82f",
+      "bytes": 16609,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/france.md",
+      "git_blob": "633e891e86489a222b5f5540d06c4c59615aad48",
+      "sha256": "871136efca3c3c5441e770812c77dde71a5facd295136ca46110a8afd643620e",
+      "bytes": 32340,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/gabon.md",
+      "git_blob": "221aefb4c162639e05c44521e1ef52e0b1f70970",
+      "sha256": "badfe3f53360c9c6333b326f20ac586e60d9e44d3c44e8c30feafcc22bbf606c",
+      "bytes": 515,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/gambia.md",
+      "git_blob": "c05144789b647c4cf15ab93765d07ef162599f4e",
+      "sha256": "fd7b946ebd77bdae88063f22e64cc94a2c509e5f562c90ec54bc17779b88286a",
+      "bytes": 490,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/georgia.md",
+      "git_blob": "98128d7f4359f98658391a2897ee16f159852501",
+      "sha256": "9a684154d0b0e6916008858ca36a3d981d94f76db674ca8b79dd3c4c6231d796",
+      "bytes": 11571,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/germany.md",
+      "git_blob": "f84d69ac1ad159c3875b5749987bb73ced3fbd0b",
+      "sha256": "32b3da3488ee5ec6c13d00bae9b354655608a089e98c7977382a6bd83dea9eb6",
+      "bytes": 70917,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/ghana.md",
+      "git_blob": "91679a371e96692085d2863545e8c7a04eccfcf1",
+      "sha256": "392e6b7d23b4d09f1e4b5fe2c46b315be3f0f2ac53b4a1bc94a09d55b01f9680",
+      "bytes": 557,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/greece.md",
+      "git_blob": "6f9aee942449e5a7d72527c526e6063773fb60a9",
+      "sha256": "5a6f34e63345ec49930fe7f6e5aeeba90f9063cb06cc186a2f129987894a3bc0",
+      "bytes": 54117,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/grenada.md",
+      "git_blob": "5afff7c4f8d88ad32a40c3e43099503def596d35",
+      "sha256": "adcba91739798b8299265ba9d74a0972de5f162116c4fd44b48d3d86c0d50f85",
+      "bytes": 2053,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/guatemala.md",
+      "git_blob": "6b73e800236064031f5058f31482032bef5fdc7d",
+      "sha256": "db8d311743ff773e029db855bb4d9ce4222092c4779dbccc339f6404a7fdd3c6",
+      "bytes": 3218,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/guinea-bissau.md",
+      "git_blob": "c1a107c0563d708aed6adecfe56bddb56854dc02",
+      "sha256": "907f9147f32d782b1234f04c475e4e16e02ba01def24ef438b2f0050fc8b1903",
+      "bytes": 536,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/guinea.md",
+      "git_blob": "69b6df480c97e4b9ab8cd8c5ec8a815f125e0a98",
+      "sha256": "dde27acd094dd61cc81b54ab100c77362cb2bc8d2cab61831836c996c07780b1",
+      "bytes": 410,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/guyana.md",
+      "git_blob": "ded45b5a4e22ef4966fa9ac4fd1a8973fc13a7bd",
+      "sha256": "ee790a1d57d4edc6fc7b11d2d15621a183becc89891828fa36e5619de3df98f6",
+      "bytes": 3333,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/hong-kong.md",
+      "git_blob": "6920b169effbcf666c9a614509b42cdbb6b30070",
+      "sha256": "84b2d44ec2336d3ab9af2f67041d0a57bb5bebcca6df3076909895553e7a4a24",
+      "bytes": 5137,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/hungary.md",
+      "git_blob": "4ca992d0c6010506dff23fafc523048d20bf9ba4",
+      "sha256": "75e35db7b689e1f033fabcb17188d211725bf85cc0eddbc3f9fe47c7aec68cad",
+      "bytes": 18531,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/iceland.md",
+      "git_blob": "3c8fd1545f69f8334e8e069431e00bcdd627ec00",
+      "sha256": "dcc69888628ea33305fd995fbc4da88c276ed48cb64af91089a3ec36e3f6fa5f",
+      "bytes": 4312,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/india.md",
+      "git_blob": "5bf082ff7bbd369b145af8b795778843b2de7f6d",
+      "sha256": "79ba0f71e415e5a9d0f283631b10aba7a7aad6f0f85028ebc4d8a1601e44f4fb",
+      "bytes": 428208,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/indonesia.md",
+      "git_blob": "a6e8161faf2e96c7b2300afe6558c815e6d897b6",
+      "sha256": "b2811934b6017650df2f0a39d83f10f751068787f519cebc0be16f7f5f5a402b",
+      "bytes": 17542,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/iran.md",
+      "git_blob": "96e1e6563bce3a145806f342cd2fb8966ebe03fa",
+      "sha256": "a71dda9187c4adc83c14c86f1fa9043863e30717b3007343923bb380fa7c394d",
+      "bytes": 13182,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/iraq.md",
+      "git_blob": "e3603198b118ff37ac9f8321eae8e35cdbfb36d5",
+      "sha256": "d0188b5c054d3c566e16f3d7ebb425baa0d2cf3b8d28e734ad2b9fe56e71136c",
+      "bytes": 4644,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/ireland.md",
+      "git_blob": "ce08694d6253fb2662c93755c713ad46f03308a0",
+      "sha256": "dda6588d2bf34b8732f4dd4191fe51089346a49643ff3b4780c7d4291027e13e",
+      "bytes": 17047,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/israel.md",
+      "git_blob": "fa11ae0b438dbd8a01ff779c546bfed71e2fc16e",
+      "sha256": "3d912536f1d82b04eec6c6c38da13d4a9719fd3631620bbfef601f0495aca57d",
+      "bytes": 7753,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/italy.md",
+      "git_blob": "aa3e55d4a1ef195c9f4a9db6f7fb4f829a240bc9",
+      "sha256": "2e60d9e0f446729465b8f23fc611d31d9b364a24844c6d2d19c718a41f0ade7e",
+      "bytes": 28647,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/japan.md",
+      "git_blob": "fe73bda839168ab1779f8568d0c1b313a11b06b5",
+      "sha256": "03e761bb34721ec71d882c392563ba1ade37c71b35c4066a85b1794ed502bd8c",
+      "bytes": 33281,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/jordan.md",
+      "git_blob": "988f7f3c891158225b7a760b1ccee1f8e58ce503",
+      "sha256": "85b56e6817b9553a1bb3769b240e3da908d434e55df13798bd2eee68608c6909",
+      "bytes": 8436,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/kazakhstan.md",
+      "git_blob": "31bcdef1debf3e6fbb6e39da9f825dbd819115a5",
+      "sha256": "32d8966f790d892b2264fed818cc8ff649d787b0184af98133f63e030a2780c5",
+      "bytes": 14808,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/kenya.md",
+      "git_blob": "cfd91016fd0723d0538a80d6258893d5b38194f6",
+      "sha256": "86bc93596d782f43f2afcf6165e897bdd2c00a87304cc1723fc2a94e513ee962",
+      "bytes": 645,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/kiribati.md",
+      "git_blob": "177fe6fd00f9d42864d1080fb887f48b09719a75",
+      "sha256": "12df47b67aa84cead14e470f6e8b9231cef8e1a8de6d1d93d76f407780f5879e",
+      "bytes": 2070,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/kosovo.md",
+      "git_blob": "6fe86e17c0807dd0297ecc8de49f8921e957b329",
+      "sha256": "a8b00cce905c8d6eb4d5c6bf27acd02fb2d9916a68fa50ed376393aff39eadd4",
+      "bytes": 6370,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/kuwait.md",
+      "git_blob": "ab0375f72797901ee0747e38d74e5bf2fda57eb4",
+      "sha256": "1099759d42cb76272d0de91b0088c8b226ca21f74e7960bda738dadfa91a23fd",
+      "bytes": 2687,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/kyrgyzstan.md",
+      "git_blob": "87f9d1eb9aa7015fd04ddcab8070888ac8b1274d",
+      "sha256": "75183b2a39b0e3447bc013e7080dc7d234ee43f93c7a6554d29762c3e2fa76da",
+      "bytes": 6426,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/laos.md",
+      "git_blob": "431f805bbeeec76b5bddcbaf4f9db85abf2d546e",
+      "sha256": "193395398772d94daade60de26d4b06dd32dc322106d097446f8a370d790a0c2",
+      "bytes": 7268,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/latvia.md",
+      "git_blob": "0e1b88d024eba851b27f047c5f7af5f6d2909121",
+      "sha256": "f9ae5cae7fa0f799e3111a04503e5f709e9333e3ffe17c91ef378178d1f15975",
+      "bytes": 12674,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/lebanon.md",
+      "git_blob": "c3622d208cf6b6104f261e428f6637fa3919b104",
+      "sha256": "b57f22aabcd3d0f128ab46271fcd944f872e66eb3bd3f1a08a370ec2ddb5b894",
+      "bytes": 7002,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/lesotho.md",
+      "git_blob": "cbfe25aec682168d1337c9dd0961ea58015b3310",
+      "sha256": "06a2bd1abd313e7573d7e290d565cdf6f3abe053b519572af9df4a8a36c776ae",
+      "bytes": 507,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/liberia.md",
+      "git_blob": "a5e3ae36ed53beb05a52beb87cf4c554622c408e",
+      "sha256": "f2d7e34558dc75844b72bf8f6774c54d321469cbf7239a40297f4f83ba2ca529",
+      "bytes": 656,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/libya.md",
+      "git_blob": "a5a2a709823c38a4442482b1ea79037dc3ad12bc",
+      "sha256": "b74f9972e18690d12885b0ecb10b6c04c48ce3a765d6a5fb6ae9bcd1a99162e4",
+      "bytes": 700,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/liechtenstein.md",
+      "git_blob": "fad7f5b3f5a97d4ba6d66c21c29557d95ad46012",
+      "sha256": "33fc050daeeba63b94376f7c03fe8f9abc348d999278e8cf2f791a033c280492",
+      "bytes": 2549,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/lithuania.md",
+      "git_blob": "7c0741a9eaff10d5731ee9ac52469451d1266ec9",
+      "sha256": "9b94ef5657708dec1af42b96341f35809f2bb18d64350b92747baa53e1392411",
+      "bytes": 10141,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/luxembourg.md",
+      "git_blob": "c307d7b0f5973243db8328f9a807d6d0fa500e9c",
+      "sha256": "5bba5e088424f9e262da32fe2286376749d81270e5ca35fa1bfd3ab2788463d7",
+      "bytes": 3830,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/macao.md",
+      "git_blob": "dab4d29ae805abffc987e79c1fb4b6df16d641a4",
+      "sha256": "28ab3ce5b2af117aee0610f1e9c3c48fc7dd09e7eff251b59bcd8327d6f2e124",
+      "bytes": 5394,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/madagascar.md",
+      "git_blob": "e799d4e2096c84233618e79c6659111ba9816859",
+      "sha256": "733e7849228baf8acf34b1fbe5b6ccf9019df780e94725d5859eda3a6854b45b",
+      "bytes": 761,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/malawi.md",
+      "git_blob": "23fc6db7a497e6e610b1677ad53d98eadd3dadf7",
+      "sha256": "d9ca1f0ba59501564ff97ef45fc2d6422510e616f6b1fdf6e50262b1bbb91cf7",
+      "bytes": 991,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/malaysia.md",
+      "git_blob": "c4599e09bd4d72f0b4dbc246c230530e732db4af",
+      "sha256": "ebd1e613751c9c3518651994af714a76fe5690cfb0b5ea7cea754d4780c8df9f",
+      "bytes": 9613,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/maldives.md",
+      "git_blob": "228b83cd907e7771c2e76c451a9c405d24de8885",
+      "sha256": "6498f7ce689f8785ecfa3ae0180350bed39dc3fa392b09d24c1ecd3bc901b9e4",
+      "bytes": 4367,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/mali.md",
+      "git_blob": "044a786145f05366063e9759a0be12e67e64def9",
+      "sha256": "a73718e1bfe55f5c793ddad87af5a606ba5c07dac409b440571f1fc86a453ba9",
+      "bytes": 5050,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/malta.md",
+      "git_blob": "9b903011b73839c7877ccfe4593828ec0c66f870",
+      "sha256": "1a69241d8c54d4672cd2f86090d48c659eee9c4879575d7b9ef1845cdb3be382",
+      "bytes": 4727,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/marshall-islands.md",
+      "git_blob": "08c5702d9ae82b5591f1d784ffc6dd96944d6393",
+      "sha256": "fe579e0be4b9b20bf41b38d7fd7c468dbf5e7fb07f72bd99b647cded27644778",
+      "bytes": 2546,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/mauritania.md",
+      "git_blob": "ac87accf3e1e623ee16efbae23c4edc01896afb9",
+      "sha256": "c61bbb86f27a412f1613422bf11521e465d70f6cf877a816f586ab52d2c16d15",
+      "bytes": 3123,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/mauritius.md",
+      "git_blob": "23f1d290e7be8b5c44792616c1859878e6c9e32e",
+      "sha256": "c537ad9d9880f08c1fce41fa4ef121d3d4fab0760999d032229138ca14adfc47",
+      "bytes": 3501,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/micronesia.md",
+      "git_blob": "fee2337aebb066cbe2cd18cacbfddb579860ed03",
+      "sha256": "962e3233e60fccf86b34a948bcab5a3e18b5d0a83b3dd22ac8bb30fd8db49ec0",
+      "bytes": 2386,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/moldova.md",
+      "git_blob": "7982ac548d6b5754405141d5c906ea23cd04dbce",
+      "sha256": "34befa6552d48d3ccdd4adc931935dd05f3dbbbf69ef16bec19863c18d3967d7",
+      "bytes": 5218,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/monaco.md",
+      "git_blob": "70fb293206bffb18cc66b39efd82429d68e4c889",
+      "sha256": "1b184877bbb7bd94fd9bfbff4daaba3cadaaa5a377aa9a904387d84758bf2150",
+      "bytes": 3097,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/mongolia.md",
+      "git_blob": "53b9ba5c38d19264ecd799a284e090e2f5b7e7a9",
+      "sha256": "57df306de848c0b6841b2b6da0f35834f37e91c684e38373326cc7a3f819471c",
+      "bytes": 10056,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/montenegro.md",
+      "git_blob": "a0b4770d60e7fbad4919f707d5db9606348aeb42",
+      "sha256": "04f3fa779a97f10bad122dfe5a19d93396b55c04f61e51db8ee6c75a772354aa",
+      "bytes": 9338,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/morocco.md",
+      "git_blob": "d47ff87d8f8398de57264afdce6718ecd9f1c199",
+      "sha256": "1a952890edae1777273740eee832e67b7f74cc0aa575ff0d57a17d1922c094e3",
+      "bytes": 8359,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/mozambique.md",
+      "git_blob": "534b5dfc624997461eaa0ce8a385618a972396fd",
+      "sha256": "e56d03609c03766dbb1584cb16b0aba815207e14b2dd1678039e828509da92e8",
+      "bytes": 7215,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/myanmar.md",
+      "git_blob": "f340fa3462952a8dba0fcf178b8b548bd7b34c51",
+      "sha256": "20544704e6affb607eb6b776dced576948d1430bf39f20bf191d9115155fd61d",
+      "bytes": 7751,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/namibia.md",
+      "git_blob": "f997674288587661217f9b1df40964a27c945f57",
+      "sha256": "cd60eeabb3b998cf17d350336e492e85bfc5e361ff692601078646b8a7851547",
+      "bytes": 2596,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/nauru.md",
+      "git_blob": "785852216232bdeed09e2eb4500fc85f6f62db0c",
+      "sha256": "8c29beb29b64353374530152c5cf1662e43bb145d00957e3bd38c239592b3389",
+      "bytes": 1292,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/nepal.md",
+      "git_blob": "986bf6cffcec137473490ab0ea461b5fd1797c5c",
+      "sha256": "7a207660de7e376c0c10151863e435ab85f02d0e9ad06aabb5e3c5bf5661831d",
+      "bytes": 10749,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/netherlands.md",
+      "git_blob": "de35038409dd06433b5449216c423640e6ba1a0d",
+      "sha256": "593394ab62a0c230b03731d13e75034e853f211ade02d69b9d5f567523dbc665",
+      "bytes": 28877,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/new-zealand.md",
+      "git_blob": "69ab4f349e1af53dc07de9c9465f11ad332b8c4a",
+      "sha256": "33b1f2fb8fcb10c99cc40821926a18537ce4d45fc63ec55176a7993d9cf124c6",
+      "bytes": 10162,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/niger.md",
+      "git_blob": "e00e2a5d02fc468264e2a4a6644957e6a9e437fa",
+      "sha256": "928c216887a2b46725718db8a634faaddea2f6a1b871643760a95a244dfc9986",
+      "bytes": 1922,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/nigeria.md",
+      "git_blob": "31e343362b1c95d4e4a22c80543cec595b5cd7f7",
+      "sha256": "ebf15ddf54006bab8fb2d89fa0eb3e4fe446d824d07a1849dce560258c6b29b1",
+      "bytes": 1914,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/north-korea.md",
+      "git_blob": "fd61a731b1c15cb967d401a777a119df1a2ba4f8",
+      "sha256": "d5805e9269bde53b52aa87fa6685530e6697f6e8a93e38ba0156f15318ab1a18",
+      "bytes": 4449,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/north-macedonia.md",
+      "git_blob": "360298caff4c9dac101d8123a9218699466c631c",
+      "sha256": "39a031fd865df60e7a6d7146f1640ceb894f1c76778e3a294e1e7bb69915af2a",
+      "bytes": 8123,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/norway.md",
+      "git_blob": "738431dec5129673a8d4200b3a2b8e241dbaaf4f",
+      "sha256": "29e1de3dd7e3b479f1e24c71865dc5dc0f3092aa4177d19c4d391049fe5d405a",
+      "bytes": 15733,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/oman.md",
+      "git_blob": "1f05281b8ed891040f190d3b4ab153f3346e9575",
+      "sha256": "aa36e708c3df4851dfffe7b0041e3bbb9284e6147a8064a33d15e14f6b25cdb1",
+      "bytes": 6661,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/palau.md",
+      "git_blob": "5192a7c9799d4c287ede0058e7145238a81729f9",
+      "sha256": "6f0e0c25f45ad6d7fa51890cccbb6218058a671b21306ccd5608ae61086e789b",
+      "bytes": 2928,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/palestine.md",
+      "git_blob": "f8a05014025baee05e2ab8d7fb5b8841abd2b849",
+      "sha256": "99097b13d814f5487d63065e6295d323a36303f79068358196d043913b0f8e11",
+      "bytes": 4077,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/panama.md",
+      "git_blob": "52ec55f6bc44c0b268a1be5de190773beb4e8704",
+      "sha256": "f3d49ff331583bf434beac272966d77dfd4434124d5de2c3d18ef45750a54b1d",
+      "bytes": 2288,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/papua-new-guinea.md",
+      "git_blob": "0ed23fcbc026b04d757d9d864e84cc0eff759080",
+      "sha256": "d8c138258256b7a25a63cacc761f7620335a669b98df1c3310686ee5abe5c953",
+      "bytes": 2348,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/paraguay.md",
+      "git_blob": "a4871110a7d680481fd05ce2cb98f8e0019043c0",
+      "sha256": "98d07bf3eb5f6dfa9eabb0d948cbdf05d5bca66588d53ec89e70c87391fcceb3",
+      "bytes": 5684,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/peru.md",
+      "git_blob": "fd7eafac079e2e9875668cfff551d7d526ef183b",
+      "sha256": "623f9dd374fe6b3124f7dfb10a87f6aae14da0d6cdad9d283df103111e0f5e56",
+      "bytes": 13738,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/philippines.md",
+      "git_blob": "3aac750ac5d8cb3d4024e960cf85e70d75f3d1b8",
+      "sha256": "de2470eeeafa574d9724a023f5cd0d0b89ff0772d5e65a1e98bed308c29aa621",
+      "bytes": 9481,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/poland.md",
+      "git_blob": "718a584edc009e74a635e304f690a7c9a542f6f7",
+      "sha256": "1af9635778121f7850b8cc141dfeb5dfa1dbb81ff9d8c6e4573f2d3df0cb107a",
+      "bytes": 19610,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/portugal.md",
+      "git_blob": "70a1a46124fd4bbce47b87fec220e0baf0d61c41",
+      "sha256": "0100c99d12fb94f6f7b3e7d25f1963c1a38073a99095855b8ecee2656b7c19e5",
+      "bytes": 50424,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/qatar.md",
+      "git_blob": "ea41445cc773a78c3b10341f3fdf996ec5ee417c",
+      "sha256": "52e0bc72b1fed054ab48169f7d15066cfe29e810c4dfeffe8b9009a4a8df7dae",
+      "bytes": 4630,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/republic-of-the-congo.md",
+      "git_blob": "21af5e79d662944993a8453b616865700b584797",
+      "sha256": "eea313d09fc58790fa9933996984fd0e4fc01dff704fbd78dfb5eac5abc62f3a",
+      "bytes": 508,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/romania.md",
+      "git_blob": "9425f63f1891b43537246d1c72be36eec2fb0b8e",
+      "sha256": "bcc0911f2d818bac5446c8b43b0b78141cf6401518cb121cb8733512c019e5c6",
+      "bytes": 10802,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/russia.md",
+      "git_blob": "d6bab50aa2c65add8aa3a4651f4106558dc3ce69",
+      "sha256": "8691d7bb3fefaa011f437861cfb489440a4a246c5a5eb7961f2d04f6e3ad940a",
+      "bytes": 6892,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/rwanda.md",
+      "git_blob": "388e008de92e1e1c33a89de6877f39080266dc58",
+      "sha256": "4ed1fc089c9ee65d4386a2d4ae7bc449270260d0031270e6c3bb032d76bc24ea",
+      "bytes": 1327,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/saint-kitts-and-nevis.md",
+      "git_blob": "fc8f398a2c37ee45ea445758bf03f4da95b5433f",
+      "sha256": "e19f6fba8b2570af196be7d048133acdf92ea62d8bf3071269d31187810fe203",
+      "bytes": 2616,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/saint-lucia.md",
+      "git_blob": "0d0aa4a49b0c13b505b980414683db513d968724",
+      "sha256": "d716763b6528dd65a7fa9f871a7a7d1cec964b6cb35bff69e1826e8a417c5cf0",
+      "bytes": 1817,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/saint-vincent-and-the-grenadines.md",
+      "git_blob": "16023e922bce42e901e436ebb7cb1ace794b14c1",
+      "sha256": "eb0c26982f43de66f4a01230d83ff9a54971740943541043e901111452681e5f",
+      "bytes": 2097,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/samoa.md",
+      "git_blob": "06af34c4b9ff35eabb57fb988f19fe1eb88c8791",
+      "sha256": "c963cdc7c6376ec8975801cf2e3d39dfe186449dce8dc3cae6ba9fcbbc5e40ff",
+      "bytes": 1650,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/san-marino.md",
+      "git_blob": "78908bbb46ca52a18f78d150b4f5b57480dafdaa",
+      "sha256": "ac5beb4dc5ac5f12bb66bbaea49dfe90b62f453bff6d9fbe5361a3ea107b6d17",
+      "bytes": 2430,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/saudi-arabia.md",
+      "git_blob": "7e2c682cf6683bae5d1d933d44b0e64cd9ecd3ce",
+      "sha256": "5943a754058d8d9a9429edb041b57497c46ad808d185cb230714af799f2adb89",
+      "bytes": 9465,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/senegal.md",
+      "git_blob": "d25cbdea82ed5ac4a1c96e0a152f9fc9d8061dfe",
+      "sha256": "0365822cf05044cf3a644d8961fcd4ca364dc7039d9eed7bacd64d9335250d02",
+      "bytes": 1496,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/serbia.md",
+      "git_blob": "b1f17f1c06a6b99dc42ddd00b42c114a4d04202e",
+      "sha256": "f7a0ddea925b501e58f3e24c7c326d0fbcaeb32738b8a6ef0724a8a8e4df006d",
+      "bytes": 9148,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/seychelles.md",
+      "git_blob": "49728c1f4e39219ce72edda032eda3fee40ffa0e",
+      "sha256": "5ef6cadf815dd1355c1d60297cbcda8c3cd824f72ea91fd78788ecb5a96204b4",
+      "bytes": 1368,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/sierra-leone.md",
+      "git_blob": "cfd13958be04d3410d5f8e2e0fbed788b6b713b5",
+      "sha256": "478060bb7251a135ff5ab5bda459c42afcf12816aef60600e884e5dd274efbcd",
+      "bytes": 1836,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/singapore.md",
+      "git_blob": "8a9242d37c5016882acc31e378b0fc02d6774d11",
+      "sha256": "ef3dd017807b94fceb5826e62532f016d89ad57f7b4832a7d52f78040d1d6722",
+      "bytes": 15479,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/slovakia.md",
+      "git_blob": "9396e0ff0e5be2c84f37e99316e976503fe45018",
+      "sha256": "d683703a7fa5c80055ce9109ece91a659ec097cb1db601b2f2c3a2b989a93fb0",
+      "bytes": 10319,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/slovenia.md",
+      "git_blob": "607f44262478b9e95e963bd27a5d792261a5c88f",
+      "sha256": "aee49254ac2259f86ec9f8d764a10dcbf1298088e92f262480dfe3dc3a42b737",
+      "bytes": 11319,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/solomon-islands.md",
+      "git_blob": "7c1641124845f3bb078e883422dc4ef43b2f0229",
+      "sha256": "705b672a512ad180d1db067665128226b28f6f995255bdb2b04e859db7bfb10e",
+      "bytes": 1803,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/somalia.md",
+      "git_blob": "56d86680fe27ceb3efb840f1679bd62de6eddfa7",
+      "sha256": "a63589aa3d148da2f23ff0d160799d6567f3a91750f5c2c6720d31401477b349",
+      "bytes": 1379,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/south-africa.md",
+      "git_blob": "1d0b12740c82b3a7a2602750304d2577c3c15f15",
+      "sha256": "c0cad8f0221d80c62a87d226bfbbff13e72e5c7a6ae4359248a0af21b61d3d0b",
+      "bytes": 3102,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/south-korea.md",
+      "git_blob": "06e6631664944747b954ef2174062264d1647d46",
+      "sha256": "28f7af30957d69d00da25d9c77721b01ab8446310ae9f658ae71832780d66c3c",
+      "bytes": 19824,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/south-sudan.md",
+      "git_blob": "7fcdd573de34cf5de93611524fa1606d5b23cd37",
+      "sha256": "0effe93d67874eb5b3dc4f5190c9d17e1dfde13fa00d86b10f7cc9960bca3b6d",
+      "bytes": 696,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/spain.md",
+      "git_blob": "3154bb556fb0cb703404509d7a019de47742fecc",
+      "sha256": "be560340a3502631e346399d31bf1216c0df6670281f5da96e614f12b79468ea",
+      "bytes": 30527,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/sri-lanka.md",
+      "git_blob": "30ee7efd9c1347719d7b6c444001b08e6c0393c4",
+      "sha256": "5a114b82f204d6f537f01bb2523966b9d927eb78dc81efcf888a3346e2e83725",
+      "bytes": 13351,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/sudan.md",
+      "git_blob": "713e6688c26fb1195baa16295e893d97fae9ec93",
+      "sha256": "cc810c37d48b6ab413435b9ded8380fb775a7ff14f3d9ffe2172b4aef0e895d6",
+      "bytes": 1499,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/suriname.md",
+      "git_blob": "74b54679237e6c049ef431cec53e54541a26605d",
+      "sha256": "b60bb5ce6a6dcb7f6ba1478e70ca13f3f498b0dcd2da5165cb6f4c1359ef474c",
+      "bytes": 4439,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/sweden.md",
+      "git_blob": "2fdad7d4cc7b145525f9870534bb4377f87ca4a9",
+      "sha256": "abd62dd84de69d450009d06e99e1157267b43d0082bd4078a55caaae6dc7c1e5",
+      "bytes": 17563,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/switzerland.md",
+      "git_blob": "18c85818b54baba9115db525d900d796c81f715d",
+      "sha256": "a27b3534329caec1b76355f18a1720f4fb189b16f3e4b5d5f003590cb355c2b0",
+      "bytes": 23207,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/syria.md",
+      "git_blob": "4407bb919a78282562dc9cbcd2909e460920d986",
+      "sha256": "1d5473f39ba343066ca286a21cffdbf69b2c1f37bcbceaf86a0124d6849ef71c",
+      "bytes": 1607,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/s\u00e3o-tom\u00e9-and-pr\u00edncipe.md",
+      "git_blob": "35184f7687498eb2eaa37cfe58ddffb9d6f18643",
+      "sha256": "8954bdebc6cc22135642bdf97a28e070896ba90f519bb64f96d3ff20c7f374ee",
+      "bytes": 2833,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/taiwan.md",
+      "git_blob": "67c8b17a089defefa3af72c4f3bad76dfa2304c6",
+      "sha256": "f5e7f973c93a134f280badd84658854b47112aa2770056d8689b9624ecf8a81a",
+      "bytes": 10004,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/tajikistan.md",
+      "git_blob": "c7c41360a37593f86f75d80eac4721e9ce2b6c94",
+      "sha256": "59a2a5fd17df79dad1207f746bf337b33fefdb2865a6e34281d8d62970cdd96b",
+      "bytes": 7228,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/tanzania.md",
+      "git_blob": "60a4f3313d3de909704460ad6282e464908a148a",
+      "sha256": "37156f3285f54340cede1a179969d238c2cf19442f3a2fb74c2b16e1a22b85a2",
+      "bytes": 907,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/thailand.md",
+      "git_blob": "309392f7ef4e43fe4be7b420610e48c47eb4e84d",
+      "sha256": "07a885831a5044fc1f3fcaf536835af6728f4a0f03b9789cff8b361e3a4029cb",
+      "bytes": 15747,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/timor-leste.md",
+      "git_blob": "53a76ab0a2196c382096d2ab49a38d46bdbb2398",
+      "sha256": "dbc4300464b0eb8b1e651f4955808183667a00b80f7401e72be2b7460ab1bd98",
+      "bytes": 6307,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/togo.md",
+      "git_blob": "ef18d9e5adb4df32a92b94b4ecfc1f1bde557f56",
+      "sha256": "f4fd737a095424045744db4f0a29838efb8fb868f3186e13f03c9bc6fe49567d",
+      "bytes": 704,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/tonga.md",
+      "git_blob": "74ed1793b0b845a9c4564957181173c8825672d7",
+      "sha256": "00e34b1a4d44f612bd872244484d461f518af6e6938137f440f04c9aab2ea61e",
+      "bytes": 1865,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/trinidad-and-tobago.md",
+      "git_blob": "794ba7af9b74185ff2b351a0a199cb4f2c40a14c",
+      "sha256": "e78bc624cbf94406cc5db3456b0bd57286f16a953321da46f9433607b752e7af",
+      "bytes": 2789,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/tunisia.md",
+      "git_blob": "7294b8b4b78dabddf35f9c6eb5d62b6578955282",
+      "sha256": "3b2c05e432c758230752059cd3f4663f0d86173165c0a03860c54e3f10e4d6f7",
+      "bytes": 1137,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/turkey.md",
+      "git_blob": "ee4b08012a8df9bd904e4dd91b937f4ab90450df",
+      "sha256": "3e51af6279c42c7a9ef06a8922cad907d8ce65b56a83c376f46434b171e00366",
+      "bytes": 37144,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/turkmenistan.md",
+      "git_blob": "521976c0f9291f4ccb1c47fecfba5b7296363f78",
+      "sha256": "351649e4303d3bc9b5c6b68b27a68e58b5db2ff2c344767dec00d39a06183e8b",
+      "bytes": 4929,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/tuvalu.md",
+      "git_blob": "c0caf68fca1c462e0be24474e01662e4281ba356",
+      "sha256": "75d92e68415eea96ccb82e93fcb839b71f856eab7d7b995860df33de21acd0f7",
+      "bytes": 1757,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/uganda.md",
+      "git_blob": "871d19de6f352f1a89d47362b767c763b33deec3",
+      "sha256": "ba36c0b4d057e095d1e7e360bd533172246b3e6f46784cab4df41296668084e9",
+      "bytes": 1220,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/ukraine.md",
+      "git_blob": "6ddbbfbec28a0e2692e41696178e71b2776588a9",
+      "sha256": "889ea2208952da16628d2cfaa5ea6b2fa6535ca3c7f5402c66a36135f825e156",
+      "bytes": 2681,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/united-arab-emirates.md",
+      "git_blob": "d2f3bff79ec812c590e8a2227b5cc7d200dae762",
+      "sha256": "edba8bd5fda9d941aefe4fd4bfb5d19a3ba98befd2a26d726734b0447fcd87b3",
+      "bytes": 16723,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/united-kingdom.md",
+      "git_blob": "37f4679ad365b9123f1734283cb1fb108bc01d1e",
+      "sha256": "70c1a8d0fa866358c45ad0e5cd99eb82307fca77fa188267134fe87483a206df",
+      "bytes": 29951,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/uruguay.md",
+      "git_blob": "a07e9685fc1d7bd6cf03d118a1304c5107ac3b36",
+      "sha256": "3fa0263fc779a8135b738b5c2d874f27d12f71b1453f773645fb77e760cf6f37",
+      "bytes": 6232,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/uzbekistan.md",
+      "git_blob": "fd3ab1ea8254a8cd5931cce021c9e2ab0a5f9c79",
+      "sha256": "41bfec0644618017d2f151f32a8ee0ef350dcb8235d05649286d22aeb4d769a4",
+      "bytes": 9190,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/vanuatu.md",
+      "git_blob": "7f5d9d910fc4c46baad81b23959b159320e2b4e4",
+      "sha256": "7a50bd734a695bc7f4a47166c118cf9e70d8d16676d45ea50224a41d336b54c0",
+      "bytes": 4644,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/vatican-city.md",
+      "git_blob": "7d6d705b132c968b4abd6f6a5d452d81cb551784",
+      "sha256": "0f45726d777c04168a95d8cf147273abbeca46e2e32ce28389f5cd2e1fc084e2",
+      "bytes": 2209,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/venezuela.md",
+      "git_blob": "71f90c01e11e106d548559ca64979723f9f538fe",
+      "sha256": "96e67e6beff84c005bb4e638b4600351ed6161fcd16315ef05cf886b138a2ee8",
+      "bytes": 8037,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/vietnam.md",
+      "git_blob": "0488e5f7b42733323090be306c2a3ffff66f8678",
+      "sha256": "619fc6ae8d147a2dbbaad1138c795196199166a0cd1e66b958f49d6b64dd31bf",
+      "bytes": 8874,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/yemen.md",
+      "git_blob": "7cd6e18095c0f497aa36e7729b82ede4d6fbfa61",
+      "sha256": "185b16dabc458610121bfbe1dd4c15e941d20a67c95294663a0aef164f5ba737",
+      "bytes": 2931,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/zambia.md",
+      "git_blob": "864cf5dd0b337bcfde00494c915ebf5540215362",
+      "sha256": "ee91daab67e25fda00a347274ce0a46d221c1a74fc4b892e22a72748d85a5cae",
+      "bytes": 1096,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/places_by_country/zimbabwe.md",
+      "git_blob": "2ce39e40ca7cd4916f651ee7f1d1a852261942a3",
+      "sha256": "73486d3cdf078710a3f3b8325032be37bfe477bd96aae2549861c8bd199481d0",
+      "bytes": 1207,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/states.md",
+      "git_blob": "da3688c4090ee15ad4ca7c7613803a2f173b61a2",
+      "sha256": "065d5aa4915cb2965417fcc625f9a403f13f39bb407cc58c543daf9c767dc23c",
+      "bytes": 84970,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/travel_data_complete.db-shm",
+      "git_blob": "fe9ac2845eca6fe6da8a63cd096d9cf9e24ece10",
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb",
+      "bytes": 32768,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/catalog/travel_data_complete.db-wal",
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "data/seeds/README.md",
+      "git_blob": "09741335fc5a54eecdd4b2a7b26f994b2fe33326",
+      "sha256": "40a2febaec371ba4f63f60c70cabe13d1638603d3126cf2d34e1856c65eb5645",
+      "bytes": 546,
+      "action": "restored_discarded_edit"
+    },
+    {
+      "path": "docs/architecture.md",
+      "git_blob": "e92223345bfcdd76aa6b0653cd7dd73a4f9525bf",
+      "sha256": "a00c9d8696d316a5f22176719bf04dc9a9e7b9d0c8e244b5be8fdbe9ee145d22",
+      "bytes": 3322,
+      "action": "restored_discarded_edit"
+    },
+    {
+      "path": "docs/files.md",
+      "git_blob": "b9cc623f38bd3f3c24dce7d54fe8437ee336299d",
+      "sha256": "e0e0a544946e044819fa1dbe1819bba70bfe067ff68220a7ac5e6c6b01a84cba",
+      "bytes": 59087,
+      "action": "restored_discarded_edit"
+    },
+    {
+      "path": "docs/reports/full-data-import/report.json",
+      "git_blob": "20693e89367c0317b6856c991ed2d2fa9335389e",
+      "sha256": "62257152db183b7f96e46a1f91211a84191f5f160086d30bcf0c29c632eaba5a",
+      "bytes": 325308,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/full-data-import/report.md",
+      "git_blob": "50be5e9409bcebcbb05218bf2a78f5368608a537",
+      "sha256": "f24886d58d6a533bd03c094e0619ca2e48dbdb25b130fa7f401f81b616c74c4d",
+      "bytes": 3097,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit.zip",
+      "git_blob": "c382f60a4996228f46e544eff937182f908fe75a",
+      "sha256": "0ffaf7ad599bcb96275353fc87253f9c7f4ebffdf33415f6363ce8b026cd5046",
+      "bytes": 5269192,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/cities.csv",
+      "git_blob": "aba7159c718baa3865c7b70561d48eade97d97c2",
+      "sha256": "0b8e886d4896ce84c9ab1bf8e85227cde986d4e04393cebe36e3740851260857",
+      "bytes": 318110,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/countries.csv",
+      "git_blob": "f444f26e7253f5e03d4d8f50cca31fd6c91e26b7",
+      "sha256": "ab1bb6ff95d4691d6dfa9be5b1f4b8b0991e32d5c32544c5e96700c65fdb549c",
+      "bytes": 14806,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/country_summary.csv",
+      "git_blob": "2aca0f904389c169c758216ce4e2354a56ad9d54",
+      "sha256": "985ab7e6ef4205087ccfbebc577ec5a2faff4655c10ef4d273ac9f315bb4d6b8",
+      "bytes": 26338,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/cross_country_id_collisions.csv",
+      "git_blob": "02f038888fcdf5af8119411b91861077be8e886a",
+      "sha256": "47500e1bdb3ba9be8367e98adf2c5e4fb55f0c8f80eac5b3aafcd7dd9c37f79e",
+      "bytes": 509418,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/data_quality_issues.csv",
+      "git_blob": "b6db27afb69c626bb4948d317fa970ee9875bf46",
+      "sha256": "6ae74982355cf17ed50fdc9185c6ee15ae7e41a6b97792d64f18786bf59f7336",
+      "bytes": 864366,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/duplicate_place_names.csv",
+      "git_blob": "9ac7fc0998f1d86d1117e407eda2accb5f2c60b1",
+      "sha256": "65c4cdc17dda557973ba80752ffc8edae66b588d480eb8e1bcfec2ea37834a72",
+      "bytes": 216,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/festivals.csv",
+      "git_blob": "8d49a46b76ca8b938ff839babda74824c9a3caec",
+      "sha256": "1723c0bec562b60bb8f62d8c0fda055aaac4efdc6c356a856bab74195c3819c4",
+      "bytes": 242887,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/field_completeness.csv",
+      "git_blob": "2fde3103387fda8d294afd6c44056055f08def76",
+      "sha256": "ec8284ca8ca9180eb3660334d8a5ef35a1ea9598fd8254f5592c92492e279eb2",
+      "bytes": 8613,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/file_inventory.csv",
+      "git_blob": "8c46aa17cc078e751421d65801e31c7e8c8729bd",
+      "sha256": "21d00b4e29e1d9729053d341955ffdb07afa3701701e6b9c8f22cc4bd06c21d0",
+      "bytes": 32790,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/ingestion_log.csv",
+      "git_blob": "5521321f40bb9213865d3404cc8f0e5f3fbd65c3",
+      "sha256": "190f57a18c9b7732b15a58229368906eb64f25f6c351de650ab753ec926817e4",
+      "bytes": 808515,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/missing_parent_references.csv",
+      "git_blob": "4c4eacd97e12ece1d6e359e73f5852d388660285",
+      "sha256": "de4466aa33a74672dc9394a9435cdf21a42bb73c42aff0bd34a21eec1908b377",
+      "bytes": 32592,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/opening_hours.csv",
+      "git_blob": "0547d50cb44dbb1107076c6709f87533dc62d3b7",
+      "sha256": "e541db8e8fb701d7e0e752802bea154fa4f07b107f66906255e08e989945d8b7",
+      "bytes": 4830279,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/photos.csv",
+      "git_blob": "dfe83176281bcefd0883e66aa5b322c06a0a191a",
+      "sha256": "b83520713267c8d3aa0584dff42a0b558745b0fdc0a2ba24b2d3f945a5b48c1a",
+      "bytes": 3562013,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/place_missing_information.csv",
+      "git_blob": "9acd2c57e30d6d083989452b23b345a327e5d37d",
+      "sha256": "dffd9dad2e91259638d6d51f7539fa8fcccfa7a3c914dcfecea13e4ea1618825",
+      "bytes": 28859713,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/place_tags.csv",
+      "git_blob": "4ae7eae02a9d358f06ba67ec6174bcfd509b893f",
+      "sha256": "f68bf7945c8628410d5bf66feea0f15232160530b005d634532ead48fae19479",
+      "bytes": 3336112,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/places.csv",
+      "git_blob": "653fc21c5b6f92971c93d9658cb61e41355d58b5",
+      "sha256": "91a138e29080c9322405a94e44092775f71616ba1fbf5a65e658585d4b6872f0",
+      "bytes": 14717019,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/repeated_ids_within_country.csv",
+      "git_blob": "b25fd332fa8599e9ff3a19911feabf5672626f1c",
+      "sha256": "ff5e1f2ebf170036c2c6b9475d53a654efa698523a1681d1bbf9ee0e61b83500",
+      "bytes": 155317,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/report.md",
+      "git_blob": "5026edf4443cf9779aa97bf1becf782cd430a425",
+      "sha256": "f90e3cbe76a81eb80a9fb2027e18b5e8b835689316b95fe6081f8fc379597eb0",
+      "bytes": 28179,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/restaurants.csv",
+      "git_blob": "7c226906d9fc9ba8b99f44476908763b87dbbb34",
+      "sha256": "68959101cbf92068cf058b5b9cc284694033f279f212e798b034ec2104b8c962",
+      "bytes": 69312,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/schema_mismatches.csv",
+      "git_blob": "8f4eecb787293890841e3f16da997c5c515d6e0f",
+      "sha256": "f68e6a73f98aa6264b3301ec6e1beea651725dfacd7d43219c59030c63a4e8ac",
+      "bytes": 14169,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/statement_issues.csv",
+      "git_blob": "7e8b48ded014af788e364917aae67a57f6f5b35b",
+      "sha256": "a755e78e2895e643985ef773aab5a886742b7263516e545992ea9e029292451e",
+      "bytes": 20805,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/states.csv",
+      "git_blob": "e9488872da22b1b5caf39a30a29702a7c51bd34a",
+      "sha256": "4ec646235f9bb76e8fe10667fbe8b7fbc95a23ff04a38cbe6e63587789899203",
+      "bytes": 143092,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/summary.json",
+      "git_blob": "7842fdf006c78b1efc1f5a388a6b37b91103699b",
+      "sha256": "7bb86ae10f7f61327b9c4fd408cbd14ba139c5d65a869b3a627dfc08f392d996",
+      "bytes": 294809,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/tag_ids_requiring_reconciliation.csv",
+      "git_blob": "072281fcd23fbb44fb0aea6152ab8b8a2c17bbe3",
+      "sha256": "e50745a2f61858d61e15ea33c64db90524c77d9b0aa3378505008c05cb1243a0",
+      "bytes": 1267069,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/tags.csv",
+      "git_blob": "ac8b1ff0d36f0f513a6086171f0512ed8fa0309a",
+      "sha256": "d3375f778f8b263b4da50cf56bd68bef1c6c147d355d8b85528d613c7e0dcfac",
+      "bytes": 283829,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/tripraft_city_meta.csv",
+      "git_blob": "45498734784c1bf64af0d1e1b8642732c70be509",
+      "sha256": "b49e3fde132901000f9d0dc5a31a809a34e0b22d87ada05413c8a7582d90627e",
+      "bytes": 37725,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/tripraft_place_external_ids.csv",
+      "git_blob": "e405d247afe7a1838bfdd77ffc2ee896976fa7b1",
+      "sha256": "5581ee11c55d8ec3c947fcc34ec51946d35649463aa21912380d097cc748508c",
+      "bytes": 191475,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/tripraft_place_meta.csv",
+      "git_blob": "ade33d1e3777c8a14e3da3b56e9d842cd30c0b36",
+      "sha256": "e016b13955f24aaacca30b277acc1dc114a4eb60d7a4d9f6bfebfe83a10856bc",
+      "bytes": 1527603,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/tripraft_restaurant_external_ids.csv",
+      "git_blob": "e2b1437e3a597cf1ffafbf19d910b57621ac070c",
+      "sha256": "3c8e638de58fd2eed9dc0fb0fc48fe8bdfcb102117aadc0c93fd228e6759cf64",
+      "bytes": 44976,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/tripraft_restaurant_meta.csv",
+      "git_blob": "67452a78142730847d28111229771fab6df154cf",
+      "sha256": "4f0997ab7b06bf6c35a16d4c11dc43bc832f7e0cab526b35dc31093b96a7b2ab",
+      "bytes": 165773,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/reports/sql-seed-audit/tripraft_state_meta.csv",
+      "git_blob": "aea477feb51814b61e47a72264b51e76d83f6675",
+      "sha256": "6b5f6903050f03ea44fa8ac495776f4510046a6a01482583acb89b9042516b6c",
+      "bytes": 5779,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "docs/startup.md",
+      "git_blob": "9fd6a3b0de6f9e75566a8892823d13fe94db909c",
+      "sha256": "32d72dd36437cb2e79f8d7e73e5f27c947711aa68a0564a02ffb25b51ffb613f",
+      "bytes": 3807,
+      "action": "restored_discarded_edit"
+    },
+    {
+      "path": "infra/docker/docker-compose.yml",
+      "git_blob": "24a80f15399688b9c4b83747a03ab43dd5f0b1f3",
+      "sha256": "41ced226bed10dcf69fa8d1d101b09ba7d22301e99118388b736e0e43e7b423c",
+      "bytes": 2161,
+      "action": "restored_discarded_edit"
+    },
+    {
+      "path": "infra/tools/document_files.py",
+      "git_blob": "4302bb59c038da537e8a9469a13aa47a62a74d97",
+      "sha256": "22e2bcdd52ba912049395403e743586aeabcdec1dc65f248b2e4671b1bd87462",
+      "bytes": 14173,
+      "action": "restored_discarded_edit"
+    },
+    {
+      "path": "infra/tools/validate_infra.py",
+      "git_blob": "13adab49c8fbfaee53f83a66b8a83f15718329d5",
+      "sha256": "a4d513591272d8385c77f7e41119479d901edf187c99fce377eb677d978f9131",
+      "bytes": 1640,
+      "action": "restored_discarded_edit"
+    },
+    {
+      "path": "services/api/.env.example",
+      "git_blob": "68161597b56533e599fa6c67792aef8190e8d35f",
+      "sha256": "e365a3dcb405e48f7d2c456f079efa98030f80873416f0a4327f4f5c8591e04f",
+      "bytes": 4359,
+      "action": "restored_discarded_edit"
+    },
+    {
+      "path": "services/api/Dockerfile",
+      "git_blob": "b59e3e2f222d2b670f069393d6accf57ba166d7a",
+      "sha256": "493c7e8390557f28e59674fcc5d99912d38dbad1dfff4de93ad9fd391c373573",
+      "bytes": 2015,
+      "action": "restored_discarded_edit"
+    },
+    {
+      "path": "services/api/Dockerfile.dockerignore",
+      "git_blob": "1fc7e921a9ce22592c991ae60d4f512cde3bcdf4",
+      "sha256": "3a83019a6f34c5226cce17a949511914ab320c217b84b69f4008332ff06498e1",
+      "bytes": 343,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "services/api/app/core/config.py",
+      "git_blob": "867d760dfd2a542223dff301442b9966a0ad8da5",
+      "sha256": "9b616819026c52726e8db6c5268ef53d193e0563b27919b4b13214dd2e926735",
+      "bytes": 22687,
+      "action": "restored_discarded_edit"
+    },
+    {
+      "path": "services/api/app/core/db/travel_db.py",
+      "git_blob": "57eba2880c4f00317ee172a022f98425947a7591",
+      "sha256": "94d0e640519d41dd4eab0c988c0e4a8689bc3b6b0a8d31d78b3e9aed4bc08332",
+      "bytes": 11578,
+      "action": "restored_discarded_edit"
+    },
+    {
+      "path": "services/api/docker-entrypoint.sh",
+      "git_blob": "b519387206618b8a7566f09d869a292d56c36162",
+      "sha256": "9c043e5c286f561934c06b131dc3250f80de235537218aa0f9be6eaa6dd38832",
+      "bytes": 221,
+      "action": "restored_discarded_edit"
+    },
+    {
+      "path": "services/api/init_travel_db.py",
+      "git_blob": "abef64a976efe163ac3c87eeefdbd9e46b84f656",
+      "sha256": "5b481e94b54f3f556c0708a7b1a2c236c91488a494786a3ed3e8c0aa5273fafa",
+      "bytes": 4772,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "services/api/schema/tripraft-canonical-schema.sql",
+      "git_blob": "20ecc6007cf7ee108ad1ebeccb2230d2acdfa654",
+      "sha256": "300be83ae42123e524b84b458033043bcf1bcc77868f8807f2077cda9d673ca1",
+      "bytes": 13897,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "services/api/tests/test_canonical_catalog.py",
+      "git_blob": "fd5ee2103609f4366975691b274ffcb0bbd1b586",
+      "sha256": "7c7e58ec6f9134ee96c7870551e08b5e927506ac73d882a6898d22144d0dc46c",
+      "bytes": 5654,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/afghanistan-tripraft-seed.sql",
+      "git_blob": "66e59f9afdc623bbf723becfee5f0bc1b7014c30",
+      "sha256": "468401c6fe16bbbd0aae6abdd64307fe36583781e8c9939bdd1a49d172956d35",
+      "bytes": 77441,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/albania-tripraft-seed.sql",
+      "git_blob": "1dfa415b88f48d4ddc9ab5c86867cb58157b395a",
+      "sha256": "07a03e9afeb3a9833c67ee19988a591c96f789331edf138bd5168b288eb0e27d",
+      "bytes": 14851,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/algeria-tripraft-seed.sql",
+      "git_blob": "9c73be0e781d0c13b4e9ecbdd8d10d1977c82b45",
+      "sha256": "1242770f7e9d6dd56ffa52d7f576e13171e4ef15e0fec56de3d78ac2017bd734",
+      "bytes": 27307,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/andorra-tripraft-seed.sql",
+      "git_blob": "7c3e0d38fecec5424dce045a6ffef22fef9b5fda",
+      "sha256": "b2840e6f4895fc075cf7f675c904df646eaafdbc4022e6edb62f8b3e2049af70",
+      "bytes": 77453,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/angola-tripraft-seed.sql",
+      "git_blob": "1cde85b908d794e3d3774ae55cfcb4df557c7f62",
+      "sha256": "449d8cf3f74ab61f89d317de0f3575a5859d65270074963d34513846d3bfede7",
+      "bytes": 41773,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/antigua-and-barbuda-tripraft-seed.sql",
+      "git_blob": "916dfba225c468e5047baf728e86e05ba603e2a2",
+      "sha256": "c6b4827bcae1c02e1d11299d09ee9e27abc229dc48acf3f8dfd86426d774065e",
+      "bytes": 14502,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/argentina-tripraft-seed.sql",
+      "git_blob": "ebfbec8a3c5cf482d44693da308c56c00a866749",
+      "sha256": "addea0554554f740e4042d5f38c5c619787249990c899609a93384267f7374dc",
+      "bytes": 89790,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/armenia-tripraft-seed.sql",
+      "git_blob": "349838efdb25db46c5eafccbe66fc66e06c8a4e8",
+      "sha256": "a301a5d0403c2706dbf1b608e8aa92b304c1b59edd9d71c493789e92d32e5943",
+      "bytes": 13892,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/australia-tripraft-seed.sql",
+      "git_blob": "098168c7dc118b7f7ebe42d30aef8885bc868f78",
+      "sha256": "19f4f3cee2da27675699c66d3737828d60ce60e95b091696751cd5b8a1c0cb5b",
+      "bytes": 245835,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/austria-tripraft-seed.sql",
+      "git_blob": "d7b7ec133f1f57e9c95de747d6ead61dca5d2e4f",
+      "sha256": "bdd2b6d7a84adb94279ca8f88a95630e195c79c2a44a900a30b6c9c7ae49e3cd",
+      "bytes": 739261,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/azerbaijan-tripraft-seed.sql",
+      "git_blob": "38c92004dbf515efc32455a8b3a34fb78a021fc7",
+      "sha256": "46ab4f453cf15bc97f99e3742e1c38c29b10128ed4024861eb3ababab0d2847f",
+      "bytes": 15784,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/bahamas-tripraft-seed.sql",
+      "git_blob": "51122d578a37360a7a890ddbe5199942e2644ad3",
+      "sha256": "116401784c63081fe6fc1d15db427d49cdff14a3e03cea92c659003737a0378b",
+      "bytes": 19996,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/bahrain-tripraft-seed.sql",
+      "git_blob": "01d497d8b60010b42d008639054b45979c220fef",
+      "sha256": "3c6f8117ec33249d8331fd9e14b7f8eb66f553f8e9987ae1ee85aa3a46a0fcaf",
+      "bytes": 68451,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/barbados-tripraft-seed.sql",
+      "git_blob": "e02bd8cc3646114ed40d3355020f687cc04a8c00",
+      "sha256": "3915c0cb3f361d663c0b903df53128a9f4506e38ba94812723ab093d40eeacfb",
+      "bytes": 21785,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/belarus-tripraft-seed.sql",
+      "git_blob": "94f8385f1bfb0df01f8d8440fb6f4873b6faf4f2",
+      "sha256": "50b50ef66c29fdd9351e604fa0631763f5e3a7ad76cf92c3773a1e7283c04368",
+      "bytes": 87029,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/belgium-tripraft-seed.sql",
+      "git_blob": "c675d96e58793af2fcab9ba1488e55d2e42ecd13",
+      "sha256": "0bbe4c0b4b6cbdb2e269570b9beebc0cb07d151f200105f787b2f54d248fb475",
+      "bytes": 368948,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/belize-tripraft-seed.sql",
+      "git_blob": "d221c3083b6e2f1449c32925f2f14edcdb0439e7",
+      "sha256": "8734a7feb197c745d98d561eebf1085b9ab3968b123937f3f4dd6d992993cdca",
+      "bytes": 24670,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/benin-tripraft-seed.sql",
+      "git_blob": "9fc5edb3c168bb7e4b731292cba4068d25216748",
+      "sha256": "dce23dd8a49b476180a835fe5661bebd8a642dffd2b633fc600a2ca933dbc3ce",
+      "bytes": 29544,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/bhutan-tripraft-seed.sql",
+      "git_blob": "d3c7dd7093be77c5aef59732cebb4234b2ee5312",
+      "sha256": "e30f940b7b3e1704d567fc77436a73372afc2d75804abe945fa530f01196a7b2",
+      "bytes": 10079,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/bolivia-tripraft-seed.sql",
+      "git_blob": "db427b814b7c8265fa8631ed17ea8f3bdcea9be1",
+      "sha256": "9e0829cade53b0e575b023ee95a05a44eab9014748de516d530c314a4d16fdde",
+      "bytes": 66488,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/botswana-tripraft-seed.sql",
+      "git_blob": "f0306732ef05065cf85a4d17cd60a698742d5fad",
+      "sha256": "f5916579963cdf8fffa56723b17508cc7b086ffcb62517578b3d62e3e34f6096",
+      "bytes": 22907,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/brazil-tripraft-seed.sql",
+      "git_blob": "66191077db6c6bb8e5cca11f2f36907637cbbf05",
+      "sha256": "b73b7af915b163db7bdd42297f7633b58a46d513fcf82d132cd60b763e216acb",
+      "bytes": 88082,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/brunei-tripraft-seed.sql",
+      "git_blob": "b3f6d452fe851b5ec5972dfb4f47330376605241",
+      "sha256": "fe2fd9ab157cd4b96af84e97091452cf719d300a45246b897ed27df6406e7147",
+      "bytes": 98528,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/bulgaria-tripraft-seed.sql",
+      "git_blob": "60d5555bfff2ef7327ab77dc34332fa7280d43ab",
+      "sha256": "2ea8c90bec8784294da67bb472f859cd950f6453d8f197ebac2988fb7d5ff453",
+      "bytes": 114202,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/burkina-faso-tripraft-seed.sql",
+      "git_blob": "524c97bf1ef09635d43ed704d3424b2a06ee911e",
+      "sha256": "d85eb7748d5eb576bf37279c5d1a178b077d52acc1a6de069a3cb7b800612419",
+      "bytes": 28527,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/burundi-tripraft-seed.sql",
+      "git_blob": "18e9e2722f82577f24149a69f6c58a325363e23a",
+      "sha256": "ea951bc9f4c410e25d11a2b093b0f5f9670695205c369ef28ff07f2e20a93c25",
+      "bytes": 11150,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/cabo-verde-tripraft-seed.sql",
+      "git_blob": "16633df40518987a90251e75824fab642d12e247",
+      "sha256": "8cbe3c5b6b4701c0fb17868198ba14cafa60f02d4558b69e9e3232908f5e8dd8",
+      "bytes": 3532,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/cambodia-tripraft-seed.sql",
+      "git_blob": "753f3edd20faf06c7a6fc191345410459a09ee6b",
+      "sha256": "b71cf7a5986a9528d374d34b0c60cf84ad95811cd4cf97c868dcea06687d27ec",
+      "bytes": 190998,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/cameroon-tripraft-seed.sql",
+      "git_blob": "8eca9af2dea8a85b9c948ff2748ff78820f65a63",
+      "sha256": "d28a70c363fc7681410af2512e3feb48916ec85ec7a9020bea5dfae69b70575b",
+      "bytes": 3391,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/canada-tripraft-seed.sql",
+      "git_blob": "d4a991e12b4bcaf0af959992e327a5f1d5aef7dc",
+      "sha256": "2f2715fb7fde26e00686fea815b55900c610263b49200cc427ca8b15ab58e711",
+      "bytes": 59826,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/central-african-republic-tripraft-seed.sql",
+      "git_blob": "18f13575ac605114c32e1bdd28f7a9d1ea0d24bf",
+      "sha256": "66fdce6ac3c9a437c3a0d337aa189bc0ef268d3cd470bb7c9bc47f8284516ff5",
+      "bytes": 3708,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/chad-tripraft-seed.sql",
+      "git_blob": "c15100ee20ee9c757b05d62554e8661e5fda49d6",
+      "sha256": "a056db0d8788c323f82dc44caac81ffd6a652f251e09806c563a5728b17e079a",
+      "bytes": 3388,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/chile-tripraft-seed.sql",
+      "git_blob": "3aa0949aa2f45e65e0e67975d6c06209cee87dc6",
+      "sha256": "0a0f07393ed9ba7b42f60c27923dca6e7237cc9aa37c82357ca3513e190d7933",
+      "bytes": 77593,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/china-tripraft-seed.sql",
+      "git_blob": "ea5e2c6119daa346440a8daed9741468e2849d77",
+      "sha256": "a74269f0011f57bdc147ddf65fcb0e9f8a810526a72b9a0d9406e7879623b583",
+      "bytes": 44496,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/colombia-tripraft-seed.sql",
+      "git_blob": "fe2ec3a676f0de347b4bfabb8c0abbdbdac17368",
+      "sha256": "993186edd590e8fc0675f1ce991cbcd9e6bcaded84ba8d78c7260bc8226f355c",
+      "bytes": 83724,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/comoros-tripraft-seed.sql",
+      "git_blob": "c27dcc0f4ed46eb420c720bac5a9d1d41b0409f0",
+      "sha256": "f27d5978d58690ec721b6eed645f98f02265144d56fa45185052391c04cd004b",
+      "bytes": 3297,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/costa-rica-tripraft-seed.sql",
+      "git_blob": "bc73c9a40f77bbd3c0ea4364f363e23b75ec4e4a",
+      "sha256": "872a2bace4a7916fa4ef897fe82f6904bdf8116a57082fe8eb5e1dcfb49c5801",
+      "bytes": 30564,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/cote-d-ivoire-tripraft-seed.sql",
+      "git_blob": "9ea96676fb41104368631ad78ce7e95c14a5e9e1",
+      "sha256": "a0db1a0d43e81a4a8e4aea709282b28fe5e7a193404b4490c82d1d018cb5d702",
+      "bytes": 3433,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/croatia-tripraft-seed.sql",
+      "git_blob": "f4cb0027071050e66ea45c339dd9f38415fc7fae",
+      "sha256": "dd7f3082f32118a5afeca115de6e351dbf0db907a83526f0e2a82963d17c758f",
+      "bytes": 365834,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/cuba-tripraft-seed.sql",
+      "git_blob": "8ac84ff16420274a38f093d39e3686a5945b1d8b",
+      "sha256": "43b8d14a3d51ffcabf6651fbd60f05d7687711c98e978011ba527121218d9975",
+      "bytes": 22726,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/cyprus-tripraft-seed.sql",
+      "git_blob": "98a40a29a926f212806e60f7adc0d22af06c0a1f",
+      "sha256": "a91c77b4460b772fef8013cf7e437505b3137b023a695b2d455bfdbc794e6da2",
+      "bytes": 79784,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/czechia-tripraft-seed.sql",
+      "git_blob": "ad77e17000233d9116538a215e514a38ad6f1e46",
+      "sha256": "01039eacfbd65e5ded1115d208a79206061e2090d9c3d576bdb36dd7c7d45640",
+      "bytes": 370673,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/democratic-republic-of-the-congo-tripraft-seed.sql",
+      "git_blob": "c95fb37ee99dfc21865a84d6114967253127e279",
+      "sha256": "ca73e14a76b16ed39f4c10817c45c27d42e69979b2cd42c0698b6752d0e4620c",
+      "bytes": 3328,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/denmark-tripraft-seed.sql",
+      "git_blob": "78bc5a01ce9e0a0eace9d34d22b314f2bb392aa3",
+      "sha256": "e5edde19be51a3754c65d1e32535d72c03aa333ff42a5b7ed07c4e0db15ee4e7",
+      "bytes": 370741,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/djibouti-tripraft-seed.sql",
+      "git_blob": "00ae4c0cb1c39e1e294c4256f2614121ec04da02",
+      "sha256": "fb110dc1868daa74a517cab2b307ad0d4de6abad96921bf4ed04e72acf8152ed",
+      "bytes": 3592,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/dominica-tripraft-seed.sql",
+      "git_blob": "714fe03e7e8ea4fb047711fc00d422faecb3e4a2",
+      "sha256": "6488f33fc17059035bb8e5d13f49e11482bd737942846e8b7d782a4af590a901",
+      "bytes": 25171,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/dominican-republic-tripraft-seed.sql",
+      "git_blob": "8a7cfcb20e5111c0436499d2f93c2af1d0771d64",
+      "sha256": "a81a3f3bf7c6510f3eb696ffee3e85291a066396159729e5d910312387108c62",
+      "bytes": 42751,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/ecuador-tripraft-seed.sql",
+      "git_blob": "6f50f01bf654eecf39f284594f44a3ae602765cb",
+      "sha256": "362105ea57c4bb262719711a1684ad0e2688f341ee6a9b43b9b22046cf364453",
+      "bytes": 122245,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/egypt-tripraft-seed.sql",
+      "git_blob": "a734be471516906a1042f642be41d7a569b67f17",
+      "sha256": "23db8431e716b7acf2a6f9060b508d22b56cbaaedbfd300e40f0de0790959f0e",
+      "bytes": 3443,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/el-salvador-tripraft-seed.sql",
+      "git_blob": "883c8da27e7b1461e171f7f1416e3d015c587c8c",
+      "sha256": "47725237f787ee433065cba5dfff401056886da392adfe896100681d1c131067",
+      "bytes": 39040,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/equatorial-guinea-tripraft-seed.sql",
+      "git_blob": "7f1ecd44ebf03aab49ce8d4342c97ef65e9b6e2f",
+      "sha256": "bdea7c35fe5821a9198f67dca831c2526ff3a418250b46f55cbb93672f80ff48",
+      "bytes": 3703,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/eritrea-tripraft-seed.sql",
+      "git_blob": "17128e621d38274483eb7590d00782f2225b06b1",
+      "sha256": "fe130028cd2428377994f441139bfde6b2a68e07796f3c01c4e227914d88efb9",
+      "bytes": 2677,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/estonia-tripraft-seed.sql",
+      "git_blob": "c5a5f5a2d86c19133b241176b6b31fe91b5144a8",
+      "sha256": "f13a496aa96dd367739addb1ed6313c7c38e8d74b023e6bc9c5ba83d740ca161",
+      "bytes": 66582,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/eswatini-tripraft-seed.sql",
+      "git_blob": "6171ebeb8bcfe6e613e4f2b0d3ba1138aa96ff23",
+      "sha256": "c4d5f256afd070dd5306d8ebea73527b5b3cbe08e9e9305a6c1aff2096e1725f",
+      "bytes": 3376,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/ethiopia-tripraft-seed.sql",
+      "git_blob": "843aa85815ec2112320ff3aa61076dce9508f1f9",
+      "sha256": "f4f7273c2dd7abf58ad49f381011c3d07ff9399075465af107fc70c95d34b292",
+      "bytes": 3888,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/fiji-tripraft-seed.sql",
+      "git_blob": "5b2aac871dfcc5de7bc2949a2844530234073356",
+      "sha256": "60d8fab66eb0af29ae8d3c4712ca8a0f9cbc011d0e8a30bdc19fba45f050ecc6",
+      "bytes": 105067,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/finland-tripraft-seed.sql",
+      "git_blob": "6bc867bd2a2fef6393c52eb1e48ead87020078b8",
+      "sha256": "f43f28e80e24a79d78d407ae6b4caf2e92d5656db3f77d7551d6e3c941710d4d",
+      "bytes": 414108,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/france-seed-complete-360-places-expanded-core.sql",
+      "git_blob": "5449789d198a9bd941877155cde0f7aed0a1218d",
+      "sha256": "a66e53f8355f0453138f429c2bb872e1e0dcefcced6e74ed4b4aa716ad20a786",
+      "bytes": 488790,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/gabon-tripraft-seed.sql",
+      "git_blob": "a18383033c6375ce5f968d830e65cd0af0d66bbd",
+      "sha256": "99dba463d963daea54689dc89c5251fe21e69d699794b4bc89c7995e5e86c453",
+      "bytes": 3807,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/gambia-tripraft-seed.sql",
+      "git_blob": "649682ab8792a52fbd3b86e03423b8d1dd247ae8",
+      "sha256": "0ec1b32bce56d06bbf08055a2d3fed4e8f7687da89de708b810215ef5bd9b976",
+      "bytes": 3572,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/georgia-tripraft-seed.sql",
+      "git_blob": "39873188990dfe15bb1f6bdfe3d6b6c35e426983",
+      "sha256": "a2b064aeafc2ec6041a142a43a77501fce035105ce55babca536eeafae454e89",
+      "bytes": 17274,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/germany-tripraft-seed.sql",
+      "git_blob": "f1076e4e6f67a9564da4a97d781edfdb17827708",
+      "sha256": "d9ecbe78276dc9dca4bcd602cfc917de595358dedd71294383649f1bcad1ad07",
+      "bytes": 1220522,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/ghana-tripraft-seed.sql",
+      "git_blob": "73acff7641bce38c6fa6b11bad596afaaa9aeb75",
+      "sha256": "a5d70b3c62f7360d3edc3f39e2b7a963cd5b6f9991f73d0095ebe10c9157cd67",
+      "bytes": 4548,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/greece-tripraft-seed.sql",
+      "git_blob": "f44f283980b29def28372490482d4de7019e91ec",
+      "sha256": "ff56e9f1cee9e53c30d0ba9860595beaeb46d411bd1822fa8a98a39ad19ec0cc",
+      "bytes": 1067894,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/grenada-tripraft-seed.sql",
+      "git_blob": "14324a68f6cb0ba779854bc134abb0f3b8e32dc9",
+      "sha256": "9d04b5de8fecafc2b0145f10026b56f58c1f1baeb287201df65dc3eeb52f1e78",
+      "bytes": 36970,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/guatemala-tripraft-seed.sql",
+      "git_blob": "16837e3869b3eed85e7012ead6d7857385ad788e",
+      "sha256": "781e181494d4facd1f27868a93c7a208095912ae35cf203fc5b3940baacecf88",
+      "bytes": 60394,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/guinea-bissau-tripraft-seed.sql",
+      "git_blob": "5391b5e45e6a3fc7ddd896073ee3ea1124356ecb",
+      "sha256": "1bb968f560f411dfe3bb36c2ebc82bb32f19ce893be33679378e6483bc9562c4",
+      "bytes": 3590,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/guinea-tripraft-seed.sql",
+      "git_blob": "64c7add78c1341ddd6f198feec5ac8b576c026f1",
+      "sha256": "f94321b8623c55608139ff5f6e4eaa28abef3ceeb52c0c42ce905d1810701bea",
+      "bytes": 2491,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/guyana-tripraft-seed.sql",
+      "git_blob": "fd64c930fa42a432c9f4db135b853fafdf9bcec6",
+      "sha256": "3080b39943da6c6097529a81ed79e55c246e267ca82290927850e760ae905f7d",
+      "bytes": 56446,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/hong-kong-tripraft-seed.sql",
+      "git_blob": "1e4c3bd0d5eadd3f5fdf1a873ae652c13ce89b72",
+      "sha256": "05ec39d9645edd3b60700c77b90fe21cb90fd4fe2fb4ce5de69753ef44c28f44",
+      "bytes": 100472,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/hungary-tripraft-seed.sql",
+      "git_blob": "67ce947611d5f2540c817101ec5ea7449f467ee5",
+      "sha256": "f8b1e8d71393084163592c40f325dee9e00eda4341ca25ad1766f83761e25ce7",
+      "bytes": 372409,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/iceland-tripraft-seed.sql",
+      "git_blob": "c7b5e86b586fef29c6aff2ea1645713a97550095",
+      "sha256": "b807f263b6449f87cd2f630df9d60bcf1d16e284cf6902be28c2c064205ec8bb",
+      "bytes": 88747,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/indonesia-seed-complete-200-places-verified.sql",
+      "git_blob": "6910d19a8d381b6aaf2a6f2eebff3c17b1a55c6b",
+      "sha256": "34836ccf3d32631212991329523d9866e5a5b78a821854af865e7857121505a5",
+      "bytes": 225537,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/iran-tripraft-seed.sql",
+      "git_blob": "c221c9d9b962e7f99828d8196f55eff8c98e4fb7",
+      "sha256": "25e9c46f9e420cdc56a0e2976ac148a6e16a73dab9e6dc941b2e5809c16114a2",
+      "bytes": 18848,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/iraq-tripraft-seed.sql",
+      "git_blob": "7216f0d5b1cc357c9b4e9c2a664987209615f6c5",
+      "sha256": "f9e3e19c1ff9ba2a63befa2a6898da815167a6f289847e56d84c99284c5a13e6",
+      "bytes": 109428,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/ireland-tripraft-seed.sql",
+      "git_blob": "8e47de1fef950c935188cc07a9ba78234c56dde8",
+      "sha256": "3a6893f43b7d98b6be67b3c957ad455d8207d6cd65ed62bdf182ac31fcbb3a13",
+      "bytes": 414152,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/israel-tripraft-seed.sql",
+      "git_blob": "87b48c0557924e6773f12b31c1e672b17c070a9d",
+      "sha256": "ff1b7f6a7a9dfb1fe26261f5cd83089cee9693d3d8208e3bc5bccfb5bb88292a",
+      "bytes": 176711,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/italy-seed-complete-360-places-expanded-core.sql",
+      "git_blob": "89633dbcd37c668d3fa202f9ebf65d23ee46f175",
+      "sha256": "1b655d2ab0b6ae11d135720385f181ec51aa894ef4f8f867e2020de7006e7f4b",
+      "bytes": 482958,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/japan-seed-complete-400-places-verified.sql",
+      "git_blob": "3548482771cccdfdc5880116446f26e8b1d0c344",
+      "sha256": "0a33144ac619c220babb8246da0c94ef9aa53ecf6b211033ba649218690dc724",
+      "bytes": 439740,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/jordan-tripraft-seed.sql",
+      "git_blob": "613b812fc139c6a1dd1af86e426a71cc8af89e9f",
+      "sha256": "ee2f8e347f68161e982b7ae517fec31a0576da8e41db1c5b9847efa6261a0c68",
+      "bytes": 175085,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/kazakhstan-tripraft-seed.sql",
+      "git_blob": "0b596d297357a158ce81c1f8de1bab659761d0f7",
+      "sha256": "a009214a41ebcda6680d0ff73925aa22dc7dce6b66b0f3db00c157be8a7e8479",
+      "bytes": 18945,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/kenya-tripraft-seed.sql",
+      "git_blob": "09a2026fc2e1ea40300d797a2177acd6e9e8dd87",
+      "sha256": "41b038a098272325819e5bad8cb1752264a25fd351b3de2a1bec35f3eada0270",
+      "bytes": 5663,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/kiribati-tripraft-seed.sql",
+      "git_blob": "40367ab5401b632ba71fe68e5f0ada881f73247c",
+      "sha256": "eadfc6bb1e99a12cf2b54fd7abbc373d0c39ce3e059ae23ae8da52baad9e20e6",
+      "bytes": 35906,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/kosovo-tripraft-seed.sql",
+      "git_blob": "a5f89069c69bf8730ffd280df7a286010413f4e5",
+      "sha256": "42eb06ff67b09a99e0e4be4bf839b56c2c33fe491739c185978737ed9976b7ff",
+      "bytes": 65317,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/kuwait-tripraft-seed.sql",
+      "git_blob": "727457fe91a066c6fab812ebc99079e849664c9e",
+      "sha256": "18af707b21cf26e7845e4351dead2230384dff79d8cca9090c73968c4ee47947",
+      "bytes": 53030,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/kyrgyzstan-tripraft-seed.sql",
+      "git_blob": "804b2fa24817e4b115b02f5c5e32c48790fd92f4",
+      "sha256": "dc46e9c79e87a32a58de0e8141ee8bbf19117b04145e873d144228627bb4846b",
+      "bytes": 10135,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/laos-tripraft-seed.sql",
+      "git_blob": "f69c3be1ea1aab93b0cdec4fec4a768729fc619f",
+      "sha256": "d7617026e3dac744c454b5e0d54ff220e4983c89f92ee5c659bcbd22c696b2c1",
+      "bytes": 153677,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/latvia-tripraft-seed.sql",
+      "git_blob": "878c0c85a0edffa759b481c637a436544eea9d69",
+      "sha256": "2ebf6af04cd2ba94cfc4eb2a1de186b53d79bc424b450599356ea32e81025d2d",
+      "bytes": 101905,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/lebanon-tripraft-seed.sql",
+      "git_blob": "ab194d1bfd04222587686db3336f37c69abfb07b",
+      "sha256": "0bace0d451f889d13fe8ace83594b0934786ef305643ea51e9dd99f5922ec304",
+      "bytes": 139546,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/lesotho-tripraft-seed.sql",
+      "git_blob": "3cebd0010dc13c68712365cff3560bcb5386a39e",
+      "sha256": "8cbce77ad34ab0f237340b08c7b12553a8efbcbf5feee514d068ba2887ce16ee",
+      "bytes": 3964,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/liberia-tripraft-seed.sql",
+      "git_blob": "7055d30c5bf3b9f732c572f6b72f054c171d1f3d",
+      "sha256": "a5f96d4f9a42722af998106650f292b79b4469b849cd722afe1ccda7cc186444",
+      "bytes": 6349,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/libya-tripraft-seed.sql",
+      "git_blob": "66464858b2733c2ec0a83d146cd8419bdda75562",
+      "sha256": "d29a605a5eb4e146bde7d10ce8c7e78120cf080bbdb961ead3be8df189519ec7",
+      "bytes": 6563,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/liechtenstein-tripraft-seed.sql",
+      "git_blob": "123db3d731f3f3b87583dc410cd77b81edd4e4be",
+      "sha256": "760d085ac571df40364464aa1906f538bc1ac2ed8a6235eb854a80a5d23cee46",
+      "bytes": 55593,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/lithuania-tripraft-seed.sql",
+      "git_blob": "5e1a10059220e42833a916c35e59483580ff8905",
+      "sha256": "6851c5ede1be64fd87a02404ef8fa6cb207d04c4a65b3d0a55adc3b691fed05b",
+      "bytes": 88957,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/luxembourg-tripraft-seed.sql",
+      "git_blob": "eb04ab0b34ffc0c3a50f938b2ff0a9e56e285f03",
+      "sha256": "d32e02692e16ed2a9131d352df619a5ecddb3ad58c8fd223bc1a524a7824939f",
+      "bytes": 81548,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/macao-tripraft-seed.sql",
+      "git_blob": "9fe6ed0b201f464962070ffab7d11baf4ea5032a",
+      "sha256": "29c42a6a51053feae51531c04fc28618170f5956c4a7436453ce1e9c04301115",
+      "bytes": 77998,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/madagascar-tripraft-seed.sql",
+      "git_blob": "e52e33fd469a7f854371f2395794947136d1b8d6",
+      "sha256": "89fe690d2a7fd009b4ed97be63cc4dc59554224331b7bc5fb1ad67a6cb78c290",
+      "bytes": 7355,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/malawi-tripraft-seed.sql",
+      "git_blob": "fcaa76c3a308f3dc702eb006704862e930a26dea",
+      "sha256": "8daf482d4b5bb2197b79ac6c49bde6e1914e3a2b83dba7004bcd9aa44ab9da4a",
+      "bytes": 10491,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/malaysia-tripraft-seed.sql",
+      "git_blob": "272014c6c207f63444d5707cdaa923d32013ade3",
+      "sha256": "1cb7c54b5b0d1b5496bbbd11485a710539d44695ac93970bf05f7c46ff627c02",
+      "bytes": 205461,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/maldives-tripraft-seed.sql",
+      "git_blob": "0c8abc60cc7ea4ad406d712c99091dd143ce7eea",
+      "sha256": "f40afb6d3ef7702587685bcc658977aa66285c7bb638c655ced8c17c00cb0e06",
+      "bytes": 8148,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/mali-tripraft-seed.sql",
+      "git_blob": "fa9250515a42915004836a9f31e0af2ed1499b8b",
+      "sha256": "b875ccd8264d120f7b8ee2bcaf215bec788526530cb39eceacc8210b1cbdf007",
+      "bytes": 55446,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/malta-tripraft-seed.sql",
+      "git_blob": "9e861f62e147faa53a867d82a27d98bc7de4a602",
+      "sha256": "9030f1333e708c7a88e30b6898f9248c46f3c1b96c767b0d73d3e7d9792eee50",
+      "bytes": 96910,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/marshall-islands-tripraft-seed.sql",
+      "git_blob": "e87d464e6cbe13de997f146ac4e0086928ba2899",
+      "sha256": "f32e3d69d5959daa2cb11490943f97683c93e25eef15528feacc3776fc4c57e6",
+      "bytes": 54594,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/mauritania-tripraft-seed.sql",
+      "git_blob": "d61fd3d28ba29a7ebe7ec19953c0748a6fdf0171",
+      "sha256": "dfaab69948a8402172f6bd3986411456a21b36606b5625f67f27e9664e1e4b46",
+      "bytes": 36698,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/mauritius-tripraft-seed.sql",
+      "git_blob": "b99d6f440206473a8256ac2c7c4e0e52ffc0c673",
+      "sha256": "f74979e668e93057f0d93ded797fe50674e2fb9a6f043230bd6f449d7cf0dead",
+      "bytes": 41625,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/micronesia-tripraft-seed.sql",
+      "git_blob": "13ed703ddee19f7787061a5f97e28689458f76e4",
+      "sha256": "b8678163c0a1e110874fd7996963e591d5a1d73a967b28556caca3add0e979d2",
+      "bytes": 50341,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/moldova-tripraft-seed.sql",
+      "git_blob": "1e01362b485c23794b5e81340b69a23205f9ef65",
+      "sha256": "bafb585a9c512ea92a16556db14c0d90a05e77e9dc97279bad87831a9e95aaa6",
+      "bytes": 53696,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/monaco-tripraft-seed.sql",
+      "git_blob": "db4dfcdd3dd3644b1b8bb98f8baf868f67cbdfa7",
+      "sha256": "0eeca112c3defaf986689591dfe0430c7979ecfef46f4367f3d3c4a2f9b8e38a",
+      "bytes": 57256,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/mongolia-tripraft-seed.sql",
+      "git_blob": "cfced0c344476f45e05c18a58de0ef22857d99a8",
+      "sha256": "a6aa3f37657121a974ce42f1a248283f9dd185f5215075745b3900e12aa506a4",
+      "bytes": 14095,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/montenegro-tripraft-seed.sql",
+      "git_blob": "4898eeb53657a1a8e2c0b14f65597fec58cab8dc",
+      "sha256": "47cf60e6109b6a57fb1e346271cee9cd6120740f47733be8fb0dc047ac6ccdbd",
+      "bytes": 14774,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/morocco-tripraft-seed.sql",
+      "git_blob": "849ea62cf787c67da6a52dfb4d5d13ed88bf495f",
+      "sha256": "bc39b65ebaec48e968e421e5cc95aeb5362c0b062b1bc87953f35fd8cc0d2814",
+      "bytes": 95803,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/mozambique-tripraft-seed.sql",
+      "git_blob": "22bd8d708f1b6a6fd6184de3e2eeb9efd9c8b68d",
+      "sha256": "2c9fa9f409f6be84f89b413ab6a07a4185958e3396eedb8002054995e0e1253e",
+      "bytes": 87182,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/myanmar-tripraft-seed.sql",
+      "git_blob": "541ae1043379e0fea314b340207ce85cf5bb726c",
+      "sha256": "9bc439cf340e200c34c4094e88faa941c0ae4380340f6355a05ba1d9cca2a9b4",
+      "bytes": 173831,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/namibia-tripraft-seed.sql",
+      "git_blob": "5437808286db5e1a9376d7ac5dfbe9c0c107bb8f",
+      "sha256": "16a7f300d3b8c8d813b8101cb2b6c62f43fce265a1c936ff726b3ec13bc2caa4",
+      "bytes": 56330,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/nauru-tripraft-seed.sql",
+      "git_blob": "7ed85d1c716f23a6305e01e18b1e7c8fcc4da5da",
+      "sha256": "f13e1d923b91a1c8e6c184ac1c6b60f66cfeb6d4de2548a2a6446f64ed4fbf70",
+      "bytes": 24623,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/nepal-tripraft-seed.sql",
+      "git_blob": "98e4b9c748c1614bc134a4760ee8bb55d3381ee3",
+      "sha256": "7ab9cd256a3e42277368f5005c93161a1d194d7b3e6b907cda6743c0e3b1400c",
+      "bytes": 13299,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/netherlands-tripraft-seed.sql",
+      "git_blob": "df6ce35980f5f61a899c8b93447b057cd545e5a3",
+      "sha256": "7106765e5f30f4108e4576496b25cabb507d001109d8d6e0adaf23100729fdeb",
+      "bytes": 584572,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/new-zealand-tripraft-seed.sql",
+      "git_blob": "b38273bb729d8c4de52031f5c6eb62dc041f6034",
+      "sha256": "52316a454f7e4fc8aab467b2044f0ebf89a39474ee2a8d841e46af33995f0f2b",
+      "bytes": 198970,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/niger-tripraft-seed.sql",
+      "git_blob": "92467bd7d8ed90d0e94eca28152d5f5a3a8f9100",
+      "sha256": "30279994700f966526b431a7e9fd34d794bbd85687408336b9fd5425b5bc61d4",
+      "bytes": 39218,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/nigeria-tripraft-seed.sql",
+      "git_blob": "1208f59e7ff5f9e7511b96bdfd2e33bdd05031fa",
+      "sha256": "877325490658f3b47b4b9439fa0fed6cc51a80e06013c6f78e31f10d098c22d3",
+      "bytes": 37419,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/north-korea-tripraft-seed.sql",
+      "git_blob": "c7fd4b4187fa01fbe1bf1bdf25ff6f2f41346c0d",
+      "sha256": "355b7b91d522306e495b265fe3829ff78b3fe02bb9576747134b423cf91cbeb1",
+      "bytes": 85720,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/north-macedonia-tripraft-seed.sql",
+      "git_blob": "16c5b0da2ab2094a3526ad8a064cf783f066deab",
+      "sha256": "d8fcd5ab0e0b0bac2b57b84e3bd731d04fb8f4ce47db19e7dc3c22aa7bbb1cad",
+      "bytes": 13794,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/norway-tripraft-seed.sql",
+      "git_blob": "05a0a378429177730b8bc7b59ccf80c5cb0b8d10",
+      "sha256": "cd9a405a9f4cafed30c109950b5cec2d3e06db05348a14825499655c214c6646",
+      "bytes": 410711,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/oman-tripraft-seed.sql",
+      "git_blob": "8b9295fd61be4c845622cfc84a8eb72a1b8720ff",
+      "sha256": "475500d841673671a2e2794f28c4afb4dc33b572d82cc811ab285946c3617c17",
+      "bytes": 130160,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/palau-tripraft-seed.sql",
+      "git_blob": "987222dc4de012195f2ff191c301609ad14c98cb",
+      "sha256": "66ac7d149df8334d9d67c09a8ac054d969055cdc08a226e34ebc7ac9f2415f5f",
+      "bytes": 62086,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/palestine-tripraft-seed.sql",
+      "git_blob": "622bd672cacb942fdf2d755c2400fc2af6291dd8",
+      "sha256": "cd9ede4331a8aebbc7e4ed01653ff9b87a69edea1cefe7a6da732a88f5e3e55c",
+      "bytes": 74449,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/panama-tripraft-seed.sql",
+      "git_blob": "22bec6843cf7609519929fbbdbc9560ffc1c0335",
+      "sha256": "f3b55acd12b331e29637ea22fa367cf063d88fca29e1f60956d1cbdbfbd0e85f",
+      "bytes": 40386,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/papua-new-guinea-tripraft-seed.sql",
+      "git_blob": "5349e8203440cf71f23acc962ad59799f160bd00",
+      "sha256": "1bb2626d8f8957e8117f952f3b36e864201e95483364f6c273afa3fe4d4fe234",
+      "bytes": 48344,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/paraguay-tripraft-seed.sql",
+      "git_blob": "b76d47571d6c41ccc0b031ce0a8fe06a209fe495",
+      "sha256": "b8e33f3f501f94e697585421da6fc4d2a8e09f53e9e23343b093c266ad0ac9b9",
+      "bytes": 91906,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/peru-tripraft-seed.sql",
+      "git_blob": "7d49ab72ce6b6e6dd30b30eb0a3c443ab9f104ba",
+      "sha256": "287eea63c71949a864a591049555a9133ffae4b7044bf2005632d2f2578baedb",
+      "bytes": 256698,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/philippines-tripraft-seed.sql",
+      "git_blob": "027fd1930dbdaf881e1090e7e1fe43c5d4c731b5",
+      "sha256": "c994497433c49d4186f5ce8186d8feaca55e372247e84a4ff2602786e51beb7d",
+      "bytes": 176772,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/poland-tripraft-seed.sql",
+      "git_blob": "d6f83661493b06befd43e26a1dab9479d49f416c",
+      "sha256": "84ceaf264b911dae895f3157ad5bd85ce8516e9009e1310c86e8590a0b64ba31",
+      "bytes": 417146,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/portugal-tripraft-seed.sql",
+      "git_blob": "b97d9079d05eac39c8ff6a2fc209089b0cd536b0",
+      "sha256": "da95b0a4e5bbac71466826e069f9252452ca52a0fe5e37d751255b2ab72697c1",
+      "bytes": 1032881,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/qatar-tripraft-seed.sql",
+      "git_blob": "7719a6ac2ac2951b38d5658873ea24977f253471",
+      "sha256": "38ca496c13627ca2c272feb29dfb4f5e46b288691257741f066240f5df3e8563",
+      "bytes": 82677,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/republic-of-the-congo-tripraft-seed.sql",
+      "git_blob": "d2adc0e2d5c188c5cb2ac742c0f1914184bcad7a",
+      "sha256": "80023ad06ebc7346a92335ad02269da031d64399c8ae57847cf8348e0f43ad7b",
+      "bytes": 3540,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/romania-tripraft-seed.sql",
+      "git_blob": "039710fc021c324f6a9c8458993077685f1d443f",
+      "sha256": "2bdca0278f75a6c5057e185eb4a0d6fbcfd39cde9d52483f5ee04d22026049ae",
+      "bytes": 104439,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/russia-tripraft-seed.sql",
+      "git_blob": "94f4cb0728fa73f233e8a71112cb511acbbbd867",
+      "sha256": "e11193da04d5089c7734c9697c68fd2e04f534190065c8ba38365c8f30ef2a22",
+      "bytes": 134334,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/rwanda-tripraft-seed.sql",
+      "git_blob": "e150b62e2a02b855449f5da60a95287b222cbd0c",
+      "sha256": "e894d62c17d5d999dc4a49452056e85781b87ecd13cbfcf269b39f5e16bbb590",
+      "bytes": 23920,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/saint-kitts-and-nevis-tripraft-seed.sql",
+      "git_blob": "39bf4e35bd05cd487dda0a153d10db22a2058b1e",
+      "sha256": "fa1bc5df8f02cf22da36c30df74363976c7acd276b3a39ae04d4ed05ad0e5cf8",
+      "bytes": 37871,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/saint-lucia-tripraft-seed.sql",
+      "git_blob": "d5d08e88230adef774871605dae7e9de6d1cd648",
+      "sha256": "0cd2b9a561fa8c4c711aa5ae9e5a6695d059f780d72dec46008ee647cff562cb",
+      "bytes": 30174,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/saint-vincent-and-the-grenadines-tripraft-seed.sql",
+      "git_blob": "547007b7e87784bf8c0e05c8ea29acdb527a20be",
+      "sha256": "06499ec90082c559e34aa5e38c94e125bb9829e24512aa74da3e7e47377fe7ec",
+      "bytes": 34533,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/samoa-tripraft-seed.sql",
+      "git_blob": "cc54bd2606163d3542037eb2c9397905758f193a",
+      "sha256": "795aab3b19cbb004e4b38429f40a24b2349c0f350c8db4471f2895ae2b06ed82",
+      "bytes": 36869,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/san-marino-tripraft-seed.sql",
+      "git_blob": "959204fb205c8966852c201040d14f78fc941cc9",
+      "sha256": "8b4d5b39a425eee7e85891289dc22b4d51bc87e7a4688e34b058b99e4b0d1ff8",
+      "bytes": 41371,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/sao-tome-and-principe-tripraft-seed.sql",
+      "git_blob": "7211fae4fadd6f4f1a329f4bf6875e9a39614aac",
+      "sha256": "7659a02780ac7470f7a40809de773d94148ab8401760456299beaf35a15acd81",
+      "bytes": 50029,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/saudi-arabia-tripraft-seed.sql",
+      "git_blob": "3cf8b60873b3439d6aa92482b37f9f67de90cd66",
+      "sha256": "21b8f7db2f4a69ce8b0313a5fe2bce52dd9bad6297e7fa43500f0d4157b66196",
+      "bytes": 203199,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/senegal-tripraft-seed.sql",
+      "git_blob": "02f4f585e55424334688a6e5d9be0f385928616c",
+      "sha256": "d50067da90f72b38e8eaec2b921b793c58ed6c16b88b1251d40a3e83771fd83f",
+      "bytes": 27224,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/serbia-tripraft-seed.sql",
+      "git_blob": "f8198e7d2f7986f8e76d6eb7b894d6033da360dd",
+      "sha256": "7236297f760fcf152e3d67f94f20401a2b1985b177fd2f79f37b9a2e7618dda4",
+      "bytes": 15170,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/seychelles-tripraft-seed.sql",
+      "git_blob": "0eed5d16d14c7ab8dabb9e744b1c7873fea76426",
+      "sha256": "1298e53051276fcc71fdf37323de21b99512b64540efe522855f11981ee9342f",
+      "bytes": 21570,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/sierra-leone-tripraft-seed.sql",
+      "git_blob": "acae4ce5f3cb0b93f1d024b5de369cceaa0492b5",
+      "sha256": "59236c56f1c59e3777e0de2c5a790298d7622495daaa3679f6b8160ec092396b",
+      "bytes": 32807,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/singapore-seed-complete-200-places-verified (1).sql",
+      "git_blob": "2019ed801d343a955947154d898fe58f81131157",
+      "sha256": "ec408561a7a6a08a88ba5341e8fb3981b8f8637561e734eb91443a2faba20d9c",
+      "bytes": 212321,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/slovakia-tripraft-seed.sql",
+      "git_blob": "4a4446c12e9b45ca60e2fef82c74e87cbe018897",
+      "sha256": "b092262d385c0e31117952eec7ad922b469f7701c5735fad913ea9f0d6ea6d46",
+      "bytes": 88628,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/slovenia-tripraft-seed.sql",
+      "git_blob": "a007e219b3738ec4ea8cbb4ed2d5311896e8fc88",
+      "sha256": "fac9614ad9d3e518e0d6323e45a84aed770a97d305bbfa7f7abc699e0708ba31",
+      "bytes": 93335,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/solomon-islands-tripraft-seed.sql",
+      "git_blob": "167ec3f6952b0b2eae9f3ceb62f50c1bf9d6fa28",
+      "sha256": "f997fc56afeff4c62671c7249556cf93466f3e677b56e22cc632fde7163d373a",
+      "bytes": 35503,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/somalia-tripraft-seed.sql",
+      "git_blob": "7817fff10a632317deaba69613f0c5a715748f18",
+      "sha256": "c988f152b231e39464a66c1c9e2c085147b44f9596b4afac8eed3411d66f70d7",
+      "bytes": 24022,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/south-africa-tripraft-seed.sql",
+      "git_blob": "8e4fd985e33cd2b80379d4ae7c2bf9362012a09f",
+      "sha256": "86cf9eab1a332c4737376eee3187f9a48484788fa82c77a7f36b5a6ff1ca476c",
+      "bytes": 59275,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/south-korea-tripraft-seed.sql",
+      "git_blob": "a6d91a9752c2a65caae3018c08c9bf1ddb65bdc9",
+      "sha256": "5a4cca0bd9f46b8c4ea339872acb8ea572631c58339e28661ff9cc1318712c5f",
+      "bytes": 338704,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/south-sudan-tripraft-seed.sql",
+      "git_blob": "ad4466dc9625615fc7aa71d330a968463713673c",
+      "sha256": "13212fa3d73a1fac7c93799f57e1c9eec27c76e95e2510e34e218ea5a78e02fd",
+      "bytes": 9364,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/spain-seed-complete-360-places-expanded-core.sql",
+      "git_blob": "8ddafbe52d7fe419671eee01b89557d702640e1b",
+      "sha256": "e27b6bccf7f3318645ce293ba10b7926d13e0550c0b775b3d785df6188f1bcb3",
+      "bytes": 487577,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/sri-lanka-tripraft-seed.sql",
+      "git_blob": "3514522e7f3bdd4b7979283c3efb8fe1e065014d",
+      "sha256": "ee892d5386508c114c19aa0b1e18e179c2620b6785e2d5d6faee5ac8314f521e",
+      "bytes": 15506,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/sudan-tripraft-seed.sql",
+      "git_blob": "af20c65d71163a66b4cedbcc8c71bb2198de3c49",
+      "sha256": "d4b92c9a350592b2ac5ba6d289f91f436563f601a1559da669fe3599cce250d9",
+      "bytes": 26317,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/suriname-tripraft-seed.sql",
+      "git_blob": "9b91fa44797ce1958a38c2c8db9349856ca174ac",
+      "sha256": "aaa2302d27e1b7eb7d679c866c3e66ea92268139d1fa9bd53c522f1e72f81edb",
+      "bytes": 79452,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/sweden-tripraft-seed.sql",
+      "git_blob": "92c46323f17f906e144cfe02f43ff1981b5ed018",
+      "sha256": "a01c896414216ff96384e3973a05c4f1951d1abfcb86dd37205cd795c10fb9d5",
+      "bytes": 411778,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/switzerland-seed-complete-280-places-expanded-core.sql",
+      "git_blob": "045211c0ac62103ea1b78392ce5420cf4f18b618",
+      "sha256": "9534569b22451eac1d13629777aa2390fd5d092f69500a8dfbf70a5fa8233bda",
+      "bytes": 378908,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/syria-tripraft-seed.sql",
+      "git_blob": "9103c87ab3cf307f754cdc572fc77c74b44b2703",
+      "sha256": "1427789bf674d16fb833fa1c6e302f02bc0f3fbbf300f87a3ca1a3d7e1f55813",
+      "bytes": 31815,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/taiwan-tripraft-seed.sql",
+      "git_blob": "82086654e35fa0107e0d4a9120160c52916a360e",
+      "sha256": "3a47c54262d96004f599f72246cdb1c47ba05553ef4139623ddf6ee234afe88b",
+      "bytes": 204282,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/tajikistan-tripraft-seed.sql",
+      "git_blob": "0e7283744bdda05fc3da3a2d917df90b8c4cd7e4",
+      "sha256": "512dfe494e85a209f6c5576f475518e57b9e54045cc4c1de31bd2a594b3c28f0",
+      "bytes": 10325,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/tanzania-tripraft-seed.sql",
+      "git_blob": "a8f49ca492675667cec5577669b7b7df8fd0ba24",
+      "sha256": "975bd9eeb22d62f2f1d2795183747b52a32aa111630e8797a7a33055de765fa3",
+      "bytes": 14683,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/thailand-seed-phase1-bangkok-verified.sql",
+      "git_blob": "08aabadc87aea52e5da2d66bb63c01aaa8d31a25",
+      "sha256": "71176c80221b5b59fee3987dfe05a9025d109b5f077692653ac5622346bcffa8",
+      "bytes": 34341,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/thailand-seed-phase2-phuket-verified.sql",
+      "git_blob": "3e223ff06671ae5ab83880a2ca1c03bf920ce345",
+      "sha256": "942301b0f9e28dd9148546fab2bd0d45c8c733653c961f0c56004b9d2a088480",
+      "bytes": 63744,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/thailand-seed-phase3-chiang-mai-verified.sql",
+      "git_blob": "fc96215fc87a75cfb1beb8e9dd56b6b58f205d31",
+      "sha256": "11641648a33ed38aac30a38233f3565c0d5e2f690543c68dc21668f28c80a7f8",
+      "bytes": 94777,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/thailand-seed-phase4-pattaya-verified.sql",
+      "git_blob": "2d41431286c3f0f6379f3e546867befdec95b91d",
+      "sha256": "ca70bb58e9a999828b715668af6aa047433e35f7caa7664dfdc5e242419ff853",
+      "bytes": 124149,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/thailand-seed-phase5-krabi-verified.sql",
+      "git_blob": "b3263b92cfc254c78b1c4f030d9c968cc3b7c776",
+      "sha256": "aa03306a35e70d34a64ee6d094910426479fe0acb07175ee7d78f3ff8cbb0591",
+      "bytes": 164447,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/thailand-seed-phase6-ko-samui-verified.sql",
+      "git_blob": "6503ebf26e91f33c30cbc2c85e31e16cdd1403ec",
+      "sha256": "d54cfb4ce308e07aa86e77c8d8a9872895c4dc0b476cf1eada5ec01935e5875a",
+      "bytes": 203461,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/thailand-seed-phase7-chiang-rai-verified.sql",
+      "git_blob": "bd420aa2722ad666cdc66c4f9f709df269112579",
+      "sha256": "d89c59a565bbd6b647405d7cbf423a4d3783eb5d018a0c0c2613b9227f8eddc5",
+      "bytes": 243594,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/thailand-seed-phase8-ayutthaya-verified.sql",
+      "git_blob": "e26c79e8133ce893157a1272b921160bd8be7c61",
+      "sha256": "aaee684950a1e18432d0715b1aac939b57fde109259b922de3626ed0700bd8d0",
+      "bytes": 282208,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/timor-leste-tripraft-seed.sql",
+      "git_blob": "4ede58abcc03f0d8f04884c2af84f58d2837fc4f",
+      "sha256": "3ae55b21d8b142a4ea9660d6d69b73840a17d8d606021e26b166398b04fc7285",
+      "bytes": 119724,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/togo-tripraft-seed.sql",
+      "git_blob": "7f26211d9d3fbdc9f90a797343a80f3731a7a445",
+      "sha256": "8910abc3b2b9d3511de10c41dfa926db576d1ca33859f757bffca5a8aff225ca",
+      "bytes": 9524,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/tonga-tripraft-seed.sql",
+      "git_blob": "59cc4e4bc99b1ac7330f1038779cabf4b27e0c0e",
+      "sha256": "0cf529903fec1599bd80cb9c62c9cc1320a1834430d8450a5ead8e344e646668",
+      "bytes": 36152,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/trinidad-and-tobago-tripraft-seed.sql",
+      "git_blob": "59795ff252d0f36875d29f5a5bdc4e5eab11fa15",
+      "sha256": "e5beaa7546ca0c27918454e945398b8c0b25d68ec262e254c1f1d827403f9c0a",
+      "bytes": 46383,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/tripraft-india-36-states-combined-seed (1).sql",
+      "git_blob": "68a50c754b65841aabfef7edfe16062e5038a5eb",
+      "sha256": "781a455091f666cdca15ba072c5335d736c91094616bb3811baf24831c35d191",
+      "bytes": 13256582,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/tunisia-tripraft-seed.sql",
+      "git_blob": "c889c9916747e661d980027cb14cc21231a77576",
+      "sha256": "fc72fc59042cb9046c7a9df7ddd7f242f431987d6e3645840ab4fd867585bd44",
+      "bytes": 18220,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/turkey-tripraft-seed.sql",
+      "git_blob": "ee8562441c58acaff997d37e7788b532bd0f2f9c",
+      "sha256": "c39221d4c5bb6851b2f8c282f1533013a0fc6080dfeb638991dc9f280856c458",
+      "bytes": 55582,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/turkmenistan-tripraft-seed.sql",
+      "git_blob": "a89a645b1ae6cdbd6cfa9aa5e69d0eb09bd2593c",
+      "sha256": "40de96cd6bf527bceda3368f152aebeb8805a6f1167c6b716798d6ce2051be47",
+      "bytes": 8475,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/tuvalu-tripraft-seed.sql",
+      "git_blob": "773214b29e6e95fb28d112db15462bba0f8763d4",
+      "sha256": "0c0fadafda84b619dd67f63b59133f6094b48f9f6fe21f591fa0f4746764daac",
+      "bytes": 36729,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/uae-master-verified (1).sql",
+      "git_blob": "29623b2d76b5862b8e77ca426c047f976a444bbb",
+      "sha256": "a6c20209966d10ef7dc1ba65d647b9bf48a7284e11f635d361ce784f9c89fc59",
+      "bytes": 318307,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/uganda-tripraft-seed.sql",
+      "git_blob": "8e8041135c2c87fdbd3b31957c63fea5025999f3",
+      "sha256": "c58091697112ac2598cf4384f5aeb772377fa5c9543b646c2f5decada55928f7",
+      "bytes": 20920,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/ukraine-tripraft-seed.sql",
+      "git_blob": "4aa443daf814d6a8aeee075cf09d126f9a1f40db",
+      "sha256": "bfca4b400491c53e40410881a1361ecdc7cebe8a7be5620d463b6d3fb934f9f0",
+      "bytes": 25634,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/united-kingdom-seed-complete-360-places-expanded-core.sql",
+      "git_blob": "818b9628866757e779d076fff406736e7b1b475c",
+      "sha256": "ad5bc8fdf807e788609e6b1da10700d589224d4bba1cd2e053bc8f188e3029af",
+      "bytes": 491826,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/uruguay-tripraft-seed.sql",
+      "git_blob": "068e2314c1f319555460e4c1b38ee356fc011ca9",
+      "sha256": "745a13afc7c3f72bf37d535b8eda1eb359669568a4da28c043ffaa27de7896c4",
+      "bytes": 109978,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/uzbekistan-tripraft-seed.sql",
+      "git_blob": "5325060f67f1e571c8ffa3168168c5277c30877f",
+      "sha256": "b57adf6931ebeb2b2965a99af4015316b8047b6d64c820746d071b9cd0d519ac",
+      "bytes": 13142,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/vanuatu-tripraft-seed.sql",
+      "git_blob": "9e34cfd7d1a41fd5a2bd26a0b057f78fa3af9c09",
+      "sha256": "3e7839b7b0ebb60e7ee6b8375a324a48639e935205a0c4c086894f95c5d99a9f",
+      "bytes": 101487,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/vatican-city-tripraft-seed.sql",
+      "git_blob": "b0400dce2d62ab03156c45161eca4031012e3b26",
+      "sha256": "c1c77ea1fd37581996da12a95b5da93c887a4b859bc9392484f9fdd31bbc45ce",
+      "bytes": 17812,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/venezuela-tripraft-seed.sql",
+      "git_blob": "ca505adfea91c3b4f42cb436f695e50e7bf6df57",
+      "sha256": "ad7a3dfe45d9bd4be0eadea8957390163e480df01d1de5602605a2b27cf107c1",
+      "bytes": 152827,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/vietnam-tripraft-seed.sql",
+      "git_blob": "d0f3ed7affc304651bf2a69ea2735bf709228b23",
+      "sha256": "bbb97e468bc9513ad9c345287e36ed70022f8685bf7f3c842454f992161e8fed",
+      "bytes": 214939,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/yemen-tripraft-seed.sql",
+      "git_blob": "ea3445ac73319838c0747b23c7c0c0636f7f227e",
+      "sha256": "36b77afc863da46c944fd2d17dc85cc1bd5afcfd5f2632ca0483d9a0ddd8708c",
+      "bytes": 58747,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/zambia-tripraft-seed.sql",
+      "git_blob": "4866402376468cc175712dcb23ea4b8c5a61b03e",
+      "sha256": "21f2c162a9bcfae9b319ba21b0e8edf5c9e878eaab9c16d9f20c7d2775609c49",
+      "bytes": 18325,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/Old/zimbabwe-tripraft-seed.sql",
+      "git_blob": "ce8a25843b654e0897a139c965b5326d52cbbba0",
+      "sha256": "2c355938e469c05eebea7fa11d973d2e60d34ecb03c20d49c2b527c0136ecdeb",
+      "bytes": 19054,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/README.md",
+      "git_blob": "767dc68c6bd9250180eaf6ee718f414514ba0c77",
+      "sha256": "68b9311e77b68b99c78fc316fccca76d12222cdd309883146e3aae5dd865e286",
+      "bytes": 1834,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/all_places.md",
+      "git_blob": "9aed49c457d5ebd986c72e3a19f9104c5e5e54d4",
+      "sha256": "78cc2fc2400661e2045986c4f6e1ca3cd451e3b82e7a2c3494a5059b5f5d20bc",
+      "bytes": 1137834,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/cities.md",
+      "git_blob": "ba145ab311eadad545d2ec0d8bbdbaa9b1cd165c",
+      "sha256": "3ce3a68a68b566dea0e9ce8de48ba4513b9d4873be7e38a7531cffa71e8bbc92",
+      "bytes": 232538,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/countries_table.sql",
+      "git_blob": "5c953035f4bae9fd176f3f38911a5b3815f4402c",
+      "sha256": "2ad28e176ed8bf0e2f818addb048fc8ed4d75deb7d4e5ab3cbaa63022195b7ef",
+      "bytes": 22820,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/geography-import-preview.json",
+      "git_blob": "2de0dcd4a2f9f06dc2c37b2d0ea796523547a273",
+      "sha256": "6eb7f4571c991873f1dbd43f24b531f4b84292f01309b973e62f211426930701",
+      "bytes": 3556,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/geography-import-report.json",
+      "git_blob": "38ef326c297caf08a51b6b073e243a83baa4b8fc",
+      "sha256": "e6338c306742ac3210edba3bfb80a1d165c650daa80930472141c894e8eabb7a",
+      "bytes": 4063,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/import_geography.py",
+      "git_blob": "5c3f5cb5e53912ee502a34bf4b6b39ee2a7d316a",
+      "sha256": "2856ab39d8c380a0f4a80985d1b8cb727a64c5b98295796b2aea37ff83b63400",
+      "bytes": 15294,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/README.md",
+      "git_blob": "fb8c5f478f50b7b774298918fe784f5c39b82692",
+      "sha256": "d0b7bf3f2160c45faf79d092a8e2605266bba0b5314ce43d0214e9da0758a1e6",
+      "bytes": 11146,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/afghanistan.md",
+      "git_blob": "6d12d5706b2f66083ce7feb4795dc226cbf83c50",
+      "sha256": "cdcf08d8ef7828288694fce6ba44636536cb19a56bf87906794fa9f90ca0b694",
+      "bytes": 3388,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/albania.md",
+      "git_blob": "ceedc07f15cbffccda05f6b9e2ace353d9fe6bce",
+      "sha256": "d094cfae8d4ec63ab3646dc5fd7220b0d7d091dd8eaa8746227a323453a799b8",
+      "bytes": 9536,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/algeria.md",
+      "git_blob": "acdedc76472b3aaf80d7bee86e4f0b82fa5eef91",
+      "sha256": "401ec25fb6afe4dfac405c80dd61980cf02e4eb2206b1e3abf1cd3a033f73495",
+      "bytes": 2615,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/andorra.md",
+      "git_blob": "ba5ec5e2553d2c69d7b2cc1239013844a0afd9e1",
+      "sha256": "b4b4c48909e7be93a316fd6a5b88833178f721328caed3ea2ed8e5541f69ffa7",
+      "bytes": 3959,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/angola.md",
+      "git_blob": "5f995b6f660fca38a4df64658b6f5bdc02a093bf",
+      "sha256": "e73ffddf18ad4dcde43ee25d022e9187fbb7c445b0f7fd6b1d0394f3f0bba1c1",
+      "bytes": 3770,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/antigua-and-barbuda.md",
+      "git_blob": "201109c9989508e5f971c7c145e0d3d1258de60b",
+      "sha256": "bcadcac2b420d93d24e753bd106c832d41b0e545a4834ecc4e1037dcdec6fa15",
+      "bytes": 922,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/argentina.md",
+      "git_blob": "32ee96cad9d87ea4418b5d3292493c0ba7f3dd07",
+      "sha256": "25084b5a61e162c3b75b6063ecf2353a4362992a2e9ad3b45e45a3ddce28b3b7",
+      "bytes": 5093,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/armenia.md",
+      "git_blob": "f1f71689b3f3ce0cfe2265e7f8d628a8b0abc43f",
+      "sha256": "0ef08401bb3073c2f886c11426be3fe3a0939b6b54e5ad212c9bf464e2cd9062",
+      "bytes": 8955,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/australia.md",
+      "git_blob": "edd84a78e5317c0a4673a707b69c0caf938f689f",
+      "sha256": "888e7364505cfad6999cc0ab567dfd9565dfe3da91863a4bf8e848e9ea9db49b",
+      "bytes": 12570,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/austria.md",
+      "git_blob": "c4bb424745c79a2b2de1f9dd65206fcf1b7f0d7d",
+      "sha256": "9256da0e549b1bc39e0e165bd46f7f2a00894bada7b0e003aaa28517f0056ed6",
+      "bytes": 37107,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/azerbaijan.md",
+      "git_blob": "a64b00570aadafd62d8ceeb88c690db82cd3a132",
+      "sha256": "c4c7f9ad85cb7c315f4fb325cd791af787b23692634a384d2effefdb26e12964",
+      "bytes": 10945,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/bahamas.md",
+      "git_blob": "c493e52c73309a40f82936c06ea4e8a10e709546",
+      "sha256": "e52296d6cbc3706fc36ece2566c54a7b1ca13fbd761b2b695fa6c02bfdea1b27",
+      "bytes": 1233,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/bahrain.md",
+      "git_blob": "c8f3c61dc68681e6ae93c22170d846054228df7e",
+      "sha256": "ae139c3b0052bd94e79008abf8d64d92591065eff8b52caf6ec2265e5dd83cd2",
+      "bytes": 3738,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/barbados.md",
+      "git_blob": "7922c6723a75da2fccf292f5114b64114021b87d",
+      "sha256": "16310fd05f1d237e5e4b3b457636586546d964ace0ca4ce3c5f85088130173cb",
+      "bytes": 1300,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/belarus.md",
+      "git_blob": "aa36c6b64068247ff0a45423e81d5db5ede1846b",
+      "sha256": "d51c36cc9f4099ff03e0d0ff00ccb1832a3dd3523fd7e41f85cc3f691aa433a2",
+      "bytes": 4346,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/belgium.md",
+      "git_blob": "d4b9136e7b120f82406aec32353f260885a46593",
+      "sha256": "c6d0c6b61f1a3e179e1a65272ab571d6eab023915bccab49d756d710d607495e",
+      "bytes": 17476,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/belize.md",
+      "git_blob": "1dffba9f54f065f06ad6cf08bfd02f230bb55a2d",
+      "sha256": "b48c0ab83cdedb8543ce16082f0ea18446e3842672e7d1cb46dd9171846f537c",
+      "bytes": 1663,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/benin.md",
+      "git_blob": "d675e11ac3512901048b6df84613abed2a037916",
+      "sha256": "73e2a1f17966594152c8628a851e3b63a75b2371cb55c94019020a921a911b59",
+      "bytes": 2808,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/bhutan.md",
+      "git_blob": "9b241729bcd0621cbab9c350a845e94d4e4ce654",
+      "sha256": "b7c700c6de0c65c9215faae9f8c0fb860ebd5753212a6c42112600c75e21dc77",
+      "bytes": 7339,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/bolivia.md",
+      "git_blob": "00235fd1a39828e4ac3b124ad5344c1e86d63db8",
+      "sha256": "f2f6546ce4b30bb2c6f05935bf1e3830020d7e8d26371debe9a7740912c0e8ca",
+      "bytes": 3560,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/botswana.md",
+      "git_blob": "26108d9f71d60341a5e0609c2f23e2404552257f",
+      "sha256": "8f7d2c93d330d237fb8824001b4895073eb738257b335ec1fe0683e3807b83ba",
+      "bytes": 2156,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/brazil.md",
+      "git_blob": "3549840f7a3528444a83f0bff8e4f83a60695f63",
+      "sha256": "2118b0e75606a4308a83743249eea64c33b44f5f1e920b6f732ec1be0dce7303",
+      "bytes": 4709,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/brunei.md",
+      "git_blob": "ee6487f96d6766ece83816698fd30f7d228c7f71",
+      "sha256": "8c6c768b1df3fc3057d2298ec1e20283ce45cb6da6c56d94ce75d45d673e2237",
+      "bytes": 5509,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/bulgaria.md",
+      "git_blob": "bc3dde9b56e879a3f8de91232c6a8ab832e497d1",
+      "sha256": "952152a59f57779795845e1ec65cb89d707c855b50be6a40bce109ac5b376fb1",
+      "bytes": 12208,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/burkina-faso.md",
+      "git_blob": "1ec62830e944237720c9261e54614bef7bfa6811",
+      "sha256": "2996df586172b06676b360813ba9b8cce69e17119b9749b42a2851b3a41dda05",
+      "bytes": 2659,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/burundi.md",
+      "git_blob": "f9c7468d56887d5a0468814778d18209f333a086",
+      "sha256": "bf5217183b3ca3fc042dc6e128b5e305d3cbb697a25efa74a8ad1c873c2f7b92",
+      "bytes": 1099,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/cabo-verde.md",
+      "git_blob": "74efa4fee2ed4579f0ce4faa7e33589df0c4f282",
+      "sha256": "da8533ae6f791e988325486846d9463322b121098fbc270b3e1c6ff9e220386e",
+      "bytes": 526,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/cambodia.md",
+      "git_blob": "8bd7c843cc1e5f992ddb144ef43834ccfb954856",
+      "sha256": "113eecdfead762a0c1c18668f3677f7747415d397f7d0ce2d5df40353324b320",
+      "bytes": 8465,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/cameroon.md",
+      "git_blob": "a8eeeb9fc22f26619844b3b14f7fbc0982a4553c",
+      "sha256": "e61b5c778cf876df6c80b19c8804f8420e04475025b68dc06e235e4fe396b155",
+      "bytes": 485,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/canada.md",
+      "git_blob": "885255db1e419b0ed0e1432484b5ade078e6716a",
+      "sha256": "7f325ba31fafb93c15ce65c461bae4bf6b911bca960a36cd9fccc217cb598453",
+      "bytes": 3474,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/central-african-republic.md",
+      "git_blob": "1a182d386c93148d2eae4b078b2b6d0fcf5038e2",
+      "sha256": "2c0e60308fd58326bbd0bca8034a837abe79cfd6adde2b294da0c32c84c87083",
+      "bytes": 589,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/chad.md",
+      "git_blob": "529806a07551629ddb96b3628e26e2dafd3b684a",
+      "sha256": "8f2d6d6d16f1f12d785d17e5aace6090f81dac65cce5a321427d3095cad5b15c",
+      "bytes": 490,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/chile.md",
+      "git_blob": "ab207bc977246e3c39176a9b86fcc851b1ad6d11",
+      "sha256": "f30657303bc5e1c09584c5fad0cfbaa6d44ca4b406b9a63793a8d71c60c346bc",
+      "bytes": 4341,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/china.md",
+      "git_blob": "c4e432ac8dc34d90d37b8d31b16efde62f3cbe86",
+      "sha256": "37646d3ea36215ed31951872f51addff4d56f92694c17a75ed1ee8a9f2943fc6",
+      "bytes": 35398,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/colombia.md",
+      "git_blob": "1c29b0d683d577659775ef636cc03be9da250fcf",
+      "sha256": "e217335b0dd4f9e4b59b2f37869d32f6e2b39a7d7b73ac06de1bd0b4ff89173a",
+      "bytes": 4881,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/comoros.md",
+      "git_blob": "783c48b9979cad33fbb8827ee0fd328fdc7ed82e",
+      "sha256": "724f5601ae469c3a7018862de2b4c56e5f7aec22e804de05160cc0c91dac5f0b",
+      "bytes": 458,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/costa-rica.md",
+      "git_blob": "fd120422b80060fccd0abea6524bf1d67f648823",
+      "sha256": "636307abeb104f32c2c1f3880b594a3348524dc261dfa0ac4e2f63aadffc322a",
+      "bytes": 2021,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/croatia.md",
+      "git_blob": "287e96b351ef58033d3b1fd888a76fa1d118ab53",
+      "sha256": "87565786d6ab882470c13778fe6ea969b501c7c887a4ba0f5db0e668c3b909b6",
+      "bytes": 18427,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/cuba.md",
+      "git_blob": "1f8c5b554c6d02ce2f70abe04866934072cbb802",
+      "sha256": "b3012872784aaf0f29373fed08b61250d3a429c7ce2a164074826cca7bff5770",
+      "bytes": 1589,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/cyprus.md",
+      "git_blob": "96c27283ee5de1e0aecea3befe1d9364db384134",
+      "sha256": "e16420ef8ac975ab60e5d1cec8e5303fe80756bc8a0d99be1059f67e9d6a14af",
+      "bytes": 7777,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/czechia.md",
+      "git_blob": "4db395999ab30820bda227ee76171a97f6c4c731",
+      "sha256": "082ffbe361e21e0ee32df8319fc7983acf2afee9ac25a4dbc8d2f2fbbad5a942",
+      "bytes": 19252,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/c\u00f4te-divoire.md",
+      "git_blob": "23d888392eecbaccb69d09708acbb0ee07e901c2",
+      "sha256": "41a88d5a3cc464172d5a9bae0b2779da053580b95fdedf1c4794b9bc67b8c549",
+      "bytes": 517,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/democratic-republic-of-the-congo.md",
+      "git_blob": "995fc55a01177becca1a508349a9ec8eac153965",
+      "sha256": "45aa5172eeb687fff38dbf4fda238e0b79f0eb258a07f93239c3f8cfbc08843b",
+      "bytes": 487,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/denmark.md",
+      "git_blob": "e5c34abba055929cfdaf48e75c38da8351bf73a6",
+      "sha256": "dafd420169648abc9f2176f75c23f515c2f9f653763b2b939dbedd8c8c7084d6",
+      "bytes": 19184,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/djibouti.md",
+      "git_blob": "b2de5d1f740b9f6eaa0478aee962c7e692bd80e5",
+      "sha256": "ac8b0d118fc3ea10935ae7b105c79c420d7f5d081b34f83ec07ff2f74590deef",
+      "bytes": 544,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/dominica.md",
+      "git_blob": "588ae1025721ed4d9b1a40a7367436fe19936f6c",
+      "sha256": "87db58202d8eed0bd69ceb3c631332c76d6ac09e7bc666b540d2662875f5bd8a",
+      "bytes": 1376,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/dominican-republic.md",
+      "git_blob": "01dfdc83424e31478eab5afb2db989386b261525",
+      "sha256": "1822eb698e50a7b3b81c8b0bc6891ab3a4babec5c626ecec1dcda78aa8c0f71d",
+      "bytes": 2336,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/ecuador.md",
+      "git_blob": "0dcb8951a633da7b9b3c1c151ab050a85a5a5188",
+      "sha256": "7481c695f76e116356a6d0dc4a689ebfd0f82acac9076568631f54145110f287",
+      "bytes": 6756,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/egypt.md",
+      "git_blob": "789905844dc226dc5d532655869a0d5b96ade765",
+      "sha256": "2ee08630ae9bfc14ff1ed452389d9721155c2e8d372a7596a34e07e9315345d0",
+      "bytes": 461,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/el-salvador.md",
+      "git_blob": "77c8161473c7eeb6aad81d01772c1646f0789d4d",
+      "sha256": "2d4669f5faf13149ee53244adafe08664a4f95f4d39267bd07f8332354a18656",
+      "bytes": 2110,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/equatorial-guinea.md",
+      "git_blob": "1fba506c382010144d2fc775bb4ea27b90f64937",
+      "sha256": "21e7d913e9e2821ff9cdf9e223b60a4c4142b7ff8008b163e0500db554cb7d8f",
+      "bytes": 528,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/eritrea.md",
+      "git_blob": "c7f6785ec8907f70c0d997587c189e05fdf4ee95",
+      "sha256": "64a477b3b714674af022c68d5eec7c2dcd70d5314e8ed807881787265c6e31b6",
+      "bytes": 397,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/estonia.md",
+      "git_blob": "8eae35b8eecdcf34cc7c3cb980f9d56cd7d5abd2",
+      "sha256": "39dd6a8c05d2114ad984009992c32a4de11a62cebe7c2d951042832daad366a7",
+      "bytes": 15050,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/eswatini.md",
+      "git_blob": "4eef1c6083441d9ca0870dfa7acd9b8d8d036380",
+      "sha256": "4a809bed4bf0b33cafbf7eb45d3b655c5f49ac1ed47c3163d55ece4a67cac77d",
+      "bytes": 475,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/ethiopia.md",
+      "git_blob": "e30b9755d457da675c0724d6d39c72270365b38b",
+      "sha256": "3e64e370f78bb88ac6009b1529e2a13f9bf75b91685efbebff6f4b7952bbeb7c",
+      "bytes": 484,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/fiji.md",
+      "git_blob": "4fc2a980a2c10e41baa8cb0904a8f2eac24a8db6",
+      "sha256": "abeae258ae24d540f05c062b6b5580ae9896e11b0762ebf1c3a65e6168399e28",
+      "bytes": 5476,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/finland.md",
+      "git_blob": "3a32a9354b19a31f16fc1d97cd651cb910d61ccf",
+      "sha256": "cf87b259d0f6ca18c3c2926934774a5df81e7f4534af47185f1052ab2cbac82f",
+      "bytes": 16609,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/france.md",
+      "git_blob": "633e891e86489a222b5f5540d06c4c59615aad48",
+      "sha256": "871136efca3c3c5441e770812c77dde71a5facd295136ca46110a8afd643620e",
+      "bytes": 32340,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/gabon.md",
+      "git_blob": "221aefb4c162639e05c44521e1ef52e0b1f70970",
+      "sha256": "badfe3f53360c9c6333b326f20ac586e60d9e44d3c44e8c30feafcc22bbf606c",
+      "bytes": 515,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/gambia.md",
+      "git_blob": "c05144789b647c4cf15ab93765d07ef162599f4e",
+      "sha256": "fd7b946ebd77bdae88063f22e64cc94a2c509e5f562c90ec54bc17779b88286a",
+      "bytes": 490,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/georgia.md",
+      "git_blob": "98128d7f4359f98658391a2897ee16f159852501",
+      "sha256": "9a684154d0b0e6916008858ca36a3d981d94f76db674ca8b79dd3c4c6231d796",
+      "bytes": 11571,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/germany.md",
+      "git_blob": "f84d69ac1ad159c3875b5749987bb73ced3fbd0b",
+      "sha256": "32b3da3488ee5ec6c13d00bae9b354655608a089e98c7977382a6bd83dea9eb6",
+      "bytes": 70917,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/ghana.md",
+      "git_blob": "91679a371e96692085d2863545e8c7a04eccfcf1",
+      "sha256": "392e6b7d23b4d09f1e4b5fe2c46b315be3f0f2ac53b4a1bc94a09d55b01f9680",
+      "bytes": 557,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/greece.md",
+      "git_blob": "6f9aee942449e5a7d72527c526e6063773fb60a9",
+      "sha256": "5a6f34e63345ec49930fe7f6e5aeeba90f9063cb06cc186a2f129987894a3bc0",
+      "bytes": 54117,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/grenada.md",
+      "git_blob": "5afff7c4f8d88ad32a40c3e43099503def596d35",
+      "sha256": "adcba91739798b8299265ba9d74a0972de5f162116c4fd44b48d3d86c0d50f85",
+      "bytes": 2053,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/guatemala.md",
+      "git_blob": "6b73e800236064031f5058f31482032bef5fdc7d",
+      "sha256": "db8d311743ff773e029db855bb4d9ce4222092c4779dbccc339f6404a7fdd3c6",
+      "bytes": 3218,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/guinea-bissau.md",
+      "git_blob": "c1a107c0563d708aed6adecfe56bddb56854dc02",
+      "sha256": "907f9147f32d782b1234f04c475e4e16e02ba01def24ef438b2f0050fc8b1903",
+      "bytes": 536,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/guinea.md",
+      "git_blob": "69b6df480c97e4b9ab8cd8c5ec8a815f125e0a98",
+      "sha256": "dde27acd094dd61cc81b54ab100c77362cb2bc8d2cab61831836c996c07780b1",
+      "bytes": 410,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/guyana.md",
+      "git_blob": "ded45b5a4e22ef4966fa9ac4fd1a8973fc13a7bd",
+      "sha256": "ee790a1d57d4edc6fc7b11d2d15621a183becc89891828fa36e5619de3df98f6",
+      "bytes": 3333,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/hong-kong.md",
+      "git_blob": "6920b169effbcf666c9a614509b42cdbb6b30070",
+      "sha256": "84b2d44ec2336d3ab9af2f67041d0a57bb5bebcca6df3076909895553e7a4a24",
+      "bytes": 5137,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/hungary.md",
+      "git_blob": "4ca992d0c6010506dff23fafc523048d20bf9ba4",
+      "sha256": "75e35db7b689e1f033fabcb17188d211725bf85cc0eddbc3f9fe47c7aec68cad",
+      "bytes": 18531,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/iceland.md",
+      "git_blob": "3c8fd1545f69f8334e8e069431e00bcdd627ec00",
+      "sha256": "dcc69888628ea33305fd995fbc4da88c276ed48cb64af91089a3ec36e3f6fa5f",
+      "bytes": 4312,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/india.md",
+      "git_blob": "5bf082ff7bbd369b145af8b795778843b2de7f6d",
+      "sha256": "79ba0f71e415e5a9d0f283631b10aba7a7aad6f0f85028ebc4d8a1601e44f4fb",
+      "bytes": 428208,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/indonesia.md",
+      "git_blob": "a6e8161faf2e96c7b2300afe6558c815e6d897b6",
+      "sha256": "b2811934b6017650df2f0a39d83f10f751068787f519cebc0be16f7f5f5a402b",
+      "bytes": 17542,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/iran.md",
+      "git_blob": "96e1e6563bce3a145806f342cd2fb8966ebe03fa",
+      "sha256": "a71dda9187c4adc83c14c86f1fa9043863e30717b3007343923bb380fa7c394d",
+      "bytes": 13182,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/iraq.md",
+      "git_blob": "e3603198b118ff37ac9f8321eae8e35cdbfb36d5",
+      "sha256": "d0188b5c054d3c566e16f3d7ebb425baa0d2cf3b8d28e734ad2b9fe56e71136c",
+      "bytes": 4644,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/ireland.md",
+      "git_blob": "ce08694d6253fb2662c93755c713ad46f03308a0",
+      "sha256": "dda6588d2bf34b8732f4dd4191fe51089346a49643ff3b4780c7d4291027e13e",
+      "bytes": 17047,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/israel.md",
+      "git_blob": "fa11ae0b438dbd8a01ff779c546bfed71e2fc16e",
+      "sha256": "3d912536f1d82b04eec6c6c38da13d4a9719fd3631620bbfef601f0495aca57d",
+      "bytes": 7753,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/italy.md",
+      "git_blob": "aa3e55d4a1ef195c9f4a9db6f7fb4f829a240bc9",
+      "sha256": "2e60d9e0f446729465b8f23fc611d31d9b364a24844c6d2d19c718a41f0ade7e",
+      "bytes": 28647,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/japan.md",
+      "git_blob": "fe73bda839168ab1779f8568d0c1b313a11b06b5",
+      "sha256": "03e761bb34721ec71d882c392563ba1ade37c71b35c4066a85b1794ed502bd8c",
+      "bytes": 33281,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/jordan.md",
+      "git_blob": "988f7f3c891158225b7a760b1ccee1f8e58ce503",
+      "sha256": "85b56e6817b9553a1bb3769b240e3da908d434e55df13798bd2eee68608c6909",
+      "bytes": 8436,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/kazakhstan.md",
+      "git_blob": "31bcdef1debf3e6fbb6e39da9f825dbd819115a5",
+      "sha256": "32d8966f790d892b2264fed818cc8ff649d787b0184af98133f63e030a2780c5",
+      "bytes": 14808,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/kenya.md",
+      "git_blob": "cfd91016fd0723d0538a80d6258893d5b38194f6",
+      "sha256": "86bc93596d782f43f2afcf6165e897bdd2c00a87304cc1723fc2a94e513ee962",
+      "bytes": 645,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/kiribati.md",
+      "git_blob": "177fe6fd00f9d42864d1080fb887f48b09719a75",
+      "sha256": "12df47b67aa84cead14e470f6e8b9231cef8e1a8de6d1d93d76f407780f5879e",
+      "bytes": 2070,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/kosovo.md",
+      "git_blob": "6fe86e17c0807dd0297ecc8de49f8921e957b329",
+      "sha256": "a8b00cce905c8d6eb4d5c6bf27acd02fb2d9916a68fa50ed376393aff39eadd4",
+      "bytes": 6370,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/kuwait.md",
+      "git_blob": "ab0375f72797901ee0747e38d74e5bf2fda57eb4",
+      "sha256": "1099759d42cb76272d0de91b0088c8b226ca21f74e7960bda738dadfa91a23fd",
+      "bytes": 2687,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/kyrgyzstan.md",
+      "git_blob": "87f9d1eb9aa7015fd04ddcab8070888ac8b1274d",
+      "sha256": "75183b2a39b0e3447bc013e7080dc7d234ee43f93c7a6554d29762c3e2fa76da",
+      "bytes": 6426,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/laos.md",
+      "git_blob": "431f805bbeeec76b5bddcbaf4f9db85abf2d546e",
+      "sha256": "193395398772d94daade60de26d4b06dd32dc322106d097446f8a370d790a0c2",
+      "bytes": 7268,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/latvia.md",
+      "git_blob": "0e1b88d024eba851b27f047c5f7af5f6d2909121",
+      "sha256": "f9ae5cae7fa0f799e3111a04503e5f709e9333e3ffe17c91ef378178d1f15975",
+      "bytes": 12674,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/lebanon.md",
+      "git_blob": "c3622d208cf6b6104f261e428f6637fa3919b104",
+      "sha256": "b57f22aabcd3d0f128ab46271fcd944f872e66eb3bd3f1a08a370ec2ddb5b894",
+      "bytes": 7002,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/lesotho.md",
+      "git_blob": "cbfe25aec682168d1337c9dd0961ea58015b3310",
+      "sha256": "06a2bd1abd313e7573d7e290d565cdf6f3abe053b519572af9df4a8a36c776ae",
+      "bytes": 507,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/liberia.md",
+      "git_blob": "a5e3ae36ed53beb05a52beb87cf4c554622c408e",
+      "sha256": "f2d7e34558dc75844b72bf8f6774c54d321469cbf7239a40297f4f83ba2ca529",
+      "bytes": 656,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/libya.md",
+      "git_blob": "a5a2a709823c38a4442482b1ea79037dc3ad12bc",
+      "sha256": "b74f9972e18690d12885b0ecb10b6c04c48ce3a765d6a5fb6ae9bcd1a99162e4",
+      "bytes": 700,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/liechtenstein.md",
+      "git_blob": "fad7f5b3f5a97d4ba6d66c21c29557d95ad46012",
+      "sha256": "33fc050daeeba63b94376f7c03fe8f9abc348d999278e8cf2f791a033c280492",
+      "bytes": 2549,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/lithuania.md",
+      "git_blob": "7c0741a9eaff10d5731ee9ac52469451d1266ec9",
+      "sha256": "9b94ef5657708dec1af42b96341f35809f2bb18d64350b92747baa53e1392411",
+      "bytes": 10141,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/luxembourg.md",
+      "git_blob": "c307d7b0f5973243db8328f9a807d6d0fa500e9c",
+      "sha256": "5bba5e088424f9e262da32fe2286376749d81270e5ca35fa1bfd3ab2788463d7",
+      "bytes": 3830,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/macao.md",
+      "git_blob": "dab4d29ae805abffc987e79c1fb4b6df16d641a4",
+      "sha256": "28ab3ce5b2af117aee0610f1e9c3c48fc7dd09e7eff251b59bcd8327d6f2e124",
+      "bytes": 5394,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/madagascar.md",
+      "git_blob": "e799d4e2096c84233618e79c6659111ba9816859",
+      "sha256": "733e7849228baf8acf34b1fbe5b6ccf9019df780e94725d5859eda3a6854b45b",
+      "bytes": 761,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/malawi.md",
+      "git_blob": "23fc6db7a497e6e610b1677ad53d98eadd3dadf7",
+      "sha256": "d9ca1f0ba59501564ff97ef45fc2d6422510e616f6b1fdf6e50262b1bbb91cf7",
+      "bytes": 991,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/malaysia.md",
+      "git_blob": "c4599e09bd4d72f0b4dbc246c230530e732db4af",
+      "sha256": "ebd1e613751c9c3518651994af714a76fe5690cfb0b5ea7cea754d4780c8df9f",
+      "bytes": 9613,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/maldives.md",
+      "git_blob": "228b83cd907e7771c2e76c451a9c405d24de8885",
+      "sha256": "6498f7ce689f8785ecfa3ae0180350bed39dc3fa392b09d24c1ecd3bc901b9e4",
+      "bytes": 4367,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/mali.md",
+      "git_blob": "044a786145f05366063e9759a0be12e67e64def9",
+      "sha256": "a73718e1bfe55f5c793ddad87af5a606ba5c07dac409b440571f1fc86a453ba9",
+      "bytes": 5050,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/malta.md",
+      "git_blob": "9b903011b73839c7877ccfe4593828ec0c66f870",
+      "sha256": "1a69241d8c54d4672cd2f86090d48c659eee9c4879575d7b9ef1845cdb3be382",
+      "bytes": 4727,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/marshall-islands.md",
+      "git_blob": "08c5702d9ae82b5591f1d784ffc6dd96944d6393",
+      "sha256": "fe579e0be4b9b20bf41b38d7fd7c468dbf5e7fb07f72bd99b647cded27644778",
+      "bytes": 2546,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/mauritania.md",
+      "git_blob": "ac87accf3e1e623ee16efbae23c4edc01896afb9",
+      "sha256": "c61bbb86f27a412f1613422bf11521e465d70f6cf877a816f586ab52d2c16d15",
+      "bytes": 3123,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/mauritius.md",
+      "git_blob": "23f1d290e7be8b5c44792616c1859878e6c9e32e",
+      "sha256": "c537ad9d9880f08c1fce41fa4ef121d3d4fab0760999d032229138ca14adfc47",
+      "bytes": 3501,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/micronesia.md",
+      "git_blob": "fee2337aebb066cbe2cd18cacbfddb579860ed03",
+      "sha256": "962e3233e60fccf86b34a948bcab5a3e18b5d0a83b3dd22ac8bb30fd8db49ec0",
+      "bytes": 2386,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/moldova.md",
+      "git_blob": "7982ac548d6b5754405141d5c906ea23cd04dbce",
+      "sha256": "34befa6552d48d3ccdd4adc931935dd05f3dbbbf69ef16bec19863c18d3967d7",
+      "bytes": 5218,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/monaco.md",
+      "git_blob": "70fb293206bffb18cc66b39efd82429d68e4c889",
+      "sha256": "1b184877bbb7bd94fd9bfbff4daaba3cadaaa5a377aa9a904387d84758bf2150",
+      "bytes": 3097,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/mongolia.md",
+      "git_blob": "53b9ba5c38d19264ecd799a284e090e2f5b7e7a9",
+      "sha256": "57df306de848c0b6841b2b6da0f35834f37e91c684e38373326cc7a3f819471c",
+      "bytes": 10056,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/montenegro.md",
+      "git_blob": "a0b4770d60e7fbad4919f707d5db9606348aeb42",
+      "sha256": "04f3fa779a97f10bad122dfe5a19d93396b55c04f61e51db8ee6c75a772354aa",
+      "bytes": 9338,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/morocco.md",
+      "git_blob": "d47ff87d8f8398de57264afdce6718ecd9f1c199",
+      "sha256": "1a952890edae1777273740eee832e67b7f74cc0aa575ff0d57a17d1922c094e3",
+      "bytes": 8359,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/mozambique.md",
+      "git_blob": "534b5dfc624997461eaa0ce8a385618a972396fd",
+      "sha256": "e56d03609c03766dbb1584cb16b0aba815207e14b2dd1678039e828509da92e8",
+      "bytes": 7215,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/myanmar.md",
+      "git_blob": "f340fa3462952a8dba0fcf178b8b548bd7b34c51",
+      "sha256": "20544704e6affb607eb6b776dced576948d1430bf39f20bf191d9115155fd61d",
+      "bytes": 7751,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/namibia.md",
+      "git_blob": "f997674288587661217f9b1df40964a27c945f57",
+      "sha256": "cd60eeabb3b998cf17d350336e492e85bfc5e361ff692601078646b8a7851547",
+      "bytes": 2596,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/nauru.md",
+      "git_blob": "785852216232bdeed09e2eb4500fc85f6f62db0c",
+      "sha256": "8c29beb29b64353374530152c5cf1662e43bb145d00957e3bd38c239592b3389",
+      "bytes": 1292,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/nepal.md",
+      "git_blob": "986bf6cffcec137473490ab0ea461b5fd1797c5c",
+      "sha256": "7a207660de7e376c0c10151863e435ab85f02d0e9ad06aabb5e3c5bf5661831d",
+      "bytes": 10749,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/netherlands.md",
+      "git_blob": "de35038409dd06433b5449216c423640e6ba1a0d",
+      "sha256": "593394ab62a0c230b03731d13e75034e853f211ade02d69b9d5f567523dbc665",
+      "bytes": 28877,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/new-zealand.md",
+      "git_blob": "69ab4f349e1af53dc07de9c9465f11ad332b8c4a",
+      "sha256": "33b1f2fb8fcb10c99cc40821926a18537ce4d45fc63ec55176a7993d9cf124c6",
+      "bytes": 10162,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/niger.md",
+      "git_blob": "e00e2a5d02fc468264e2a4a6644957e6a9e437fa",
+      "sha256": "928c216887a2b46725718db8a634faaddea2f6a1b871643760a95a244dfc9986",
+      "bytes": 1922,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/nigeria.md",
+      "git_blob": "31e343362b1c95d4e4a22c80543cec595b5cd7f7",
+      "sha256": "ebf15ddf54006bab8fb2d89fa0eb3e4fe446d824d07a1849dce560258c6b29b1",
+      "bytes": 1914,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/north-korea.md",
+      "git_blob": "fd61a731b1c15cb967d401a777a119df1a2ba4f8",
+      "sha256": "d5805e9269bde53b52aa87fa6685530e6697f6e8a93e38ba0156f15318ab1a18",
+      "bytes": 4449,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/north-macedonia.md",
+      "git_blob": "360298caff4c9dac101d8123a9218699466c631c",
+      "sha256": "39a031fd865df60e7a6d7146f1640ceb894f1c76778e3a294e1e7bb69915af2a",
+      "bytes": 8123,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/norway.md",
+      "git_blob": "738431dec5129673a8d4200b3a2b8e241dbaaf4f",
+      "sha256": "29e1de3dd7e3b479f1e24c71865dc5dc0f3092aa4177d19c4d391049fe5d405a",
+      "bytes": 15733,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/oman.md",
+      "git_blob": "1f05281b8ed891040f190d3b4ab153f3346e9575",
+      "sha256": "aa36e708c3df4851dfffe7b0041e3bbb9284e6147a8064a33d15e14f6b25cdb1",
+      "bytes": 6661,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/palau.md",
+      "git_blob": "5192a7c9799d4c287ede0058e7145238a81729f9",
+      "sha256": "6f0e0c25f45ad6d7fa51890cccbb6218058a671b21306ccd5608ae61086e789b",
+      "bytes": 2928,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/palestine.md",
+      "git_blob": "f8a05014025baee05e2ab8d7fb5b8841abd2b849",
+      "sha256": "99097b13d814f5487d63065e6295d323a36303f79068358196d043913b0f8e11",
+      "bytes": 4077,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/panama.md",
+      "git_blob": "52ec55f6bc44c0b268a1be5de190773beb4e8704",
+      "sha256": "f3d49ff331583bf434beac272966d77dfd4434124d5de2c3d18ef45750a54b1d",
+      "bytes": 2288,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/papua-new-guinea.md",
+      "git_blob": "0ed23fcbc026b04d757d9d864e84cc0eff759080",
+      "sha256": "d8c138258256b7a25a63cacc761f7620335a669b98df1c3310686ee5abe5c953",
+      "bytes": 2348,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/paraguay.md",
+      "git_blob": "a4871110a7d680481fd05ce2cb98f8e0019043c0",
+      "sha256": "98d07bf3eb5f6dfa9eabb0d948cbdf05d5bca66588d53ec89e70c87391fcceb3",
+      "bytes": 5684,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/peru.md",
+      "git_blob": "fd7eafac079e2e9875668cfff551d7d526ef183b",
+      "sha256": "623f9dd374fe6b3124f7dfb10a87f6aae14da0d6cdad9d283df103111e0f5e56",
+      "bytes": 13738,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/philippines.md",
+      "git_blob": "3aac750ac5d8cb3d4024e960cf85e70d75f3d1b8",
+      "sha256": "de2470eeeafa574d9724a023f5cd0d0b89ff0772d5e65a1e98bed308c29aa621",
+      "bytes": 9481,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/poland.md",
+      "git_blob": "718a584edc009e74a635e304f690a7c9a542f6f7",
+      "sha256": "1af9635778121f7850b8cc141dfeb5dfa1dbb81ff9d8c6e4573f2d3df0cb107a",
+      "bytes": 19610,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/portugal.md",
+      "git_blob": "70a1a46124fd4bbce47b87fec220e0baf0d61c41",
+      "sha256": "0100c99d12fb94f6f7b3e7d25f1963c1a38073a99095855b8ecee2656b7c19e5",
+      "bytes": 50424,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/qatar.md",
+      "git_blob": "ea41445cc773a78c3b10341f3fdf996ec5ee417c",
+      "sha256": "52e0bc72b1fed054ab48169f7d15066cfe29e810c4dfeffe8b9009a4a8df7dae",
+      "bytes": 4630,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/republic-of-the-congo.md",
+      "git_blob": "21af5e79d662944993a8453b616865700b584797",
+      "sha256": "eea313d09fc58790fa9933996984fd0e4fc01dff704fbd78dfb5eac5abc62f3a",
+      "bytes": 508,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/romania.md",
+      "git_blob": "9425f63f1891b43537246d1c72be36eec2fb0b8e",
+      "sha256": "bcc0911f2d818bac5446c8b43b0b78141cf6401518cb121cb8733512c019e5c6",
+      "bytes": 10802,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/russia.md",
+      "git_blob": "d6bab50aa2c65add8aa3a4651f4106558dc3ce69",
+      "sha256": "8691d7bb3fefaa011f437861cfb489440a4a246c5a5eb7961f2d04f6e3ad940a",
+      "bytes": 6892,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/rwanda.md",
+      "git_blob": "388e008de92e1e1c33a89de6877f39080266dc58",
+      "sha256": "4ed1fc089c9ee65d4386a2d4ae7bc449270260d0031270e6c3bb032d76bc24ea",
+      "bytes": 1327,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/saint-kitts-and-nevis.md",
+      "git_blob": "fc8f398a2c37ee45ea445758bf03f4da95b5433f",
+      "sha256": "e19f6fba8b2570af196be7d048133acdf92ea62d8bf3071269d31187810fe203",
+      "bytes": 2616,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/saint-lucia.md",
+      "git_blob": "0d0aa4a49b0c13b505b980414683db513d968724",
+      "sha256": "d716763b6528dd65a7fa9f871a7a7d1cec964b6cb35bff69e1826e8a417c5cf0",
+      "bytes": 1817,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/saint-vincent-and-the-grenadines.md",
+      "git_blob": "16023e922bce42e901e436ebb7cb1ace794b14c1",
+      "sha256": "eb0c26982f43de66f4a01230d83ff9a54971740943541043e901111452681e5f",
+      "bytes": 2097,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/samoa.md",
+      "git_blob": "06af34c4b9ff35eabb57fb988f19fe1eb88c8791",
+      "sha256": "c963cdc7c6376ec8975801cf2e3d39dfe186449dce8dc3cae6ba9fcbbc5e40ff",
+      "bytes": 1650,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/san-marino.md",
+      "git_blob": "78908bbb46ca52a18f78d150b4f5b57480dafdaa",
+      "sha256": "ac5beb4dc5ac5f12bb66bbaea49dfe90b62f453bff6d9fbe5361a3ea107b6d17",
+      "bytes": 2430,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/saudi-arabia.md",
+      "git_blob": "7e2c682cf6683bae5d1d933d44b0e64cd9ecd3ce",
+      "sha256": "5943a754058d8d9a9429edb041b57497c46ad808d185cb230714af799f2adb89",
+      "bytes": 9465,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/senegal.md",
+      "git_blob": "d25cbdea82ed5ac4a1c96e0a152f9fc9d8061dfe",
+      "sha256": "0365822cf05044cf3a644d8961fcd4ca364dc7039d9eed7bacd64d9335250d02",
+      "bytes": 1496,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/serbia.md",
+      "git_blob": "b1f17f1c06a6b99dc42ddd00b42c114a4d04202e",
+      "sha256": "f7a0ddea925b501e58f3e24c7c326d0fbcaeb32738b8a6ef0724a8a8e4df006d",
+      "bytes": 9148,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/seychelles.md",
+      "git_blob": "49728c1f4e39219ce72edda032eda3fee40ffa0e",
+      "sha256": "5ef6cadf815dd1355c1d60297cbcda8c3cd824f72ea91fd78788ecb5a96204b4",
+      "bytes": 1368,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/sierra-leone.md",
+      "git_blob": "cfd13958be04d3410d5f8e2e0fbed788b6b713b5",
+      "sha256": "478060bb7251a135ff5ab5bda459c42afcf12816aef60600e884e5dd274efbcd",
+      "bytes": 1836,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/singapore.md",
+      "git_blob": "8a9242d37c5016882acc31e378b0fc02d6774d11",
+      "sha256": "ef3dd017807b94fceb5826e62532f016d89ad57f7b4832a7d52f78040d1d6722",
+      "bytes": 15479,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/slovakia.md",
+      "git_blob": "9396e0ff0e5be2c84f37e99316e976503fe45018",
+      "sha256": "d683703a7fa5c80055ce9109ece91a659ec097cb1db601b2f2c3a2b989a93fb0",
+      "bytes": 10319,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/slovenia.md",
+      "git_blob": "607f44262478b9e95e963bd27a5d792261a5c88f",
+      "sha256": "aee49254ac2259f86ec9f8d764a10dcbf1298088e92f262480dfe3dc3a42b737",
+      "bytes": 11319,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/solomon-islands.md",
+      "git_blob": "7c1641124845f3bb078e883422dc4ef43b2f0229",
+      "sha256": "705b672a512ad180d1db067665128226b28f6f995255bdb2b04e859db7bfb10e",
+      "bytes": 1803,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/somalia.md",
+      "git_blob": "56d86680fe27ceb3efb840f1679bd62de6eddfa7",
+      "sha256": "a63589aa3d148da2f23ff0d160799d6567f3a91750f5c2c6720d31401477b349",
+      "bytes": 1379,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/south-africa.md",
+      "git_blob": "1d0b12740c82b3a7a2602750304d2577c3c15f15",
+      "sha256": "c0cad8f0221d80c62a87d226bfbbff13e72e5c7a6ae4359248a0af21b61d3d0b",
+      "bytes": 3102,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/south-korea.md",
+      "git_blob": "06e6631664944747b954ef2174062264d1647d46",
+      "sha256": "28f7af30957d69d00da25d9c77721b01ab8446310ae9f658ae71832780d66c3c",
+      "bytes": 19824,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/south-sudan.md",
+      "git_blob": "7fcdd573de34cf5de93611524fa1606d5b23cd37",
+      "sha256": "0effe93d67874eb5b3dc4f5190c9d17e1dfde13fa00d86b10f7cc9960bca3b6d",
+      "bytes": 696,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/spain.md",
+      "git_blob": "3154bb556fb0cb703404509d7a019de47742fecc",
+      "sha256": "be560340a3502631e346399d31bf1216c0df6670281f5da96e614f12b79468ea",
+      "bytes": 30527,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/sri-lanka.md",
+      "git_blob": "30ee7efd9c1347719d7b6c444001b08e6c0393c4",
+      "sha256": "5a114b82f204d6f537f01bb2523966b9d927eb78dc81efcf888a3346e2e83725",
+      "bytes": 13351,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/sudan.md",
+      "git_blob": "713e6688c26fb1195baa16295e893d97fae9ec93",
+      "sha256": "cc810c37d48b6ab413435b9ded8380fb775a7ff14f3d9ffe2172b4aef0e895d6",
+      "bytes": 1499,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/suriname.md",
+      "git_blob": "74b54679237e6c049ef431cec53e54541a26605d",
+      "sha256": "b60bb5ce6a6dcb7f6ba1478e70ca13f3f498b0dcd2da5165cb6f4c1359ef474c",
+      "bytes": 4439,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/sweden.md",
+      "git_blob": "2fdad7d4cc7b145525f9870534bb4377f87ca4a9",
+      "sha256": "abd62dd84de69d450009d06e99e1157267b43d0082bd4078a55caaae6dc7c1e5",
+      "bytes": 17563,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/switzerland.md",
+      "git_blob": "18c85818b54baba9115db525d900d796c81f715d",
+      "sha256": "a27b3534329caec1b76355f18a1720f4fb189b16f3e4b5d5f003590cb355c2b0",
+      "bytes": 23207,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/syria.md",
+      "git_blob": "4407bb919a78282562dc9cbcd2909e460920d986",
+      "sha256": "1d5473f39ba343066ca286a21cffdbf69b2c1f37bcbceaf86a0124d6849ef71c",
+      "bytes": 1607,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/s\u00e3o-tom\u00e9-and-pr\u00edncipe.md",
+      "git_blob": "35184f7687498eb2eaa37cfe58ddffb9d6f18643",
+      "sha256": "8954bdebc6cc22135642bdf97a28e070896ba90f519bb64f96d3ff20c7f374ee",
+      "bytes": 2833,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/taiwan.md",
+      "git_blob": "67c8b17a089defefa3af72c4f3bad76dfa2304c6",
+      "sha256": "f5e7f973c93a134f280badd84658854b47112aa2770056d8689b9624ecf8a81a",
+      "bytes": 10004,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/tajikistan.md",
+      "git_blob": "c7c41360a37593f86f75d80eac4721e9ce2b6c94",
+      "sha256": "59a2a5fd17df79dad1207f746bf337b33fefdb2865a6e34281d8d62970cdd96b",
+      "bytes": 7228,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/tanzania.md",
+      "git_blob": "60a4f3313d3de909704460ad6282e464908a148a",
+      "sha256": "37156f3285f54340cede1a179969d238c2cf19442f3a2fb74c2b16e1a22b85a2",
+      "bytes": 907,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/thailand.md",
+      "git_blob": "309392f7ef4e43fe4be7b420610e48c47eb4e84d",
+      "sha256": "07a885831a5044fc1f3fcaf536835af6728f4a0f03b9789cff8b361e3a4029cb",
+      "bytes": 15747,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/timor-leste.md",
+      "git_blob": "53a76ab0a2196c382096d2ab49a38d46bdbb2398",
+      "sha256": "dbc4300464b0eb8b1e651f4955808183667a00b80f7401e72be2b7460ab1bd98",
+      "bytes": 6307,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/togo.md",
+      "git_blob": "ef18d9e5adb4df32a92b94b4ecfc1f1bde557f56",
+      "sha256": "f4fd737a095424045744db4f0a29838efb8fb868f3186e13f03c9bc6fe49567d",
+      "bytes": 704,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/tonga.md",
+      "git_blob": "74ed1793b0b845a9c4564957181173c8825672d7",
+      "sha256": "00e34b1a4d44f612bd872244484d461f518af6e6938137f440f04c9aab2ea61e",
+      "bytes": 1865,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/trinidad-and-tobago.md",
+      "git_blob": "794ba7af9b74185ff2b351a0a199cb4f2c40a14c",
+      "sha256": "e78bc624cbf94406cc5db3456b0bd57286f16a953321da46f9433607b752e7af",
+      "bytes": 2789,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/tunisia.md",
+      "git_blob": "7294b8b4b78dabddf35f9c6eb5d62b6578955282",
+      "sha256": "3b2c05e432c758230752059cd3f4663f0d86173165c0a03860c54e3f10e4d6f7",
+      "bytes": 1137,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/turkey.md",
+      "git_blob": "ee4b08012a8df9bd904e4dd91b937f4ab90450df",
+      "sha256": "3e51af6279c42c7a9ef06a8922cad907d8ce65b56a83c376f46434b171e00366",
+      "bytes": 37144,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/turkmenistan.md",
+      "git_blob": "521976c0f9291f4ccb1c47fecfba5b7296363f78",
+      "sha256": "351649e4303d3bc9b5c6b68b27a68e58b5db2ff2c344767dec00d39a06183e8b",
+      "bytes": 4929,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/tuvalu.md",
+      "git_blob": "c0caf68fca1c462e0be24474e01662e4281ba356",
+      "sha256": "75d92e68415eea96ccb82e93fcb839b71f856eab7d7b995860df33de21acd0f7",
+      "bytes": 1757,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/uganda.md",
+      "git_blob": "871d19de6f352f1a89d47362b767c763b33deec3",
+      "sha256": "ba36c0b4d057e095d1e7e360bd533172246b3e6f46784cab4df41296668084e9",
+      "bytes": 1220,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/ukraine.md",
+      "git_blob": "6ddbbfbec28a0e2692e41696178e71b2776588a9",
+      "sha256": "889ea2208952da16628d2cfaa5ea6b2fa6535ca3c7f5402c66a36135f825e156",
+      "bytes": 2681,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/united-arab-emirates.md",
+      "git_blob": "d2f3bff79ec812c590e8a2227b5cc7d200dae762",
+      "sha256": "edba8bd5fda9d941aefe4fd4bfb5d19a3ba98befd2a26d726734b0447fcd87b3",
+      "bytes": 16723,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/united-kingdom.md",
+      "git_blob": "37f4679ad365b9123f1734283cb1fb108bc01d1e",
+      "sha256": "70c1a8d0fa866358c45ad0e5cd99eb82307fca77fa188267134fe87483a206df",
+      "bytes": 29951,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/uruguay.md",
+      "git_blob": "a07e9685fc1d7bd6cf03d118a1304c5107ac3b36",
+      "sha256": "3fa0263fc779a8135b738b5c2d874f27d12f71b1453f773645fb77e760cf6f37",
+      "bytes": 6232,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/uzbekistan.md",
+      "git_blob": "fd3ab1ea8254a8cd5931cce021c9e2ab0a5f9c79",
+      "sha256": "41bfec0644618017d2f151f32a8ee0ef350dcb8235d05649286d22aeb4d769a4",
+      "bytes": 9190,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/vanuatu.md",
+      "git_blob": "7f5d9d910fc4c46baad81b23959b159320e2b4e4",
+      "sha256": "7a50bd734a695bc7f4a47166c118cf9e70d8d16676d45ea50224a41d336b54c0",
+      "bytes": 4644,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/vatican-city.md",
+      "git_blob": "7d6d705b132c968b4abd6f6a5d452d81cb551784",
+      "sha256": "0f45726d777c04168a95d8cf147273abbeca46e2e32ce28389f5cd2e1fc084e2",
+      "bytes": 2209,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/venezuela.md",
+      "git_blob": "71f90c01e11e106d548559ca64979723f9f538fe",
+      "sha256": "96e67e6beff84c005bb4e638b4600351ed6161fcd16315ef05cf886b138a2ee8",
+      "bytes": 8037,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/vietnam.md",
+      "git_blob": "0488e5f7b42733323090be306c2a3ffff66f8678",
+      "sha256": "619fc6ae8d147a2dbbaad1138c795196199166a0cd1e66b958f49d6b64dd31bf",
+      "bytes": 8874,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/yemen.md",
+      "git_blob": "7cd6e18095c0f497aa36e7729b82ede4d6fbfa61",
+      "sha256": "185b16dabc458610121bfbe1dd4c15e941d20a67c95294663a0aef164f5ba737",
+      "bytes": 2931,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/zambia.md",
+      "git_blob": "864cf5dd0b337bcfde00494c915ebf5540215362",
+      "sha256": "ee91daab67e25fda00a347274ce0a46d221c1a74fc4b892e22a72748d85a5cae",
+      "bytes": 1096,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/places_by_country/zimbabwe.md",
+      "git_blob": "2ce39e40ca7cd4916f651ee7f1d1a852261942a3",
+      "sha256": "73486d3cdf078710a3f3b8325032be37bfe477bd96aae2549861c8bd199481d0",
+      "bytes": 1207,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/states table.sql",
+      "git_blob": "3b11985e96cb964154d9be6c2c9898c79fca6bd3",
+      "sha256": "c9c176403d9ecf38a3330e84dd563e34c3b21acd157c49bb5a88ed66e2b33d17",
+      "bytes": 905535,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/states.md",
+      "git_blob": "da3688c4090ee15ad4ca7c7613803a2f173b61a2",
+      "sha256": "065d5aa4915cb2965417fcc625f9a403f13f39bb407cc58c543daf9c767dc23c",
+      "bytes": 84970,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/tripraft-cities-all-3380-audit.csv",
+      "git_blob": "6c5ec5ff97f39db6406f6b3fb73ba6650075166d",
+      "sha256": "4326219119a11e2b50273501d47329efec786046880c212982dab759414c91d3",
+      "bytes": 989337,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "sql_database/tripraft-global-schema-v2.1.sql",
+      "git_blob": "6e2face997218201456cd7cb6fb88af4c4683a02",
+      "sha256": "41cdbe86d7ce9e7f76d1a2bab18b701c786d7798ca0e50841c93ac5b635a82c4",
+      "bytes": 29070,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "start.py",
+      "git_blob": "c0d76d93eb9aafd8d470939280e8671d7ede64c3",
+      "sha256": "5cfb1323d6519838711cbac461d016439f5bbdeb38951c9d9ecbf8126bf8561c",
+      "bytes": 14022,
+      "action": "restored_discarded_edit"
+    },
+    {
+      "path": "wikidata/README.md",
+      "git_blob": "67aa9307791715faa6fa96cebabbe921925f14fc",
+      "sha256": "e45cadf1322d942bd9e4e8d34b1b816e0ea935b53e9b4227099d4fd544258629",
+      "bytes": 4574,
+      "action": "restored_missing_file"
+    },
+    {
+      "path": "wikidata/countries.py",
+      "git_blob": "53a5ae85311e3077d9a1ddd4d1519fb75ce1e025",
+      "sha256": "77104361d4be177b409797d8112721b6e5c7837b15621b2e1de3e024261f69ab",
+      "bytes": 30016,
+      "action": "restored_missing_file"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+# Purpose: Limits the root build context to API code and the authoritative SQL schema.
+**
+!services/
+!services/api/
+!services/api/**
+!sql_database/
+!sql_database/tripraft-global-schema-v2.1.sql
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.ruff_cache
+**/.venv
+**/logs
+**/uploads
+**/.env
+**/.env.*
+**/tests
+**/*.db
+**/*.db-*
+services/api/schema
