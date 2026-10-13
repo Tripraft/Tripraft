@@ -27,6 +27,11 @@ import ExpenseSummary from './ExpenseSummary';
 
 import TransactionModal from './TransactionModal';
 import GroupManager from './GroupManager';
+import GroupDashboard from './GroupDashboard';
+import ExpenseDialog from './ExpenseDialog';
+import GroupDetailHeader from './GroupDetailHeader';
+import NewExpenseGroupModal from './NewExpenseGroupModal';
+import { groupOverview } from '../utils/groupOverview';
 
 import GroupSummaryCards from './GroupSummaryCards';
 import SettlementHistoryModal from './SettlementHistoryModal';
@@ -49,6 +54,8 @@ import {
   usePersonalExpenses
 } from '../../../hooks/useExpenseQuery';
 import '../css/ExpenseManager.css';
+import '../css/ExpenseGroups.css';
+import '../css/ExpenseResponsive.css';
 import { expensePayload } from '../../../utils/money';
 
 /** Unwrap backend response envelope { success, data, meta } -> inner data */
@@ -68,6 +75,7 @@ const ExpenseManager = () => {
   const {
     groups,
     loading: groupsLoading,
+    error: groupsError,
     refetch: refetchGroups,
     updateGroupsFromResponse,  // INSTANT UPDATE helper
     setGroups
@@ -124,6 +132,8 @@ const ExpenseManager = () => {
   const [toasts, setToasts] = useState([]);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [mutationLoading, setMutationLoading] = useState(false);
+  const [showNewGroup, setShowNewGroup] = useState(false);
+  const [groupTab, setGroupTab] = useState('balances');
 
   const setExpenseView = useCallback((nextMode, groupId, options = {}) => {
     const userId = currentUser?.uid || currentUser?.user_id;
@@ -144,6 +154,7 @@ const ExpenseManager = () => {
   // A pending action belongs to the group where it was opened.
   useEffect(() => {
     setShowTransactionModal(false);
+    setGroupTab('balances');
     setShowConfirmModal(false);
     setIsHistoryModalOpen(false);
     setState(previous => ({ ...previous, editingTransactionId: null }));
@@ -157,13 +168,6 @@ const ExpenseManager = () => {
       setState(previous => ({ ...previous, editingTransactionId: null }));
     }
   }, [mode, groupDetailError, activeGroupData]);
-
-  // A deep link selects its requested group even if another group is listed first.
-  useEffect(() => {
-    if (!authLoading && mode === 'group' && !activeGroupId && groups?.length > 0) {
-      setExpenseView('group', groups[0].id || groups[0].group_id, { replace: true });
-    }
-  }, [authLoading, mode, activeGroupId, groups, setExpenseView]);
 
   // Helper functions
   const showAlert = (message) => {
@@ -251,7 +255,7 @@ const ExpenseManager = () => {
 
   // Event Handlers
   const handleModeToggle = () => {
-    setExpenseView(mode === 'personal' ? 'group' : 'personal', activeGroupId);
+    setExpenseView(mode === 'personal' ? 'group' : 'personal');
   };
 
   const handleGroupChange = (groupId) => {
@@ -342,7 +346,7 @@ const ExpenseManager = () => {
       
       // Clear active group AFTER successful deletion
       if (activeGroupId === groupId) {
-        setExpenseView('personal');
+        setExpenseView('group');
       }
       
       // Refetch groups
@@ -413,6 +417,7 @@ const ExpenseManager = () => {
           // Use new balances if returned, otherwise refetch to get accurate balances
           if (result.group_balances && result.group_balances.length > 0) {
             updateExpensesAndBalances(updatedExpenses, result.group_balances);
+            await refetchGroupDetail();
           } else {
             // Balances not returned - refetch to ensure accurate calculation
             await refetchGroupDetail();
@@ -564,8 +569,8 @@ const ExpenseManager = () => {
     <div className="expense-manager">
       <header className="expense-header">
         <div>
-          <h1>Expense Dashboard</h1>
-          <p>Manage your personal and group trip expenses.</p>
+          <h1>{mode === 'group' ? 'Group expenses' : 'Expense Dashboard'}</h1>
+          <p>{mode === 'group' ? 'Share the costs. Enjoy the journey.' : 'Manage your personal and group trip expenses.'}</p>
         </div>
         <div className="header-actions">
           <button 
@@ -577,10 +582,10 @@ const ExpenseManager = () => {
             <RefreshCw size={20} className={refreshing ? 'spinning' : ''} />
           </button>
           <ModeToggle mode={mode} onToggle={handleModeToggle} />
-          <button className="btn-add-transaction" onClick={handleOpenModal} disabled={mutationLoading || (mode === 'group' && (!activeGroupData || groupDetailLoading))}>
+          {mode === 'personal' && <button className="btn-add-transaction" onClick={handleOpenModal} disabled={mutationLoading || (mode === 'group' && (!activeGroupData || groupDetailLoading))}>
             <PlusCircle size={20} />
             <span>Add Transaction</span>
-          </button>
+          </button>}
         </div>
       </header>
 
@@ -600,28 +605,13 @@ const ExpenseManager = () => {
         currentUser={currentUser}
       />
 
-      {/* Group Management Section */}
-      {mode === 'group' && (
-        <GroupManager
-          groups={(groups || []).filter(g => g && (g.id || g.group_id))}
-          activeGroupId={activeGroupId}
-          activeGroup={activeGroupId ? activeGroupData : null}
-          members={activeGroupMembers || []}
-          loading={groupsLoading || groupDetailLoading}
-          onGroupChange={handleGroupChange}
-          onGroupCreate={handleCreateGroup}
-          onGroupDelete={handleDeleteGroup}
-          onGroupUpdated={async () => { await refetchGroupDetail(); await refetchGroups(); }}
-          onGroupLeave={async () => { setExpenseView('personal'); await refetchGroups(); }}
-          onMemberAdd={async () => await refetchGroupDetail()}
-          onMemberRemove={async () => await refetchGroupDetail()}
-          showAlert={showAlert}
-          currentUser={currentUser}
-          pendingInvitationsFromParent={groupInvitations}
-          onRefreshInvitations={refetchGroupDetail}
-          usingMegaBootstrap={false}
-        />
-      )}
+      {mode === 'group' && !activeGroupId && <GroupDashboard
+        groups={(groups || []).filter(group => group && (group.id || group.group_id))}
+        currentUserId={currentUser?.uid || currentUser?.user_id || currentUser?.id}
+        loading={groupsLoading} error={groupsError}
+        onSelect={handleGroupChange} onCreate={() => setShowNewGroup(true)} onRetry={refetchGroups}
+      />}
+      {mode === 'group' && activeGroupId && groupDetailLoading && !activeGroupData && <p role="status">Loading group…</p>}
 
       {/* Personal Expense Summary */}
       {mode === 'personal' && (
@@ -632,73 +622,57 @@ const ExpenseManager = () => {
         />
       )}
 
-      {/* Group Summary Cards */}
-      {mode === 'group' && activeGroupId && (() => {
-        const transactions = getCurrentTransactions() || [];
-        const activeExpenses = transactions.filter(t => !t.is_deleted);
-        const totalAmount = activeExpenses.reduce((sum, t) => sum + (t.amount || 0), 0);
-        const expenseCount = activeExpenses.length;
-        
+      {mode === 'group' && activeGroupId && activeGroupData && (() => {
+        const transactions = getCurrentTransactions();
         const balances = getCurrentBalances() || [];
-        const totalSettled = (activeGroupSettlements || []).reduce((sum, s) => sum + (s.amount || 0), 0);
-        
-        let currentOwed = 0;
-        if (Array.isArray(balances)) {
-          currentOwed = balances
-            .filter(b => Math.abs(b.net_balance || 0) >= 0.01)
-            .reduce((sum, b) => sum + Math.abs(b.net_balance || 0), 0) / 2;
-        }
-        
-        // Calculate "My Share" - user's balance from the expense group
-        const members = activeGroupMembers || [];
-        const memberCount = members.length || 1;
-        const userId = currentUser?.id || currentUser?.uid || currentUser?.user_id;
-        
-        // Get user's balance from balances array (this is the authoritative source)
-        let myShare = 0;
-        if (Array.isArray(balances)) {
-          const userBalance = balances.find(b => {
-            return b.user_id === userId || 
-                   String(b.user_id) === String(userId);
-          });
-          if (userBalance) {
-            myShare = Math.abs(userBalance.net_balance || userBalance.balance || 0);
-          }
-        }
-        
-        return (
-          <>
-            <GroupSummaryCards
-              totalExpenses={expenseCount}
-              totalAmount={totalAmount}
-              remainingBalance={currentOwed}
-              totalSettlements={totalSettled}
-              settlementCount={(activeGroupSettlements || []).length}
-              myShare={myShare}
-              memberCount={memberCount}
-              currency={activeGroupData?.currency || 'USD'}
-              onSettlementCardClick={() => setIsHistoryModalOpen(true)}
-            />
-            
-            <SettlementHistoryModal
-              isOpen={isHistoryModalOpen}
-              onClose={() => setIsHistoryModalOpen(false)}
-              settlements={activeGroupSettlements || []}
-              group={activeGroupData}
-              currentUserId={currentUser?.uid || currentUser?.user_id || currentUser?.id}
-              onDelete={handleSettlementDelete}
-              currency={activeGroupData?.currency || 'USD'}
-            />
-          </>
-        );
+        const overview = groupOverview(activeGroupData, currentUser?.uid || currentUser?.user_id || currentUser?.id, transactions, balances);
+        const remainingBalance = balances.reduce((sum, balance) => sum + Math.max(0, Number(balance.net_balance ?? balance.balance) || 0), 0);
+        return <>
+          <GroupDetailHeader group={activeGroupData} members={activeGroupMembers || []} overview={overview}
+            busy={mutationLoading || groupDetailLoading} onBack={() => { setExpenseView('group'); refetchGroups(); }}
+            onCreate={() => setShowNewGroup(true)} onAdd={handleOpenModal} onSettle={() => setGroupTab('settleup')} />
+          <GroupSummaryCards remainingBalance={remainingBalance}
+            totalSettlements={(activeGroupSettlements || []).reduce((sum, settlement) => sum + (Number(settlement.amount) || 0), 0)}
+            settlementCount={(activeGroupSettlements || []).length}
+            changeCount={transactions.filter(transaction => transaction.is_edited).length}
+            currency={activeGroupData.currency || 'USD'} onSettlementCardClick={() => setIsHistoryModalOpen(true)}
+            onSettleClick={() => setGroupTab('settleup')} onHistoryClick={() => setGroupTab('transactions')} />
+          <SettlementHistoryModal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)}
+            settlements={activeGroupSettlements || []} group={activeGroupData}
+            currentUserId={currentUser?.uid || currentUser?.user_id || currentUser?.id}
+            onDelete={handleSettlementDelete} currency={activeGroupData.currency || 'USD'} />
+        </>;
       })()}
 
-      {mode === 'group' && groupDetailError && <p role="alert">Unable to open this group: {groupDetailError}</p>}
+      {mode === 'group' && groupDetailError && <div className="expense-groups-empty" role="alert"><p>Unable to open this group: {groupDetailError}</p><button className="expense-secondary-button" onClick={() => setExpenseView('group')}>Back to all groups</button></div>}
 
       {/* Group View with Tabs (Balances, Settle Up, Spending, Transactions, Analytics) */}
       {mode === 'group' && activeGroupId && activeGroupData && (
         <TabbedGroupView
-          key={`tabbed-${activeGroupId}-${(getCurrentBalances() || []).length}`}
+          key={activeGroupId}
+          activeTab={groupTab}
+          onTabChange={setGroupTab}
+          membersContent={<GroupManager
+            groups={(groups || []).filter(g => g && (g.id || g.group_id))}
+            activeGroupId={activeGroupId}
+            activeGroup={activeGroupData}
+            members={activeGroupMembers || []}
+            loading={groupsLoading || groupDetailLoading}
+            onGroupChange={handleGroupChange}
+            onGroupCreate={handleCreateGroup}
+            onGroupDelete={handleDeleteGroup}
+            onGroupUpdated={async () => { await refetchGroupDetail(); await refetchGroups(); }}
+            onGroupLeave={async () => { setExpenseView('group'); await refetchGroups(); }}
+            onMemberAdd={async () => await refetchGroupDetail()}
+            onMemberRemove={async () => await refetchGroupDetail()}
+            showAlert={showAlert}
+            currentUser={currentUser}
+            pendingInvitationsFromParent={groupInvitations}
+            onRefreshInvitations={refetchGroupDetail}
+            usingMegaBootstrap={false}
+            compact
+            expenses={getCurrentTransactions()}
+          />}
           group={activeGroupData}
           balances={getCurrentBalances() || []}
           members={activeGroupMembers || []}
@@ -739,6 +713,8 @@ const ExpenseManager = () => {
         />
       )}
 
+      {showNewGroup && <NewExpenseGroupModal onClose={() => setShowNewGroup(false)} onCreate={handleCreateGroup} />}
+
       {/* Transaction Modal */}
       {showTransactionModal && (
         <TransactionModal
@@ -756,21 +732,18 @@ const ExpenseManager = () => {
 
       {/* Alert Modal */}
       {showAlertModal && (
-        <div className="modal-backdrop" onClick={() => setShowAlertModal(false)}>
-          <div className="modal modal-small" onClick={(e) => e.stopPropagation()}>
+        <ExpenseDialog label="Heads up" onClose={() => setShowAlertModal(false)} className="modal modal-small">
             <h2>Heads up!</h2>
             <p>{alertMessage}</p>
             <div className="modal-actions">
               <button className="btn-save" onClick={() => setShowAlertModal(false)}>OK</button>
             </div>
-          </div>
-        </div>
+        </ExpenseDialog>
       )}
 
       {/* Confirm Modal */}
       {showConfirmModal && (
-        <div className="modal-backdrop" onClick={() => setShowConfirmModal(false)}>
-          <div className="modal modal-small" onClick={(e) => e.stopPropagation()}>
+        <ExpenseDialog label="Confirm expense deletion" onClose={() => setShowConfirmModal(false)} className="modal modal-small">
             <h2>Are you sure?</h2>
             <p>{confirmMessage}</p>
             <div className="modal-actions">
@@ -785,8 +758,7 @@ const ExpenseManager = () => {
                 Delete
               </button>
             </div>
-          </div>
-        </div>
+        </ExpenseDialog>
       )}
       
       {/* Toast notifications */}

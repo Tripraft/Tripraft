@@ -1,0 +1,82 @@
+/* Purpose: Responsive reference-inspired expense analysis without fixed chart widths. */
+.expense-analysis { color: var(--color-text-primary, #111827); min-width: 0; width: 100%; }
+.expense-analysis-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px; margin-bottom: 26px; }
+.expense-analysis-heading h2 { font-size: clamp(20px, 2vw, 25px); letter-spacing: -.035em; margin: 0; overflow-wrap: anywhere; }
+.expense-analysis-heading p { color: #6b7280; font-size: 13px; margin: 6px 0 0; }
+.expense-analysis-heading .expense-eyebrow { color: #7c3aed; }
+.expense-analysis-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.expense-analysis-controls select { border: 1px solid #e5e7eb; background: #fff; color: #4b5563; padding: 10px 12px; border-radius: 10px; font: inherit; font-size: 13px; min-height: 42px; max-width: 100%; }
+.expense-analysis-section-label { display: flex; align-items: center; gap: 7px; color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: .12em; margin: 0 0 13px; }
+.expense-analysis-insights { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 24px; }
+.expense-analysis-insight { border: 1px solid #e5e7eb; border-radius: 17px; padding: 19px; background: linear-gradient(145deg, #fff 60%, #faf8ff); min-width: 0; }
+.expense-analysis-insight-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; color: #7c3aed; background: #f5f3ff; margin-bottom: 14px; }
+.expense-analysis-insight h4 { margin: 0 0 6px; font-size: 12px; color: #6b7280; font-weight: 500; }
+.expense-analysis-insight > strong { font-size: clamp(15px, 1.4vw, 20px); font-weight: 700; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.expense-analysis-insight p { font-size: 12px; color: #6b7280; margin: 9px 0 0; line-height: 1.65; overflow-wrap: anywhere; }
+.expense-analysis-segment { display: inline-flex; padding: 4px; border: 1px solid #e5e7eb; background: #f9fafb; border-radius: 12px; gap: 3px; margin-bottom: 20px; max-width: 100%; }
+.expense-analysis-segment button { padding: 9px 18px; border: 0; border-radius: 9px; background: transparent; color: #6b7280; font-size: 13px; font-weight: 600; cursor: pointer; min-height: 40px; }
+.expense-analysis-segment button[aria-pressed="true"] { background: #7c3aed; color: white; box-shadow: 0 2px 5px #7c3aed20; }
+.expense-analysis-category-layout { display: grid; grid-template-columns: minmax(230px, .8fr) minmax(0, 1.5fr); gap: 18px; align-items: stretch; margin-bottom: 18px; }
+.expense-analysis-panel { border: 1px solid #e5e7eb; border-radius: 20px; background: #fff; padding: 23px; min-width: 0; margin-bottom: 18px; }
+.expense-analysis-category-layout > .expense-analysis-panel { margin-bottom: 0; }
+.expense-analysis-panel h3 { font-size: 13px; font-weight: 650; letter-spacing: -.01em; margin: 0 0 18px; }
+.expense-analysis-panel-caption { color: #6b7280; font-size: 12px; margin: -8px 0 23px; }
+.expense-analysis-donut { width: min(100%, 210px); position: relative; margin: 0 auto 20px; }
+.expense-analysis-donut svg { display: block; width: 100%; height: auto; }
+.expense-analysis-donut-center { position: absolute; inset: 28%; display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; gap: 3px; pointer-events: none; }
+.expense-analysis-donut-center strong { font-size: clamp(12px, 1.5vw, 20px); letter-spacing: -.04em; max-width: 100%; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.expense-analysis-donut-center span { color: #6b7280; font-size: 11px; }
+.expense-analysis-legend { list-style: none; display: grid; gap: 11px; margin: 0; padding: 0; }
+.expense-analysis-legend li { display: flex; align-items: baseline; gap: 9px; font-size: 12px; min-width: 0; }
+.expense-analysis-legend i { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+.expense-analysis-legend span { flex: 1; overflow-wrap: anywhere; }
+.expense-analysis-legend strong { color: #6b7280; font-size: 11px; font-variant-numeric: tabular-nums; }
+.expense-analysis-bars { display: grid; gap: 23px; }
+.expense-analysis-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 9px 16px; font-size: 13px; }
+.expense-analysis-bar > span:first-child { overflow-wrap: anywhere; color: #4b5563; }
+.expense-analysis-bar strong { font-size: 12px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; text-align: right; max-width: 150px; }
+.expense-analysis-bar-track { display: block; grid-column: 1 / -1; height: 9px; border-radius: 6px; background: #f3f4f6; overflow: hidden; }
+.expense-analysis-bar-track i { display: block; height: 100%; border-radius: inherit; }
+.expense-analysis-panel-heading { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 16px; }
+.expense-analysis-panel-heading h3 { margin: 0; }
+.expense-analysis-panel-heading > span { font-size: 11px; color: #6b7280; }
+.expense-analysis-area { min-width: 0; }
+.expense-analysis-area > svg { display: block; width: 100%; height: auto; min-height: 140px; }
+.expense-analysis-chart-scale, .expense-analysis-chart-dates { display: flex; justify-content: space-between; gap: 12px; color: #9ca3af; font-size: 11px; }
+.expense-analysis-chart-scale { margin-bottom: 6px; }
+.expense-analysis-data { color: #6b7280; font-size: 12px; margin-top: 18px; }
+.expense-analysis-data summary { cursor: pointer; padding: 6px 0; }
+.expense-analysis-data dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px 24px; margin-top: 10px; }
+.expense-analysis-data dl > div { display: flex; justify-content: space-between; gap: 12px; }
+.expense-analysis-data dd { margin: 0; }
+.expense-analysis-top-list { list-style: none; display: grid; gap: 0; margin: 0; padding: 0; }
+.expense-analysis-top-list li { display: flex; align-items: center; gap: 13px; padding: 15px 0; border-top: 1px solid #f3f4f6; min-width: 0; }
+.expense-analysis-rank { width: 28px; height: 28px; display: grid; place-items: center; flex-shrink: 0; background: #f5f3ff; color: #7c3aed; border-radius: 9px; font-size: 11px; }
+.expense-analysis-top-list li > div { flex: 1; min-width: 0; }
+.expense-analysis-top-list strong { display: block; font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.expense-analysis-top-list small { display: block; color: #6b7280; font-size: 11px; margin-top: 4px; }
+.expense-analysis-top-list b { font-size: 13px; font-weight: 650; text-align: right; max-width: 40%; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.expense-analysis-top-list svg { color: #c4b5fd; flex-shrink: 0; }
+.expense-analysis-empty { display: flex; flex-direction: column; align-items: center; padding: 40px 20px; border: 1px dashed #ddd6fe; border-radius: 18px; background: #faf8ff; text-align: center; color: #7c3aed; }
+.expense-analysis-empty h3 { margin: 15px 0 7px; font-size: 17px; }
+.expense-analysis-empty p { color: #6b7280; font-size: 13px; max-width: 340px; line-height: 1.6; }
+.expense-analysis .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+@media (max-width: 1000px) { .expense-analysis-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) {
+  .expense-analysis-category-layout { grid-template-columns: minmax(0, 1fr); }
+  .expense-analysis-panel { padding: 18px; }
+  .expense-analysis-insight { padding: 15px; }
+  .expense-analysis-insight > strong { font-size: 16px; }
+  .expense-analysis-heading { align-items: flex-start; }
+  .expense-analysis-controls { width: 100%; }
+  .expense-analysis-controls label { flex: 1; }
+  .expense-analysis-controls select { width: 100%; }
+  .expense-analysis-donut-center strong { font-size: 18px; }
+}
+@media (max-width: 360px) {
+  .expense-analysis-insights { gap: 10px; }
+  .expense-analysis-insight { padding: 12px; }
+  .expense-analysis-insight > strong { font-size: 14px; }
+  .expense-analysis-top-list li { gap: 9px; }
+  .expense-analysis-top-list svg { display: none; }
+}

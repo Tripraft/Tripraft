@@ -1,4 +1,6 @@
 // Purpose: Renders the Transaction List interface within apps\web\src\features\expenses\jsx.
+import ExpenseDialog from './ExpenseDialog';
+import TransactionActivity from './TransactionActivity';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Edit2, Trash2, FolderOpen, Info, ChevronLeft, ChevronRight, History, RefreshCw, Utensils, Car, Home, ShoppingBag, Plane, Heart, Zap, Film, Gift, Coffee, Hotel, Gamepad2, Shirt, Pill, Briefcase, Music, Dumbbell, Banknote, CircleDollarSign, HelpCircle } from 'lucide-react';
 import { formatMoney } from '../../../utils/money';
@@ -259,7 +261,7 @@ const TransactionList = ({
   };
 
   return (
-    <div className="card transactions-card">
+    <div className={`card transactions-card ${mode === 'group' ? 'expense-group-transactions' : 'expense-personal-transactions'}`}>
       {!isInTab && (
         <div className="transactions-header">
           <h2>Transaction History</h2>
@@ -311,7 +313,9 @@ const TransactionList = ({
             </div>
           </div>
           
-          <div className="table-container">
+          {mode === 'group' ? <TransactionActivity transactions={paginatedTransactions} group={activeGroup}
+            currentUserId={currentUserId} getMemberName={getMemberName} formatDate={formatDate} wasEdited={wasEdited}
+            onSplit={handleViewDetails} onHistory={handleViewHistory} onEdit={onEdit} onDelete={onDelete} currency={currency} /> : <div className="table-container">
             <table>
               <thead>
                 <tr>
@@ -438,6 +442,12 @@ const TransactionList = ({
                       </div>
                     </td>
                     <td className="actions">
+                      {mode === 'group' && !isDeleted && <button
+                        className="btn-icon expense-mobile-split"
+                        onClick={() => handleViewDetails(t)}
+                        title="View split details on mobile"
+                        aria-label={`View split details for ${t.description || 'expense'}`}
+                      ><Info size={15} /></button>}
                       {isDeleted ? (
                         <span className="deleted-indicator">
                           <Trash2 size={14} />
@@ -475,7 +485,7 @@ const TransactionList = ({
               })}
             </tbody>
           </table>
-        </div>
+        </div>}
         
         {totalPages > 1 && (
           <div className="pagination-controls">
@@ -530,8 +540,7 @@ const TransactionList = ({
 
       {/* Split Details Modal - Receipt Style */}
       {showDetailsModal && selectedTransaction && (
-        <div className="modal-backdrop" onClick={() => setShowDetailsModal(false)}>
-          <div className="modal receipt-modal" onClick={(e) => e.stopPropagation()}>
+        <ExpenseDialog label="Expense split details" onClose={() => setShowDetailsModal(false)} className="modal receipt-modal">
             <div className="receipt-header">
               <div className="receipt-title">RECEIPT</div>
               <div className="receipt-line"></div>
@@ -547,7 +556,7 @@ const TransactionList = ({
               
               <div className="receipt-item">
                 <span className="receipt-label">PAID BY</span>
-                <span className="receipt-value">{getMemberName(selectedTransaction.paid_by)}</span>
+                <span className="receipt-value">{selectedTransaction.paid_by_name || getMemberName(selectedTransaction.paid_by)}</span>
               </div>
               
               <div className="receipt-item">
@@ -563,7 +572,7 @@ const TransactionList = ({
                 <div className="receipt-label">SPLIT BREAKDOWN</div>
                 {selectedTransaction.splits && Array.isArray(selectedTransaction.splits) && selectedTransaction.splits.map((split, idx) => (
                   <div key={idx} className="receipt-split-item">
-                    <span className="split-name">{getMemberName(split.user_id)}</span>
+                    <span className="split-name">{split.user_name || split.display_name || getMemberName(split.user_id)}</span>
                     <span className="split-dots"></span>
                     <span className="split-amt">{formatCurrency(split.amount)}</span>
                   </div>
@@ -586,8 +595,7 @@ const TransactionList = ({
                 Close
               </button>
             </div>
-          </div>
-        </div>
+        </ExpenseDialog>
       )}
 
       {/* Phase 12: Expense History Modal */}

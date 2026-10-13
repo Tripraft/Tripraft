@@ -1,4 +1,5 @@
 // Purpose: Collects debt-bounded settlement payments and displays currency-aware history and save errors.
+import ExpenseDialog from './ExpenseDialog';
 import React, { useState, useEffect } from 'react';
 import { formatMoney, settlementCap } from '../../../utils/money';
 import '../css/SettlementModal.css';
@@ -79,17 +80,10 @@ const SettlementModal = ({ isOpen, onClose, settlement, groupId, members, balanc
   if (!isOpen) return null;
 
   return (
-    <div 
-      className="settlement-modal-overlay"
-      onClick={onClose}
-    >
-      <div 
-        className="settlement-modal-content" 
-        onClick={(e) => e.stopPropagation()}
-      >
+    <ExpenseDialog label="Record settlement" onClose={onClose} busy={loading} className="settlement-modal-content">
           <div className="modal-header">
             <h2>Record Settlement</h2>
-            <button className="close-button" onClick={onClose}>&times;</button>
+            <button className="close-button" onClick={onClose} aria-label="Close settlement" disabled={loading}>&times;</button>
           </div>
 
         <form onSubmit={handleSubmit}>
@@ -216,6 +210,7 @@ const SettlementModal = ({ isOpen, onClose, settlement, groupId, members, balanc
             <button 
               type="button" 
               onClick={onClose}
+              disabled={loading}
               className="btn btn-secondary"
             >
               Cancel
@@ -229,8 +224,7 @@ const SettlementModal = ({ isOpen, onClose, settlement, groupId, members, balanc
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </ExpenseDialog>
   );
 };
 

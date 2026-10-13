@@ -1,31 +1,18 @@
 // Purpose: Displays and manages expense groups, members, ownership controls and invitations.
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Mail, Trash2, Clock } from 'lucide-react';
+import { Users, Plus, Mail, Trash2, Clock, Settings, Link, Send } from 'lucide-react';
 import { formatDateLocal } from '../../../utils/timezoneUtils';
 import expenseApi from '../../../services/expenseApi';
 import { groupPermissions } from '../utils/groupPermissions';
+import { currencies } from '../utils/currencies';
+import ExpenseDialog from './ExpenseDialog';
+import { formatMoney } from '../../../utils/money';
 
 const unwrapEnvelope = response => response?.data ?? response;
 const invitationLink = invitation => invitation.invitation_link ||
   `${window.location.origin}/invitation/${encodeURIComponent(invitation.invitation_id || invitation.id)}`;
 
-const currencies = {
-  USD: { code: 'USD', symbol: '$', name: 'US Dollar' },
-  EUR: { code: 'EUR', symbol: '\u20ac', name: 'Euro' },
-  INR: { code: 'INR', symbol: '\u20b9', name: 'Indian Rupee' },
-  GBP: { code: 'GBP', symbol: '\u00a3', name: 'British Pound' },
-  JPY: { code: 'JPY', symbol: '\u00a5', name: 'Japanese Yen' },
-  CAD: { code: 'CAD', symbol: 'C$', name: 'Canadian Dollar' },
-  AUD: { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
-  CHF: { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc' },
-  CNY: { code: 'CNY', symbol: '\u00a5', name: 'Chinese Yuan' },
-  KRW: { code: 'KRW', symbol: '\u20a9', name: 'South Korean Won' },
-  BRL: { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
-  MXN: { code: 'MXN', symbol: 'Mex$', name: 'Mexican Peso' },
-  SGD: { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
-  HKD: { code: 'HKD', symbol: 'HK$', name: 'Hong Kong Dollar' },
-  NZD: { code: 'NZD', symbol: 'NZ$', name: 'New Zealand Dollar' }
-};
+
 
 const GroupManager = ({ 
   groups, 
@@ -44,7 +31,9 @@ const GroupManager = ({
   currentUser,
   pendingInvitationsFromParent,
   onRefreshInvitations,
-  usingMegaBootstrap = false
+  usingMegaBootstrap = false,
+  compact = false,
+  expenses = []
 }) => {
   // Simplified: No complex prefetch or mutation hooks
   
@@ -328,344 +317,66 @@ const GroupManager = ({
     );
   }
 
-  return (
-    <div className="group-section">
-      <div className="group-cards">
-        <div className="card">
-          <h2>
-            <Users size={20} />
-            Manage Groups
-          </h2>
-          <select 
-            className="group-select"
-            value={activeGroupId || ''}
-            onChange={handleGroupSelect}
-          >
-            <option key="select-placeholder" value="">Select a group</option>
-            {groups.map(group => (
-              <option key={group.id || group.group_id} value={group.id || group.group_id}>
-                {group.name} ({group.currency || 'USD'})
-              </option>
-            ))}
-          </select>
+  const inviteForm = permissions.can_invite && <form className="expense-member-invite" onSubmit={handleInviteMember}>
+    <h3><Mail size={17} />Invite your crew</h3><p>Share the journey and keep every expense together.</p>
+    <label htmlFor="expense-member-email">Email address</label><input id="expense-member-email" type="email" placeholder="Email address to invite..." value={newMemberEmail} onChange={event => setNewMemberEmail(event.target.value)} required disabled={inviting} />
+    <button className="expense-primary-button" disabled={inviting}><Plus size={16} />{inviting ? 'Inviting...' : 'Invite Member'}</button>
+  </form>;
+  const invitationsList = <section className="expense-member-invitations" aria-label="Group invitations"><h3><Clock size={16} />Pending invitations ({pendingInvitations.length})</h3>
+    {loadingInvitations ? <p>Loading invitations...</p> : !pendingInvitations.length ? <p className="expense-member-empty">No pending invitations.</p> : <ul>{pendingInvitations.map(invitation => {
+      const id = invitation.invitation_id || invitation.id;
+      const declined = invitation.status?.toLowerCase() === 'declined';
+      const expiry = invitation.expires_at;
+      const expired = invitation.is_expired ?? Boolean(expiry && new Date(/(?:Z|[+-]\d{2}:?\d{2})$/.test(expiry) ? expiry : `${expiry}Z`) < new Date());
+      const canRetry = String(invitation.invited_by) === String(userId) || permissions.can_update_group;
+      return <li key={id}><div className="expense-member-invitation-heading"><strong>{invitation.invited_email || invitation.invitee_email || invitation.invited_username || 'Invited member'}</strong><span>{declined ? 'Declined' : expired ? 'Expired' : 'Pending'}</span></div>
+        <small>Invited {formatDateLocal(invitation.created_at, { year: 'numeric', month: 'short', day: 'numeric' })}</small>
+        <div className="expense-member-invitation-actions">{!declined && !expired && <button onClick={() => handleCopyInvitation(invitation)}><Link size={13} />Copy invite link</button>}
+          {!declined && !expired && canRetry && <button disabled={Boolean(resendingInvitationId)} onClick={() => handleResendInvitation(invitation)}><Send size={13} />{resendingInvitationId === id ? 'Sending...' : 'Resend email'}</button>}
+          {(declined || expired) && <button disabled={inviting} onClick={event => handleInviteMember(event, true, invitation.invited_email || invitation.invitee_email)}>Resend</button>}
+          {!declined && canRetry && <button disabled={actionBusy} onClick={() => confirm('Cancel this invitation? Its link will no longer allow joining.', async () => {
+            await expenseApi.cancelInvitation(id); setPendingInvitations(previous => previous.filter(row => (row.invitation_id || row.id) !== id)); await refreshGroup();
+          })}>Cancel invitation</button>}
+        </div></li>;
+    })}</ul>}
+  </section>;
+  const memberList = <ul className="expense-member-list">{members.map((member, index) => {
+    const id = member.user_id || member.id;
+    const name = member.user?.display_name || member.user?.username || member.display_name || member.username || member.user?.email || member.email || 'Unknown User';
+    const isOwner = String(id) === String(activeGroup?.created_by);
+    const isYou = String(id) === String(userId);
+    const paid = expenses.filter(expense => !expense.is_deleted && String(expense.paid_by) === String(id)).reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
+    return <li key={id}><span className={`expense-member-avatar avatar-${index % 4}`} aria-hidden="true">{name.split(/\s+/).map(part => part[0]).slice(0, 2).join('').toUpperCase()}</span>
+      <div className="expense-member-identity"><strong>{name}{isYou && <small>(You)</small>}</strong><span>Paid {formatMoney(paid, activeGroup?.currency || 'USD')}</span></div>
+      <span className={`expense-member-role ${isOwner ? 'is-owner' : ''}`}>{isOwner ? 'Owner' : member.role === 'admin' ? 'Admin' : 'Member'}</span>
+      <div className="expense-member-actions">{permissions.can_manage_roles && !isOwner && <button disabled={actionBusy} onClick={() => confirm(`${member.role === 'admin' ? 'Remove admin access from' : 'Make admin:'} ${name}?`, async () => {
+        await expenseApi.updateGroupMemberRole(activeGroupId, id, member.role === 'admin' ? 'member' : 'admin'); await refreshGroup();
+      })}>{member.role === 'admin' ? 'Make member' : 'Make admin'}</button>}
+      {permissions.can_remove_members && !isOwner && !isYou && <button className="expense-member-remove" title="Remove member (Owner Only)" aria-label={`Remove ${name}`} disabled={actionBusy} onClick={() => confirm(`Remove ${name}? Their balance must be zero. Their existing history will be retained.`, () => handleRemoveMember(id))}><Trash2 size={15} /></button>}</div>
+    </li>;
+  })}</ul>;
 
-          {activeGroup && (
-            <div className="group-info-card">
-              <div className="group-info-header">
-                <h3>
-                  {activeGroup.name}
-                  {(permissions.can_delete_group) && (
-                    <span style={{ 
-                      marginLeft: '0.5rem', 
-                      fontSize: '0.75rem', 
-                      background: '#667eea', 
-                      color: 'white', 
-                      padding: '0.15rem 0.5rem', 
-                      borderRadius: '12px',
-                      fontWeight: '600'
-                    }}>
-                      Owner
-                    </span>
-                  )}
-                </h3>
-                {(permissions.can_delete_group) && (
-                  <button 
-                    className="btn-icon-delete" 
-                    onClick={() => confirm('Delete this group? All balances must be settled. The group will be archived and pending invitations cancelled.', handleDeleteGroup)}
-                    title="Delete Group (Owner Only)"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                )}
-              </div>
-              <div className="group-info-details">
-                <div className="info-item">
-                  <span className="info-label">Currency</span>
-                  <span className="info-value">{activeGroup.currency || 'USD'}</span>
-                </div>
-                <div className="info-item">
-                  <span className="info-label">Members</span>
-                  <span className="info-value">{members.length}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeGroup && permissions.can_update_group && !editingGroup && <button type="button" onClick={() => {
-            setGroupName(activeGroup.name); setGroupDescription(activeGroup.description || ''); setEditingGroup(true);
-          }}>Edit group</button>}
-          {activeGroup && editingGroup && permissions.can_update_group && <form onSubmit={event => {
-            event.preventDefault();
-            runAction(async () => {
-              await expenseApi.updateGroup(activeGroupId, { name: groupName.trim(), description: groupDescription.trim() || null });
-              await refreshGroup(); setEditingGroup(false);
-            });
-          }}>
-            <label>Group name<input value={groupName} maxLength={100} required onChange={event => setGroupName(event.target.value)} /></label>
-            <label>Description<textarea value={groupDescription} maxLength={1000} onChange={event => setGroupDescription(event.target.value)} /></label>
-            <button disabled={actionBusy || !groupName.trim()}>Save group</button>
-            <button type="button" disabled={actionBusy} onClick={() => setEditingGroup(false)}>Cancel edit</button>
-          </form>}
-          {activeGroup && permissions.can_leave_group && <button type="button" disabled={actionBusy} onClick={() => confirm(
-            'Leave this group? Your balance must be zero. Your existing expense and payment history will be retained.', async () => {
-              await expenseApi.leaveGroup(activeGroupId); if (onGroupLeave) await onGroupLeave();
-            },
-          )}>Leave group</button>}
-          {confirmation && <div role="alertdialog" aria-label="Confirm group action">
-            <p>{confirmation.message}</p>
-            <button disabled={actionBusy} onClick={() => runAction(confirmation.action)}>{actionBusy ? 'Saving...' : 'Confirm'}</button>
-            <button disabled={actionBusy} onClick={() => { setConfirmation(null); setActionError(''); }}>Cancel</button>
-          </div>}
-          {actionError && <p role="alert">{actionError}</p>}
-
-          <form className="create-group-form" onSubmit={handleCreateGroup}>
-            <input 
-              type="text" 
-              placeholder="New group name..." 
-              value={newGroupName}
-              maxLength={100}
-              onChange={(e) => setNewGroupName(e.target.value)}
-              required
-              disabled={creating}
-            />
-            <select 
-              value={newGroupCurrency}
-              onChange={(e) => setNewGroupCurrency(e.target.value)}
-              disabled={creating}
-            >
-              {Object.values(currencies).map(curr => (
-                <option key={curr.code} value={curr.code}>
-                  {curr.symbol} {curr.code} - {curr.name}
-                </option>
-              ))}
-            </select>
-            <button type="submit" disabled={creating}>
-              <Plus size={16} />
-              {creating ? 'Creating...' : 'Create Group'}
-            </button>
-          </form>
-        </div>
-
-        {activeGroupId && activeGroup && (
-          <div className="card">
-            <h2>
-              <Users size={20} />
-              Group Members & Invitations
-            </h2>
-            
-            {/* Tab Navigation */}
-            <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', borderBottom: '2px solid #f0f0f0' }}>
-              <button
-                onClick={() => setActiveTab('members')}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: activeTab === 'members' ? '2px solid #667eea' : '2px solid transparent',
-                  color: activeTab === 'members' ? '#667eea' : '#666',
-                  fontWeight: activeTab === 'members' ? '600' : '400',
-                  cursor: 'pointer',
-                  marginBottom: '-2px'
-                }}
-              >
-                Members ({members.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('pending')}
-                style={{
-                  padding: '0.5rem 1rem',
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: activeTab === 'pending' ? '2px solid #667eea' : '2px solid transparent',
-                  color: activeTab === 'pending' ? '#667eea' : '#666',
-                  fontWeight: activeTab === 'pending' ? '600' : '400',
-                  cursor: 'pointer',
-                  marginBottom: '-2px'
-                }}
-              >
-                <Clock size={14} style={{ marginRight: '0.25rem', display: 'inline', verticalAlign: 'middle' }} />
-                Pending ({pendingInvitations.length})
-              </button>
-            </div>
-
-            {/* Members Tab */}
-            {activeTab === 'members' && (
-              <>
-                {members.length === 0 ? (
-                  <p style={{ textAlign: 'center', color: '#666', padding: '1rem' }}>
-                    No members yet. Invite someone to get started!
-                  </p>
-                ) : (
-                  <ul className="member-list">
-                    {members.map(member => {
-                      // Handle nested user data structure
-                      const displayName = member.user?.display_name || 
-                                         member.user?.username || 
-                                         member.user?.email ||
-                                         member.display_name ||
-                                         member.username || 
-                                         member.email ||
-                                         'Unknown User';
-                      
-                      // Ids are UUIDv7 strings. Compare them as strings; the
-                      // previous Number() coercion made all three NaN, and
-                      // NaN === NaN is false, so none of these was ever true.
-                      const memberId = member.user_id != null ? String(member.user_id) : null;
-                      const groupOwnerId = activeGroup?.created_by != null ? String(activeGroup.created_by) : null;
-                      const currentUserId = userId != null ? String(userId) : null;
-
-                      const isCreator = memberId !== null && memberId === groupOwnerId;
-                      const isCurrentUser = memberId !== null && memberId === currentUserId;
-                      const canRemove = permissions.can_remove_members && !isCreator && !isCurrentUser;
-                      
-                      return (
-                        <li key={member.user_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span>
-                            {displayName}
-                            {isCreator && (
-                              <span style={{ 
-                                marginLeft: '0.5rem', 
-                                fontSize: '0.7rem', 
-                                background: '#667eea', 
-                                color: 'white', 
-                                padding: '0.15rem 0.4rem', 
-                                borderRadius: '10px',
-                                fontWeight: '600'
-                              }}>
-                                Owner
-                              </span>
-                            )}
-                            {!isCreator && <span style={{ marginLeft: '0.5rem' }}>{member.role === 'admin' ? 'Admin' : 'Member'}</span>}
-                            {isCurrentUser && <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#666' }}>(You)</span>}
-                          </span>
-                          {permissions.can_manage_roles && !isCreator && <button type="button" disabled={actionBusy} onClick={() => confirm(
-                            `${member.role === 'admin' ? 'Remove admin access from' : 'Make admin:'} ${displayName}?`, async () => {
-                              await expenseApi.updateGroupMemberRole(activeGroupId, memberId, member.role === 'admin' ? 'member' : 'admin');
-                              await refreshGroup();
-                            },
-                          )}>{member.role === 'admin' ? 'Make member' : 'Make admin'}</button>}
-                          {canRemove && (
-                            <button 
-                              onClick={() => confirm(`Remove ${displayName}? Their balance must be zero. Their existing history will be retained.`, () => handleRemoveMember(member.user_id))}
-                              style={{ padding: '0.25rem', background: 'transparent', border: 'none', cursor: 'pointer', color: '#e74c3c' }}
-                              title="Remove member (Owner Only)"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          )}
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-                
-                {/* Invitation form - ONLY in Members tab */}
-                <form className="add-member-form" onSubmit={handleInviteMember} style={{ marginTop: '1rem', borderTop: '1px solid #f0f0f0', paddingTop: '1rem' }}>
-                  <input 
-                    type="email" 
-                    placeholder="Email address to invite..." 
-                    value={newMemberEmail}
-                    onChange={(e) => setNewMemberEmail(e.target.value)}
-                    required
-                    disabled={inviting}
-                  />
-                  <button type="submit" disabled={inviting}>
-                    <Mail size={16} />
-                    {inviting ? 'Inviting...' : 'Invite Member'}
-                  </button>
-                </form>
-              </>
-            )}
-
-            {/* Pending Invitations Tab - VIEW ONLY (no invitation form) */}
-            {activeTab === 'pending' && (
-              <>
-                {loadingInvitations ? (
-                  <p style={{ textAlign: 'center', color: '#666', padding: '1rem' }}>
-                    Loading invitations...
-                  </p>
-                ) : pendingInvitations.length === 0 ? (
-                  <p style={{ textAlign: 'center', color: '#666', padding: '1rem' }}>
-                    No pending invitations.
-                  </p>
-                ) : (
-                  <ul className="member-list">
-                    {pendingInvitations.map(invitation => {
-                      const isDeclined = invitation.status?.toLowerCase() === 'declined';
-                      const isExpired = invitation.expires_at && new Date(invitation.expires_at) < new Date();
-                      const bgColor = isDeclined ? '#ffebee' : isExpired ? '#f5f5f5' : '#fff9e6';
-                      const statusColor = isDeclined ? '#e74c3c' : isExpired ? '#999' : '#f39c12';
-                      const statusText = isDeclined ? 'Declined' : isExpired ? 'Expired' : 'Pending';
-                      const canResend = isDeclined || isExpired;
-                      const canRetryEmail = String(invitation.invited_by) === String(userId) || permissions.can_update_group;
-                      return (
-                        <li key={invitation.invitation_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: bgColor, padding: '0.75rem', borderRadius: '6px', marginBottom: '0.5rem' }}>
-                          <div>
-                            <div style={{ fontWeight: '500' }}>
-                              {invitation.invited_email || invitation.invited_username || 'Unknown'}
-                            </div>
-                            <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
-                              <Clock size={12} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.25rem' }} />
-                              Invited {formatDateLocal(invitation.created_at, { year: 'numeric', month: 'short', day: 'numeric' })}
-                              {invitation.expires_at && (
-                                <span style={{ marginLeft: '0.5rem', color: isExpired ? '#e74c3c' : '#999' }}>
-                                  {isExpired ? '(Expired)' : `• Expires ${formatDateLocal(invitation.expires_at, { year: 'numeric', month: 'short', day: 'numeric' })}`}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            {!isDeclined && !isExpired && (
-                              <button type="button" onClick={() => handleCopyInvitation(invitation)}>
-                                Copy invite link
-                              </button>
-                            )}
-                            {!isDeclined && !isExpired && canRetryEmail && (
-                              <button type="button" disabled={Boolean(resendingInvitationId)}
-                                onClick={() => handleResendInvitation(invitation)}>
-                                {resendingInvitationId === (invitation.invitation_id || invitation.id) ? 'Sending...' : 'Resend email'}
-                              </button>
-                            )}
-                            {!isDeclined && canRetryEmail && <button type="button" disabled={actionBusy} onClick={() => confirm('Cancel this invitation? Its link will no longer allow joining.', async () => {
-                              await expenseApi.cancelInvitation(invitation.invitation_id || invitation.id);
-                              setPendingInvitations(previous => previous.filter(row => (row.invitation_id || row.id) !== (invitation.invitation_id || invitation.id)));
-                              await refreshGroup();
-                            })}>Cancel invitation</button>}
-                            {canResend && (
-                              <button
-                                onClick={(e) => handleInviteMember(e, true, invitation.invited_email)}
-                                style={{ 
-                                  padding: '0.25rem 0.75rem', 
-                                  fontSize: '0.7rem', 
-                                  background: '#667eea', 
-                                  color: 'white', 
-                                  border: 'none', 
-                                  borderRadius: '4px', 
-                                  cursor: 'pointer',
-                                  fontWeight: '600'
-                                }}
-                                title="Resend invitation"
-                              >
-                                Resend
-                              </button>
-                            )}
-                            <span style={{ fontSize: '0.75rem', color: statusColor, fontWeight: '600', textTransform: 'uppercase' }}>
-                              {statusText}
-                            </span>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return <div className="group-section expense-members-view">
+    {!compact && <section className="expense-members-selector"><h2><Users size={20} />Manage Groups</h2><select className="group-select" value={activeGroupId || ''} onChange={handleGroupSelect} aria-label="Select a group"><option value="">Select a group</option>{groups.map(group => <option key={group.id || group.group_id} value={group.id || group.group_id}>{group.name} ({group.currency || 'USD'})</option>)}</select></section>}
+    {activeGroupId && activeGroup && <>
+      <div className="expense-members-grid"><section className="expense-members-panel"><div className="expense-section-toolbar"><h2>Group Members &amp; Invitations</h2><span className="expense-member-count">{members.length} members</span></div>
+        {!compact && <div className="expense-members-switch"><button aria-pressed={activeTab === 'members'} onClick={() => setActiveTab('members')}>Members ({members.length})</button><button aria-pressed={activeTab === 'pending'} onClick={() => setActiveTab('pending')}>Pending ({pendingInvitations.length})</button></div>}
+        {compact || activeTab === 'members' ? <>{members.length ? memberList : <p className="expense-member-empty">No members yet. Invite someone to get started!</p>}{!compact && inviteForm}</> : invitationsList}
+      </section>{compact && <aside className="expense-members-aside">{inviteForm}{invitationsList}</aside>}</div>
+      <details className="expense-member-settings" open={!compact || editingGroup || undefined}><summary><Settings size={16} />Group settings</summary><div className="expense-member-settings-content">
+        <div className="expense-member-settings-info"><strong>{activeGroup.name}</strong><span>{activeGroup.currency || 'USD'} &middot; {members.length} members</span></div>
+        <div className="expense-member-settings-actions">{permissions.can_update_group && !editingGroup && <button className="expense-secondary-button" onClick={() => { setGroupName(activeGroup.name); setGroupDescription(activeGroup.description || ''); setEditingGroup(true); }}>Edit group</button>}
+        {permissions.can_leave_group && <button className="expense-secondary-button" disabled={actionBusy} onClick={() => confirm('Leave this group? Your balance must be zero. Your existing expense and payment history will be retained.', async () => { await expenseApi.leaveGroup(activeGroupId); if (onGroupLeave) await onGroupLeave(); })}>Leave group</button>}
+        {permissions.can_delete_group && <button className="expense-secondary-button expense-member-remove" title="Delete Group (Owner Only)" onClick={() => confirm('Delete this group? All balances must be settled. The group will be archived and pending invitations cancelled.', handleDeleteGroup)}><Trash2 size={15} />Delete group</button>}</div>
+        {editingGroup && permissions.can_update_group && <form className="expense-member-edit" onSubmit={event => {
+          event.preventDefault(); runAction(async () => { await expenseApi.updateGroup(activeGroupId, { name: groupName.trim(), description: groupDescription.trim() || null }); await refreshGroup(); setEditingGroup(false); });
+        }}><label>Group name<input value={groupName} maxLength={100} required onChange={event => setGroupName(event.target.value)} /></label><label>Description<textarea value={groupDescription} maxLength={1000} onChange={event => setGroupDescription(event.target.value)} /></label><div><button className="expense-primary-button" disabled={actionBusy || !groupName.trim()}>Save group</button><button className="expense-secondary-button" type="button" disabled={actionBusy} onClick={() => setEditingGroup(false)}>Cancel edit</button></div></form>}
+      </div></details>
+    </>}
+    {actionError && !confirmation && <p role="alert">{actionError}</p>}
+    {activeGroup && confirmation && <ExpenseDialog label="Confirm group action" onClose={() => !actionBusy && setConfirmation(null)} busy={actionBusy} className="expense-group-confirm"><div role="alertdialog" aria-label="Confirm group action"><h2>Confirm group action</h2><p>{confirmation.message}</p>{actionError && <p role="alert">{actionError}</p>}<div><button className="expense-primary-button" disabled={actionBusy} onClick={() => runAction(confirmation.action)}>{actionBusy ? 'Saving...' : 'Confirm'}</button><button className="expense-secondary-button" disabled={actionBusy} onClick={() => { setConfirmation(null); setActionError(''); }}>Cancel</button></div></div></ExpenseDialog>}
+    {!compact && <form className="create-group-form expense-legacy-create" onSubmit={handleCreateGroup}><input type="text" placeholder="New group name..." value={newGroupName} maxLength={100} onChange={event => setNewGroupName(event.target.value)} required disabled={creating} /><select aria-label="New group currency" value={newGroupCurrency} onChange={event => setNewGroupCurrency(event.target.value)} disabled={creating}>{Object.values(currencies).map(value => <option key={value.code} value={value.code}>{value.symbol} {value.code} - {value.name}</option>)}</select><button className="expense-primary-button" disabled={creating}><Plus size={16} />{creating ? 'Creating...' : 'Create Group'}</button></form>}
+  </div>;
 };
 
 export default GroupManager;
-

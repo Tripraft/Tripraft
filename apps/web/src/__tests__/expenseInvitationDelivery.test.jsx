@@ -30,6 +30,14 @@ beforeEach(() => {
   Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: jest.fn().mockResolvedValue() } });
 });
 
+it('honors the backend expiry flag instead of exposing an invalid copy link', () => {
+  setup([{ ...invitation, is_expired: true }]);
+  fireEvent.click(screen.getByRole('button', { name: /Pending/ }));
+  expect(screen.getByText('Expired')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Copy invite link' })).toBeNull();
+  expect(screen.getByRole('button', { name: 'Resend' })).toBeInTheDocument();
+});
+
 it.each([
   ['disabled', 'Invitation created.'],
   ['failed', 'Invitation created.'],

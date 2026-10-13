@@ -7,7 +7,8 @@ const ModeToggle = ({ mode, onToggle }) => {
       <span>Personal</span>
       <label className="toggle-switch">
         <input 
-          type="checkbox" 
+          type="checkbox"
+          aria-label="Show group expenses"
           checked={mode === 'group'}
           onChange={onToggle}
         />

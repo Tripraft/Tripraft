@@ -1,4 +1,5 @@
 // Purpose: Renders the Transaction Modal interface within apps\web\src\features\expenses\jsx.
+import ExpenseDialog from './ExpenseDialog';
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
@@ -142,11 +143,10 @@ const TransactionModal = ({
   const groupMembers = members || [];
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+    <ExpenseDialog label={editingTransaction ? "Edit expense" : "Add expense"} onClose={onClose} busy={saving} className="modal expense-transaction-dialog">
         <div className="modal-header">
           <h2>{editingTransaction ? 'Edit Transaction' : (mode === 'personal' ? 'Add Personal Transaction' : 'Add Group Expense')}</h2>
-          <button className="btn-close" onClick={onClose}>
+          <button className="btn-close" onClick={onClose} aria-label="Close expense" disabled={saving}>
             <X size={24} />
           </button>
         </div>
@@ -303,14 +303,14 @@ const TransactionModal = ({
               type="button" 
               className="btn-cancel"
               onClick={onClose}
+              disabled={saving}
             >
               Cancel
             </button>
             <button type="submit" className="btn-save" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
           </div>
         </form>
-      </div>
-    </div>
+    </ExpenseDialog>
   );
 };
 

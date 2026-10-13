@@ -64,17 +64,17 @@ it('confirms deletion, keeps a failed deletion retryable, and waits for success'
 it.each([['payer', true], ['bystander', false], ['admin', true]])('shows the one-cent debt and appropriate settle action for %s', (user, allowed) => {
   render(<Tabs group={{ ...group, my_role: user === 'admin' ? 'admin' : 'member' }} currentUserId={user}
     balances={balances} members={[]} settlementHistory={[]} transactions={[]} filter={{}} />);
-  fireEvent.click(screen.getByRole('button', { name: 'Settle Up' }));
+  fireEvent.click(screen.getByRole('tab', { name: 'Settle Up' }));
   expect(screen.getByText('$0.01')).toBeInTheDocument();
   expect(Boolean(screen.queryByText('View only'))).toBe(!allowed);
-  expect(screen.getAllByRole('button', { name: 'Settle Up' })).toHaveLength(allowed ? 2 : 1);
+  expect(screen.queryAllByRole('button', { name: 'Settle Up' })).toHaveLength(allowed ? 1 : 0);
 });
 
 it('rejects a manual payment between two other members', () => {
   const save = jest.fn();
-  const { container } = render(<Settlement isOpen currentUserId="bystander" group={group}
+  render(<Settlement isOpen currentUserId="bystander" group={group}
     balances={balances} settlement={{ from: 'payer', to: 'recipient', amount: 0.01 }} onSuccess={save} />);
-  fireEvent.submit(container.querySelector('form'));
+  fireEvent.submit(screen.getByRole('dialog', { name: 'Record settlement' }).querySelector('form'));
   expect(screen.getByText(/only record a payment involving yourself/)).toBeInTheDocument();
   expect(save).not.toHaveBeenCalled();
 });

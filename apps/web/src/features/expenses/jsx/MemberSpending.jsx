@@ -34,7 +34,8 @@ const MemberSpending = ({
     expenses.forEach(exp => {
       if (exp.is_deleted) return;
       const paidBy = exp.paid_by;
-      if (paidBy && spending[paidBy]) {
+      if (paidBy) {
+        if (!spending[paidBy]) spending[paidBy] = { userId: paidBy, name: exp.paid_by_name || 'Former member', totalPaid: 0, transactionCount: 0 };
         spending[paidBy].totalPaid += parseFloat(exp.amount) || 0;
         spending[paidBy].transactionCount += 1;
       }
@@ -58,7 +59,7 @@ const MemberSpending = ({
   };
 
   if (memberSpending.length === 0) {
-    return null;
+    return <div className="expense-analysis-empty"><Users size={28} /><h3>No member spending yet</h3><p>Member contributions will appear when you add an expense.</p></div>;
   }
 
   return (
@@ -112,6 +113,7 @@ const MemberSpending = ({
           return (
             <div 
               key={member.userId}
+              className="expense-member-spending-row"
               style={{
                 display: 'flex',
                 alignItems: 'center',

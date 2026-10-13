@@ -5,294 +5,12 @@
  */
 
 import React, { useState } from 'react';
-import { Scale, TrendingUp, Receipt, Handshake, BarChart3 } from 'lucide-react';
+import { Scale, TrendingUp, Receipt, Handshake, BarChart3, Users } from 'lucide-react';
 import GroupBalances from './GroupBalances';
-import { canRecordSettlement } from '../utils/groupPermissions';
 import MemberSpending from './MemberSpending';
 import TransactionList from './TransactionList';
 import ExpenseAnalytics from './ExpenseAnalytics';
-import SettlementModal from './SettlementModal';
-import SettlementHistoryModal from './SettlementHistoryModal';
-
-// Settle Up Tab Component - Shows suggested settlements with action buttons
-const SettleUpTab = ({ 
-  group, 
-  balances, 
-  members,
-  allMembersMap,
-  settlementHistory,
-  onSettlementSuccess,
-  onSettlementDelete,
-  currentUserId,
-  currency = 'USD' 
-}) => {
-  const [selectedSettlement, setSelectedSettlement] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
-      currency: currency 
-    }).format(Math.abs(amount));
-  };
-
-  // Helper to get member name
-  const getMemberName = (userId, balanceObj = null) => {
-    if (balanceObj?.display_name && balanceObj.display_name !== 'Unknown') {
-      return balanceObj.display_name;
-    }
-    if (members && userId) {
-      const member = members.find(m => (m.user_id || m.id) === userId);
-      if (member) {
-        return member.user?.display_name || member.display_name || member.username || member.email || 'Unknown';
-      }
-    }
-    if (allMembersMap && userId && allMembersMap[userId]) {
-      return allMembersMap[userId].display_name || 'Former Member';
-    }
-    return 'Unknown User';
-  };
-
-  // Filter significant balances
-  const significantBalances = (balances || []).filter(balance => 
-    balance && Math.abs(balance.net_balance || 0) >= 0.01
-  );
-
-  // Calculate suggested settlements
-  const calculateSettlements = () => {
-    const settlements = [];
-    const creditors = significantBalances
-      .filter(b => b.net_balance > 0)
-      .map(b => ({ ...b, net_balance: b.net_balance }));
-    const debtors = significantBalances
-      .filter(b => b.net_balance < 0)
-      .map(b => ({ ...b, net_balance: b.net_balance }));
-    
-    creditors.forEach(creditor => {
-      debtors.forEach(debtor => {
-        if (Math.abs(debtor.net_balance) >= 0.01 && Math.abs(creditor.net_balance) >= 0.01) {
-          const amount = Math.min(creditor.net_balance, Math.abs(debtor.net_balance));
-          settlements.push({
-            from: debtor.user_id,
-            fromName: getMemberName(debtor.user_id),
-            to: creditor.user_id,
-            toName: getMemberName(creditor.user_id),
-            amount: amount
-          });
-          creditor.net_balance = Math.round((creditor.net_balance - amount) * 100) / 100;
-          debtor.net_balance = Math.round((debtor.net_balance + amount) * 100) / 100;
-        }
-      });
-    });
-    return settlements;
-  };
-
-  const settlements = calculateSettlements();
-  const totalSettled = settlementHistory.reduce((sum, s) => sum + (s.amount || 0), 0);
-  const allSettled = significantBalances.length === 0;
-
-  const handleSettleUp = (settlement) => {
-    setSelectedSettlement(settlement);
-    setIsModalOpen(true);
-  };
-
-  const handleSettlementSuccess = async (settlementData) => {
-    // The modal closes only after the save succeeds.
-    if (onSettlementSuccess) {
-      await onSettlementSuccess(settlementData);
-    }
-  };
-
-  return (
-    <div>
-      {/* Settlement Summary Cards */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '1rem',
-        marginBottom: '1.5rem'
-      }}>
-        <div style={{
-          background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-          padding: '1.25rem',
-          borderRadius: '12px',
-          color: 'white'
-        }}>
-          <div style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '0.25rem' }}>Total Settled</div>
-          <div style={{ fontSize: '1.75rem', fontWeight: '700' }}>{formatCurrency(totalSettled)}</div>
-          <div style={{ fontSize: '0.8rem', opacity: 0.85, marginTop: '0.5rem' }}>
-            {settlementHistory.length} payment{settlementHistory.length !== 1 ? 's' : ''} recorded
-          </div>
-        </div>
-        
-        <div style={{
-          background: allSettled ? 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' : 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-          padding: '1.25rem',
-          borderRadius: '12px',
-          color: 'white'
-        }}>
-          <div style={{ fontSize: '0.875rem', opacity: 0.9, marginBottom: '0.25rem' }}>
-            {allSettled ? 'Status' : 'Pending Settlements'}
-          </div>
-          <div style={{ fontSize: '1.75rem', fontWeight: '700' }}>
-            {allSettled ? 'All Settled!' : settlements.length}
-          </div>
-          <div style={{ fontSize: '0.8rem', opacity: 0.85, marginTop: '0.5rem' }}>
-            {allSettled ? 'No pending payments' : 'Suggested transactions'}
-          </div>
-        </div>
-      </div>
-
-      {/* View Settlement History Button */}
-      <div style={{ marginBottom: '1.5rem', textAlign: 'right' }}>
-        <button
-          onClick={() => setIsHistoryModalOpen(true)}
-          style={{
-            background: '#f3f4f6',
-            color: '#374151',
-            border: '1px solid #e5e7eb',
-            padding: '0.5rem 1rem',
-            borderRadius: '8px',
-            fontSize: '0.875rem',
-            fontWeight: '500',
-            cursor: 'pointer',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}
-        >
-          View Settlement History
-        </button>
-      </div>
-
-      {/* Suggested Settlements */}
-      {allSettled ? (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '3rem 1rem', 
-          background: '#f0fdf4',
-          borderRadius: '12px',
-          border: '1px solid #bbf7d0'
-        }}>
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>&#127881;</div>
-          <h3 style={{ color: '#166534', margin: '0 0 0.5rem 0' }}>All Settled Up!</h3>
-          <p style={{ color: '#15803d', margin: 0, fontSize: '0.9rem' }}>
-            Everyone in the group is square. No payments needed.
-          </p>
-        </div>
-      ) : (
-        <div>
-          <h3 style={{ fontSize: '1rem', color: '#374151', marginBottom: '1rem' }}>
-            Suggested Settlements ({settlements.length})
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {settlements.map((settlement, idx) => (
-              <div key={settlement.from + '-' + settlement.to} style={{
-                padding: '1rem 1.25rem',
-                background: 'white',
-                borderRadius: '10px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-                border: '1px solid #e5e7eb',
-                gap: '1rem'
-              }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <span style={{ 
-                      fontWeight: '600', 
-                      color: '#dc2626',
-                      background: '#fef2f2',
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '20px',
-                      fontSize: '0.875rem'
-                    }}>
-                      {settlement.fromName}
-                    </span>
-                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>pays</span>
-                    <span style={{ 
-                      fontWeight: '600', 
-                      color: '#16a34a',
-                      background: '#f0fdf4',
-                      padding: '0.25rem 0.75rem',
-                      borderRadius: '20px',
-                      fontSize: '0.875rem'
-                    }}>
-                      {settlement.toName}
-                    </span>
-                  </div>
-                </div>
-                <div style={{ 
-                  fontWeight: '700',
-                  color: '#111827',
-                  fontSize: '1.125rem',
-                  marginRight: '0.5rem'
-                }}>
-                  {formatCurrency(settlement.amount)}
-                </div>
-                {canRecordSettlement(group, currentUserId, settlement.from, settlement.to) ? <button
-                  onClick={() => handleSettleUp(settlement)}
-                  style={{
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '0.625rem 1.25rem',
-                    borderRadius: '8px',
-                    fontSize: '0.875rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    whiteSpace: 'nowrap'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.4)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = 'none';
-                  }}
-                >
-                  Settle Up
-                </button> : <span>View only</span>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Settlement History Modal */}
-      <SettlementHistoryModal
-        isOpen={isHistoryModalOpen}
-        onClose={() => setIsHistoryModalOpen(false)}
-        settlements={settlementHistory}
-        group={group}
-        currentUserId={currentUserId}
-        onDelete={onSettlementDelete}
-        currency={currency}
-      />
-
-      {/* Settlement Modal */}
-      <SettlementModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setSelectedSettlement(null);
-        }}
-        settlement={selectedSettlement}
-        groupId={group?.group_id || group?.id}
-        group={group}
-        currentUserId={currentUserId}
-        members={members}
-        balances={balances || []}
-        currency={group?.currency || 'USD'}
-        onSuccess={handleSettlementSuccess}
-      />
-    </div>
-  );
-};
+import SettlementView from './SettlementView';
 
 const TabbedGroupView = ({
   group,
@@ -310,14 +28,19 @@ const TabbedGroupView = ({
   currentUserId,
   onEdit,
   onDelete,
-  onExportPDF
+  onExportPDF,
+  membersContent,
+  activeTab: selectedTab,
+  onTabChange
 }) => {
-  const [activeTab, setActiveTab] = useState('balances');
+  const [localTab, setLocalTab] = useState('balances');
+  const activeTab = selectedTab ?? localTab;
+  const setActiveTab = onTabChange || setLocalTab;
 
   const tabs = [
     {
       id: 'balances',
-      label: 'Group Balances',
+      label: 'Balances',
       icon: Scale,
       color: '#667eea'
     },
@@ -335,7 +58,7 @@ const TabbedGroupView = ({
     },
     {
       id: 'transactions',
-      label: 'Transaction History',
+      label: 'Activity & history',
       icon: Receipt,
       color: '#3b82f6'
     },
@@ -344,11 +67,12 @@ const TabbedGroupView = ({
       label: 'Analytics',
       icon: BarChart3,
       color: '#8b5cf6'
-    }
+    },
+    ...(membersContent ? [{ id: 'members', label: 'Members', icon: Users, color: '#7c3aed' }] : [])
   ];
 
   return (
-    <div style={{
+    <div className="expense-group-tabs" style={{
       background: 'white',
       borderRadius: '12px',
       border: '1px solid #e5e7eb',
@@ -357,7 +81,7 @@ const TabbedGroupView = ({
       marginBottom: '1.5rem'
     }}>
       {/* Tab Headers */}
-      <div style={{
+      <div className="expense-group-tablist" role="tablist" aria-label="Group details" style={{
         display: 'flex',
         borderBottom: '1px solid #e5e7eb',
         background: '#f9fafb'
@@ -369,6 +93,20 @@ const TabbedGroupView = ({
           return (
             <button
               key={tab.id}
+              role="tab"
+              id={`group-tab-${tab.id}`}
+              aria-selected={isActive}
+              aria-controls="group-detail-panel"
+              tabIndex={isActive ? 0 : -1}
+              onKeyDown={event => {
+                if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+                event.preventDefault();
+                const index = tabs.findIndex(item => item.id === activeTab);
+                const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1
+                  : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
+                setActiveTab(tabs[next].id);
+                document.getElementById(`group-tab-${tabs[next].id}`)?.focus();
+              }}
               onClick={() => setActiveTab(tab.id)}
               style={{
                 flex: 1,
@@ -397,7 +135,8 @@ const TabbedGroupView = ({
       </div>
 
       {/* Tab Content */}
-      <div style={{ padding: '1.5rem' }}>
+      <div className="expense-group-tabpanel" id="group-detail-panel" role="tabpanel" aria-labelledby={`group-tab-${activeTab}`} tabIndex={0} style={{ padding: '1.5rem' }}>
+        {activeTab === 'members' && membersContent}
         {/* Group Balances Tab */}
         {activeTab === 'balances' && (
           <div style={{ animation: 'fadeIn 0.3s ease' }}>
@@ -419,7 +158,7 @@ const TabbedGroupView = ({
         {/* Settle Up Tab - Shows suggested settlements with action buttons */}
         {activeTab === 'settleup' && (
           <div style={{ animation: 'fadeIn 0.3s ease' }}>
-            <SettleUpTab
+            <SettlementView
               group={group}
               balances={balances}
               members={members}
@@ -447,8 +186,8 @@ const TabbedGroupView = ({
 
         {/* Transaction History Tab */}
         {activeTab === 'transactions' && (
-          <div style={{ animation: 'fadeIn 0.3s ease', marginTop: '-1.5rem', marginLeft: '-1.5rem', marginRight: '-1.5rem', marginBottom: '-1.5rem' }}>
-            <div style={{ padding: '1.5rem' }}>
+          <div className="expense-activity-tab">
+            <div className="expense-activity-filters">
               <div style={{ 
                 display: 'flex', 
                 gap: '1rem',
@@ -527,6 +266,9 @@ const TabbedGroupView = ({
               members={activeGroupMembers || []}
               currency={group?.currency || 'USD'}
               mode="group"
+              currentUserId={currentUserId}
+              groupName={group?.name}
+              settlements={settlementHistory || []}
               onExportPDF={onExportPDF}
             />
           </div>

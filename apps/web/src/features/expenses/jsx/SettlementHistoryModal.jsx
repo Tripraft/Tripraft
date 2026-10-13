@@ -1,4 +1,5 @@
 // Purpose: Renders the Settlement History Modal interface within apps\web\src\features\expenses\jsx.
+import ExpenseDialog from './ExpenseDialog';
 import React, { useState } from 'react';
 import { X, CheckCircle, Clock, AlertCircle, ArrowRight, Calendar, DollarSign } from 'lucide-react';
 import { formatDateLocal } from '../../../utils/timezoneUtils';
@@ -104,12 +105,10 @@ const SettlementHistoryModal = ({ isOpen, onClose, settlements = [], currency = 
     }
   };
 
-  const totalSettled = settlements.reduce((sum, s) => sum + (s.amount || 0), 0);
+  const totalSettled = settlements.reduce((sum, s) => sum + (Number(s.amount) || 0), 0);
 
   return (
-    <>
-      <div className="settlement-modal-overlay" onClick={close} />
-      <div className="settlement-history-modal-new">
+    <ExpenseDialog label="Settlement history" onClose={close} busy={deleting} className="settlement-history-modal-new">
         {/* Header */}
         <div className="shm-header">
           <div className="shm-header-content">
@@ -210,8 +209,7 @@ const SettlementHistoryModal = ({ isOpen, onClose, settlements = [], currency = 
             </div>
           )}
         </div>
-      </div>
-    </>
+    </ExpenseDialog>
   );
 };
 

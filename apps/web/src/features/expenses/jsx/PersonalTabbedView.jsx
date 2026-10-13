@@ -37,7 +37,7 @@ const PersonalTabbedView = ({
   ];
 
   return (
-    <div style={{
+    <div className="expense-personal-tabs" style={{
       background: 'white',
       borderRadius: '12px',
       border: '1px solid #e5e7eb',
@@ -46,7 +46,7 @@ const PersonalTabbedView = ({
       marginBottom: '1.5rem'
     }}>
       {/* Tab Headers */}
-      <div style={{
+      <div className="expense-personal-tablist" style={{
         display: 'flex',
         borderBottom: '1px solid #e5e7eb',
         background: '#f9fafb'
@@ -58,6 +58,7 @@ const PersonalTabbedView = ({
           return (
             <button
               key={tab.id}
+              aria-pressed={isActive}
               onClick={() => setActiveTab(tab.id)}
               style={{
                 flex: 1,
@@ -159,6 +160,7 @@ const PersonalTabbedView = ({
               members={[]}
               currency={currency}
               mode="personal"
+              currentUserId={currentUserId}
               onExportPDF={onExportPDF}
             />
           </div>

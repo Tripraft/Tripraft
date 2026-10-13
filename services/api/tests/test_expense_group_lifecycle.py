@@ -76,6 +76,47 @@ def test_create_group_form_contract_and_authenticated_owner(alice):
         assert session.query(GroupBalance).filter_by(group_id=UUID(gid), user_id=UUID(owner_id)).count() == 1
 
 
+def test_group_cards_summarize_whole_ledger_and_keep_share_after_settlement(group_of_two):
+    api, alice, member, bob, gid = group_of_two
+    expense(api, gid, alice, amount='100', category='Accommodation', expense_date='2026-12-12',
+            split_type='exact', splits=[{'user_id': alice, 'amount': '20'}, {'user_id': bob, 'amount': '80'}])
+    second = expense(api, gid, bob, amount='50', category='Food', expense_date='2026-12-18')
+    response = member.post('/api/v1/expenses/settlements', json={
+        'group_id': gid, 'from_user_id': bob, 'to_user_id': alice, 'amount': '25',
+    })
+    assert response.status_code == 201, response.get_json()
+    card = next(row for row in payload(api.get('/api/v1/expenses/groups'))['groups'] if row['id'] == gid)
+    assert card['my_balance'] == 30
+    assert card['summary'] == {
+        'total_spend': 150, 'your_share': 45, 'you_paid': 100, 'expense_count': 2,
+        'start_date': '2026-12-12', 'end_date': '2026-12-18',
+        'top_category': {'name': 'Accommodation', 'percentage': 67},
+        'daily_spend': [{'date': '2026-12-12', 'amount': 100}, {'date': '2026-12-18', 'amount': 50}],
+    }
+    detail = payload(api.get('/api/v1/expenses/groups/%s/full?expense_limit=1' % gid))['group']
+    assert len(detail['expenses']) == 1
+    assert detail['summary'] == card['summary']
+    assert payload(member.get('/api/v1/expenses/groups'))['groups'][0]['summary']['your_share'] == 105
+    assert api.delete('/api/v1/expenses/%s' % second['id']).status_code == 200
+    summary = payload(api.get('/api/v1/expenses/groups'))['groups'][0]['summary']
+    assert summary['total_spend'] == 100
+    assert summary['your_share'] == 20
+    assert summary['expense_count'] == 1
+
+
+def test_dashboard_new_group_payload_without_optional_fields(alice):
+    api, user_id, _ = alice
+    response = api.post('/api/v1/expenses/groups', json={'name': 'Goa Getaway', 'currency': 'USD'})
+    assert response.status_code == 201, response.get_json()
+    data = payload(response)
+    assert data['group']['created_by'] == user_id
+    assert data['group']['name'] == 'Goa Getaway'
+    card = next(row for row in data['groups'] if row['id'] == data['group_id'])
+    assert card['summary']['total_spend'] == 0
+    assert card['summary']['your_share'] == 0
+    assert card['summary']['expense_count'] == 0
+
+
 def test_invitation_acceptance_contains_existing_ledger_and_members(group_of_two, make_user):
     api, alice, _, bob, gid = group_of_two
     friend, friend_id, email = make_user('friend')

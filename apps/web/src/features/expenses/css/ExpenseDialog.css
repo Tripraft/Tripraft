@@ -1,0 +1,55 @@
+/* Purpose: Shared, isolated dialog geometry; the backdrop never paints over the dialog surface. */
+.expense-dialog-layer {
+  position: fixed; inset: 0; z-index: 12000; display: grid; place-items: center;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: rgb(17 24 39 / 55%); overflow: auto; isolation: isolate;
+  font-family: var(--font-sans, 'Inter', sans-serif); color: var(--color-text-primary, #111827);
+}
+.expense-dialog-layer > .expense-dialog-surface {
+  position: relative; inset: auto; transform: none; animation: none; filter: none; backdrop-filter: none;
+  width: 100%; min-width: 0; max-width: 600px; max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px);
+  margin: auto; border: 1px solid var(--color-border-light, #e5e7eb); border-radius: 20px;
+  background: var(--color-bg-primary, #fff); color: var(--color-text-primary, #111827);
+  overflow: auto; box-shadow: 0 24px 80px #11182740; z-index: auto; outline: none;
+}
+.expense-dialog-surface *, .expense-dialog-surface *::before, .expense-dialog-surface *::after { box-sizing: border-box; }
+.expense-dialog-surface :is(input, select, textarea, button) { font: inherit; }
+.expense-dialog-surface :is(input, select, textarea) { min-width: 0; max-width: 100%; font-size: 16px; }
+.expense-dialog-surface :is(button, input, select, textarea):focus-visible { outline: 3px solid var(--color-primary-300, #c4b5fd); outline-offset: 2px; }
+.expense-dialog-surface :is(h2, h3, p, span, strong, label) { overflow-wrap: anywhere; }
+.expense-dialog-surface button { min-height: 40px; cursor: pointer; }
+.expense-dialog-surface button:disabled { cursor: wait; }
+.expense-dialog-surface .modal-header { position: static; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 20px 24px; }
+.expense-dialog-surface .modal-header h2 { font-size: 20px; line-height: 1.3; letter-spacing: -.025em; text-transform: none; }
+.expense-dialog-surface .modal-actions, .expense-dialog-surface .modal-footer { flex-wrap: wrap; gap: 10px; }
+.expense-dialog-layer > .settlement-history-modal-new { display: flex; flex-direction: column; }
+.expense-dialog-layer > .settlement-modal-content, .expense-dialog-layer > .receipt-modal, .expense-dialog-layer > .expense-create-dialog { max-width: 460px; }
+.expense-dialog-surface .shm-body, .expense-dialog-surface .history-content { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.expense-dialog-surface .shm-header { flex-shrink: 0; gap: 12px; background: var(--color-primary-600, #7c3aed); }
+.expense-dialog-surface .shm-header-content { min-width: 0; }
+.expense-dialog-surface .shm-header-icon, .expense-dialog-surface .shm-close-btn { flex-shrink: 0; }
+.expense-dialog-surface .shm-stat { min-width: 0; padding: 0 16px; }
+.expense-dialog-surface .shm-stat-value { font-size: clamp(18px, 4vw, 24px); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.expense-dialog-surface .shm-item { gap: 12px; }
+.expense-dialog-surface .shm-item-left, .expense-dialog-surface .shm-item-right { min-width: 0; }
+.expense-dialog-surface .shm-item-right { flex-wrap: wrap; }
+.expense-dialog-surface .shm-amount { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.expense-dialog-surface .receipt-header { display: block; padding: 20px; }
+.expense-dialog-surface .receipt-body { padding: 20px; }
+.expense-dialog-surface .receipt-split-item { gap: 8px; align-items: baseline; }
+.expense-dialog-surface .split-name { overflow-wrap: anywhere; }
+.expense-dialog-surface .split-amt { white-space: normal; text-align: right; overflow-wrap: anywhere; }
+.expense-dialog-surface .receipt-total { flex-wrap: wrap; gap: 12px; }
+.expense-dialog-surface .submit-button, .expense-dialog-surface .btn-save { background: var(--color-primary-600, #7c3aed); }
+.expense-dialog-surface .entry-content, .expense-dialog-surface .change-item { min-width: 0; }
+.expense-dialog-surface .entry-meta, .expense-dialog-surface .change-values { flex-wrap: wrap; }
+.expense-dialog-surface .modal-content { min-height: 0; overflow-y: auto; }
+@media (max-width: 480px) {
+  .expense-dialog-layer { padding: 10px; }
+  .expense-dialog-layer > .expense-dialog-surface { max-height: calc(100vh - 20px); max-height: calc(100dvh - 20px); border-radius: 16px; }
+  .expense-dialog-surface .modal-header, .expense-dialog-surface .modal-body, .expense-dialog-surface .receipt-body { padding: 16px; }
+  .expense-dialog-surface .shm-header { padding: 16px; }
+  .expense-dialog-surface .shm-header-icon { display: none; }
+  .expense-dialog-surface .shm-summary { padding: 16px 8px; }
+  .expense-dialog-surface .form-grid { grid-template-columns: minmax(0, 1fr); }
+}

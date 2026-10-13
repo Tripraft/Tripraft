@@ -3,7 +3,7 @@ import secrets
 from datetime import datetime, timezone
 
 from marshmallow import ValidationError as SchemaError
-from sqlalchemy import func
+from sqlalchemy import case, func
 from sqlalchemy.orm import joinedload, selectinload
 
 from app.core.config import Config
@@ -51,6 +51,47 @@ def group_dict(group, member):
     return data
 
 
+def group_summaries(session, group_ids, user_id):
+    """Aggregate card metrics in a fixed number of queries, without loading ledgers."""
+    summaries = {gid: {'total_spend': 0, 'your_share': 0, 'you_paid': 0,
+                       'expense_count': 0, 'start_date': None, 'end_date': None,
+                       'top_category': None, 'daily_spend': []} for gid in group_ids}
+    if not group_ids:
+        return summaries
+    filters = (Expense.group_id.in_(group_ids), Expense.is_deleted.is_(False))
+    for gid, total, paid, count, start, end in session.query(
+        Expense.group_id, func.sum(Expense.amount),
+        func.sum(case((Expense.paid_by == identifier(user_id), Expense.amount), else_=0)),
+        func.count(Expense.id), func.min(Expense.expense_date), func.max(Expense.expense_date),
+    ).filter(*filters).group_by(Expense.group_id):
+        summaries[gid].update(total_spend=money_to_json(total), you_paid=money_to_json(paid),
+                              expense_count=count, start_date=start.isoformat() if start else None,
+                              end_date=end.isoformat() if end else None)
+    for gid, amount in session.query(Expense.group_id, func.sum(ExpenseSplit.amount)).join(
+        ExpenseSplit, ExpenseSplit.expense_id == Expense.id,
+    ).filter(*filters, ExpenseSplit.user_id == identifier(user_id)).group_by(Expense.group_id):
+        summaries[gid]['your_share'] = money_to_json(amount)
+    for gid, category, amount in session.query(
+        Expense.group_id, Expense.category, func.sum(Expense.amount),
+    ).filter(*filters).group_by(Expense.group_id, Expense.category).order_by(
+        func.sum(Expense.amount).desc(), Expense.category,
+    ):
+        summary = summaries[gid]
+        if summary['top_category'] is None:
+            summary['top_category'] = {'name': category or 'Other',
+                                       'percentage': round(float(amount) / summary['total_spend'] * 100)
+                                       if summary['total_spend'] else 0}
+    for gid, day, amount in session.query(
+        Expense.group_id, Expense.expense_date, func.sum(Expense.amount),
+    ).filter(*filters).group_by(Expense.group_id, Expense.expense_date).order_by(Expense.expense_date):
+        if day:
+            summaries[gid]['daily_spend'].append({'date': day.isoformat(), 'amount': money_to_json(amount)})
+    # Cards only need the most recent trend; totals above always include the whole ledger.
+    for summary in summaries.values():
+        summary['daily_spend'] = summary['daily_spend'][-14:]
+    return summaries
+
+
 class GroupServiceSQL:
     @staticmethod
     @service_result
@@ -90,7 +131,9 @@ class GroupServiceSQL:
                 GroupMember.user_id == identifier(user_id), GroupMember.is_active.is_(True),
                 Group.is_active.is_(True),
             ).order_by(Group.updated_at.desc(), Group.id.desc()).all()
-            return {'groups': [group_dict(group, member) for group, member in rows]}
+            summaries = group_summaries(session, [group.id for group, _ in rows], user_id)
+            return {'groups': [{**group_dict(group, member), 'summary': summaries[group.id]}
+                               for group, member in rows]}
 
     @staticmethod
     @service_result
@@ -240,6 +283,7 @@ class GroupServiceSQL:
         from app.expenses.services.expense_service import ExpenseServiceSQL
         from app.expenses.services.settlement_service import SettlementServiceSQL
         data = group_dict(group, member)
+        data['summary'] = group_summaries(session, [group.id], user_id)[group.id]
         query = session.query(Expense).filter_by(group_id=group.id, is_deleted=False)
         total = query.count()
         expenses = query.options(joinedload(Expense.payer),

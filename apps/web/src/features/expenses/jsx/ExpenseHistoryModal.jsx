@@ -1,5 +1,6 @@
 // Purpose: Renders the Expense History Modal interface within apps\web\src\features\expenses\jsx.
 import React from 'react';
+import ExpenseDialog from './ExpenseDialog';
 import { X, History, Clock, User, ArrowRight } from 'lucide-react';
 import { useExpenseEditHistory } from '../../../hooks/useExpenseQuery';
 import { formatMoney } from '../../../utils/money';
@@ -83,16 +84,9 @@ const ExpenseHistoryModal = ({ expense, members, onClose, currency = expense?.cu
       return String(value); // Return EQUAL or CUSTOM as is
     }
     
-    // Format splits array - improved display
+    // A custom split may include every member; display the recorded amounts.
     if (field === 'splits' && Array.isArray(value)) {
-      const splitCount = value.length;
-      const totalMembers = members?.length || splitCount;
-      
-      if (splitCount === totalMembers) {
-        return `All ${splitCount} members (EQUAL split)`;
-      } else {
-        return `${splitCount} of ${totalMembers} members`;
-      }
+      return value.map(split => `${getMemberName(split.user_id)}: ${formatMoney(split.amount, currency)}`).join('; ');
     }
     
     return String(value);
@@ -126,14 +120,13 @@ const ExpenseHistoryModal = ({ expense, members, onClose, currency = expense?.cu
   };
 
   return (
-    <div className="expense-history-overlay" onClick={onClose}>
-      <div className="expense-history-modal" onClick={e => e.stopPropagation()}>
+    <ExpenseDialog label="Expense change history" onClose={onClose} className="expense-history-modal">
         <div className="modal-header">
           <div className="header-title">
             <History size={20} />
             <h2>Edit History</h2>
           </div>
-          <button className="btn-close" onClick={onClose}>
+          <button className="btn-close" onClick={onClose} aria-label="Close edit history">
             <X size={20} />
           </button>
         </div>
@@ -184,7 +177,7 @@ const ExpenseHistoryModal = ({ expense, members, onClose, currency = expense?.cu
                     {entry.action === 'updated' && entry.changes && (
                       (() => {
                         // Handle both array and object formats for changes
-                        const changesArray = Array.isArray(entry.changes) ? entry.changes : Object.values(entry.changes || {});
+                        const changesArray = Array.isArray(entry.changes) ? entry.changes : Object.entries(entry.changes || {}).map(([field, change]) => ({ ...change, field: change.field_name || change.field || field }));
                         
                         if (changesArray.length === 0) return null;
                         
@@ -197,11 +190,9 @@ const ExpenseHistoryModal = ({ expense, members, onClose, currency = expense?.cu
                                 const newVal = change.new_value ?? change.new;
                                 const fieldName = change.field_name || change.field;
                                 
-                                // For splits, compare lengths if arrays
+                                // Amounts and participants can change while the row count stays equal.
                                 if (fieldName === 'splits') {
-                                  const oldLen = Array.isArray(oldVal) ? oldVal.length : 0;
-                                  const newLen = Array.isArray(newVal) ? newVal.length : 0;
-                                  return oldLen !== newLen;
+                                  return JSON.stringify(oldVal) !== JSON.stringify(newVal) || Boolean(change.added_members?.length || change.removed_members?.length);
                                 }
                                 
                                 // Skip if both are same
@@ -217,11 +208,11 @@ const ExpenseHistoryModal = ({ expense, members, onClose, currency = expense?.cu
                                       <span className="field-name">{getFieldLabel(fieldName)}</span>
                                       <div className="change-values">
                                         <span className="old-value">
-                                          {formatValue(fieldName, change.old)}
+                                          {formatValue(fieldName, change.old_value ?? change.old)}
                                         </span>
                                         <ArrowRight size={14} className="arrow" />
                                         <span className="new-value">
-                                          {formatValue(fieldName, change.new)}
+                                          {formatValue(fieldName, change.new_value ?? change.new)}
                                         </span>
                                       </div>
                                       {/* Display added members in green */}
@@ -292,8 +283,7 @@ const ExpenseHistoryModal = ({ expense, members, onClose, currency = expense?.cu
             Close
           </button>
         </div>
-      </div>
-    </div>
+    </ExpenseDialog>
   );
 };
 

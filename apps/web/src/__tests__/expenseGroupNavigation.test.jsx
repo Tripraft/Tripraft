@@ -31,7 +31,7 @@ jest.mock('../features/expenses/jsx/GroupSummaryCards', () => () => null);
 jest.mock('../features/expenses/jsx/SettlementHistoryModal', () => () => null);
 jest.mock('../features/expenses/jsx/TransactionModal', () => () => null);
 
-const groups = [{ id: 'first-group' }, { id: 'joined-group' }];
+const groups = [{ id: 'first-group', name: 'First trip' }, { id: 'joined-group', name: 'Joined trip' }];
 let auth;
 function Location() {
   const location = useLocation();
@@ -75,8 +75,12 @@ it('keeps the selected group through session restoration', () => {
 
 it('switches groups and restores the previous group with browser back', () => {
   render(<Page />);
-  fireEvent.click(screen.getByRole('button', { name: 'Select first group' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Back to all groups' }));
+  expect(screen.queryByText('Group expenses: joined-group')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Open First trip' }));
   expect(screen.getByText('Group expenses: first-group')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+  expect(screen.getByRole('heading', { name: 'Your groups' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Back' }));
   expect(screen.getByText('Group expenses: joined-group')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Mode: group' }));
@@ -85,9 +89,28 @@ it('switches groups and restores the previous group with browser back', () => {
 
 it('opens a newly created group and preserves it in the URL', async () => {
   render(<Page />);
+  fireEvent.click(screen.getByRole('button', { name: 'New group' }));
+  fireEvent.change(screen.getByLabelText('Group name'), { target: { value: 'New trip' } });
   fireEvent.click(screen.getByRole('button', { name: 'Create group' }));
   expect(await screen.findByText('Group expenses: new-group')).toBeInTheDocument();
   expect(screen.getByText('/expenses/friend-uuid/group?groupId=new-group')).toBeInTheDocument();
+});
+
+it('shows the group dashboard without automatically opening the first group', () => {
+  render(<Page entry="/expenses/friend-uuid/group" />);
+  expect(screen.getByRole('button', { name: 'Open First trip' })).toBeInTheDocument();
+  expect(screen.queryByText('Group expenses: first-group')).toBeNull();
+  expect(useGroupDetail.mock.calls.every(([id]) => id === null)).toBe(true);
+});
+
+it('shows an empty state with a working new group action', () => {
+  useGroups.mockReturnValue({ groups: [], refetch: jest.fn() });
+  render(<Page entry="/expenses/friend-uuid/group" />);
+  expect(screen.getByText('You don’t have any groups yet')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Add Transaction' })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'New group' }));
+  expect(screen.getByRole('dialog', { name: 'New group' })).toBeInTheDocument();
+  expect(screen.getByLabelText('Group name')).toHaveFocus();
 });
 
 it('opens the accepted group from the dashboard API envelope', async () => {
