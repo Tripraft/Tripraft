@@ -438,6 +438,12 @@ class PlaceService:
                 session.refresh(place)
                 
                 logger.info(f"Place updated: {place_id}")
+
+                try:
+                    from app.trips.realtime.events import emit_to_group
+                    emit_to_group(group_id, 'place:updated', {'place': place.to_dict(), 'user_id': str(user_id)})
+                except Exception:
+                    logger.debug('Place update broadcast unavailable', exc_info=True)
                 
                 return True, {'place': place.to_dict()}
                 
@@ -536,6 +542,12 @@ class PlaceService:
                 session.commit()
                 
                 logger.info(f"Place deleted: {place_id}")
+
+                try:
+                    from app.trips.realtime.events import emit_to_group
+                    emit_to_group(group_id, 'place:deleted', {'place_id': str(place_id), 'user_id': str(user_id)})
+                except Exception:
+                    logger.debug('Place deletion broadcast unavailable', exc_info=True)
                 
                 return True, {'message': 'Place deleted successfully'}
                 

@@ -45,7 +45,7 @@ export default function PollFeed({ polls, members, uidStr, handleVotePoll, handl
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <button className="gp-poll-view-btn" onClick={() => setExpandedVoters(expandedVoters === poll.id ? null : poll.id)}>View Voters</button>
-                    <button className="gp-itinerary-edit-btn" onClick={() => handleDeletePoll(poll.id)} title="Delete poll"><Trash2 size={11} /></button>
+                    {String(poll.created_by) === uidStr && <button className="gp-itinerary-edit-btn" onClick={() => handleDeletePoll(poll.id)} title="Delete poll"><Trash2 size={11} /></button>}
                   </div>
                 </div>
                 {expandedVoters === poll.id && (

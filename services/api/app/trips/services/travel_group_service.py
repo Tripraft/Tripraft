@@ -308,6 +308,18 @@ class GroupService:
                     except (ValueError, AttributeError):
                         pass
                 
+                # Validate both candidate dates before changing the group. Empty
+                # strings explicitly clear dates; None means leave unchanged.
+                try:
+                    next_start = group.start_date if start_date is None else (
+                        datetime.fromisoformat(start_date.replace('Z', '+00:00')).date() if start_date else None)
+                    next_end = group.end_date if end_date is None else (
+                        datetime.fromisoformat(end_date.replace('Z', '+00:00')).date() if end_date else None)
+                except (ValueError, AttributeError, TypeError):
+                    return False, {'error': 'Trip dates must be ISO-8601 dates'}
+                if next_start and next_end and next_end < next_start:
+                    return False, {'error': 'Trip end date must be on or after the start date'}
+
                 # Update fields
                 if name is not None:
                     group.name = name.strip()
@@ -316,15 +328,9 @@ class GroupService:
                 if destination is not None:
                     group.destination = destination.strip()
                 if start_date is not None:
-                    try:
-                        group.start_date = datetime.fromisoformat(start_date.replace('Z', '+00:00')).date()
-                    except Exception:
-                        pass
+                    group.start_date = next_start
                 if end_date is not None:
-                    try:
-                        group.end_date = datetime.fromisoformat(end_date.replace('Z', '+00:00')).date()
-                    except Exception:
-                        pass
+                    group.end_date = next_end
                 if estimated_budget is not None:
                     group.estimated_budget = estimated_budget
                 if budget_currency is not None:

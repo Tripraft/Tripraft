@@ -49,6 +49,11 @@ class PollService:
             name = sanitize_text(name)
             options = [sanitize_text(o) for o in options if o and o.strip()]
 
+            if not name.strip():
+                return False, {'error': 'Poll name or question is required'}
+            if any(not option.strip() for option in options) or len(options) != len(set(options)):
+                return False, {'error': 'Poll options must be non-empty and unique'}
+
             if len(options) > Config.MAX_POLL_OPTIONS:
                 return False, {'error': f'Maximum {Config.MAX_POLL_OPTIONS} options allowed'}
             for opt in options:
@@ -75,8 +80,12 @@ class PollService:
                 if expires_at:
                     try:
                         parsed_expires_at = datetime.fromisoformat(expires_at.replace('Z', '+00:00'))
-                    except Exception:
-                        pass
+                        if parsed_expires_at.tzinfo is None:
+                            parsed_expires_at = parsed_expires_at.replace(tzinfo=timezone.utc)
+                        # SQLite DateTime drops timezone information: store UTC.
+                        parsed_expires_at = parsed_expires_at.astimezone(timezone.utc)
+                    except (ValueError, AttributeError, TypeError):
+                        return False, {'error': 'Invalid poll expiration date'}
                 
                 # Create poll
                 poll = Poll(
@@ -264,24 +273,27 @@ class PollService:
                         except (ValueError, AttributeError):
                             expires_at = None
                     
-                    if expires_at and expires_at < datetime.now(timezone.utc):
+                    if expires_at and expires_at.tzinfo is None:
+                        expires_at = expires_at.replace(tzinfo=timezone.utc)
+                    if expires_at and expires_at <= datetime.now(timezone.utc):
                         return False, {'error': 'Poll has expired'}
                 
-                # Remove previous votes if not multiple choice
+                # Remember the selected vote before removing other choices so a
+                # repeated click toggles it off in single-choice polls as well.
+                existing_vote = session.query(PollVote).filter(
+                    PollVote.poll_id == poll_id,
+                    PollVote.user_id == user_id,
+                    PollVote.option == option
+                ).first()
+
                 if not poll.is_multiple_choice:
                     previous_votes = session.query(PollVote).filter(
                         PollVote.poll_id == poll_id,
                         PollVote.user_id == user_id
                     ).all()
                     for pv in previous_votes:
-                        session.delete(pv)
-                
-                # Check if already voted for this option
-                existing_vote = session.query(PollVote).filter(
-                    PollVote.poll_id == poll_id,
-                    PollVote.user_id == user_id,
-                    PollVote.option == option
-                ).first()
+                        if pv is not existing_vote:
+                            session.delete(pv)
                 
                 if existing_vote:
                     # Toggle off if already voted
@@ -321,7 +333,7 @@ class PollService:
                 return True, {
                     'poll_id': str(poll_id),
                     'votes': poll_data['votes'],
-                    'user_vote': option
+                    'user_vote': None if existing_vote else option
                 }
                 
         except Exception as e:
@@ -368,7 +380,7 @@ class PollService:
                     return False, {'error': 'Poll not found'}
                 
                 # Only creator can delete
-                if poll.created_by != user_id:
+                if str(poll.created_by) != str(user_id):
                     return False, {'error': 'Only the poll creator can delete it'}
                 
                 # Soft delete
@@ -393,6 +405,12 @@ class PollService:
                 session.commit()
                 
                 logger.info(f"Poll deleted: {poll_id}")
+
+                try:
+                    from app.trips.realtime.events import emit_to_group
+                    emit_to_group(group_id, 'poll:deleted', {'poll_id': str(poll_id), 'user_id': str(user_id)})
+                except Exception:
+                    logger.debug('Poll deletion broadcast unavailable', exc_info=True)
                 
                 return True, {'message': 'Poll deleted successfully'}
                 

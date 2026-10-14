@@ -18,6 +18,7 @@ Security:
 import logging
 from datetime import datetime, timezone
 
+from app.core.json_utils import json_safe
 from app.trips.realtime.socketio_ext import socketio
 from flask import request
 from flask_socketio import disconnect, emit, join_room, leave_room
@@ -326,10 +327,10 @@ def handle_presence_heartbeat(data):
 
 # ---- Helper used by services to broadcast to a group ----
 
-def emit_to_group(group_id: int, event: str, payload: dict):
+def emit_to_group(group_id: str, event: str, payload: dict):
     """Emit an event to every client in a group room (fire-and-forget)."""
     try:
-        socketio.emit(event, payload, room=_room_name(group_id))
+        socketio.emit(event, json_safe(payload), room=_room_name(group_id))
     except Exception as exc:
         logger.warning("Failed to emit %s to group %s: %s", event, group_id, exc)
 

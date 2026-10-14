@@ -134,7 +134,7 @@ def get_polls(group_id):
         raise
     except Exception as e:
         logger.error(f"Get polls error: {str(e)}\n{traceback.format_exc()}")
-        return success_response(data=[])
+        return error_response('Failed to get polls', 500)
 
 
 @polls_bp.route('/groups/<group_id>/polls/<poll_id>/vote', methods=['POST'])
@@ -187,7 +187,7 @@ def vote_poll(group_id, poll_id):
 @polls_bp.route('/groups/<group_id>/polls/<poll_id>', methods=['DELETE'])
 @limit_api(Config.RATE_LIMITS['delete'])
 @require_auth
-@require_group_role('admin')
+@require_group_role('member')
 def delete_poll(group_id, poll_id):
     """
     Delete a poll (creator only)

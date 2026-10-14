@@ -10,6 +10,7 @@
 | `group-invitation-delivery-navigation-fix` | Correct local Gmail setup, verify SMTP authentication, retry pending invitation email, and open the joined group after login/signup; [findings](reports/expense-invitation-delivery-navigation-fix.md) |
 | `email-verification-page-fix` | Add the missing public verification page with success, invalid/expired link, retry and explicit resend behavior; [findings](reports/email-verification-page-fix.md) |
 | `group-expense-permissions-audit` | Align owner/admin/member controls, expose settlement reversal and group management, fix one-cent and complete-ledger visibility, and hide revoked cached data; [findings](reports/group-expense-permissions-audit.md) |
+| `group-planner-features-fix` | Repair empty-catalog startup and Group Planner polls, live updates, complete lists, place payloads, calendar days, trip dates, checklist feedback and dashboard navigation; [complete report](reports/group-planner-feature-fixes-2026-10-14.md) |
 
 Each checkpoint has an explanatory commit message. API contracts are documented
 in [personal finance](personal-finance-api.md) and [group finance](group-finance-api.md).

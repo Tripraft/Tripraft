@@ -78,6 +78,49 @@ def test_incompatible_database_is_never_modified(tmp_path):
     assert database.read_bytes() == before
 
 
+@pytest.mark.parametrize('sqlite_header', [False, True])
+def test_initializes_existing_schema_less_catalog(tmp_path, sqlite_header):
+    database = tmp_path / 'catalog.db'
+    database.touch()
+    if sqlite_header:
+        with sqlite3.connect(database) as connection:
+            connection.execute('VACUUM')
+    assert initialize_database(database)
+    assert not any(validate_database(database, require_empty=True).values())
+    assert not initialize_database(database)
+
+
+def test_failed_schema_less_initialization_rolls_back(tmp_path):
+    database = tmp_path / 'catalog.db'
+    with sqlite3.connect(database) as connection:
+        connection.execute('VACUUM')
+    schema = tmp_path / 'broken.sql'
+    schema.write_text('CREATE TABLE example(id INTEGER);\nINVALID SQL;\n', encoding='utf-8')
+    with pytest.raises(sqlite3.Error):
+        initialize_database(database, schema)
+    with sqlite3.connect(database) as connection:
+        assert connection.execute('SELECT * FROM sqlite_master').fetchall() == []
+
+
+def test_schema_less_initialization_supports_multiple_statements_on_one_line(tmp_path):
+    database = tmp_path / 'catalog.db'
+    database.touch()
+    schema = tmp_path / 'schema.sql'
+    schema.write_text("CREATE TABLE a(id INTEGER); CREATE TABLE b(value TEXT DEFAULT ';');", encoding='utf-8')
+    assert initialize_database(database, schema)
+    assert validate_database(database, schema, require_empty=True) == {'a': 0, 'b': 0}
+
+
+def test_preserves_schema_less_database_with_application_metadata(tmp_path):
+    database = tmp_path / 'catalog.db'
+    with sqlite3.connect(database) as connection:
+        connection.execute('PRAGMA user_version = 7')
+    before = database.read_bytes()
+    with pytest.raises(ValueError, match='schema differs'):
+        initialize_database(database)
+    assert database.read_bytes() == before
+
+
 def test_invalid_schema_leaves_no_partial_database(tmp_path):
     schema = tmp_path / 'broken.sql'
     schema.write_text('CREATE TABLE countries(id INTEGER); INVALID SQL;', encoding='utf-8')

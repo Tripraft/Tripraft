@@ -3,7 +3,7 @@ import React, { useState, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGroupPlaces, gpKeys } from '../../../../hooks/useGroupPlannerQuery';
 import groupPlannerApi from '../../../../services/groupPlannerApi';
-import { toArray } from '../../utils/groupPlannerUtils';
+import { toArray, tripDayNumber } from '../../utils/groupPlannerUtils';
 import { formatDate, formatDateRange, formatCurrency } from '../../utils/formatters';
 import { Pencil, X, Calendar, Trash2 } from 'lucide-react';
 
@@ -26,7 +26,7 @@ export default function ItineraryTab({ groupId, group, showToast }) {
     return [...dates].sort();
   }, [itineraryPlaces]);
 
-  const dayNumbers = useMemo(() => uniqueDates.map((_, i) => i + 1), [uniqueDates]);
+  const dayNumbers = useMemo(() => uniqueDates.map(date => tripDayNumber(date, group?.start_date, uniqueDates)), [uniqueDates, group?.start_date]);
 
   const tripDuration = useMemo(() => {
     if (!group?.start_date || !group?.end_date) return null;
@@ -52,11 +52,7 @@ export default function ItineraryTab({ groupId, group, showToast }) {
   const budgetCurrency = group?.budget_currency || 'USD';
 
   function getDayNumber(dateStr) {
-    if (!dateStr) return 1;
-    const idx = uniqueDates.indexOf(dateStr);
-    if (idx >= 0) return idx + 1;
-    const sorted = [...uniqueDates, dateStr].sort();
-    return sorted.indexOf(dateStr) + 1;
+    return tripDayNumber(dateStr, group?.start_date, uniqueDates);
   }
 
 
@@ -86,7 +82,7 @@ export default function ItineraryTab({ groupId, group, showToast }) {
       return (a.suggested_time || a.visit_date || '').localeCompare(b.suggested_time || b.visit_date || '');
     });
     return items;
-  }, [itineraryPlaces, activeDay]);
+  }, [itineraryPlaces, activeDay, group?.start_date]);
 
   const handleEditPlace = async () => {
     if (!showEditModal) return;
@@ -155,7 +151,7 @@ export default function ItineraryTab({ groupId, group, showToast }) {
 
   const handleSaveDates = async () => {
     try {
-      await groupPlannerApi.updateGroup(groupId, { start_date: dateStartInput || null, end_date: dateEndInput || null });
+      await groupPlannerApi.updateGroup(groupId, { start_date: dateStartInput, end_date: dateEndInput });
       queryClient.invalidateQueries({ queryKey: gpKeys.group(groupId) });
       setEditingDates(false);
       showToast('Trip dates updated');

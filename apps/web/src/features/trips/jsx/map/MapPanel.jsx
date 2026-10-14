@@ -3,7 +3,7 @@ import { validCoordinates } from '../../../../utils/coordinates';
 import React, { useEffect, useRef } from 'react';
 import useLeaflet from '../../hooks/useMapRenderer';
 import { TILE_URL, DEFAULT_CENTER, DEFAULT_ZOOM, DAY_COLORS, MARKER_COLORS, MARKER_ICONS } from '../../constants/mapConfig';
-import { getMarkerCategory, sanitizePopup } from '../../utils/groupPlannerUtils';
+import { getMarkerCategory, sanitizePopup, tripDayNumber } from '../../utils/groupPlannerUtils';
 import { formatDate } from '../../utils/formatters';
 
 /**
@@ -38,11 +38,7 @@ export default function MapPanel({
   const unscheduledPlaces = places.filter((p) => !p.visit_date && !p.is_deleted);
 
   function getDayNumber(dateStr) {
-    if (!dateStr) return 1;
-    const idx = uniqueDates.indexOf(dateStr);
-    if (idx >= 0) return idx + 1;
-    const sorted = [...uniqueDates, dateStr].sort();
-    return sorted.indexOf(dateStr) + 1;
+    return tripDayNumber(dateStr, group?.start_date, uniqueDates);
   }
 
   // Initialize map

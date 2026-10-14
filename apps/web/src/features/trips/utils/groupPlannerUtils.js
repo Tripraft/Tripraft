@@ -35,6 +35,15 @@ export function getMarkerCategory(cat) {
   return 'PLACE';
 }
 
+export function tripDayNumber(dateStr, startDate, uniqueDates = []) {
+  if (!dateStr) return 1;
+  const date = Date.parse(dateStr + 'T00:00:00Z');
+  const start = Date.parse(startDate + 'T00:00:00Z');
+  const offset = (date - start) / 86400000;
+  if (Number.isInteger(offset) && offset >= 0) return offset + 1;
+  return [...new Set([...uniqueDates, dateStr])].sort().indexOf(dateStr) + 1;
+}
+
 export function sanitizePopup(text) {
   if (!text) return '';
   const div = document.createElement('div');

@@ -103,21 +103,18 @@ export function useToggleChecklistItem(groupId) {
       await queryClient.cancelQueries({ queryKey: gpKeys.checklist(groupId) });
       const previous = queryClient.getQueryData(gpKeys.checklist(groupId));
       queryClient.setQueryData(gpKeys.checklist(groupId), (old) => {
-        if (!old?.data?.checklist) return old;
+        const items = Array.isArray(old?.data) ? old.data : old?.data?.checklist;
+        if (!Array.isArray(items)) return old;
+        const updated = items.map(item => item.id === itemId ? {...item, completed: !item.completed} : item);
         return {
           ...old,
-          data: {
-            ...old.data,
-            checklist: old.data.checklist.map(item =>
-              item.id === itemId ? { ...item, completed: !item.completed } : item
-            ),
-          },
+          data: Array.isArray(old.data) ? updated : {...old.data, checklist: updated},
         };
       });
       return { previous };
     },
     onError: (_err, _itemId, context) => {
-      queryClient.setQueryData(gpKeys.checklist(groupId), context.previous);
+      if (context) queryClient.setQueryData(gpKeys.checklist(groupId), context.previous);
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: gpKeys.checklist(groupId) });

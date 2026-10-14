@@ -28,7 +28,7 @@ import { ArrowLeft } from 'lucide-react';
 import '../css/GroupPlannerPage.css';
 
 import { TABS } from '../constants/tabConfig';
-import { unwrap, toArray, toObject } from '../utils/groupPlannerUtils';
+import { unwrap, toArray, toObject, tripDayNumber } from '../utils/groupPlannerUtils';
 import { getInitials } from '../utils/formatters';
 
 import GroupSelector from './shared/GroupSelector';
@@ -128,7 +128,7 @@ export default function GroupPlannerManager() {
     itineraryPlaces.forEach((p) => { if (p.visit_date) dates.add(p.visit_date); });
     return [...dates].sort();
   }, [itineraryPlaces]);
-  const dayNumbers = useMemo(() => uniqueDates.map((_, i) => i + 1), [uniqueDates]);
+  const dayNumbers = useMemo(() => uniqueDates.map(date => tripDayNumber(date, group?.start_date, uniqueDates)), [uniqueDates, group?.start_date]);
 
   // -- Route sync --
   useEffect(() => {
@@ -173,6 +173,7 @@ export default function GroupPlannerManager() {
   }, [navigate]);
 
   const handleBackToDashboard = useCallback(() => {
+    localStorage.removeItem('gp_last_group');
     setSelectedGroupId(null);
     setActiveTab('itinerary');
     navigate('/group-planner');
@@ -299,7 +300,7 @@ export default function GroupPlannerManager() {
 
         {/* Body */}
         <div className="gp-workspace-body">
-          <section className="gp-left-pane">{renderTab()}</section>
+          <section key={selectedGroupId} className="gp-left-pane">{renderTab()}</section>
           <section className="gp-right-pane">
             <MapPanel
               group={group} places={places} filteredLibrary={destinationLibrary}

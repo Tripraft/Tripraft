@@ -12,6 +12,21 @@ import GlobalConfig from '../config/globalConfig';
 const BASE = GlobalConfig.ENDPOINTS.GROUP_PLANNER;
 
 class GroupPlannerApiService {
+  async getAllPages(endpoint) {
+    const first = await apiClient.get(`${endpoint}?page=1&per_page=100`);
+    const items = [...(first.data || [])];
+    let totalPages = first.meta?.pagination?.total_pages || 1;
+    for (let page = 2; page <= totalPages; page++) {
+      const next = await apiClient.get(`${endpoint}?page=${page}&per_page=100`);
+      items.push(...(next.data || []));
+      totalPages = next.meta?.pagination?.total_pages ?? totalPages;
+    }
+    return {
+      ...first, data: items,
+      meta: {...first.meta, pagination: {page: 1, per_page: items.length, total: items.length, total_pages: 1}},
+    };
+  }
+
   // No-ops kept for backward compatibility
   setAuthToken() {}
   setCurrentUser() {}
@@ -37,7 +52,7 @@ class GroupPlannerApiService {
   }
 
   async getUserGroups() {
-    return apiClient.get(`${BASE}/user/groups`);
+    return this.getAllPages(`${BASE}/user/groups`);
   }
 
   async updateGroup(groupId, updates) {
@@ -105,7 +120,7 @@ class GroupPlannerApiService {
   // =========================================================================
 
   async getGroupPlaces(groupId) {
-    return apiClient.get(`${BASE}/groups/${groupId}/places`);
+    return this.getAllPages(`${BASE}/groups/${groupId}/places`);
   }
 
   async addPlace(groupId, placeNameOrObject) {
@@ -123,16 +138,16 @@ class GroupPlannerApiService {
     }
 
     const placeData = isObject ? {
-      place_id: placeNameOrObject.id,
       name: placeNameOrObject.place_name || placeNameOrObject.name || placeNameOrObject.restaurant_name,
       latitude,
       longitude,
       address: placeNameOrObject.address || '',
       category: placeNameOrObject.category || 'attraction',
       description: placeNameOrObject.description || placeNameOrObject.ai_summary || '',
-      rating: placeNameOrObject.rating || placeNameOrObject.rating_tourist_priority,
-      photo_url: placeNameOrObject.photo_url || (placeNameOrObject.photos?.[0]),
-      website: placeNameOrObject.website || ''
+      rating: placeNameOrObject.rating ?? placeNameOrObject.rating_tourist_priority,
+      photo_url: placeNameOrObject.photo_url || (typeof placeNameOrObject.photos?.[0] === 'string'
+        ? placeNameOrObject.photos[0] : placeNameOrObject.photos?.[0]?.photo_url || placeNameOrObject.photos?.[0]?.url),
+      website: placeNameOrObject.website || placeNameOrObject.official_website || ''
     } : { name: placeNameOrObject };
 
     return apiClient.post(`${BASE}/groups/${groupId}/places`, placeData);
@@ -226,7 +241,7 @@ class GroupPlannerApiService {
   }
 
   async getGroupPolls(groupId) {
-    return apiClient.get(`${BASE}/groups/${groupId}/polls`);
+    return this.getAllPages(`${BASE}/groups/${groupId}/polls`);
   }
 
   async updateBudget(groupId, budget) {
@@ -242,7 +257,7 @@ class GroupPlannerApiService {
   // =========================================================================
 
   async getGroupChecklist(groupId) {
-    return apiClient.get(`${BASE}/groups/${groupId}/checklist?per_page=100`);
+    return this.getAllPages(`${BASE}/groups/${groupId}/checklist`);
   }
 
   // =========================================================================

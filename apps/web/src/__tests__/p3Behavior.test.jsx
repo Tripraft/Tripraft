@@ -90,3 +90,24 @@ it('re-centers an existing map when the destination changes to zero coordinates'
   rerender(<MapPanel {...mapProps} group={{ ...mapProps.group, destination_lat: 0, destination_lng: 0 }} />);
   expect(map.setView).toHaveBeenLastCalledWith([0, 0], expect.any(Number));
 });
+
+it('uses calendar day numbers for marker filtering when the itinerary has gaps', () => {
+  useLeaflet.mockReturnValue(true);
+  const map = {remove: jest.fn(), setView: jest.fn(), fitBounds: jest.fn()};
+  const layers = {clearLayers: jest.fn()};
+  const popup = jest.fn();
+  window.L = {
+    map: jest.fn(() => map), tileLayer: () => ({addTo: jest.fn()}),
+    layerGroup: () => ({addTo: () => layers}), divIcon: jest.fn(),
+    marker: jest.fn(() => ({addTo: () => ({bindPopup: popup})})),
+  };
+  render(<MapPanel {...mapProps} group={{...mapProps.group, start_date: '2026-10-20'}}
+    uniqueDates={['2026-10-20', '2026-10-23']} dayNumbers={[1, 4]} mapDay="4"
+    places={[
+      {id: 'first', name: 'Museum', visit_date: '2026-10-20', latitude: 1, longitude: 1},
+      {id: 'last', name: 'Park', visit_date: '2026-10-23', latitude: 2, longitude: 2},
+    ]} />);
+  expect(window.L.marker).toHaveBeenCalledTimes(1);
+  expect(window.L.marker).toHaveBeenCalledWith([2, 2], expect.any(Object));
+  expect(popup).toHaveBeenCalledWith(expect.stringContaining('Day 4'));
+});

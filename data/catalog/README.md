@@ -7,7 +7,7 @@ This is the authoritative schema for both native startup and Docker builds.
 It includes all 31 logical tables, indexes, five triggers, the search-demand view,
 and the FTS5 search index. No country seed files or sample records are imported.
 
-The existing local catalog contains imported travel records. Geography is updated
+A populated catalog can contain imported travel records. Geography is updated
 from the three supplied country, state, and city files in `sql_database/` using
 [`import_geography.py`](../../sql_database/import_geography.py). See the
 [import instructions and audit details](../../sql_database/README.md). Use
@@ -22,7 +22,10 @@ python services/api/init_travel_db.py --check --require-empty
 ```
 
 Native startup and Docker also initialize this database when missing. Repeating
-initialization validates and preserves an existing database, including its data;
+initialization also completes a valid, unmarked SQLite file with no schema objects
+(including a zero-byte placeholder). Schema creation holds a write lock and rolls
+back if any statement fails. Otherwise it validates and preserves an existing
+database, including its data;
 it never overwrites or silently migrates an incompatible database. The initializer
 checks the complete schema, SQLite integrity, and foreign key consistency.
 

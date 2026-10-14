@@ -14,6 +14,7 @@ import sqlAuthService from '../services/sqlAuthService';
 import GlobalConfig from '../config/globalConfig';
 import { chatKeys } from './useChatQuery';
 import { mergeMessage } from '../lib/chatCache';
+import { gpKeys } from './useGroupPlannerQuery';
 
 const TYPING_EXPIRE_MS = 3_000;
 const TYPING_THROTTLE_MS = 2_000;
@@ -79,6 +80,11 @@ export default function useChatSocket(groupId, userId) {
         setConnected(true);
         setConnectionError(null);
         queryClient.invalidateQueries({ queryKey: chatKeys.messages(groupId) });
+        // One joined socket serves both chat and the collaborative workspace.
+        // Reconnects must recover changes made while this client was offline.
+        for (const key of [gpKeys.group, gpKeys.places, gpKeys.polls, gpKeys.checklist, gpKeys.members, gpKeys.activities]) {
+          queryClient.invalidateQueries({ queryKey: key(groupId) });
+        }
         socket.emit('join_group', { group_id: groupId });
         // The server uses a TTL-based presence record. Refresh it while the
         // tab is active so an idle, connected member does not disappear.
@@ -152,6 +158,26 @@ export default function useChatSocket(groupId, userId) {
       socket.on('chat:read', (data) => {
         queryClient.invalidateQueries({ queryKey: chatKeys.unread(groupId) });
       });
+
+      const workspaceEvents = {
+        'place:added': [gpKeys.places],
+        'place:updated': [gpKeys.places],
+        'place:deleted': [gpKeys.places],
+        'place:voted': [gpKeys.places],
+        'poll:created': [gpKeys.polls],
+        'poll:voted': [gpKeys.polls],
+        'poll:deleted': [gpKeys.polls],
+        'checklist:toggled': [gpKeys.checklist],
+        'itinerary:updated': [gpKeys.group, gpKeys.places],
+        'member:joined': [gpKeys.members, gpKeys.group],
+      };
+      for (const [event, keys] of Object.entries(workspaceEvents)) {
+        socket.on(event, () => {
+          for (const key of [...keys, gpKeys.activities]) {
+            queryClient.invalidateQueries({ queryKey: key(groupId) });
+          }
+        });
+      }
     };
 
     connect().catch(error => { if (!cancelled) setConnectionError(error.message || 'Real-time connection unavailable'); });

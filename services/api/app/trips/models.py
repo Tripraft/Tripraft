@@ -297,7 +297,7 @@ class Poll(Base):
                 if option in vote_counts:
                     vote_counts[option] += 1
                     votes_detail[option].append(str(vote.user_id))
-                if vote.user_id not in voted_by:
+                if str(vote.user_id) not in voted_by:
                     voted_by.append(str(vote.user_id))
 
         return {

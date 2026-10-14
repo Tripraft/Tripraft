@@ -51,11 +51,51 @@ def validate_database(database, schema=SCHEMA, *, require_empty=False):
 
 
 def initialize_database(database, schema=SCHEMA):
-    """Publish a verified empty DB atomically; never overwrite or migrate an existing DB."""
+    """Initialize missing/schema-less DBs; preserve and validate established catalogs."""
     database, schema = Path(database), Path(schema)
     if database.exists():
+        with closing(sqlite3.connect(database.resolve().as_uri() + '?mode=ro', uri=True)) as existing:
+            has_objects = existing.execute('SELECT 1 FROM sqlite_master LIMIT 1').fetchone()
+            marked = any(existing.execute(f'PRAGMA {key}').fetchone()[0] != 0
+                         for key in ('user_version', 'application_id'))
+        if has_objects or marked:
+            validate_database(database, schema)
+            return False
+        # SQLite readers can leave a valid file without any schema. Treat that
+        # like a missing catalog, but hold a write lock while checking so another
+        # initializer cannot race us. Never apply fresh-schema SQL to legacy data.
+        with closing(sqlite3.connect(database.resolve().as_uri() + '?mode=rw', uri=True)) as connection:
+            connection.execute('PRAGMA foreign_keys = ON')
+            connection.execute('BEGIN IMMEDIATE')
+            try:
+                empty = not connection.execute('SELECT 1 FROM sqlite_master LIMIT 1').fetchone()
+                unmarked = all(connection.execute(f'PRAGMA {key}').fetchone()[0] == 0
+                               for key in ('user_version', 'application_id'))
+                if empty and unmarked:
+                    if connection.execute('PRAGMA integrity_check').fetchall() != [('ok',)]:
+                        raise ValueError(f'Database integrity check failed: {database}')
+                    # executescript commits pending transactions; execute complete
+                    # statements individually to keep schema creation atomic.
+                    statement = ''
+                    for character in schema.read_text(encoding='utf-8-sig'):
+                        statement += character
+                        if character == ';' and sqlite3.complete_statement(statement):
+                            connection.execute(statement)
+                            statement = ''
+                    if statement.strip():
+                        connection.execute(statement)
+                    with closing(sqlite3.connect(':memory:')) as expected:
+                        expected.executescript(schema.read_text(encoding='utf-8-sig'))
+                        if schema_objects(connection) != schema_objects(expected):
+                            raise ValueError(f'Database schema differs from {schema}: {database}')
+                    connection.commit()
+                else:
+                    connection.rollback()
+            except BaseException:
+                connection.rollback()
+                raise
         validate_database(database, schema)
-        return False
+        return empty and unmarked
     database.parent.mkdir(parents=True, exist_ok=True)
     descriptor, temporary_name = tempfile.mkstemp(prefix='.catalog-', suffix='.db', dir=database.parent)
     os.close(descriptor)
