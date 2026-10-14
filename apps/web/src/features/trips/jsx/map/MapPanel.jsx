@@ -1,8 +1,16 @@
 // Purpose: Renders the Map Panel interface within apps\web\src\features\trips\jsx\map.
 import { validCoordinates } from '../../../../utils/coordinates';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Moon, Sun } from 'lucide-react';
 import useLeaflet from '../../hooks/useMapRenderer';
-import { TILE_URL, DEFAULT_CENTER, DEFAULT_ZOOM, DAY_COLORS, MARKER_COLORS, MARKER_ICONS } from '../../constants/mapConfig';
+import {
+  TILE_URL,
+  DEFAULT_CENTER,
+  DEFAULT_ZOOM,
+  DAY_COLORS,
+  MARKER_COLORS,
+  MARKER_ICONS,
+} from '../../constants/mapConfig';
 import { getMarkerCategory, sanitizePopup, tripDayNumber } from '../../utils/groupPlannerUtils';
 import { formatDate } from '../../utils/formatters';
 
@@ -33,6 +41,7 @@ export default function MapPanel({
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersLayerRef = useRef(null);
+  const [nightMap, setNightMap] = useState(false);
 
   const itineraryPlaces = places.filter((p) => p.visit_date && !p.is_deleted);
   const unscheduledPlaces = places.filter((p) => !p.visit_date && !p.is_deleted);
@@ -61,10 +70,12 @@ export default function MapPanel({
     const map = L.map(mapRef.current, {
       center,
       zoom: DEFAULT_ZOOM,
-      zoomControl: false,
-      attributionControl: false,
+      zoomControl: true,
+      attributionControl: true,
     });
-    L.tileLayer(TILE_URL).addTo(map);
+    L.tileLayer(nightMap ? TILE_URL.replace('light_all', 'dark_all') : TILE_URL, {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+    }).addTo(map);
     const markersLayer = L.layerGroup().addTo(map);
 
     mapInstanceRef.current = map;
@@ -77,7 +88,7 @@ export default function MapPanel({
         markersLayerRef.current = null;
       }
     };
-  }, [leafletReady, group?.id]);
+  }, [leafletReady, group?.id, nightMap]);
 
   // Re-center on destination change
   useEffect(() => {
@@ -103,7 +114,12 @@ export default function MapPanel({
 
         const icon = L.divIcon({
           className: 'custom-marker',
-          html: '<div class="marker-pin-wrapper" style="background: ' + color + ';">' + iconHtml + '</div>',
+          html:
+            '<div class="marker-pin-wrapper" style="background: ' +
+            color +
+            ';">' +
+            iconHtml +
+            '</div>',
           iconSize: [40, 40],
           iconAnchor: [20, 20],
         });
@@ -113,8 +129,12 @@ export default function MapPanel({
         L.marker([lat, lng], { icon })
           .addTo(markersLayerRef.current)
           .bindPopup(
-            '<div style="padding:4px;font-weight:600;">' + sanitizePopup(item.name) + '</div>' +
-            '<div style="font-size:11px;color:#71717a;">' + sanitizePopup(item.address) + '</div>'
+            '<div style="padding:4px;font-weight:600;">' +
+              sanitizePopup(item.name) +
+              '</div>' +
+              '<div style="font-size:11px;color:#71717a;">' +
+              sanitizePopup(item.address) +
+              '</div>',
           );
         bounds.push([lat, lng]);
       });
@@ -128,7 +148,9 @@ export default function MapPanel({
     // Itinerary / other tabs
     let scheduledItems = itineraryPlaces.filter((p) => validCoordinates(p.latitude, p.longitude));
     if (mapDay !== 'all') {
-      scheduledItems = scheduledItems.filter((p) => getDayNumber(p.visit_date) === parseInt(mapDay));
+      scheduledItems = scheduledItems.filter(
+        (p) => getDayNumber(p.visit_date) === parseInt(mapDay),
+      );
     }
 
     const byDay = {};
@@ -141,7 +163,14 @@ export default function MapPanel({
 
       const icon = L.divIcon({
         className: 'custom-marker',
-        html: '<div class="marker-pin-wrapper" style="background: ' + color + ';">' + iconHtml + '<div class="marker-day-badge">D' + day + '</div></div>',
+        html:
+          '<div class="marker-pin-wrapper" style="background: ' +
+          color +
+          ';">' +
+          iconHtml +
+          '<div class="marker-day-badge">D' +
+          day +
+          '</div></div>',
         iconSize: [40, 40],
         iconAnchor: [20, 20],
       });
@@ -149,17 +178,22 @@ export default function MapPanel({
       const lat = parseFloat(p.latitude);
       const lng = parseFloat(p.longitude);
 
-      let popupHtml = '<div style="padding:4px;"><div style="font-weight:600;margin-bottom:4px;">' + sanitizePopup(p.name) + '</div>';
+      let popupHtml =
+        '<div style="padding:4px;"><div style="font-weight:600;margin-bottom:4px;">' +
+        sanitizePopup(p.name) +
+        '</div>';
       popupHtml += '<div style="font-size:11px;color:#52525b;">Day ' + day;
       if (p.visit_date) popupHtml += ' &middot; ' + sanitizePopup(formatDate(p.visit_date));
       if (p.suggested_time) popupHtml += ' &middot; ' + sanitizePopup(p.suggested_time.slice(0, 5));
       popupHtml += '</div>';
-      if (p.remarks) popupHtml += '<div style="font-size:11px;color:#71717a;margin-top:4px;font-style:italic;">' + sanitizePopup(p.remarks) + '</div>';
+      if (p.remarks)
+        popupHtml +=
+          '<div style="font-size:11px;color:#71717a;margin-top:4px;font-style:italic;">' +
+          sanitizePopup(p.remarks) +
+          '</div>';
       popupHtml += '</div>';
 
-      L.marker([lat, lng], { icon })
-        .addTo(markersLayerRef.current)
-        .bindPopup(popupHtml);
+      L.marker([lat, lng], { icon }).addTo(markersLayerRef.current).bindPopup(popupHtml);
       bounds.push([lat, lng]);
 
       if (!byDay[day]) byDay[day] = [];
@@ -168,30 +202,38 @@ export default function MapPanel({
 
     // Always show unassigned places with icon-only markers (no day badge)
     unscheduledPlaces.forEach((p) => {
-        if (!validCoordinates(p.latitude, p.longitude)) return;
-        const cat = getMarkerCategory(p.category);
-        const iconHtml = MARKER_ICONS[cat] || MARKER_ICONS.PLACE;
+      if (!validCoordinates(p.latitude, p.longitude)) return;
+      const cat = getMarkerCategory(p.category);
+      const iconHtml = MARKER_ICONS[cat] || MARKER_ICONS.PLACE;
 
-        const icon = L.divIcon({
-          className: 'custom-marker',
-          html: '<div class="marker-pin-wrapper" style="background: #a1a1aa; opacity: 0.75;">' + iconHtml + '</div>',
-          iconSize: [34, 34],
-          iconAnchor: [17, 17],
-        });
-
-        const lat = parseFloat(p.latitude);
-        const lng = parseFloat(p.longitude);
-
-        let popupHtml = '<div style="padding:4px;"><div style="font-weight:600;margin-bottom:2px;">' + sanitizePopup(p.name) + '</div>';
-        popupHtml += '<div style="font-size:11px;color:#a1a1aa;">Unassigned</div>';
-        if (p.remarks) popupHtml += '<div style="font-size:11px;color:#71717a;margin-top:4px;font-style:italic;">' + sanitizePopup(p.remarks) + '</div>';
-        popupHtml += '</div>';
-
-        L.marker([lat, lng], { icon })
-          .addTo(markersLayerRef.current)
-          .bindPopup(popupHtml);
-        bounds.push([lat, lng]);
+      const icon = L.divIcon({
+        className: 'custom-marker',
+        html:
+          '<div class="marker-pin-wrapper" style="background: #a1a1aa; opacity: 0.75;">' +
+          iconHtml +
+          '</div>',
+        iconSize: [34, 34],
+        iconAnchor: [17, 17],
       });
+
+      const lat = parseFloat(p.latitude);
+      const lng = parseFloat(p.longitude);
+
+      let popupHtml =
+        '<div style="padding:4px;"><div style="font-weight:600;margin-bottom:2px;">' +
+        sanitizePopup(p.name) +
+        '</div>';
+      popupHtml += '<div style="font-size:11px;color:#a1a1aa;">Unassigned</div>';
+      if (p.remarks)
+        popupHtml +=
+          '<div style="font-size:11px;color:#71717a;margin-top:4px;font-style:italic;">' +
+          sanitizePopup(p.remarks) +
+          '</div>';
+      popupHtml += '</div>';
+
+      L.marker([lat, lng], { icon }).addTo(markersLayerRef.current).bindPopup(popupHtml);
+      bounds.push([lat, lng]);
+    });
 
     Object.keys(byDay).forEach((day) => {
       const stops = byDay[day].sort((a, b) => a.time.localeCompare(b.time));
@@ -209,21 +251,34 @@ export default function MapPanel({
     if (bounds.length > 0) {
       mapInstanceRef.current.fitBounds(bounds, { padding: [80, 80], maxZoom: 15 });
     }
-  }, [itineraryPlaces, unscheduledPlaces, mapDay, group, activeTab, filteredLibrary]);
+  }, [itineraryPlaces, unscheduledPlaces, mapDay, group, activeTab, filteredLibrary, nightMap]);
 
   return (
-    <div className="gp-map-container">
+    <div className={'gp-map-container' + (nightMap ? ' gp-map-night' : '')}>
+      <button
+        className="gp-map-theme gp-icon-button"
+        aria-label={nightMap ? 'Switch to day map' : 'Switch to night map'}
+        aria-pressed={nightMap}
+        onClick={() => setNightMap((value) => !value)}
+      >
+        {nightMap ? <Sun size={16} /> : <Moon size={16} />}
+        {nightMap ? 'Day Map' : 'Night Radar'}
+      </button>
       <div className="gp-map-day-selector">
         <button
           className={'gp-map-day-btn' + (mapDay === 'all' ? ' active' : '')}
           onClick={() => onMapDayChange('all')}
-        >All</button>
+        >
+          All
+        </button>
         {dayNumbers.map((d) => (
           <button
             key={d}
             className={'gp-map-day-btn' + (mapDay === String(d) ? ' active' : '')}
             onClick={() => onMapDayChange(String(d))}
-          >Day {d}</button>
+          >
+            Day {d}
+          </button>
         ))}
       </div>
       <div ref={mapRef} className="gp-leaflet-map" />

@@ -48,7 +48,13 @@ function renderScoutMessage(content) {
       {parts.map((part, i) => {
         if (part.type === 'link') {
           return (
-            <a key={i} href={part.url} target="_blank" rel="noopener noreferrer" className="gp-chat-link">
+            <a
+              key={i}
+              href={part.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="gp-chat-link"
+            >
               {part.title}
             </a>
           );
@@ -71,7 +77,7 @@ function renderScoutMessage(content) {
  *
  * Props: groupId, destination, showToast
  */
-export default function ChatPanel({ groupId, destination, showToast }) {
+export default function ChatPanel({ groupId, destination, showToast, isOpen = true }) {
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
   const { data: pollsRaw } = useGroupPolls(groupId);
@@ -85,10 +91,20 @@ export default function ChatPanel({ groupId, destination, showToast }) {
   const uidStr = userId ? String(userId) : null;
 
   // --- Real-time messaging ---
-  const { data: messagesData, isLoading: messagesLoading, error: messagesError, fetchNextPage, hasNextPage, isFetchingNextPage } = useMessages(groupId);
+  const {
+    data: messagesData,
+    isLoading: messagesLoading,
+    error: messagesError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useMessages(groupId);
   const sendMutation = useSendMessage(groupId);
   const deleteMutation = useDeleteMessage(groupId);
-  const { connected, connectionError, typingUsers, emitTyping, emitRead } = useChatSocket(groupId, uidStr);
+  const { connected, connectionError, typingUsers, emitTyping, emitRead } = useChatSocket(
+    groupId,
+    uidStr,
+  );
 
   // Flatten pages into a single messages array (newest first from API)
   const messages = useMemo(() => {
@@ -103,6 +119,7 @@ export default function ChatPanel({ groupId, destination, showToast }) {
 
   // --- Chat input state (local) ---
   const [chatMessage, setChatMessage] = useState('');
+  const [commsMode, setCommsMode] = useState('chat');
   const [mentionPopup, setMentionPopup] = useState({ open: false, filter: '', startIndex: -1 });
   const chatFeedRef = useRef(null);
   const chatInputRef = useRef(null);
@@ -129,7 +146,7 @@ export default function ChatPanel({ groupId, destination, showToast }) {
   // useLayoutEffect runs synchronously before paint, preventing visible flicker.
   useLayoutEffect(() => {
     const el = chatFeedRef.current;
-    if (!el || !msgFingerprint) return;
+    if (!el || !msgFingerprint || !isOpen) return;
 
     // First load: always scroll to bottom to show the latest messages.
     if (!hasScrolledInitialRef.current) {
@@ -151,7 +168,7 @@ export default function ChatPanel({ groupId, destination, showToast }) {
         lastScrollBottomRef.current = Date.now();
       }
     }
-  }, [msgFingerprint]);
+  }, [msgFingerprint, isOpen]);
 
   // Auto-refetch polls/places/checklists when crew modifies them (newest message is at index 0)
   const lastCrewRefetchIdRef = useRef(null);
@@ -193,6 +210,7 @@ export default function ChatPanel({ groupId, destination, showToast }) {
     setGlowMsgIds(new Set());
     setUnreadScoutCount(0);
     setChatMessage('');
+    setCommsMode('chat');
     setMentionPopup({ open: false, filter: '', startIndex: -1 });
     setShowPollForm(false);
     setPollQuestion('');
@@ -237,32 +255,38 @@ export default function ChatPanel({ groupId, destination, showToast }) {
   }, [messages]);
 
   // --- Mention logic ---
-  const handleChatInputChange = useCallback((e) => {
-    const val = e.target.value;
-    setChatMessage(val);
-    emitTyping();
-    const cursorPos = e.target.selectionStart;
-    const textBefore = val.slice(0, cursorPos);
-    const lastAt = textBefore.lastIndexOf('@');
-    if (lastAt !== -1 && (lastAt === 0 || textBefore[lastAt - 1] === ' ')) {
-      const frag = textBefore.slice(lastAt + 1);
-      if (!frag.includes(' ')) {
-        setMentionPopup({ open: true, filter: frag, startIndex: lastAt });
-        return;
+  const handleChatInputChange = useCallback(
+    (e) => {
+      const val = e.target.value;
+      setChatMessage(val);
+      emitTyping();
+      const cursorPos = e.target.selectionStart;
+      const textBefore = val.slice(0, cursorPos);
+      const lastAt = textBefore.lastIndexOf('@');
+      if (lastAt !== -1 && (lastAt === 0 || textBefore[lastAt - 1] === ' ')) {
+        const frag = textBefore.slice(lastAt + 1);
+        if (!frag.includes(' ')) {
+          setMentionPopup({ open: true, filter: frag, startIndex: lastAt });
+          return;
+        }
       }
-    }
-    setMentionPopup({ open: false, filter: '', startIndex: -1 });
-  }, [emitTyping]);
+      setMentionPopup({ open: false, filter: '', startIndex: -1 });
+    },
+    [emitTyping],
+  );
 
-  const handleSelectMention = useCallback((member) => {
-    const rawName = member.display_name || member.name || member.email;
-    const name = rawName.startsWith('@') ? rawName.slice(1) : rawName;
-    const before = chatMessage.slice(0, mentionPopup.startIndex);
-    const after = chatMessage.slice(mentionPopup.startIndex + 1 + mentionPopup.filter.length);
-    setChatMessage(before + '@' + name + ' ' + after);
-    setMentionPopup({ open: false, filter: '', startIndex: -1 });
-    chatInputRef.current?.focus();
-  }, [chatMessage, mentionPopup]);
+  const handleSelectMention = useCallback(
+    (member) => {
+      const rawName = member.display_name || member.name || member.email;
+      const name = rawName.startsWith('@') ? rawName.slice(1) : rawName;
+      const before = chatMessage.slice(0, mentionPopup.startIndex);
+      const after = chatMessage.slice(mentionPopup.startIndex + 1 + mentionPopup.filter.length);
+      setChatMessage(before + '@' + name + ' ' + after);
+      setMentionPopup({ open: false, filter: '', startIndex: -1 });
+      chatInputRef.current?.focus();
+    },
+    [chatMessage, mentionPopup],
+  );
 
   const dismissMention = useCallback(() => {
     setMentionPopup({ open: false, filter: '', startIndex: -1 });
@@ -273,29 +297,58 @@ export default function ChatPanel({ groupId, destination, showToast }) {
     const text = chatMessage.trim();
     if (!text) return;
     lastScrollBottomRef.current = Date.now();
-    sendMutation.mutate({ content: text, type: 'text' }, { onError: error => { showToast?.(error.message || 'Message could not be sent', 'error'); } });
+    sendMutation.mutate(
+      { content: text, type: 'text' },
+      {
+        onError: (error) => {
+          showToast?.(error.message || 'Message could not be sent', 'error');
+        },
+      },
+    );
     setChatMessage('');
     setMentionPopup({ open: false, filter: '', startIndex: -1 });
   }, [chatMessage, sendMutation, showToast]);
 
   // --- Crew answer / confirm handlers ---
-  const handleCrewAnswer = useCallback((text) => {
-    lastScrollBottomRef.current = Date.now();
-    sendMutation.mutate({ content: text, type: 'text' }, { onError: error => { showToast?.(error.message || 'Message could not be sent', 'error'); } });
-  }, [sendMutation, showToast]);
+  const handleCrewAnswer = useCallback(
+    (text) => {
+      lastScrollBottomRef.current = Date.now();
+      sendMutation.mutate(
+        { content: text, type: 'text' },
+        {
+          onError: (error) => {
+            showToast?.(error.message || 'Message could not be sent', 'error');
+          },
+        },
+      );
+    },
+    [sendMutation, showToast],
+  );
 
-  const handleCrewConfirm = useCallback(async (groupId, action, pendingKey) => {
-    const response = await groupPlannerApi.confirmCrewAction(groupId, { action, pending_key: pendingKey });
-    const result = response?.data ?? response;
-    if (action === 'confirm' && result?.entity_type === 'expense' && result.expense_group_id) {
-      await Promise.all([
-        gpKeys.expenses(groupId), queryKeys.expenses(result.expense_group_id),
-        queryKeys.group(result.expense_group_id), queryKeys.groups,
-        queryKeys.megaBootstrap(result.expense_group_id), queryKeys.megaBootstrap(),
-        queryKeys.recentHistory(result.expense_group_id), queryKeys.expenseEditHistory(result.entity_id),
-      ].map(queryKey => queryClient.invalidateQueries({ queryKey })));
-    }
-  }, [queryClient]);
+  const handleCrewConfirm = useCallback(
+    async (groupId, action, pendingKey) => {
+      const response = await groupPlannerApi.confirmCrewAction(groupId, {
+        action,
+        pending_key: pendingKey,
+      });
+      const result = response?.data ?? response;
+      if (action === 'confirm' && result?.entity_type === 'expense' && result.expense_group_id) {
+        await Promise.all(
+          [
+            gpKeys.expenses(groupId),
+            queryKeys.expenses(result.expense_group_id),
+            queryKeys.group(result.expense_group_id),
+            queryKeys.groups,
+            queryKeys.megaBootstrap(result.expense_group_id),
+            queryKeys.megaBootstrap(),
+            queryKeys.recentHistory(result.expense_group_id),
+            queryKeys.expenseEditHistory(result.entity_id),
+          ].map((queryKey) => queryClient.invalidateQueries({ queryKey })),
+        );
+      }
+    },
+    [queryClient],
+  );
 
   // --- Infinite scroll: load older messages on scroll to top ---
   // Also clears the unread Scout badge when user scrolls back to the bottom.
@@ -350,7 +403,11 @@ export default function ChatPanel({ groupId, destination, showToast }) {
       return;
     }
     try {
-      await groupPlannerApi.createPoll(groupId, { name: question, options: opts, is_multiple_choice: pollMultiChoice });
+      await groupPlannerApi.createPoll(groupId, {
+        name: question,
+        options: opts,
+        is_multiple_choice: pollMultiChoice,
+      });
       queryClient.invalidateQueries({ queryKey: gpKeys.polls(groupId) });
       queryClient.invalidateQueries({ queryKey: gpKeys.activities(groupId) });
       setShowPollForm(false);
@@ -366,201 +423,303 @@ export default function ChatPanel({ groupId, destination, showToast }) {
   return (
     <div className="gp-chat-container">
       <div className="gp-chat-header">
-        <span className="gp-chat-header-label">Dialogue Feed</span>
+        <div className="gp-comms-tabs" aria-label="Conversation view">
+          <button
+            className={commsMode === 'chat' ? 'active' : ''}
+            aria-pressed={commsMode === 'chat'}
+            onClick={() => setCommsMode('chat')}
+          >
+            Chat
+          </button>
+          <button
+            className={commsMode === 'polls' ? 'active' : ''}
+            aria-pressed={commsMode === 'polls'}
+            onClick={() => setCommsMode('polls')}
+          >
+            Polls <span>{polls.length}</span>
+          </button>
+        </div>
         {unreadScoutCount > 0 && (
-          <span className="gp-chat-unread-badge" onClick={() => {
-            chatFeedRef.current?.scrollTo({ top: chatFeedRef.current.scrollHeight, behavior: 'smooth' });
-            setUnreadScoutCount(0);
-          }}>
+          <span
+            className="gp-chat-unread-badge"
+            onClick={() => {
+              chatFeedRef.current?.scrollTo({
+                top: chatFeedRef.current.scrollHeight,
+                behavior: 'smooth',
+              });
+              setUnreadScoutCount(0);
+            }}
+          >
             {unreadScoutCount} new
           </span>
         )}
-        <div className="gp-engines-active" role="status">{connected ? 'Live' : connectionError ? 'Live updates unavailable' : 'Connecting...'}</div>
+        <div className="gp-engines-active" role="status">
+          {connected ? 'Live' : connectionError ? 'Live updates unavailable' : 'Connecting...'}
+        </div>
       </div>
 
       <div className="gp-chat-feed" ref={chatFeedRef} onScroll={handleFeedScroll}>
         {isFetchingNextPage && (
-          <div className="gp-chat-loading-older"><Loader2 size={14} className="gp-spin" /> Loading older messages...</div>
+          <div className="gp-chat-loading-older">
+            <Loader2 size={14} className="gp-spin" /> Loading older messages...
+          </div>
         )}
 
         {messagesLoading && <div role="status">Loading messages...</div>}
         {messagesError && <div role="alert">{messagesError.message}</div>}
-        {!messagesLoading && !messagesError && messages.length === 0 && polls.length === 0 && (
+        {commsMode === 'chat' && !messagesLoading && !messagesError && messages.length === 0 && (
           <div className="gp-empty-agenda">Start a conversation with your group.</div>
         )}
 
-        <PollFeed polls={polls} members={members} uidStr={uidStr} handleVotePoll={handleVotePoll} handleDeletePoll={handleDeletePoll} expandedVoters={expandedVoters} setExpandedVoters={setExpandedVoters} />
-
-        {/* Scout floating pill — appears when new Scout reply is off-screen (user scrolled up) */}
-        {unreadScoutCount > 0 && (
-          <button
-            className="gp-scout-reply-pill"
-            onClick={() => {
-              chatFeedRef.current?.scrollTo({ top: chatFeedRef.current.scrollHeight, behavior: 'smooth' });
-              setUnreadScoutCount(0);
-            }}
-          >
-            ↓ Scout replied
-          </button>
-        )}
-
-        {/* Chat Messages (reversed: API returns newest-first, display oldest at top) */}
-        {[...messages].reverse().map((msg) => {
-          if (msg.is_deleted) return null;
-          const isMine = String(msg.sender_id) === uidStr;
-          const isAi = msg.sender_type === 'ai' || msg.sender_type === 'system';
-          const isNewGlow = isAi && glowMsgIds.has(msg.id);
-          const agentName = msg.metadata_json?.agent;
-          const glowClass = isNewGlow ? (agentName === 'crew' ? ' gp-chat-crew-new' : ' gp-chat-scout-new') : '';
-
-          // Consent prompt renders as standalone card, not inside a chat bubble
-          if (msg.metadata_json?.needs_consent) {
-            return (
-              <div key={msg.id} className="gp-chat-message gp-chat-ai">
-                <ScoutConsentCard
-                  groupId={groupId}
-                  originalQuery={msg.metadata_json?.original_query}
-                  onRetry={(query) => sendMutation.mutate({ content: query, type: 'text' })}
-                  onDismiss={() => {}}
-                />
-              </div>
-            );
-          }
-
-          // --- Crew card types (private cards filtered by target_user_id) ---
-          if (msg.type === 'crew_question') {
-            if (msg.metadata_json?.target_user_id && String(msg.metadata_json.target_user_id) !== String(userId)) return null;
-            return (
-              <div key={msg.id} className={'gp-chat-message gp-chat-ai' + glowClass}>
-                <CrewQuestionCard
-                  question={msg.metadata_json?.question || msg.content}
-                  options={msg.metadata_json?.options || []}
-                  allFields={msg.metadata_json?.all_fields}
-                  onAnswer={handleCrewAnswer}
-                  createdAt={msg.created_at}
-                />
-              </div>
-            );
-          }
-
-          if (msg.type === 'crew_confirm') {
-            if (msg.metadata_json?.target_user_id && String(msg.metadata_json.target_user_id) !== String(userId)) return null;
-            const pendingKey = msg.metadata_json?.pending_key;
-            return (
-              <div key={msg.id} className={'gp-chat-message gp-chat-ai' + glowClass}>
-                <CrewConfirmCard
-                  entityName={msg.metadata_json?.entity_name || ''}
-                  entityType={msg.metadata_json?.entity_type || 'item'}
-                  onConfirm={() => handleCrewConfirm(groupId, 'confirm', pendingKey)}
-                  onCancel={() => handleCrewConfirm(groupId, 'cancel', pendingKey)}
-                  createdAt={msg.created_at}
-                />
-              </div>
-            );
-          }
-
-          if (msg.type === 'crew_place') {
-            return (
-              <div key={msg.id} className={'gp-chat-message gp-chat-ai' + glowClass}>
-                <CrewPlaceCard
-                  placeName={msg.metadata_json?.place_name || msg.content}
-                  address={msg.metadata_json?.address}
-                  source={msg.metadata_json?.source || 'library'}
-                  addedBy={msg.metadata_json?.added_by}
-                  createdAt={msg.created_at}
-                />
-              </div>
-            );
-          }
-
-          if (msg.type === 'crew_poll_created') {
-            const pollMeta = msg.metadata_json?.poll || {};
-            const pollName = pollMeta.name || msg.metadata_json?.question || msg.content;
-            const pollOpts = pollMeta.options || [];
-            const pollId = pollMeta.id || msg.metadata_json?.poll_id;
-            return (
-              <div key={msg.id} className={'gp-chat-message gp-chat-ai' + glowClass}>
-                <div className="gp-crew-poll-created-card">
-                  <div className="gp-crew-card-label">Crew</div>
-                  <div className="gp-poll-card-v2">
-                    <div className="gp-poll-card-v2-top">
-                      <span className="gp-poll-card-v2-question">{pollName}</span>
-                      <div className="gp-poll-card-v2-meta">
-                        <span className="gp-poll-card-v2-votes">0 votes</span>
-                      </div>
-                    </div>
-                    <div className="gp-poll-card-v2-options">
-                      {pollOpts.map((opt, oi) => (
-                        <div key={oi} className="gp-poll-opt-v2" onClick={() => pollId && handleVotePoll(pollId, oi)}>
-                          <div className="gp-poll-opt-v2-bar" style={{ width: '0%' }} />
-                          <div className="gp-poll-opt-v2-content">
-                            <span className="gp-poll-opt-v2-text">{opt}</span>
-                            <span className="gp-poll-opt-v2-pct"></span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="gp-poll-card-v2-footer">
-                      <span className="gp-poll-card-v2-time">{formatRelativeTime(msg.created_at)}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          }
-
-          if (msg.type === 'crew_error') {
-            if (msg.metadata_json?.target_user_id && String(msg.metadata_json.target_user_id) !== String(userId)) return null;
-          }
-
-          return (
-            <div
-              key={msg.id}
-              className={'gp-chat-message' + (isMine ? ' gp-chat-mine' : isAi ? ' gp-chat-ai' : '') + glowClass}
-              onMouseEnter={isNewGlow ? () => { emitRead(msg.id); } : undefined}
-            >
-              <div className="gp-chat-bubble">
-                {!isMine && msg.sender_name && (
-                  <span className="gp-chat-sender-name">{msg.sender_name}</span>
-                )}
-                {isAi && <span className="gp-chat-bot-label">{agentName === 'scout' ? 'Scout' : agentName === 'crew' ? 'Crew' : (msg.sender_name || 'AI')}</span>}
-                {isAi ? renderScoutMessage(msg.content) : (
-                  <p className="gp-chat-text">
-                    {String(msg.content ?? '').startsWith('__crew_fields__:') ? 'Filled the form for @crew' : (msg.content ?? '')}
-                  </p>
-                )}
-                <span className="gp-chat-time">{formatRelativeTime(msg.created_at)}</span>
-                {isMine && !msg._optimistic && (
-                  <button className="gp-chat-delete-btn" onClick={() => deleteMutation.mutate(msg.id)} title="Delete message">
-                    <Trash2 size={10} />
-                  </button>
-                )}
-                {msg._optimistic && <span className="gp-chat-sending">Sending...</span>}
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Typing indicator */}
-        {typingUsers.length > 0 && (
+        {commsMode === 'polls' && (
           <>
-            {typingUsers.some((u) => u.is_ai) && (
-              <div className="gp-chat-message gp-chat-ai">
-                <div className="gp-chat-bubble gp-scout-thinking">
-                  <span className="gp-chat-bot-label">Scout</span>
-                  <div className="gp-scout-thinking-dots">
-                    <span></span><span></span><span></span>
-                  </div>
-                </div>
-              </div>
+            <button className="gp-open-workspace" onClick={() => setShowPollForm(true)}>
+              Create a Poll
+            </button>
+            {polls.length === 0 && (
+              <div className="gp-empty-agenda">No polls yet. Put your next decision to a vote.</div>
             )}
-            {typingUsers.some((u) => !u.is_ai) && (
-              <div className="gp-chat-typing">
-                {typingUsers.filter((u) => !u.is_ai).map((u) => u.email).join(', ')} typing...
-              </div>
-            )}
+            <PollFeed
+              polls={polls}
+              members={members}
+              uidStr={uidStr}
+              handleVotePoll={handleVotePoll}
+              handleDeletePoll={handleDeletePoll}
+              expandedVoters={expandedVoters}
+              setExpandedVoters={setExpandedVoters}
+            />
           </>
         )}
+
+        <div hidden={commsMode !== 'chat'}>
+          {/* Scout floating pill — appears when new Scout reply is off-screen (user scrolled up) */}
+          {unreadScoutCount > 0 && (
+            <button
+              className="gp-scout-reply-pill"
+              onClick={() => {
+                chatFeedRef.current?.scrollTo({
+                  top: chatFeedRef.current.scrollHeight,
+                  behavior: 'smooth',
+                });
+                setUnreadScoutCount(0);
+              }}
+            >
+              ↓ Scout replied
+            </button>
+          )}
+
+          {/* Chat Messages (reversed: API returns newest-first, display oldest at top) */}
+          {[...messages].reverse().map((msg) => {
+            if (msg.is_deleted) return null;
+            const isMine = String(msg.sender_id) === uidStr;
+            const isAi = msg.sender_type === 'ai' || msg.sender_type === 'system';
+            const isNewGlow = isAi && glowMsgIds.has(msg.id);
+            const agentName = msg.metadata_json?.agent;
+            const glowClass = isNewGlow
+              ? agentName === 'crew'
+                ? ' gp-chat-crew-new'
+                : ' gp-chat-scout-new'
+              : '';
+
+            // Consent prompt renders as standalone card, not inside a chat bubble
+            if (msg.metadata_json?.needs_consent) {
+              return (
+                <div key={msg.id} className="gp-chat-message gp-chat-ai">
+                  <ScoutConsentCard
+                    groupId={groupId}
+                    originalQuery={msg.metadata_json?.original_query}
+                    onRetry={(query) => sendMutation.mutate({ content: query, type: 'text' })}
+                    onDismiss={() => {}}
+                  />
+                </div>
+              );
+            }
+
+            // --- Crew card types (private cards filtered by target_user_id) ---
+            if (msg.type === 'crew_question') {
+              if (
+                msg.metadata_json?.target_user_id &&
+                String(msg.metadata_json.target_user_id) !== String(userId)
+              )
+                return null;
+              return (
+                <div key={msg.id} className={'gp-chat-message gp-chat-ai' + glowClass}>
+                  <CrewQuestionCard
+                    question={msg.metadata_json?.question || msg.content}
+                    options={msg.metadata_json?.options || []}
+                    allFields={msg.metadata_json?.all_fields}
+                    onAnswer={handleCrewAnswer}
+                    createdAt={msg.created_at}
+                  />
+                </div>
+              );
+            }
+
+            if (msg.type === 'crew_confirm') {
+              if (
+                msg.metadata_json?.target_user_id &&
+                String(msg.metadata_json.target_user_id) !== String(userId)
+              )
+                return null;
+              const pendingKey = msg.metadata_json?.pending_key;
+              return (
+                <div key={msg.id} className={'gp-chat-message gp-chat-ai' + glowClass}>
+                  <CrewConfirmCard
+                    entityName={msg.metadata_json?.entity_name || ''}
+                    entityType={msg.metadata_json?.entity_type || 'item'}
+                    onConfirm={() => handleCrewConfirm(groupId, 'confirm', pendingKey)}
+                    onCancel={() => handleCrewConfirm(groupId, 'cancel', pendingKey)}
+                    createdAt={msg.created_at}
+                  />
+                </div>
+              );
+            }
+
+            if (msg.type === 'crew_place') {
+              return (
+                <div key={msg.id} className={'gp-chat-message gp-chat-ai' + glowClass}>
+                  <CrewPlaceCard
+                    placeName={msg.metadata_json?.place_name || msg.content}
+                    address={msg.metadata_json?.address}
+                    source={msg.metadata_json?.source || 'library'}
+                    addedBy={msg.metadata_json?.added_by}
+                    createdAt={msg.created_at}
+                  />
+                </div>
+              );
+            }
+
+            if (msg.type === 'crew_poll_created') {
+              const pollMeta = msg.metadata_json?.poll || {};
+              const pollName = pollMeta.name || msg.metadata_json?.question || msg.content;
+              const pollOpts = pollMeta.options || [];
+              const pollId = pollMeta.id || msg.metadata_json?.poll_id;
+              return (
+                <div key={msg.id} className={'gp-chat-message gp-chat-ai' + glowClass}>
+                  <div className="gp-crew-poll-created-card">
+                    <div className="gp-crew-card-label">Crew</div>
+                    <div className="gp-poll-card-v2">
+                      <div className="gp-poll-card-v2-top">
+                        <span className="gp-poll-card-v2-question">{pollName}</span>
+                        <div className="gp-poll-card-v2-meta">
+                          <span className="gp-poll-card-v2-votes">0 votes</span>
+                        </div>
+                      </div>
+                      <div className="gp-poll-card-v2-options">
+                        {pollOpts.map((opt, oi) => (
+                          <div
+                            key={oi}
+                            className="gp-poll-opt-v2"
+                            onClick={() => pollId && handleVotePoll(pollId, oi)}
+                          >
+                            <div className="gp-poll-opt-v2-bar" style={{ width: '0%' }} />
+                            <div className="gp-poll-opt-v2-content">
+                              <span className="gp-poll-opt-v2-text">{opt}</span>
+                              <span className="gp-poll-opt-v2-pct"></span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="gp-poll-card-v2-footer">
+                        <span className="gp-poll-card-v2-time">
+                          {formatRelativeTime(msg.created_at)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            if (msg.type === 'crew_error') {
+              if (
+                msg.metadata_json?.target_user_id &&
+                String(msg.metadata_json.target_user_id) !== String(userId)
+              )
+                return null;
+            }
+
+            return (
+              <div
+                key={msg.id}
+                className={
+                  'gp-chat-message' +
+                  (isMine ? ' gp-chat-mine' : isAi ? ' gp-chat-ai' : '') +
+                  glowClass
+                }
+                onMouseEnter={
+                  isNewGlow
+                    ? () => {
+                        emitRead(msg.id);
+                      }
+                    : undefined
+                }
+              >
+                <div className="gp-chat-bubble">
+                  {!isMine && msg.sender_name && (
+                    <span className="gp-chat-sender-name">{msg.sender_name}</span>
+                  )}
+                  {isAi && (
+                    <span className="gp-chat-bot-label">
+                      {agentName === 'scout'
+                        ? 'Scout'
+                        : agentName === 'crew'
+                          ? 'Crew'
+                          : msg.sender_name || 'AI'}
+                    </span>
+                  )}
+                  {isAi ? (
+                    renderScoutMessage(msg.content)
+                  ) : (
+                    <p className="gp-chat-text">
+                      {String(msg.content ?? '').startsWith('__crew_fields__:')
+                        ? 'Filled the form for @crew'
+                        : (msg.content ?? '')}
+                    </p>
+                  )}
+                  <span className="gp-chat-time">{formatRelativeTime(msg.created_at)}</span>
+                  {isMine && !msg._optimistic && (
+                    <button
+                      className="gp-chat-delete-btn"
+                      onClick={() => deleteMutation.mutate(msg.id)}
+                      title="Delete message"
+                    >
+                      <Trash2 size={10} />
+                    </button>
+                  )}
+                  {msg._optimistic && <span className="gp-chat-sending">Sending...</span>}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Typing indicator */}
+          {typingUsers.length > 0 && (
+            <>
+              {typingUsers.some((u) => u.is_ai) && (
+                <div className="gp-chat-message gp-chat-ai">
+                  <div className="gp-chat-bubble gp-scout-thinking">
+                    <span className="gp-chat-bot-label">Scout</span>
+                    <div className="gp-scout-thinking-dots">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {typingUsers.some((u) => !u.is_ai) && (
+                <div className="gp-chat-typing">
+                  {typingUsers
+                    .filter((u) => !u.is_ai)
+                    .map((u) => u.email)
+                    .join(', ')}{' '}
+                  typing...
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* Chat Input */}
@@ -568,13 +727,23 @@ export default function ChatPanel({ groupId, destination, showToast }) {
         {mentionPopup.open && mentionResults.length > 0 && (
           <div className="gp-mention-popup">
             {mentionResults.map((m) => (
-              <div key={m.id || m.user_id} className="gp-mention-item" onClick={() => handleSelectMention(m)}>
+              <div
+                key={m.id || m.user_id}
+                className="gp-mention-item"
+                onClick={() => handleSelectMention(m)}
+              >
                 {m.type === 'ai' ? (
                   <div className="gp-mention-avatar gp-mention-avatar-ai">AI</div>
                 ) : m.photo_url || m.avatar ? (
-                  <img src={m.photo_url || m.avatar} alt={m.display_name || m.name} className="gp-mention-avatar-img" />
+                  <img
+                    src={m.photo_url || m.avatar}
+                    alt={m.display_name || m.name}
+                    className="gp-mention-avatar-img"
+                  />
                 ) : (
-                  <div className="gp-mention-avatar">{getInitials(m.display_name || m.name || m.email || 'U')}</div>
+                  <div className="gp-mention-avatar">
+                    {getInitials(m.display_name || m.name || m.email || 'U')}
+                  </div>
                 )}
                 <span className="gp-mention-name">{m.display_name || m.name || m.email}</span>
                 {m.type === 'ai' && <span className="gp-mention-tag">Bot</span>}
@@ -583,7 +752,11 @@ export default function ChatPanel({ groupId, destination, showToast }) {
           </div>
         )}
         <div className="gp-chat-input-row">
-          <button className={'gp-chat-poll-btn' + (showPollForm ? ' active' : '')} onClick={() => setShowPollForm((v) => !v)} title="Create poll">
+          <button
+            className={'gp-chat-poll-btn' + (showPollForm ? ' active' : '')}
+            onClick={() => setShowPollForm((v) => !v)}
+            title="Create poll"
+          >
             <BarChart3 size={18} />
           </button>
           <div className="gp-chat-input-wrapper">
@@ -595,42 +768,100 @@ export default function ChatPanel({ groupId, destination, showToast }) {
               value={chatMessage}
               onChange={handleChatInputChange}
               onKeyDown={(e) => {
-                if (mentionPopup.open && e.key === 'Escape') { e.preventDefault(); dismissMention(); return; }
+                if (mentionPopup.open && e.key === 'Escape') {
+                  e.preventDefault();
+                  dismissMention();
+                  return;
+                }
                 if (e.key === 'Enter') handleSendChat();
               }}
             />
-            <button className="gp-chat-send-btn" onClick={handleSendChat}><Send size={16} /></button>
+            <button className="gp-chat-send-btn" onClick={handleSendChat} aria-label="Send message">
+              <Send size={16} />
+            </button>
           </div>
         </div>
       </div>
 
       {/* Poll Creation Modal */}
       {showPollForm && (
-        <div className="gp-modal-overlay" onClick={() => { setShowPollForm(false); setPollQuestion(''); setPollOptions(['', '']); setPollMultiChoice(false); }}>
+        <div
+          className="gp-modal-overlay"
+          onClick={() => {
+            setShowPollForm(false);
+            setPollQuestion('');
+            setPollOptions(['', '']);
+            setPollMultiChoice(false);
+          }}
+        >
           <div className="gp-poll-modal" onClick={(e) => e.stopPropagation()}>
             <div className="gp-poll-create-header">
               <span className="gp-poll-create-title">Create a Poll</span>
-              <button className="gp-poll-cancel-btn" onClick={() => { setShowPollForm(false); setPollQuestion(''); setPollOptions(['', '']); setPollMultiChoice(false); }}><X size={14} /></button>
+              <button
+                className="gp-poll-cancel-btn"
+                onClick={() => {
+                  setShowPollForm(false);
+                  setPollQuestion('');
+                  setPollOptions(['', '']);
+                  setPollMultiChoice(false);
+                }}
+              >
+                <X size={14} />
+              </button>
             </div>
-            <input className="gp-poll-create-input" placeholder="What's your question?" value={pollQuestion} onChange={(e) => setPollQuestion(e.target.value)} autoFocus />
+            <input
+              className="gp-poll-create-input"
+              placeholder="What's your question?"
+              value={pollQuestion}
+              onChange={(e) => setPollQuestion(e.target.value)}
+              autoFocus
+            />
             <div className="gp-poll-create-options">
               {pollOptions.map((opt, i) => (
                 <div key={i} className="gp-poll-create-opt-row">
-                  <input className="gp-poll-create-input gp-poll-create-opt-input" placeholder={`Option ${i + 1}`} value={opt} onChange={(e) => { const next = [...pollOptions]; next[i] = e.target.value; setPollOptions(next); }} />
+                  <input
+                    className="gp-poll-create-input gp-poll-create-opt-input"
+                    placeholder={`Option ${i + 1}`}
+                    value={opt}
+                    onChange={(e) => {
+                      const next = [...pollOptions];
+                      next[i] = e.target.value;
+                      setPollOptions(next);
+                    }}
+                  />
                   {pollOptions.length > 2 && (
-                    <button className="gp-poll-create-opt-remove" onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}><X size={12} /></button>
+                    <button
+                      className="gp-poll-create-opt-remove"
+                      onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))}
+                    >
+                      <X size={12} />
+                    </button>
                   )}
                 </div>
               ))}
             </div>
             <div className="gp-poll-create-actions">
               <div className="gp-poll-create-actions-left">
-                {pollOptions.length < 10 && <button className="gp-poll-create-add" onClick={() => setPollOptions([...pollOptions, ''])}>+ Add Option</button>}
+                {pollOptions.length < 10 && (
+                  <button
+                    className="gp-poll-create-add"
+                    onClick={() => setPollOptions([...pollOptions, ''])}
+                  >
+                    + Add Option
+                  </button>
+                )}
                 <label className="gp-poll-create-multi">
-                  <input type="checkbox" checked={pollMultiChoice} onChange={(e) => setPollMultiChoice(e.target.checked)} /> Multi-select
+                  <input
+                    type="checkbox"
+                    checked={pollMultiChoice}
+                    onChange={(e) => setPollMultiChoice(e.target.checked)}
+                  />{' '}
+                  Multi-select
                 </label>
               </div>
-              <button className="gp-poll-create-submit" onClick={handleCreatePoll}>Create Poll</button>
+              <button className="gp-poll-create-submit" onClick={handleCreatePoll}>
+                Create Poll
+              </button>
             </div>
           </div>
         </div>

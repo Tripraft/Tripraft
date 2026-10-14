@@ -143,6 +143,7 @@ class GroupPlannerApiService {
       longitude,
       address: placeNameOrObject.address || '',
       category: placeNameOrObject.category || 'attraction',
+      ...(placeNameOrObject.visit_date && { visit_date: placeNameOrObject.visit_date }),
       description: placeNameOrObject.description || placeNameOrObject.ai_summary || '',
       rating: placeNameOrObject.rating ?? placeNameOrObject.rating_tourist_priority,
       photo_url: placeNameOrObject.photo_url || (typeof placeNameOrObject.photos?.[0] === 'string'
