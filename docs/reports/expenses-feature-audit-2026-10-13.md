@@ -296,3 +296,54 @@ Follow-up validation:
 
 Visual browser checks could not run: this session exposed no browser surfaces,
 and opening the in-app browser returned `Browser is not available: iab`.
+
+## October 14 group live updates
+
+Expense screens now connect to the authenticated `/expenses` Socket.IO namespace.
+The server selects a private user room from the verified JWT/cookie; clients do
+not select users or subscribe to the group planner's unrelated group rooms.
+Every connected device receives a small `expenses:changed` invalidation and
+loads current data through the existing authenticated API.
+
+ORM transaction hooks collect group, member, expense/history, settlement,
+invitation, and balance changes. They publish after commit, discard rolled-back
+changes, and delay savepoint notifications until the outer commit. This also
+covers services called by linked-trip actions. Delivery failures are logged and
+do not fail an already-committed financial operation.
+
+Recipients are resolved from current active membership on each delivery.
+Removed members receive a final access-revoked notice; later changes are not
+sent to them. Group archival clears all members' stale views. The payload
+contains only group/expense identifiers and an access-revoked flag, never money,
+member details, invitation links, or ledger contents.
+
+The client refreshes group cards, selected group details (including transactions,
+balances, settlements, members and invitations), and open expense history.
+Bursts are coalesced over a 150 ms window. Reconnect, browser focus, returning to
+a visible tab, and coming online recover missed changes. A safety read runs
+every 60 seconds while connected, or every 20 seconds when disconnected, only
+while visible and online. This supports automatic updates when WebSockets are
+disabled or temporarily unavailable; that fallback is periodic rather than
+instant delivery. Existing Socket.IO Redis queue configuration supports delivery
+between API workers; no additional package or service was introduced.
+
+Background refetches preserve an open transaction draft instead of resetting it
+when member or expense objects change. An expense deleted remotely cannot be
+saved from its stale dialog. Unmount/logout disconnects the expense socket and
+removes timers/listeners.
+
+Open split receipts continue to follow the selected expense's actual ID, and
+open history headers follow updated transaction values. Missing legacy IDs no
+longer cause a receipt to switch to the first expense after a live refetch.
+
+Live-update validation:
+
+- Full frontend suite: **30 suites / 289 tests passed**. The final live-update
+  suite passed again (**6 tests**) after the event-window adjustment.
+- Backend: **20 tests passed** across live delivery/privacy/rollback/savepoints,
+  expense restoration, and concurrent money writes. The **5 existing WebSocket
+  authentication tests** also passed in the earlier targeted run.
+- Final receipt/draft/follow-up suite: **9 tests passed**, including the new
+  selected-receipt regression. ESLint, TypeScript, and the final production build
+  passed. The existing bundle-size warning remains (expense route about 565.5 kB
+  before gzip). Browser visual checks remain unavailable in this session.

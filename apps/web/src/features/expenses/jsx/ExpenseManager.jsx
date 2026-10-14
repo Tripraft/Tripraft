@@ -45,6 +45,7 @@ import Toast from '@tripraft/ui/Toast';
 import ErrorBoundary from '../../../components/common/jsx/ErrorBoundary';
 import { PlusCircle, RefreshCw } from 'lucide-react';
 import expenseApi from '../../../services/expenseApi';
+import useExpenseLiveUpdates from '../../../hooks/useExpenseLiveUpdates';
 import { generateExpensePDF } from '../../../services/pdfExportService';
 import {
   useAuth,
@@ -70,6 +71,7 @@ const ExpenseManager = () => {
   
   // Auth state
   const { isAuthenticated, currentUser, loading: authLoading } = useAuth();
+  useExpenseLiveUpdates(isAuthenticated ? currentUser?.uid || currentUser?.user_id || currentUser?.id : null, activeGroupId);
   
   // Data hooks - simple, direct SQL API calls with smart polling + INSTANT UPDATES
   const {

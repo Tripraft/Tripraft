@@ -204,6 +204,8 @@ def _init_socketio(app):
 
         # Import event handlers so they get registered with the socketio instance
         import app.trips.realtime.events  # noqa: F401
+        from app.expenses.realtime import init_expense_realtime
+        init_expense_realtime()
 
         logger.info("WebSocket event handlers registered")
     except Exception as exc:

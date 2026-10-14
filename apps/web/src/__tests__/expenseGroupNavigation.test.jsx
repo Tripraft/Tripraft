@@ -2,6 +2,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import ExpenseManager from '../features/expenses/jsx/ExpenseManager';
+jest.mock('../hooks/useExpenseLiveUpdates', () => ({ __esModule: true, default: jest.fn() }));
 import expenseApi from '../services/expenseApi';
 import { useAuth, useGroups, useGroupDetail, useInvitations, usePersonalExpenses } from '../hooks/useExpenseQuery';
 

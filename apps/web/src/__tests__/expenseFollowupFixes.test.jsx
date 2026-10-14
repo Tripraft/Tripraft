@@ -84,3 +84,26 @@ it('keeps the add amount editable beside a three-letter currency label', async (
   fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
   await waitFor(() => expect(save).toHaveBeenCalledWith(expect.objectContaining({ amount: 125.5, description: 'Dinner' })));
 });
+
+it('preserves an edit draft across live member and expense refreshes', () => {
+  const expense = { id: 'expense', description: 'Dinner', amount: 100, paid_by: 'me', splits: [{ user_id: 'me', amount: 100 }] };
+  const props = { mode: 'group', activeGroup: { id: 'group' }, members: [{ user_id: 'me' }], currentUser: { uid: 'me' }, editingTransaction: expense };
+  const view = render(<TransactionModal {...props} />);
+  fireEvent.change(screen.getByLabelText('Description'), { target: { value: 'My unsaved draft' } });
+  view.rerender(<TransactionModal {...props} members={[{ user_id: 'me' }, { user_id: 'friend' }]} editingTransaction={{ ...expense, description: 'Remote update', amount: 150 }} />);
+  expect(screen.getByLabelText('Description')).toHaveValue('My unsaved draft');
+  expect(screen.getByLabelText('Amount')).toHaveValue(100);
+});
+
+it('keeps a live split receipt attached to its expense rather than a missing legacy ID', () => {
+  const first = { id: 'first', description: 'First dinner', amount: 10 };
+  const second = { id: 'second', description: 'Second dinner', amount: 20 };
+  const props = { mode: 'group', filter: {}, members: [], currentUserId: 'me', activeGroup: { id: 'group' } };
+  const view = render(<TransactionList {...props} transactions={[first, second]} />);
+  fireEvent.click(screen.getAllByTitle('View split details')[1]);
+  view.rerender(<TransactionList {...props} transactions={[{ ...first, amount: 11 }, { ...second, amount: 25 }]} />);
+  const receipt = screen.getByRole('dialog', { name: 'Expense split details' });
+  expect(within(receipt).getByText('Second dinner')).toBeInTheDocument();
+  expect(within(receipt).getByText('$25.00')).toBeInTheDocument();
+  expect(within(receipt).queryByText('First dinner')).toBeNull();
+});

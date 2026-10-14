@@ -114,7 +114,7 @@ const TransactionList = ({
   useEffect(() => {
     if (selectedTransaction && showDetailsModal) {
       const updatedTransaction = transactions.find(t => 
-        (t.id === selectedTransaction.id) || (t.expense_id === selectedTransaction.expense_id)
+        (t.id || t.expense_id) === (selectedTransaction.id || selectedTransaction.expense_id)
       );
       if (updatedTransaction) {
         setSelectedTransaction(updatedTransaction);
@@ -614,7 +614,7 @@ const TransactionList = ({
       {restoreError && <p role="alert">{restoreError}</p>}
       {showHistoryModal && historyTransaction && (
         <ExpenseHistoryModal currency={currency}
-          expense={historyTransaction}
+          expense={transactions.find(transaction => (transaction.id || transaction.expense_id) === (historyTransaction.id || historyTransaction.expense_id)) || historyTransaction}
           members={members}
           mode={mode}
           currentUserId={currentUserId}

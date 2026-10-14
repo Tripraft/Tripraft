@@ -1,6 +1,6 @@
 // Purpose: Renders the Transaction Modal interface within apps\web\src\features\expenses\jsx.
 import ExpenseDialog from './ExpenseDialog';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
 const TransactionModal = ({ 
@@ -15,6 +15,7 @@ const TransactionModal = ({
   currency
 }) => {
   const [saving, setSaving] = useState(false);
+  const initializedForm = useRef(null);
   const customSplit = mode === 'group' && editingTransaction && String(editingTransaction.split_type || 'equal').toLowerCase() !== 'equal';
   const [formData, setFormData] = useState({
     type: 'expense',
@@ -43,6 +44,11 @@ const TransactionModal = ({
   };
 
   useEffect(() => {
+    const formKey = `${mode}:${activeGroup?.id || activeGroup?.group_id || ''}:${editingTransaction?.id || editingTransaction?.expense_id || 'new'}:${currentUser?.uid || currentUser?.user_id || currentUser?.id || ''}`;
+    if (initializedForm.current === formKey) return;
+    if (mode === 'group' && !editingTransaction && !members?.length) return;
+    // A live refetch replaces member/expense objects; it must not overwrite a draft.
+    initializedForm.current = formKey;
     if (editingTransaction) {
       // Determine type based on category
       const isIncome = editingTransaction.category && editingTransaction.category.toLowerCase() === 'salary';
@@ -93,7 +99,7 @@ const TransactionModal = ({
         splitWith: allMemberIds
       }));
     }
-  }, [editingTransaction, mode, members, currentUser]);
+  }, [editingTransaction, mode, members, currentUser, activeGroup]);
 
   // When type changes to income, set category to Salary
   const handleTypeChange = (newType) => {
@@ -106,7 +112,7 @@ const TransactionModal = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (saving) return;
+    if (saving || editingTransaction?.is_deleted) return;
     
     if (mode === 'group' && formData.splitWith.length === 0) {
       onAlert('You must split the expense with at least one person.');
@@ -308,7 +314,8 @@ const TransactionModal = ({
             >
               Cancel
             </button>
-            <button type="submit" className="btn-save" disabled={saving}>{saving ? 'Saving...' : 'Save'}</button>
+            {editingTransaction?.is_deleted && <p role="alert">This expense was deleted. Close this dialog and use Revert in the activity list to restore it.</p>}
+            <button type="submit" className="btn-save" disabled={saving || editingTransaction?.is_deleted}>{saving ? 'Saving...' : 'Save'}</button>
           </div>
         </form>
     </ExpenseDialog>
