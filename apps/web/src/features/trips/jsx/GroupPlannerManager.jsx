@@ -27,6 +27,7 @@ import Toast from '@tripraft/ui/Toast';
 import { MessageCircle, X, Search, UserPlus } from 'lucide-react';
 import PlannerHeader from './shared/PlannerHeader';
 import AddStopModal from './shared/AddStopModal';
+import { isPlannerDemo, plannerPath } from '../demo/demoMode';
 import '../css/GroupPlannerPage.css';
 
 import { TABS } from '../constants/tabConfig';
@@ -64,6 +65,7 @@ export default function GroupPlannerManager() {
   const activityCursor = useRef({ groupId: null, newestId: null });
   const [isInviting, setIsInviting] = useState(false);
   const invitingRef = useRef(false);
+  const lastGroupKey = isPlannerDemo() ? 'gp_demo_last_group' : 'gp_last_group';
 
   // -- Queries (shared across children / needed for MapPanel) --
   const {
@@ -203,10 +205,10 @@ export default function GroupPlannerManager() {
   // -- Auto-redirect to last visited group --
   useEffect(() => {
     if (routeGroupId || authLoading || groupsLoading) return;
-    const lastGroupId = localStorage.getItem('gp_last_group');
+    const lastGroupId = localStorage.getItem(lastGroupKey);
     if (!lastGroupId) return;
     if (groups.length > 0 && groups.some((g) => String(g.id) === lastGroupId)) {
-      navigate('/group-planner/' + lastGroupId, { replace: true });
+      navigate(plannerPath('/group-planner/' + lastGroupId), { replace: true });
     }
   }, [routeGroupId, authLoading, groupsLoading, groups, navigate]);
 
@@ -244,17 +246,17 @@ export default function GroupPlannerManager() {
       setAddingStop(false);
       setShowInviteModal(false);
       setInviteEmail('');
-      localStorage.setItem('gp_last_group', String(id));
-      navigate('/group-planner/' + id);
+      localStorage.setItem(lastGroupKey, String(id));
+      navigate(plannerPath('/group-planner/' + id));
     },
     [navigate],
   );
 
   const handleBackToDashboard = useCallback(() => {
-    localStorage.removeItem('gp_last_group');
+    localStorage.removeItem(lastGroupKey);
     setSelectedGroupId(null);
     setActiveTab('itinerary');
-    navigate('/group-planner');
+    navigate(plannerPath('/group-planner'));
   }, [navigate]);
 
   const handleCreateGroup = async (groupData) => {

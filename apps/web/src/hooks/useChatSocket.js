@@ -10,6 +10,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { io } from 'socket.io-client';
+import { isPlannerDemo } from '../features/trips/demo/demoMode';
 import sqlAuthService from '../services/sqlAuthService';
 import GlobalConfig from '../config/globalConfig';
 import { chatKeys } from './useChatQuery';
@@ -38,6 +39,7 @@ export default function useChatSocket(groupId, userId) {
 
   // --- Connect / disconnect lifecycle ---
   useEffect(() => {
+    if (isPlannerDemo()) return;
     if (!groupId || !userId) return;
     lastReadRef.current = { id: null, time: 0 };
     setConnectionError(null);

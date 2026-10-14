@@ -4269,3 +4269,81 @@
     z-index: 30;
   }
 }
+.gp-demo-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 28px;
+  background: #fff5df;
+  border-bottom: 1px solid #f4deb3;
+  color: #70501b;
+  font-size: 11px;
+}
+.gp-demo-toolbar strong {
+  display: block;
+  font-size: 12px;
+}
+.gp-demo-toolbar span {
+  display: block;
+  margin-top: 2px;
+}
+.gp-demo-toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+}
+.gp-demo-toolbar select,
+.gp-demo-toolbar button,
+.gp-demo-toolbar a {
+  background: #fffcf4;
+  border: 1px solid #ebd5a8;
+  color: #70501b;
+  padding: 7px 10px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+.gp-demo-toolbar ~ div .gp-workspace {
+  height: calc(100dvh - var(--gp-site-header-height, 80px) - 60px);
+}
+.gp-hub-button {
+  text-decoration: none;
+}
+.gp-group-cover-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.gp-group-cover:has(.gp-group-cover-photo)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(#102a3a20, #102a3a05);
+}
+.gp-group-cover > .gp-trip-icon,
+.gp-group-cover > .gp-status {
+  position: relative;
+  z-index: 1;
+}
+@media (max-width: 760px) {
+  .gp-demo-toolbar {
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 14px;
+  }
+  .gp-demo-toolbar > div {
+    width: 100%;
+  }
+  .gp-demo-toolbar label {
+    margin-left: 0;
+  }
+  .gp-demo-toolbar ~ div .gp-workspace {
+    height: auto;
+  }
+  .gp-hub-hero-actions {
+    flex-wrap: wrap;
+  }
+}

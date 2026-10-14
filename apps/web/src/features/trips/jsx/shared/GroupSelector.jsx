@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { isPlannerDemo } from '../../demo/demoMode';
 import {
   MapPin,
   Plus,
@@ -86,6 +87,11 @@ export default function GroupSelector({
           <p>Good company. Great adventures. Everything you need to plan together.</p>
         </div>
         <div className="gp-hub-hero-actions">
+          {!isPlannerDemo() && (
+            <a className="gp-hub-button" href="/group-planner?demo=1">
+              Explore demo
+            </a>
+          )}
           {onJoinGroup && (
             <button
               className="gp-hub-button"
@@ -162,6 +168,14 @@ export default function GroupSelector({
             {filtered.map((g, index) => (
               <article key={g.id} className="gp-group-card">
                 <div className={'gp-group-cover gp-cover-' + (index % 3)}>
+                  {g.group_image && (
+                    <img
+                      className="gp-group-cover-photo"
+                      src={g.group_image}
+                      alt=""
+                      loading="lazy"
+                    />
+                  )}
                   <Compass className="gp-cover-compass" size={116} strokeWidth={0.7} />
                   <span className="gp-trip-icon">{getInitials(g.destination || g.name)}</span>
                   <span className={'gp-status gp-status-' + tripStatus(g).toLowerCase()}>

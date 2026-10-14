@@ -3,6 +3,7 @@
 import GlobalConfig from '../config/globalConfig';
 import sqlAuthService from '../services/sqlAuthService';
 import apiLogger from './apiLogger';
+import { isPlannerDemo } from '../features/trips/demo/demoMode';
 
 export class APIClient {
   constructor() {
@@ -17,6 +18,10 @@ export class APIClient {
   }
 
   async request(method, endpoint, options = {}) {
+    if (isPlannerDemo()) {
+      const { demoRequest } = await import('../features/trips/demo/demoApi');
+      return demoRequest(method, endpoint, options);
+    }
     const url = this.baseURL + endpoint;
     const { body, headers, signal: externalSignal, timeout = this.timeout,
       responseType = 'json', _retried401, ...fetchOptions } = options;

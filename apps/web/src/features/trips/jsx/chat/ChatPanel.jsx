@@ -1,5 +1,6 @@
 // Purpose: Coordinates message rendering, live chat, AI cards, polls, optimistic sends and group-switch state.
 import PollFeed from '../../../polls/PollFeed';
+import { isPlannerDemo } from '../../demo/demoMode';
 import React, { useMemo, useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 import { useGroupPolls, useGroupMembers, gpKeys } from '../../../../hooks/useGroupPlannerQuery';
@@ -454,7 +455,13 @@ export default function ChatPanel({ groupId, destination, showToast, isOpen = tr
           </span>
         )}
         <div className="gp-engines-active" role="status">
-          {connected ? 'Live' : connectionError ? 'Live updates unavailable' : 'Connecting...'}
+          {isPlannerDemo()
+            ? 'Demo conversation'
+            : connected
+              ? 'Live'
+              : connectionError
+                ? 'Live updates unavailable'
+                : 'Connecting...'}
         </div>
       </div>
 

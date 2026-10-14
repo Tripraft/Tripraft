@@ -5,10 +5,14 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import Header from '../../../components/layout/jsx/Header';
 import { useAuth } from '../../../context/AuthContext';
 import GroupPlannerManager from './GroupPlannerManager';
+import { useSearchParams } from 'react-router-dom';
+import DemoPlannerProvider from '../demo/DemoPlannerProvider';
 import '../css/GroupPlannerPage.css';
 
 export default function GroupPlannerPage() {
   const { currentUser, signOut } = useAuth();
+  const [searchParams] = useSearchParams();
+  const demo = searchParams.get('demo') === '1';
   const headerHost = useRef(null);
   const [headerHeight, setHeaderHeight] = useState(80);
   useLayoutEffect(() => {
@@ -31,7 +35,13 @@ export default function GroupPlannerPage() {
       </div>
       <div className="gp-page" style={{ '--gp-site-header-height': `${headerHeight}px` }}>
         <main className="gp-main">
-          <GroupPlannerManager />
+          {demo ? (
+            <DemoPlannerProvider>
+              <GroupPlannerManager />
+            </DemoPlannerProvider>
+          ) : (
+            <GroupPlannerManager />
+          )}
         </main>
       </div>
     </>
