@@ -361,7 +361,6 @@ export default function GroupPlannerManager() {
   if (!selectedGroupId) {
     return (
       <>
-        {header}
         <GroupSelector
           groups={groups}
           groupsLoading={groupsLoading}

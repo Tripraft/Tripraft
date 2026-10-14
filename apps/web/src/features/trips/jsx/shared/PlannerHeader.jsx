@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import {
   Compass,
   Map,
@@ -38,9 +37,6 @@ export default function PlannerHeader({
   return (
     <header className="gp-topbar">
       <div className="gp-topbar-context">
-        <Link to="/" className="gp-brand" title="TripRaft home" aria-label="TripRaft home">
-          <Compass size={22} />
-        </Link>
         <button className="gp-hub-button" aria-label="All Groups" onClick={onAllGroups}>
           <LayoutGrid size={15} />
           <span>All Groups</span>

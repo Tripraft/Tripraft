@@ -4244,3 +4244,28 @@
   background: #e85535;
   box-shadow: 0 4px 12px #ff6b4a40;
 }
+/* The site navigation remains the shared Header, outside the planner scope. */
+.gp-page {
+  margin-top: var(--gp-site-header-height, 80px);
+  min-height: calc(100dvh - var(--gp-site-header-height, 80px));
+}
+.gp-main {
+  min-height: calc(100dvh - var(--gp-site-header-height, 80px));
+}
+.gp-workspace {
+  height: calc(100dvh - var(--gp-site-header-height, 80px));
+  min-height: 480px;
+}
+.gp-comms-drawer {
+  max-height: calc(100dvh - var(--gp-site-header-height, 80px) - 100px);
+}
+@media (max-width: 760px) {
+  .gp-workspace {
+    height: auto;
+    min-height: calc(100dvh - var(--gp-site-header-height, 80px));
+  }
+  .gp-topbar {
+    top: var(--gp-site-header-height, 80px);
+    z-index: 30;
+  }
+}
