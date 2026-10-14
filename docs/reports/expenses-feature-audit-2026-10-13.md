@@ -1,5 +1,10 @@
 # Personal and group expenses audit - October 13, 2026
 
+October 14 follow-up: personal pagination and the salary-in-spending display are
+now fixed, with the requested history, amount-field, deletion/revert, and
+settlement-card changes. See [the follow-up record](#october-14-follow-up).
+The original income-ledger integration and mixed-currency findings remain open.
+
 ## Result and scope
 
 The group dashboard, group detail, analysis, members, activity, split details,
@@ -67,15 +72,15 @@ routes in `services/api/app/expenses/routes/personal_finance.py`.
 saved as a Salary expense, while the real personal summary derives income from
 the separate Income table. UI income/balance values and backend financial
 summaries can disagree. Genuine income API records are not loaded by the current
-personal-expense query. Spending analytics can also count the Salary record as
-spending.
+personal-expense query. Before the October 14 follow-up, spending analytics also
+counted Salary records as spending; that display defect is now fixed.
 
 **Required fix:** Connect personal create/edit/delete/history to the correct
 income and expense endpoints, load both ledgers or use the personal transaction
 endpoint, and consume the backend summary. Decide how to migrate existing Salary
 expenses explicitly; do not silently change users' records based on a category.
 
-### P1 - Personal transactions stop at the first API page
+### P1 - Personal transactions stop at the first API page (fixed October 14)
 
 **Evidence:** `apps/web/src/hooks/useExpenseQuery.js`, `usePersonalExpenses`
 around line 1275, makes one `getUserExpenses({personal_only: true})` request.
@@ -92,6 +97,11 @@ pages through the already loaded subset.
 fetch all pages where a complete ledger is required. Add a regression case with
 at least 51 records. Group detail already fetches its ledger pages separately;
 its dashboard totals now use full-ledger backend aggregates.
+
+**October 14 status:** The personal query now fetches every page, including
+soft-deleted rows for Revert. A 101-record regression verifies loading beyond
+the first page. Analytics, summaries, and exports receive the complete array;
+deleted rows remain excluded from financial aggregates.
 
 ### P1 - Personal totals combine currencies and label them USD
 
@@ -243,3 +253,46 @@ commit `45280d4`, including their descriptive messages.
 
 This audit is saved as a separate documentation commit for review in Interactive
 Smartlog. No history reset or remote push is part of this work.
+
+## October 14 follow-up
+
+- Personal edit history hides `splits`, `split_type`, `split_status`, and payer
+  normalization changes because these are not personal form controls. The
+  current user is identified as **You**. Group split histories remain visible.
+- Personal analytics classifies legacy Salary/Income categories and explicit
+  income records as received money. They are excluded from spending categories,
+  trends, biggest expenses, and spending averages. Separate income, spending,
+  and net-balance cards show the cash flow for the selected period. This is a
+  display correction; it does not migrate legacy Salary rows into the Income
+  table or resolve the original endpoint-integration finding.
+- The add/edit amount field gives the currency code a separate flexible column
+  instead of absolutely positioning it over the number.
+- Personal and group activity retain gray soft-deleted rows after refresh, with
+  a **Revert** button for authorized users. `POST /expenses/<id>/restore`
+  restores the same record and saved splits, clears deletion metadata, records
+  a restored history entry, and reapplies group balances under the money lock.
+  Repeated/concurrent restores apply the balance once. Archived groups, lost
+  membership, unauthorized users, and changes that would strand former-member
+  debt are rejected. Existing default API reads still exclude deleted records;
+  the expense UI explicitly requests them.
+- The suggested-payment card and header settlement action open the Settle Up
+  tab, focus it, and scroll the tab section into view. History & changes also
+  uses this navigation behavior.
+- No cleanup candidates or unrelated user files were deleted.
+
+Follow-up validation:
+
+- Full frontend suite: **29 suites / 282 tests passed**.
+- New restore API/security/concurrency tests: **7 passed**.
+- Existing group lifecycle, money integrity/concurrency, and access checks:
+  **67 passed**, with one unrelated vault test unable to create its fixture in
+  Windows' default pytest temp directory. That test **passed on an isolated
+  retry using a fresh workspace `--basetemp` directory**. No application
+  assertion failed in these runs.
+- ESLint, TypeScript, and the production build passed. Vite's existing chunk
+  warning remains; the expense route is now approximately 562.9 kB before gzip.
+- A read-only GET probe of the running local restore route returned 405, as
+  expected for this POST-only endpoint, confirming that the server loaded it.
+
+Visual browser checks could not run: this session exposed no browser surfaces,
+and opening the in-app browser returned `Browser is not available: iab`.

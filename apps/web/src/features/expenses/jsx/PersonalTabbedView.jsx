@@ -15,6 +15,7 @@ const PersonalTabbedView = ({
   onFilterChange,
   onEdit,
   onDelete,
+  onRestore,
   currentUserId,
   currency = 'USD',
   onExportPDF
@@ -145,6 +146,7 @@ const PersonalTabbedView = ({
               currentUserId={currentUserId}
               onEdit={onEdit}
               onDelete={onDelete}
+              onRestore={onRestore}
               onFilterChange={onFilterChange}
               currency={currency}
               isInTab={true}

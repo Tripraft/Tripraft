@@ -61,8 +61,15 @@
 .expense-analysis-empty h3 { margin: 15px 0 7px; font-size: 17px; }
 .expense-analysis-empty p { color: #6b7280; font-size: 13px; max-width: 340px; line-height: 1.6; }
 .expense-analysis .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+.expense-analysis-cashflow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-bottom: 24px; }
+.expense-analysis-cashflow article { display: grid; gap: 9px; min-width: 0; padding: 20px; background: #faf8ff; border: 1px solid #ede9fe; border-radius: 16px; }
+.expense-analysis-cashflow span { font-size: 13px; color: #6b7280; }
+.expense-analysis-cashflow strong { font-size: clamp(20px, 3vw, 28px); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.expense-analysis-cashflow article:first-child strong { color: #047857; }
+.expense-analysis-cashflow small { font-size: 11px; color: #6b7280; line-height: 1.6; }
 @media (max-width: 1000px) { .expense-analysis-insights { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) {
+  .expense-analysis-cashflow { grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .expense-analysis-category-layout { grid-template-columns: minmax(0, 1fr); }
   .expense-analysis-panel { padding: 18px; }
   .expense-analysis-insight { padding: 15px; }

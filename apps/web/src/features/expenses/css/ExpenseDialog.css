@@ -44,6 +44,12 @@
 .expense-dialog-surface .entry-content, .expense-dialog-surface .change-item { min-width: 0; }
 .expense-dialog-surface .entry-meta, .expense-dialog-surface .change-values { flex-wrap: wrap; }
 .expense-dialog-surface .modal-content { min-height: 0; overflow-y: auto; }
+/* Currency takes its own column, so three-letter codes never overlap the amount. */
+.expense-dialog-surface .expense-amount-field { display: flex; align-items: center; width: 100%; min-width: 0; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; overflow: hidden; }
+.expense-dialog-surface .expense-amount-currency { flex: 0 0 auto; padding: 0 12px; font-size: 14px; font-weight: 600; color: #6b7280; border-right: 1px solid #e5e7eb; }
+.expense-dialog-surface .form-group .expense-amount-field input { flex: 1 1 0; width: 0; min-width: 0; border: 0; border-radius: 0; padding: 12px; box-shadow: none; background: transparent; }
+.expense-dialog-surface .expense-amount-field:focus-within { border-color: #8b5cf6; box-shadow: 0 0 0 3px #ede9fe; }
+.expense-dialog-surface .expense-amount-field input:focus-visible { outline: none; }
 @media (max-width: 480px) {
   .expense-dialog-layer { padding: 10px; }
   .expense-dialog-layer > .expense-dialog-surface { max-height: calc(100vh - 20px); max-height: calc(100dvh - 20px); border-radius: 16px; }

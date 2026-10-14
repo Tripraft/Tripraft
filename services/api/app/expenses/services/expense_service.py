@@ -1117,6 +1117,57 @@ class ExpenseServiceSQL:
             return False, {'error': 'Failed to delete expense'}
     
     @staticmethod
+    def restore_expense(expense_id: str, user_id: str) -> Tuple[bool, Dict[str, Any]]:
+        """Restore the original ledger entry once, under the same lock as deletion."""
+        try:
+            expense_id = ExpenseServiceSQL._identifier(expense_id)
+            user_id = ExpenseServiceSQL._identifier(user_id)
+            with get_db_session() as session:
+                expense = lock_money_record(session, Expense, expense_id)
+                if expense is None:
+                    return False, {'error': 'Expense not found', 'status_code': 404}
+                group = None
+                if expense.group_id is None:
+                    if expense.created_by != user_id:
+                        return False, {'error': 'You can only restore your own personal expenses', 'status_code': 403}
+                else:
+                    group, _ = access(session, expense.group_id, user_id)
+                    if user_id not in (group.created_by, expense.created_by):
+                        return False, {'error': 'You can only restore expenses you created', 'status_code': 403}
+
+                # A retried request must never apply the saved expense twice.
+                if expense.is_deleted:
+                    before = expense.to_dict()
+                    if group is not None:
+                        splits = list(expense.splits)
+                        if expense.currency != group.currency or sum((row.amount for row in splits), Decimal('0')) != expense.amount:
+                            return False, {'error': 'Saved expense does not match the group ledger', 'status_code': 409}
+                        effects = ExpenseServiceSQL._balance_effects(splits, expense.paid_by, expense.amount)
+                        preserve_former_member_balances(session, expense.group_id, effects)
+                        ExpenseServiceSQL._update_balances(session, expense.group_id, splits, expense.paid_by, expense.amount)
+                    expense.is_deleted = False
+                    expense.deleted_by = None
+                    expense.deleted_at = None
+                    expense.updated_at = datetime.now(timezone.utc)
+                    session.add(ExpenseHistory(
+                        expense_id=expense.id, group_id=expense.group_id, action='restored',
+                        changed_by=user_id, changes_json=[], before_snapshot=before,
+                        after_snapshot=expense.to_dict(),
+                    ))
+                    session.commit()
+
+                result = {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
+                if group is not None:
+                    from app.expenses.services.ledger_math import member_balances
+                    result['balances'] = member_balances(session, group)
+                return True, result
+        except AppError as exc:
+            return False, {'error': exc.message, 'status_code': exc.status_code}
+        except Exception:
+            logger.exception('Restore expense failed')
+            return False, {'error': 'Failed to restore expense', 'status_code': 500}
+
+    @staticmethod
     def get_user_expenses(
         user_id: str,
         limit: int = 50,

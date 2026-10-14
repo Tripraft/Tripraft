@@ -269,22 +269,24 @@ class GroupServiceSQL:
 
     @staticmethod
     @service_result
-    def get_group_full(group_id, user_id, expense_limit=50, expense_offset=0, settlement_limit=50, settlement_offset=0):
+    def get_group_full(group_id, user_id, expense_limit=50, expense_offset=0, settlement_limit=50, settlement_offset=0, include_deleted=False):
         with get_db_session() as session:
             group, member = access(session, group_id, user_id)
             return {'group': GroupServiceSQL._full_group_data(
-                session, group, member, expense_limit, expense_offset, settlement_limit, settlement_offset,
+                session, group, member, expense_limit, expense_offset, settlement_limit, settlement_offset, include_deleted,
             )}
 
     @staticmethod
-    def _full_group_data(session, group, member, expense_limit=50, expense_offset=0, settlement_limit=50, settlement_offset=0):
+    def _full_group_data(session, group, member, expense_limit=50, expense_offset=0, settlement_limit=50, settlement_offset=0, include_deleted=False):
         """Serialize in the caller's transaction so acceptance returns the ledger it actually joined."""
         user_id = member.user_id
         from app.expenses.services.expense_service import ExpenseServiceSQL
         from app.expenses.services.settlement_service import SettlementServiceSQL
         data = group_dict(group, member)
         data['summary'] = group_summaries(session, [group.id], user_id)[group.id]
-        query = session.query(Expense).filter_by(group_id=group.id, is_deleted=False)
+        query = session.query(Expense).filter_by(group_id=group.id)
+        if not include_deleted:
+            query = query.filter_by(is_deleted=False)
         total = query.count()
         expenses = query.options(joinedload(Expense.payer),
                                  selectinload(Expense.splits).joinedload(ExpenseSplit.user)).order_by(
@@ -292,11 +294,13 @@ class GroupServiceSQL:
         ).offset(expense_offset).limit(expense_limit).all()
         data['expenses'] = [ExpenseServiceSQL._get_expense_dict(session, row) for row in expenses]
         for row in data['expenses']:
-            row['permissions'] = {'can_edit': owner(group, user_id) or row['created_by'] == str(identifier(user_id)),
-                                  'can_delete': owner(group, user_id) or row['created_by'] == str(identifier(user_id))}
+            authorized = owner(group, user_id) or row['created_by'] == str(identifier(user_id))
+            row['permissions'] = {'can_edit': authorized and not row['is_deleted'],
+                                  'can_delete': authorized and not row['is_deleted'],
+                                  'can_restore': authorized and row['is_deleted']}
         data['expense_pagination'] = {'total': total, 'limit': expense_limit, 'offset': expense_offset,
                                       'has_more': expense_offset + len(expenses) < total}
-        data['total_expenses'] = money_to_json(query.with_entities(func.sum(Expense.amount)).scalar() or 0)
+        data['total_expenses'] = data['summary']['total_spend']
         query = session.query(Settlement).filter_by(group_id=group.id, is_deleted=False)
         total = query.count()
         settlements = query.options(joinedload(Settlement.from_user), joinedload(Settlement.to_user)).order_by(

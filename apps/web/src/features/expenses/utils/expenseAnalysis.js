@@ -1,5 +1,6 @@
 // Purpose: Calendar-safe analytics using recorded splits and excluding deleted expenses.
 export const ANALYSIS_COLORS = ['#8b5cf6', '#38bdf8', '#34d399', '#fbbf24', '#f472b6', '#a78bfa', '#fb7185', '#2dd4bf'];
+import { isPersonalIncome } from './personalTransactions';
 
 export function expenseDay(expense) {
   const raw = expense.expense_date || expense.date || expense.created_at;
@@ -12,16 +13,19 @@ export function calendarDay(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-export function analyzeExpenses(expenses, { range = 'all', scope = 'group', userId, now = new Date() } = {}) {
+export function analyzeExpenses(expenses, { range = 'all', scope = 'group', mode = 'group', userId, now = new Date() } = {}) {
   const days = { week: 7, month: 30, quarter: 90, year: 365 }[range];
   const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   if (days) cutoff.setDate(cutoff.getDate() - days + 1);
   const startDay = calendarDay(cutoff), today = calendarDay(now);
-  const active = expenses.filter(expense => {
+  const records = expenses.filter(expense => {
     if (expense.is_deleted) return false;
     const day = expenseDay(expense);
     return !days || (day && day >= startDay && day <= today);
   });
+  const income = mode === 'personal' ? records.filter(isPersonalIncome) : [];
+  const active = mode === 'personal' ? records.filter(expense => !isPersonalIncome(expense)) : records;
+  const incomeTotal = income.reduce((sum, entry) => sum + (Number(entry.amount) || 0), 0);
   const entries = active.map(expense => ({
     ...expense,
     day: expenseDay(expense),
@@ -47,7 +51,8 @@ export function analyzeExpenses(expenses, { range = 'all', scope = 'group', user
   const duration = dates.length ? Math.round((new Date(`${end}T12:00:00Z`) - new Date(`${dates[0]}T12:00:00Z`)) / 86400000) + 1 : 1;
   const groupTotal = active.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
   const paid = active.filter(expense => String(expense.paid_by) === String(userId)).reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
-  return { entries, total, categoryData, daily, dailyAverage: total / duration,
+  return { entries, total, incomeTotal, incomeCount: income.length, netBalance: incomeTotal - total,
+    categoryData, daily, dailyAverage: total / duration,
     topExpenses: [...entries].sort((a, b) => b.value - a.value).slice(0, 5),
     paid, footprint: groupTotal ? Math.round(paid / groupTotal * 100) : 0 };
 }

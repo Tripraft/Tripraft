@@ -16,7 +16,7 @@ import '../css/ExpenseHistoryModal.css';
  * - Color-coded field changes
  * - Chronological timeline view
  */
-const ExpenseHistoryModal = ({ expense, members, onClose, currency = expense?.currency || 'USD' }) => {
+const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', currentUserId, currency = expense?.currency || 'USD' }) => {
   const expenseId = expense?.id || expense?.expense_id;
   
   const { data, isLoading, error } = useExpenseEditHistory(expenseId);
@@ -27,8 +27,10 @@ const ExpenseHistoryModal = ({ expense, members, onClose, currency = expense?.cu
 
   // Get member name from user ID
   const getMemberName = (userId) => {
+    if (userId && String(userId) === String(currentUserId)) return 'You';
+    if (mode === 'personal' && userId && [expense?.created_by, expense?.paid_by].some(id => id != null && String(id) === String(userId))) return 'You';
     if (!userId || !members) return 'Unknown User';
-    const member = members.find(m => (m.user_id || m.id) === userId);
+    const member = members.find(m => String(m.user_id || m.id) === String(userId));
     return member?.user?.display_name || member?.display_name || member?.email || 'Unknown User';
   };
 
@@ -168,7 +170,7 @@ const ExpenseHistoryModal = ({ expense, members, onClose, currency = expense?.cu
                       </span>
                       <div className="entry-meta">
                         <User size={14} />
-                        <span>{entry.changed_by_name || getMemberName(entry.changed_by)}</span>
+                        <span>{String(entry.changed_by) === String(currentUserId) ? 'You' : entry.changed_by_name || getMemberName(entry.changed_by)}</span>
                         <Clock size={14} />
                         <span>{formatDate(entry.changed_at)}</span>
                       </div>
@@ -189,6 +191,8 @@ const ExpenseHistoryModal = ({ expense, members, onClose, currency = expense?.cu
                                 const oldVal = change.old_value ?? change.old;
                                 const newVal = change.new_value ?? change.new;
                                 const fieldName = change.field_name || change.field;
+                                // Personal ownership is not a user-editable group split.
+                                if (mode === 'personal' && ['splits', 'split_type', 'split_status', 'paid_by'].includes(fieldName)) return false;
                                 
                                 // Amounts and participants can change while the row count stays equal.
                                 if (fieldName === 'splits') {
@@ -271,6 +275,7 @@ const ExpenseHistoryModal = ({ expense, members, onClose, currency = expense?.cu
                     {entry.action === 'deleted' && (
                       <p className="action-description">Expense was deleted</p>
                     )}
+                    {entry.action === 'restored' && <p className="action-description">Expense was restored</p>}
                   </div>
                 </div>
               ))}

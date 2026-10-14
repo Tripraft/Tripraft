@@ -82,7 +82,7 @@ class ExpenseApiService {
     let combined;
     for (;;) {
       const params = new URLSearchParams({ expense_limit: 100, settlement_limit: 100,
-        expense_offset: expenseOffset, settlement_offset: settlementOffset });
+        expense_offset: expenseOffset, settlement_offset: settlementOffset, include_deleted: true });
       if (bypassCache) params.set('_t', Date.now());
       const response = await apiClient.get(`${BASE}/groups/${groupId}/full?${params}`);
       const data = response?.data ?? response;
@@ -193,6 +193,10 @@ class ExpenseApiService {
 
   async deleteExpense(expenseId) {
     return apiClient.delete(`${BASE}/${expenseId}`);
+  }
+
+  async restoreExpense(expenseId) {
+    return apiClient.post(`${BASE}/${expenseId}/restore`);
   }
 
   async getGroupExpenses(groupId, params = {}) {

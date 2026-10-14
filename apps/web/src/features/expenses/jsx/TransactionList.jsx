@@ -7,6 +7,7 @@ import { formatMoney } from '../../../utils/money';
 import { formatDateLocal } from '../../../utils/timezoneUtils';
 import ExpenseHistoryModal from './ExpenseHistoryModal';
 import { expensePermissions } from '../utils/groupPermissions';
+import { isPersonalIncome } from '../utils/personalTransactions';
 
 // Category icon mapping with colors
 const CATEGORY_CONFIG = {
@@ -72,6 +73,7 @@ const TransactionList = ({
   currentUserId, // Add current user ID to check ownership
   onEdit, 
   onDelete, 
+  onRestore,
   onFilterChange,
   currency = activeGroup?.currency || 'USD',
   isInTab = false
@@ -80,6 +82,17 @@ const TransactionList = ({
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [historyTransaction, setHistoryTransaction] = useState(null);
+  const [restoringId, setRestoringId] = useState(null);
+  const [restoreError, setRestoreError] = useState('');
+
+  const handleRestore = async id => {
+    if (restoringId) return;
+    setRestoringId(id);
+    setRestoreError('');
+    try { await onRestore(id); }
+    catch (error) { setRestoreError(error.message || 'Unable to restore expense'); }
+    finally { setRestoringId(null); }
+  };
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -115,6 +128,7 @@ const TransactionList = ({
   // Helper function to get member display name
   // Phase 17 Bug Fix: Also check allMembersMap for removed members
   const getMemberName = (userId) => {
+    if (mode === 'personal' || (userId && String(userId) === String(currentUserId))) return 'You';
     if (!userId) return 'Unknown User';
     
     // First: Check active members array
@@ -206,19 +220,14 @@ const TransactionList = ({
     }
   };
 
-  // Income category check - only Salary is income
-  const isIncome = (category) => {
-    return category && (category.toLowerCase() === 'salary' || category.toLowerCase() === 'income');
-  };
-
   const getFilteredAndSortedTransactions = () => {
     let filtered = [...transactions];
     
     // Type filter (income/expense) - used in personal mode
     if (filter.type === 'income') {
-      filtered = filtered.filter(t => isIncome(t.category));
+      filtered = filtered.filter(isPersonalIncome);
     } else if (filter.type === 'expense') {
-      filtered = filtered.filter(t => !isIncome(t.category));
+      filtered = filtered.filter(t => !isPersonalIncome(t));
     }
     
     // Category filter - used in group mode
@@ -315,7 +324,8 @@ const TransactionList = ({
           
           {mode === 'group' ? <TransactionActivity transactions={paginatedTransactions} group={activeGroup}
             currentUserId={currentUserId} getMemberName={getMemberName} formatDate={formatDate} wasEdited={wasEdited}
-            onSplit={handleViewDetails} onHistory={handleViewHistory} onEdit={onEdit} onDelete={onDelete} currency={currency} /> : <div className="table-container">
+            onSplit={handleViewDetails} onHistory={handleViewHistory} onEdit={onEdit} onDelete={onDelete}
+            onRestore={onRestore ? handleRestore : undefined} restoringId={restoringId} currency={currency} /> : <div className="table-container">
             <table>
               <thead>
                 <tr>
@@ -330,7 +340,7 @@ const TransactionList = ({
               </thead>
               <tbody>
                 {paginatedTransactions.map((t, index) => {
-                const isIncomeTransaction = isIncome(t.category);
+                const isIncomeTransaction = mode === 'personal' && isPersonalIncome(t);
                 const addedByName = mode === 'group' ? getMemberName(t.paid_by) : '';
                 const splitType = mode === 'group' ? (t.split_type || 'EQUAL') : '';
                 const permissions = expensePermissions(t, activeGroup, currentUserId, mode);
@@ -449,9 +459,11 @@ const TransactionList = ({
                         aria-label={`View split details for ${t.description || 'expense'}`}
                       ><Info size={15} /></button>}
                       {isDeleted ? (
-                        <span className="deleted-indicator">
-                          <Trash2 size={14} />
-                        </span>
+                        permissions.can_restore && onRestore ? <button className="expense-revert-button"
+                          disabled={Boolean(restoringId)} onClick={() => handleRestore(t.id || t.expense_id)}
+                          aria-label={`Revert deletion of ${t.description || 'expense'}`}>
+                          <RefreshCw size={14} />{restoringId === (t.id || t.expense_id) ? 'Restoring...' : 'Revert'}
+                        </button> : <span className="deleted-indicator"><Trash2 size={14} /></span>
                       ) : permissions.can_edit || permissions.can_delete ? (
                         <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}>
                           {permissions.can_edit && <button
@@ -599,10 +611,13 @@ const TransactionList = ({
       )}
 
       {/* Phase 12: Expense History Modal */}
+      {restoreError && <p role="alert">{restoreError}</p>}
       {showHistoryModal && historyTransaction && (
         <ExpenseHistoryModal currency={currency}
           expense={historyTransaction}
           members={members}
+          mode={mode}
+          currentUserId={currentUserId}
           onClose={() => {
             setShowHistoryModal(false);
             setHistoryTransaction(null);

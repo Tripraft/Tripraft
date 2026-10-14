@@ -1,17 +1,13 @@
 // Purpose: Renders the Expense Summary interface within apps\web\src\features\expenses\jsx.
 import React from 'react';
 import { Wallet, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { isPersonalIncome } from '../utils/personalTransactions';
 
 const ExpenseSummary = ({ transactions, mode = 'personal' }) => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
   };
 
-  // Income category - only Salary is income
-  const isIncome = (category) => {
-    return category && category.toLowerCase() === 'salary';
-  };
-  
   // Filter out deleted transactions for calculations
   const activeTransactions = transactions.filter(t => !t.is_deleted);
   
@@ -37,11 +33,11 @@ const ExpenseSummary = ({ transactions, mode = 'personal' }) => {
   
   // For personal mode: show all three cards
   const income = activeTransactions
-    .filter(t => isIncome(t.category))
+    .filter(isPersonalIncome)
     .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
   
   const expense = activeTransactions
-    .filter(t => !isIncome(t.category))
+    .filter(t => !isPersonalIncome(t))
     .reduce((sum, t) => sum + parseFloat(t.amount || 0), 0);
   
   const balance = income - expense;

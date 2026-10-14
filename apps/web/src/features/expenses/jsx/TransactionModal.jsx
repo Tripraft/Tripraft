@@ -11,7 +11,8 @@ const TransactionModal = ({
   onSave, 
   onClose, 
   onAlert,
-  currentUser
+  currentUser,
+  currency
 }) => {
   const [saving, setSaving] = useState(false);
   const customSplit = mode === 'group' && editingTransaction && String(editingTransaction.split_type || 'equal').toLowerCase() !== 'equal';
@@ -193,8 +194,8 @@ const TransactionModal = ({
 
           <div className="form-group">
             <label htmlFor="amount">Amount</label>
-            <div className="amount-input">
-              <span className="currency-symbol">{activeGroup?.currency || 'USD'}</span>
+            <div className="expense-amount-field">
+              <span className="expense-amount-currency">{currency || activeGroup?.currency || 'USD'}</span>
               <input 
                 type="number" 
                 id="amount"

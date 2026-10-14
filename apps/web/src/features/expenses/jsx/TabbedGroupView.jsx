@@ -28,6 +28,7 @@ const TabbedGroupView = ({
   currentUserId,
   onEdit,
   onDelete,
+  onRestore,
   onExportPDF,
   membersContent,
   activeTab: selectedTab,
@@ -251,6 +252,7 @@ const TabbedGroupView = ({
               currentUserId={currentUserId}
               onEdit={onEdit}
               onDelete={onDelete}
+              onRestore={onRestore}
               onFilterChange={onFilterChange}
               currency={group?.currency || 'USD'}
               isInTab={true}

@@ -21,7 +21,7 @@
  * - Single source of truth
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import ExpenseSummary from './ExpenseSummary';
 
@@ -134,6 +134,13 @@ const ExpenseManager = () => {
   const [mutationLoading, setMutationLoading] = useState(false);
   const [showNewGroup, setShowNewGroup] = useState(false);
   const [groupTab, setGroupTab] = useState('balances');
+  const groupTabsRef = useRef(null);
+  const openGroupTab = tab => {
+    setGroupTab(tab);
+    // The cards sit above the tab content, often outside the current viewport.
+    groupTabsRef.current?.scrollIntoView?.({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    groupTabsRef.current?.querySelector(`#group-tab-${tab}`)?.focus({ preventScroll: true });
+  };
 
   const setExpenseView = useCallback((nextMode, groupId, options = {}) => {
     const userId = currentUser?.uid || currentUser?.user_id;
@@ -463,7 +470,8 @@ const ExpenseManager = () => {
       
       // INSTANT UPDATE: Use returned data if available
       if (mode === 'group' && (result?.expenses || result?.group_balances)) {
-        updateExpensesAndBalances(activeGroupExpenses.filter(item => (item.id || item.expense_id) !== id), result.group_balances);
+        updateExpensesAndBalances(activeGroupExpenses.map(item => (item.id || item.expense_id) === id
+          ? { ...item, is_deleted: true } : item), result.group_balances);
         await refetchGroupDetail();
       } else if (mode === 'personal') {
         await refetchPersonalExpenses();
@@ -480,6 +488,19 @@ const ExpenseManager = () => {
     } finally {
       setMutationLoading(false);
     }
+  };
+
+  const handleRestoreTransaction = async id => {
+    setMutationLoading(true);
+    try {
+      await expenseApi.restoreExpense(id);
+      if (mode === 'personal') await refetchPersonalExpenses();
+      else { await refetchGroupDetail(); await refetchGroups(); }
+      showToast('Transaction restored!', 'success');
+    } catch (error) {
+      showToast(`Failed to restore: ${error.message}`, 'error');
+      throw error;
+    } finally { setMutationLoading(false); }
   };
 
   // Settlement handler - with INSTANT UPDATES
@@ -630,13 +651,13 @@ const ExpenseManager = () => {
         return <>
           <GroupDetailHeader group={activeGroupData} members={activeGroupMembers || []} overview={overview}
             busy={mutationLoading || groupDetailLoading} onBack={() => { setExpenseView('group'); refetchGroups(); }}
-            onCreate={() => setShowNewGroup(true)} onAdd={handleOpenModal} onSettle={() => setGroupTab('settleup')} />
+            onCreate={() => setShowNewGroup(true)} onAdd={handleOpenModal} onSettle={() => openGroupTab('settleup')} />
           <GroupSummaryCards remainingBalance={remainingBalance}
             totalSettlements={(activeGroupSettlements || []).reduce((sum, settlement) => sum + (Number(settlement.amount) || 0), 0)}
             settlementCount={(activeGroupSettlements || []).length}
             changeCount={transactions.filter(transaction => transaction.is_edited).length}
             currency={activeGroupData.currency || 'USD'} onSettlementCardClick={() => setIsHistoryModalOpen(true)}
-            onSettleClick={() => setGroupTab('settleup')} onHistoryClick={() => setGroupTab('transactions')} />
+            onSettleClick={() => openGroupTab('settleup')} onHistoryClick={() => openGroupTab('transactions')} />
           <SettlementHistoryModal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)}
             settlements={activeGroupSettlements || []} group={activeGroupData}
             currentUserId={currentUser?.uid || currentUser?.user_id || currentUser?.id}
@@ -648,7 +669,7 @@ const ExpenseManager = () => {
 
       {/* Group View with Tabs (Balances, Settle Up, Spending, Transactions, Analytics) */}
       {mode === 'group' && activeGroupId && activeGroupData && (
-        <TabbedGroupView
+        <div ref={groupTabsRef} className="expense-group-tab-target"><TabbedGroupView
           key={activeGroupId}
           activeTab={groupTab}
           onTabChange={setGroupTab}
@@ -691,8 +712,9 @@ const ExpenseManager = () => {
           currentUserId={currentUser?.uid || currentUser?.user_id}
           onEdit={handleEditTransaction}
           onDelete={(id) => showConfirm('Are you sure you want to delete this transaction?', () => handleDeleteTransaction(id))}
+          onRestore={handleRestoreTransaction}
           onExportPDF={handleExportPDF}
-        />
+        /></div>
       )}
 
       {/* Personal Mode - Tabbed View (Transaction History + Analytics) */}
@@ -707,6 +729,7 @@ const ExpenseManager = () => {
           }))}
           onEdit={handleEditTransaction}
           onDelete={(id) => showConfirm('Are you sure you want to delete this transaction?', () => handleDeleteTransaction(id))}
+          onRestore={handleRestoreTransaction}
           currentUserId={currentUser?.uid || currentUser?.user_id}
           currency="USD"
           onExportPDF={handleExportPDF}

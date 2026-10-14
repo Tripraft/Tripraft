@@ -67,6 +67,14 @@
 .expense-activity-actions button:hover { border-color: #c4b5fd; color: #7c3aed; background: #faf8ff; }
 .expense-activity-actions button.expense-activity-delete:hover { border-color: #fecdd3; color: #be123c; background: #fff1f2; }
 .expense-activity-item.is-deleted .expense-activity-title h3 { text-decoration: line-through; color: #9ca3af; }
+.expense-activity-item.is-deleted { background: #f3f4f6; box-shadow: inset 0 0 0 1px #e5e7eb; border-radius: 12px; padding-inline: 12px; margin-block: 6px; }
+.expense-activity-item.is-deleted .expense-activity-title strong { text-decoration: line-through; color: #9ca3af; }
+.expense-revert-button { display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; padding: 6px 8px; min-height: 34px; border: 1px solid #c4b5fd; border-radius: 8px; background: #fff; color: #7c3aed; font: inherit; font-size: 11px; cursor: pointer; }
+.expense-revert-button:disabled { opacity: .6; cursor: wait; }
+.expense-manager .transaction-deleted { opacity: 1; background: #f3f4f6 !important; box-shadow: inset 0 0 0 1px #e5e7eb; }
+.expense-manager .transaction-deleted:hover { background: #e5e7eb !important; }
+.expense-manager .transaction-deleted .deleted-badge, .expense-activity-item.is-deleted .deleted-badge { background: #e5e7eb; color: #6b7280; }
+.expense-group-tab-target { scroll-margin-top: 90px; min-width: 0; }
 .expense-manager .pagination-controls-top { background: #fafafa; border-radius: 12px; border: 1px solid #f3f4f6; padding: 12px 15px; gap: 12px; }
 .expense-manager .pagination-info, .expense-manager .page-size-selector { font-size: 12px; flex-wrap: wrap; }
 .expense-manager .pagination-controls { flex-wrap: wrap; padding: 16px 10px; background: #fff; gap: 8px; }

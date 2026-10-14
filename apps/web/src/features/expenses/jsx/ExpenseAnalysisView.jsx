@@ -30,7 +30,7 @@ export default function ExpenseAnalysisView({ mode = 'personal', expenses = [], 
   currentUserId, groupName, currency = 'USD', onExportPDF, onBack }) {
   const [range, setRange] = useState('all');
   const [scope, setScope] = useState('group');
-  const analysis = useMemo(() => analyzeExpenses(expenses, { range, scope, userId: currentUserId }), [expenses, range, scope, currentUserId]);
+  const analysis = useMemo(() => analyzeExpenses(expenses, { range, scope, mode, userId: currentUserId }), [expenses, range, scope, mode, currentUserId]);
   const money = value => formatMoney(value, currency);
   const topCategory = analysis.categoryData[0], largest = analysis.topExpenses[0];
   const insights = [
@@ -48,6 +48,11 @@ export default function ExpenseAnalysisView({ mode = 'personal', expenses = [], 
         <option value="all">All time</option><option value="week">Last 7 days</option><option value="month">Last 30 days</option><option value="quarter">Last 90 days</option><option value="year">Last 365 days</option>
       </select></label>{onExportPDF && <button className="expense-secondary-button" onClick={onExportPDF}><Download size={16} />Export PDF</button>}</div>
     </div>
+    {mode === 'personal' && <div className="expense-analysis-cashflow" aria-label="Personal cash flow">
+      <article><span>Income received</span><strong>{money(analysis.incomeTotal)}</strong><small>{analysis.incomeCount} income entr{analysis.incomeCount === 1 ? 'y' : 'ies'}</small></article>
+      <article><span>Money spent</span><strong>{money(analysis.total)}</strong><small>Income is excluded from spending</small></article>
+      <article><span>Net balance</span><strong>{money(analysis.netBalance)}</strong><small>Income minus expenses for this period</small></article>
+    </div>}
     <h3 className="expense-analysis-section-label"><Sparkles size={14} />Smart insights</h3>
     <div className="expense-analysis-insights">{insights.map(({ Icon, title, value, description }) => <article className="expense-analysis-insight" key={title}>
       <span className="expense-analysis-insight-icon"><Icon size={20} /></span><h4>{title}</h4><strong>{value}</strong><p>{description}</p>

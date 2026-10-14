@@ -2,9 +2,9 @@ import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import expenseApi from '../services/expenseApi';
-import { queryKeys, useGroupDetail } from '../hooks/useExpenseQuery';
+import { queryKeys, useGroupDetail, usePersonalExpenses } from '../hooks/useExpenseQuery';
 
-jest.mock('../services/expenseApi', () => ({ __esModule: true, default: { getGroupFull: jest.fn() } }));
+jest.mock('../services/expenseApi', () => ({ __esModule: true, default: { getGroupFull: jest.fn(), getUserExpenses: jest.fn() } }));
 jest.mock('../services/sqlAuthService', () => ({ __esModule: true, default: {} }));
 
 function setup() {
@@ -12,6 +12,18 @@ function setup() {
   const wrapper = ({ children }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   return { client, wrapper };
 }
+
+it('loads all personal pages including deleted rows for a persistent Revert action', async () => {
+  const { client, wrapper } = setup();
+  expenseApi.getUserExpenses.mockImplementation(async ({ offset }) => ({ expenses: offset === 0
+    ? Array.from({ length: 100 }, (_, index) => ({ id: String(index), is_deleted: index === 0 }))
+    : [{ id: '100', amount: 10 }], has_more: offset === 0 }));
+  const { result, unmount } = renderHook(() => usePersonalExpenses(), { wrapper });
+  await waitFor(() => expect(result.current.expenses).toHaveLength(101));
+  expect(result.current.expenses[0].is_deleted).toBe(true);
+  expect(expenseApi.getUserExpenses).toHaveBeenLastCalledWith({ personal_only: true, include_deleted: true, limit: 100, offset: 100 });
+  unmount(); client.clear();
+});
 
 it('hides cached ledger and controls when the server revokes membership', async () => {
   const { client, wrapper } = setup();

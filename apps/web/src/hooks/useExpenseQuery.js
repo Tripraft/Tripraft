@@ -1278,7 +1278,20 @@ export function usePersonalExpenses() {
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: personalKey,
-    queryFn: async () => unwrapEnvelope(await expenseApi.getUserExpenses({ personal_only: true })),
+    queryFn: async () => {
+      // Keep soft-deleted rows after reload without letting them displace active pages.
+      const expenses = [];
+      let offset = 0;
+      for (;;) {
+        const page = unwrapEnvelope(await expenseApi.getUserExpenses({ personal_only: true, include_deleted: true, limit: 100, offset }));
+        const rows = page.expenses || [];
+        expenses.push(...rows);
+        offset += rows.length;
+        if (!page.has_more) break;
+        if (!rows.length) throw new Error('Personal history changed while loading. Please refresh.');
+      }
+      return { expenses: [...new Map(expenses.map(row => [row.id || row.expense_id, row])).values()] };
+    },
     staleTime: 0,
     gcTime: 5 * 60 * 1000,
   });

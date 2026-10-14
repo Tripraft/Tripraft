@@ -24,10 +24,10 @@ jest.mock('../features/expenses/jsx/ModeToggle', () => function Toggle(props) {
 });
 jest.mock('../features/expenses/jsx/PersonalTabbedView', () => () => <p>Personal expenses</p>);
 jest.mock('../features/expenses/jsx/TabbedGroupView', () => function GroupView(props) {
-  return <p>Group expenses: {props.group.id}</p>;
+  const ActualView = jest.requireActual('../features/expenses/jsx/TabbedGroupView').default;
+  return <><p>Group expenses: {props.group.id}</p><ActualView {...props} /></>;
 });
 jest.mock('../features/expenses/jsx/ExpenseSummary', () => () => null);
-jest.mock('../features/expenses/jsx/GroupSummaryCards', () => () => null);
 jest.mock('../features/expenses/jsx/SettlementHistoryModal', () => () => null);
 jest.mock('../features/expenses/jsx/TransactionModal', () => () => null);
 
@@ -63,6 +63,21 @@ it('opens the exact invitation group without selecting the first group or person
   expect(screen.queryByText('Personal expenses')).toBeNull();
   expect(screen.getByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
   expect(useGroupDetail.mock.calls.every(([id]) => id === 'joined-group')).toBe(true);
+});
+
+it('opens, focuses and scrolls to settlements from the summary card', () => {
+  const original = HTMLElement.prototype.scrollIntoView;
+  const scroll = jest.fn();
+  HTMLElement.prototype.scrollIntoView = scroll;
+  try {
+    render(<Page />);
+    fireEvent.click(screen.getByRole('button', { name: /To be settled/ }));
+    const tab = screen.getByRole('tab', { name: 'Settle Up' });
+    expect(tab).toHaveAttribute('aria-selected', 'true');
+    expect(tab).toHaveFocus();
+    expect(screen.getByRole('region', { name: 'Group settlements' })).toBeInTheDocument();
+    expect(scroll).toHaveBeenCalledWith(expect.objectContaining({ block: 'start' }));
+  } finally { HTMLElement.prototype.scrollIntoView = original; }
 });
 
 it('keeps the selected group through session restoration', () => {

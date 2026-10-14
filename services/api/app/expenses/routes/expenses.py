@@ -332,6 +332,24 @@ def delete_expense(expense_id):
         return _expense_error(result, 'Failed to delete expense')
 
 
+@expenses_sql_bp.route('/<expense_id>/restore', methods=['POST'])
+@limit_api(Config.RATE_LIMITS['update'])
+@require_auth
+def restore_expense(expense_id):
+    """Revert a soft deletion without creating a replacement expense."""
+    user_id = get_current_user_id()
+    success, result = expense_service_sql.restore_expense(record_uuid(expense_id), user_id)
+    if not success:
+        return _expense_error(result, 'Failed to restore expense')
+    data = {'expense': result['expense']}
+    if 'balances' in result:
+        data['group_balances'] = result['balances']
+    if result['expense'].get('group_id') is None:
+        data['personal_summary'] = personal_summary(user_id)
+    _invalidate_expense_caches()
+    return success_response(data=data, message='Expense restored')
+
+
 @expenses_sql_bp.route('/group/<group_id>', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth

@@ -13,6 +13,7 @@ from app.core.schemas.expense_groups import (
 )
 from app.expenses.services.group_access import identifier
 from app.expenses.services.expense_group_service import group_service_sql
+from app.expenses.routes.personal_finance import parse_boolean
 
 
 groups_sql_bp = Blueprint('groups_sql', __name__, url_prefix='/api/v1/expenses/groups')
@@ -82,7 +83,10 @@ def get_group_full(group_id):
         ('settlement_limit', 50, 1, 100), ('settlement_offset', 0, 0, None),
     ):
         page[name] = parse_query_int(name, default, minimum=minimum, maximum=maximum)
-    return _response(*group_service_sql.get_group_full(parse_group_id(group_id), get_current_user_id(), **page))
+    return _response(*group_service_sql.get_group_full(
+        parse_group_id(group_id), get_current_user_id(),
+        include_deleted=parse_boolean('include_deleted'), **page,
+    ))
 
 
 @groups_sql_bp.route('/<group_id>', methods=['PUT', 'PATCH'])
