@@ -15,20 +15,37 @@ export function formatDate(dateStr) {
   }
   if (Number.isNaN(date.getTime())) return '';
   return date.toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
   });
 }
 
 export function formatTime(dateStr) {
   if (!dateStr) return '';
   return new Date(dateStr).toLocaleTimeString('en-US', {
-    hour: '2-digit', minute: '2-digit', hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
   });
 }
 
 export function formatDateRange(startStr, endStr) {
   if (!startStr) return '';
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   const s = new Date(startStr + 'T00:00:00');
   const end = endStr ? new Date(endStr + 'T00:00:00') : null;
   const sLabel = months[s.getMonth()] + ' ' + s.getDate() + ', ' + s.getFullYear();
@@ -49,14 +66,26 @@ export function formatRelativeTime(dateStr) {
 
 export function getInitials(name) {
   if (!name) return '??';
-  return name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase();
+  return name
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 }
 
 export function formatCurrency(amount, currency) {
   currency = currency || 'USD';
-  try { return new Intl.NumberFormat('en-US', {
-    style: 'currency', currency, minimumFractionDigits: 0, maximumFractionDigits: 0,
-  }).format(Number(amount) || 0); } catch { return (Number(amount) || 0).toFixed(2) + ' ' + currency; }
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(Number(amount) || 0);
+  } catch {
+    return (Number(amount) || 0).toFixed(2) + ' ' + currency;
+  }
 }
 
 export function formatFileSize(bytes) {
@@ -74,6 +103,8 @@ export function formatActivityMessage(a) {
       return 'Created the group' + (name ? ' "' + name + '"' : '');
     case 'place_added':
       return 'Added ' + (name || 'a place') + ' to the itinerary';
+    case 'place_updated':
+      return 'Updated ' + (name || 'a stop') + ' in the itinerary';
     case 'place_deleted':
       return 'Removed ' + (name || 'a place') + ' from the itinerary';
     case 'vault_upload':
@@ -84,6 +115,18 @@ export function formatActivityMessage(a) {
       return 'Created a poll' + (name ? ': "' + name + '"' : '');
     case 'poll_deleted':
       return 'Deleted the poll' + (name ? ' "' + name + '"' : '');
+    case 'expense_added':
+      return 'Logged ' + (a.details?.description || name || 'a shared expense');
+    case 'settlement_created':
+      return 'Recorded a group settlement';
+    case 'group_updated':
+      return 'Updated the group settings';
+    case 'member_updated':
+      return 'Updated a member role';
+    case 'checklist_updated':
+      return 'Updated ' + (name || 'a checklist task');
+    case 'budget_updated':
+      return 'Updated the trip budget';
     case 'member_joined':
       return 'Joined the group';
     case 'member_left':
