@@ -45,7 +45,7 @@ export default function DemoPlannerProvider({ children }) {
         <div className="gp-demo-toolbar">
           <div>
             <strong>Demo workspace</strong>
-            <span>Sample trips and people. Demo trip changes stay in this browser.</span>
+            <span>Sample trips and people. Library uses the place catalog; demo changes stay in this browser.</span>
           </div>
           <label>
             View as{' '}

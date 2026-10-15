@@ -1,8 +1,7 @@
 ﻿import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { gpKeys } from '../hooks/useGroupPlannerQuery';
-import LibraryTab from '../features/trips/jsx/tabs/LibraryTab';
 import CircleTab from '../features/trips/jsx/tabs/CircleTab';
 import { itemizedSplits, suggestedSettlements } from '../features/trips/utils/plannerMoney';
 import {
@@ -25,7 +24,6 @@ jest.mock('../hooks/useAiConsentQuery', () => ({
   useSubmitAiConsent: () => ({ mutate: jest.fn() }),
   useRevokeAiConsent: () => ({ mutate: jest.fn() }),
 }));
-import planner from '../services/groupPlannerApi';
 import { useAuth } from '../context/AuthContext';
 let client;
 beforeEach(() => {
@@ -80,40 +78,6 @@ it('includes empty trip dates and preserves existing time slots when reordering'
   const optimized = optimizeStops(stops);
   expect(optimized[0].id).toBe('a');
   expect(routeDistance(optimized)).toBeLessThan(routeDistance(stops));
-});
-it('keeps failed shortlisted places selected after a partial add to itinerary', async () => {
-  const group = { start_date: '2026-10-14', end_date: '2026-10-16' };
-  client.setQueryData(gpKeys.destPlaces('Kyoto'), {
-    success: true,
-    data: {
-      places: [
-        { id: 'a', name: 'Garden', tags: ['culture'] },
-        { id: 'b', name: 'Cafe', tags: ['restaurant'] },
-      ],
-    },
-  });
-  client.setQueryData(gpKeys.destEvents('Kyoto'), { success: true, data: { events: [] } });
-  client.setQueryData(gpKeys.places('group'), { success: true, data: [] });
-  planner.addPlace
-    .mockResolvedValueOnce({ success: true, data: { id: 'saved' } })
-    .mockRejectedValueOnce(new Error('Offline'));
-  const toast = jest.fn();
-  wrap(<LibraryTab groupId="group" group={group} destination="Kyoto" showToast={toast} />);
-  fireEvent.click(screen.getByRole('button', { name: 'Shortlist Garden' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Shortlist Cafe' }));
-  fireEvent.change(screen.getByRole('combobox', { name: 'Shortlist day' }), {
-    target: { value: '2026-10-16' },
-  });
-  fireEvent.click(screen.getByRole('button', { name: 'Push to Itinerary' }));
-  await waitFor(() => expect(planner.addPlace).toHaveBeenCalledTimes(2));
-  await waitFor(() =>
-    expect(JSON.parse(localStorage.getItem('gp_shortlist_group'))).toEqual(['place-b']),
-  );
-  expect(planner.addPlace).toHaveBeenCalledWith(
-    'group',
-    expect.objectContaining({ name: 'Garden', visit_date: '2026-10-16' }),
-  );
-  expect(toast).toHaveBeenCalledWith(expect.stringMatching(/could not be added/), 'error');
 });
 const members = [
   { id: 'owner', user_id: 'owner', display_name: 'Alex', role: 'creator' },
