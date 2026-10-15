@@ -13,7 +13,7 @@ import { queryKeys } from '../../../../hooks/useExpenseQuery';
 import groupPlannerApi from '../../../../services/groupPlannerApi';
 import { toArray } from '../../utils/groupPlannerUtils';
 import { getInitials, formatRelativeTime } from '../../utils/formatters';
-import { Send, BarChart3, Trash2, X, Loader2 } from 'lucide-react';
+import { Send, Trash2, X, Loader2 } from 'lucide-react';
 import ScoutConsentCard from '../../../scout/ScoutConsentCard';
 import { CrewQuestionCard, CrewConfirmCard, CrewPlaceCard } from '../../../scout/CrewCards';
 
@@ -853,14 +853,6 @@ export default function ChatPanel({
           </div>
         )}
         <div className="gp-chat-input-row">
-          <button
-            disabled={!canEdit}
-            className={'gp-chat-poll-btn' + (showPollForm ? ' active' : '')}
-            onClick={() => setShowPollForm((v) => !v)}
-            title="Create poll"
-          >
-            <BarChart3 size={18} />
-          </button>
           <div className="gp-chat-input-wrapper">
             <input
               ref={chatInputRef}
