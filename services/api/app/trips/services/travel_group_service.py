@@ -368,7 +368,7 @@ class GroupService:
                     return False, {'error': 'Group not found'}
                 
                 # Only creator can delete
-                if group.created_by != user_id:
+                if str(group.created_by) != str(user_id):
                     return False, {'error': 'Only the group creator can delete the group'}
                 
                 # Soft delete
@@ -885,11 +885,11 @@ class GroupService:
                     return False, {'error': 'Group not found'}
                 
                 # Check permissions - only owner can remove others (except themselves)
-                if group.created_by != requester_id:
+                if str(group.created_by) != str(requester_id):
                     return False, {'error': 'Only the group owner can remove members'}
                 
                 # Prevent owner from removing themselves
-                if member_id == group.created_by:
+                if str(member_id) == str(group.created_by):
                     return False, {'error': 'Group owner cannot remove themselves from the group'}
                 
                 # Get the member to remove
@@ -1053,7 +1053,7 @@ class GroupService:
                 if not group:
                     return False, {'error': 'Group not found'}
 
-                if group.created_by == user_id:
+                if str(group.created_by) == str(user_id):
                     return False, {
                         'error': 'Group owner cannot leave. Transfer ownership or delete the group.'
                     }

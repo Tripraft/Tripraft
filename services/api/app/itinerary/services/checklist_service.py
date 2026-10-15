@@ -82,6 +82,8 @@ class ChecklistService:
                 
                 if not member:
                     return False, {'error': 'Not a member of this group'}
+                if member.role not in {'creator', 'admin', 'member'}:
+                    return False, {'error': 'Member role or higher required', 'status_code': 403}
                 
                 # Validate item text
                 if not text or not text.strip():
@@ -230,6 +232,8 @@ class ChecklistService:
                 
                 if not member:
                     return False, {'error': 'Not a member of this group'}
+                if member.role not in {'creator', 'admin', 'member'}:
+                    return False, {'error': 'Member role or higher required', 'status_code': 403}
                 
                 # Get item
                 item = session.query(ChecklistItem).filter(
@@ -327,6 +331,8 @@ class ChecklistService:
                 
                 if not member:
                     return False, {'error': 'Not a member of this group'}
+                if member.role not in {'creator', 'admin', 'member'}:
+                    return False, {'error': 'Member role or higher required', 'status_code': 403}
                 
                 # Update fields if provided
                 if text is not _UNSET:
@@ -406,6 +412,8 @@ class ChecklistService:
                 
                 if not member:
                     return False, {'error': 'Not a member of this group'}
+                if member.role not in {'creator', 'admin', 'member'}:
+                    return False, {'error': 'Member role or higher required', 'status_code': 403}
                 
                 # Get item
                 item = session.query(ChecklistItem).filter(

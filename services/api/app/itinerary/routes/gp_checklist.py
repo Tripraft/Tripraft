@@ -79,7 +79,7 @@ def add_checklist_item(group_id):
             invalidate_cache('gp_checklist:*')
             return created_response(data=result.get('item'))
         else:
-            return error_response(result.get('error'))
+            return error_response(result.get('error'), result.get('status_code', 400))
             
     except Exception as e:
         logger.error(f"Add checklist item error: {str(e)}")
@@ -125,7 +125,7 @@ def get_group_checklist(group_id):
                 pagination=result.get('pagination')
             )
         else:
-            return error_response(result.get('error'))
+            return error_response(result.get('error'), result.get('status_code', 400))
             
     except RequestValidationError:
         raise
@@ -186,9 +186,9 @@ def toggle_checklist_item(item_id, group_id=None):
         
         if success:
             invalidate_cache('gp_checklist:*')
-            return success_response(data=result.get('item'))
+            return success_response(data=result.get('item', result))
         else:
-            return error_response(result.get('error'), 404)
+            return error_response(result.get('error'), result.get('status_code', 404))
             
     except Exception as e:
         logger.error(f"Toggle checklist item error: {str(e)}")
@@ -236,7 +236,7 @@ def update_checklist_item(item_id):
             return success_response(data=result.get('item'))
         else:
             status = 404 if 'not found' in result.get('error', '').lower() else 400
-            return error_response(result.get('error'), status)
+            return error_response(result.get('error'), result.get('status_code', status))
             
     except Exception as e:
         logger.error(f"Update checklist item error: {str(e)}")
@@ -296,7 +296,7 @@ def delete_checklist_item(item_id, group_id=None):
             return success_response(message=result.get('message'))
         else:
             status = 404 if 'not found' in result.get('error', '').lower() else 400
-            return error_response(result.get('error'), status)
+            return error_response(result.get('error'), result.get('status_code', status))
             
     except Exception as e:
         logger.error(f"Delete checklist item error: {str(e)}")
@@ -334,7 +334,7 @@ def assign_checklist_item(item_id):
             invalidate_cache('gp_checklist:*')
             return success_response(data=result.get('item'))
         else:
-            return error_response(result.get('error'))
+            return error_response(result.get('error'), result.get('status_code', 400))
             
     except Exception as e:
         logger.error(f"Assign checklist item error: {str(e)}")
@@ -392,7 +392,7 @@ def get_checklist_stats(group_id):
                 'pending_by_priority': priorities
             })
         else:
-            return error_response(result.get('error'))
+            return error_response(result.get('error'), result.get('status_code', 400))
             
     except Exception as e:
         logger.error(f"Get checklist stats error: {str(e)}")

@@ -57,6 +57,8 @@ class InvitationService:
                 
                 if not member:
                     return False, {'error': 'Not a member of this group'}
+                if member.role not in {'creator', 'admin', 'member'}:
+                    return False, {'error': 'Member role or higher required', 'status_code': 403}
                 
                 # Get group
                 group = session.get(TravelGroup, group_id)

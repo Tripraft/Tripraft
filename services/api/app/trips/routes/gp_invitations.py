@@ -11,7 +11,7 @@ from app.core.apiutils.responses import (created_response, error_response,
 from app.core.apiutils.validators import validate_schema
 from app.core.config import Config
 from app.core.rate_limiter import limit_api
-from app.auth.security.decorators import require_auth
+from app.auth.security.decorators import require_auth, require_group_role
 from app.core.cache.redis import cache_response, invalidate_cache
 from app.core.schemas.invitations import CreateGPInvitationSchema
 from flask import Blueprint, g, request
@@ -79,7 +79,7 @@ def create_invitation():
             
             return created_response(data=result.get('invitation', result))
         else:
-            return error_response(result.get('error'))
+            return error_response(result.get('error'), result.get('status_code', 400))
             
     except Exception as e:
         logger.error(f"Create invitation error: {str(e)}")
@@ -222,6 +222,7 @@ def get_user_invitations():
 @invitations_bp.route('/groups/<group_id>/invitations', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
+@require_group_role('admin')
 @cache_response(key_prefix='gp_invitations:group', ttl=Config.CACHE_TTLS['invitations'], vary_on_user=True)
 def get_group_invitations(group_id):
     """
