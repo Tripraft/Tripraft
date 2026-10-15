@@ -11,6 +11,13 @@ export function getDemoState() {
     } catch {
       state = createDemoState();
     }
+    for (const trip of Object.values(state.trips)) {
+      for (const person of trip.members) {
+        if (person.crew_role === undefined)
+          person.crew_role =
+            demoPeople.find((sample) => sample.id === person.user_id)?.crew_role || null;
+      }
+    }
   }
   return state;
 }
@@ -326,6 +333,16 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
       const target = trip.members.find((m) => m.user_id === id);
       if (!target) fail('Member not found', 404);
       permit(trip, method === 'DELETE' ? ['creator'] : ['creator', 'admin']);
+      if (method === 'PATCH' && route[4] === 'crew-role') {
+        const crewRole = body.crew_role || null;
+        if (![null, 'treasurer', 'navigator', 'culture_scout'].includes(crewRole))
+          fail('Invalid responsibility');
+        target.crew_role = crewRole;
+        activity(trip, 'member_updated', target.display_name + ' responsibility changed', 'member');
+        trip.activities[0].details.message = `${target.display_name}: ${crewRole ? crewRole.replace('_', ' ') : 'responsibility cleared'}`;
+        save();
+        return envelope(target);
+      }
       if (target.role === 'creator') fail('The owner role cannot be changed');
       if (method === 'DELETE') trip.members = trip.members.filter((m) => m !== target);
       else {

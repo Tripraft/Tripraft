@@ -122,7 +122,7 @@ export function formatActivityMessage(a) {
     case 'group_updated':
       return 'Updated the group settings';
     case 'member_updated':
-      return 'Updated a member role';
+      return a.details?.message || 'Updated a member role';
     case 'checklist_updated':
       return 'Updated ' + (name || 'a checklist task');
     case 'budget_updated':

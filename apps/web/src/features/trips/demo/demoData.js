@@ -21,6 +21,7 @@ export const demoPeople = [
     display_name: 'Alex Rivera',
     email: 'alex@example.test',
     role: 'creator',
+    crew_role: null,
     photo_url: photo('photo-1507003211169-0a1dd7228f2d', 120),
   },
   {
@@ -29,6 +30,7 @@ export const demoPeople = [
     display_name: 'Sarah Chen',
     email: 'sarah@example.test',
     role: 'admin',
+    crew_role: 'treasurer',
     photo_url: photo('photo-1534528741775-53994a69daeb', 120),
   },
   {
@@ -37,6 +39,7 @@ export const demoPeople = [
     display_name: 'Marcus Williams',
     email: 'marcus@example.test',
     role: 'member',
+    crew_role: 'navigator',
     photo_url: photo('photo-1500648767791-00dcc994a43e', 120),
   },
   {
@@ -45,6 +48,7 @@ export const demoPeople = [
     display_name: 'Elena Rossi',
     email: 'elena@example.test',
     role: 'viewer',
+    crew_role: 'culture_scout',
     photo_url: photo('photo-1517841905240-472988babdf9', 120),
   },
 ];

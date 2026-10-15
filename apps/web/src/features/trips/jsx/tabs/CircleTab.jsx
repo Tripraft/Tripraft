@@ -13,6 +13,9 @@ import {
   Trash2,
   Sparkles,
   LogOut,
+  Wallet,
+  Compass,
+  MapPin,
 } from 'lucide-react';
 import { useAuth } from '../../../../context/AuthContext';
 import { useGroupMembers, gpKeys } from '../../../../hooks/useGroupPlannerQuery';
@@ -26,6 +29,7 @@ import { toArray } from '../../utils/groupPlannerUtils';
 import { getInitials, formatDate } from '../../utils/formatters';
 import { AI_BOTS } from '../../../scout/aiBots';
 import { isPlannerDemo } from '../../demo/demoMode';
+import { CREW_ROLES } from '../../constants/crewRoles';
 const roles = {
   creator: { label: 'Owner', description: 'Owns the trip and its membership.', Icon: Shield },
   admin: {
@@ -98,6 +102,21 @@ export default function CircleTab({ groupId, group, showToast, onInvite, onLeave
       showToast('Member role updated');
     } catch (e) {
       showToast(e.message || 'Could not update role', 'error');
+    } finally {
+      setBusyMember(null);
+    }
+  };
+  const updateCrewRole = async (member, crewRole) => {
+    if (busyMember) return;
+    setBusyMember(member.user_id || member.id);
+    try {
+      await groupPlannerApi.updateMemberCrewRole(groupId, member.user_id || member.id, crewRole);
+      refresh();
+      showToast(
+        crewRole ? `Assigned ${CREW_ROLES[crewRole].label}` : 'Trip responsibility cleared',
+      );
+    } catch (e) {
+      showToast(e.message || 'Could not update responsibility', 'error');
     } finally {
       setBusyMember(null);
     }
@@ -192,6 +211,33 @@ export default function CircleTab({ groupId, group, showToast, onInvite, onLeave
                 <h2>{member.display_name || member.email}</h2>
                 <p>{member.email}</p>
                 <span className="gp-crew-description">{role.description}</span>
+                {member.crew_role && CREW_ROLES[member.crew_role] && (
+                  <div className="gp-crew-responsibility">
+                    <strong>{CREW_ROLES[member.crew_role].label}</strong>
+                    <span>{CREW_ROLES[member.crew_role].description}</span>
+                  </div>
+                )}
+                <div className="gp-crew-assignment">
+                  <label htmlFor={`crew-role-${id}`}>Trip responsibility</label>
+                  {manage ? (
+                    <select
+                      id={`crew-role-${id}`}
+                      aria-label={'Trip responsibility for ' + member.display_name}
+                      value={member.crew_role || ''}
+                      disabled={busyMember === id}
+                      onChange={(event) => updateCrewRole(member, event.target.value)}
+                    >
+                      <option value="">Not assigned</option>
+                      {Object.entries(CREW_ROLES).map(([value, info]) => (
+                        <option key={value} value={value}>
+                          {info.label}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span>{CREW_ROLES[member.crew_role]?.label || 'Not assigned'}</span>
+                  )}
+                </div>
                 <div className="gp-crew-controls">
                   {manage && member.role !== 'creator' ? (
                     <select
@@ -229,6 +275,37 @@ export default function CircleTab({ groupId, group, showToast, onInvite, onLeave
           })}
         </div>
       )}
+      <section className="gp-crew-responsibilities" aria-labelledby="crew-responsibilities-title">
+        <div className="gp-tab-heading">
+          <div>
+            <h2 id="crew-responsibilities-title">Trip Responsibilities</h2>
+            <p>
+              Owner and Admin control access. Assign a trip responsibility to coordinate the crew's
+              work.
+            </p>
+          </div>
+        </div>
+        <div className="gp-responsibility-grid">
+          {Object.entries(CREW_ROLES).map(([value, info]) => {
+            const Icon = value === 'treasurer' ? Wallet : value === 'navigator' ? MapPin : Compass;
+            const assigned = members.filter((member) => member.crew_role === value);
+            return (
+              <article className="gp-feature-card" key={value}>
+                <div className="gp-feature-icon">
+                  <Icon size={20} />
+                </div>
+                <h3>{info.label}</h3>
+                <p>{info.description}</p>
+                <span>
+                  {assigned.length
+                    ? assigned.map((member) => member.display_name || member.email).join(', ')
+                    : 'No one assigned yet'}
+                </span>
+              </article>
+            );
+          })}
+        </div>
+      </section>
       <div className="gp-circle-settings-grid">
         <section className="gp-feature-card">
           <div className="gp-feature-heading">

@@ -291,6 +291,10 @@ class GroupPlannerApiService {
   // DESTINATION LIBRARY (from places search DB)
   // =========================================================================
 
+  async updateMemberCrewRole(groupId, memberId, crewRole) {
+    return apiClient.patch(`${BASE}/groups/${groupId}/members/${memberId}/crew-role`, { crew_role: crewRole || null });
+  }
+
   async searchCatalogDestinations(query = '', type = 'all') {
     const params = new URLSearchParams({ q: query, type, limit: 10 });
     return apiClient.get(`${BASE}/catalog/destinations?${params}`);

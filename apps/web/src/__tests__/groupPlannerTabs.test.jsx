@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { gpKeys } from '../hooks/useGroupPlannerQuery';
 import CircleTab from '../features/trips/jsx/tabs/CircleTab';
@@ -15,6 +15,7 @@ jest.mock('../services/groupPlannerApi', () => ({
   default: {
     addPlace: jest.fn(),
     updatePlace: jest.fn(),
+    updateMemberCrewRole: jest.fn().mockResolvedValue({ success: true }),
     getGroupInvitations: jest.fn().mockResolvedValue({ success: true, data: [] }),
   },
 }));
@@ -25,6 +26,7 @@ jest.mock('../hooks/useAiConsentQuery', () => ({
   useRevokeAiConsent: () => ({ mutate: jest.fn() }),
 }));
 import { useAuth } from '../context/AuthContext';
+import planner from '../services/groupPlannerApi';
 let client;
 beforeEach(() => {
   localStorage.clear();
@@ -98,14 +100,45 @@ it.each(['owner', 'admin', 'member', 'viewer'])(
       expect(screen.getByLabelText('Group name')).not.toBeDisabled();
       expect(screen.getByRole('button', { name: 'Save Group Settings' })).toBeInTheDocument();
       expect(screen.getByRole('combobox', { name: 'Role for Marcus' })).toBeInTheDocument();
+      expect(screen.getAllByRole('combobox', { name: /^Trip responsibility for/ })).toHaveLength(4);
+      expect(
+        screen.getByRole('combobox', { name: 'Trip responsibility for Alex' }),
+      ).toBeInTheDocument();
     } else {
       expect(screen.getByLabelText('Group name')).toBeDisabled();
       expect(screen.queryByRole('button', { name: 'Save Group Settings' })).not.toBeInTheDocument();
       expect(screen.queryByRole('combobox', { name: 'Role for Marcus' })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('combobox', { name: /^Trip responsibility for/ }),
+      ).not.toBeInTheDocument();
     }
     expect(screen.queryByRole('combobox', { name: 'Role for Alex' })).not.toBeInTheDocument();
     if (role === 'owner')
       expect(screen.getByRole('button', { name: 'Delete Group' })).toBeInTheDocument();
     else expect(screen.queryByRole('button', { name: 'Delete Group' })).not.toBeInTheDocument();
+  },
+);
+it.each(['owner', 'admin'])(
+  'allows the %s to assign a trip responsibility independently of access',
+  async (actor) => {
+    useAuth.mockReturnValue({ currentUser: { uid: actor } });
+    client.setQueryData(gpKeys.members('group'), { success: true, data: members });
+    jest.spyOn(client, 'invalidateQueries').mockResolvedValue();
+    wrap(
+      <CircleTab
+        groupId="group"
+        group={{ id: 'group', created_by: 'owner' }}
+        showToast={jest.fn()}
+      />,
+    );
+    fireEvent.change(screen.getByRole('combobox', { name: 'Trip responsibility for Marcus' }), {
+      target: { value: 'treasurer' },
+    });
+    await waitFor(() =>
+      expect(planner.updateMemberCrewRole).toHaveBeenCalledWith('group', 'member', 'treasurer'),
+    );
+    expect(
+      client.getQueryData(gpKeys.members('group')).data.find((m) => m.user_id === 'member').role,
+    ).toBe('member');
   },
 );

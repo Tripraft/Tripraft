@@ -6173,3 +6173,96 @@
     gap: 10px;
   }
 }
+
+/* Crew responsibilities complement access roles. */
+.gp-page .gp-crew-responsibility {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 11px 12px;
+  margin-top: 10px;
+  border-radius: 12px;
+  background: #edf8fc;
+}
+.gp-page .gp-crew-responsibility strong {
+  color: #087ea4;
+  font-size: 12px;
+}
+.gp-page .gp-crew-responsibility > span {
+  color: #537082;
+  font-size: 10px;
+  line-height: 1.6;
+}
+.gp-page .gp-crew-assignment {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 14px;
+}
+.gp-page .gp-crew-assignment > label {
+  color: #537082;
+  font-size: 10px;
+  font-weight: 600;
+}
+.gp-page .gp-crew-assignment > select {
+  padding: 9px;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #e2f0f6;
+  border-radius: 9px;
+  background: #f4fafd;
+  color: #102a3a;
+  font: inherit;
+  font-size: 12px;
+}
+.gp-page .gp-crew-assignment > span {
+  color: #102a3a;
+  font-size: 12px;
+}
+.gp-page .gp-crew-responsibilities {
+  margin: 28px 0;
+}
+.gp-page .gp-crew-responsibilities h2 {
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+.gp-page .gp-responsibility-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.gp-page .gp-responsibility-grid .gp-feature-card {
+  display: flex;
+  flex-direction: column;
+  align-items: start;
+  gap: 10px;
+  padding: 20px;
+}
+.gp-page .gp-responsibility-grid h3 {
+  font-size: 14px;
+  margin: 0;
+}
+.gp-page .gp-responsibility-grid p {
+  margin: 0;
+  color: #537082;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.gp-page .gp-responsibility-grid article > span {
+  font-size: 11px;
+  color: #087ea4;
+  border-top: 1px solid #e2f0f6;
+  padding-top: 12px;
+  margin-top: auto;
+  width: 100%;
+}
+@media (max-width: 760px) {
+  .gp-page .gp-responsibility-grid {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 540px) {
+  .gp-page .gp-crew-grid {
+    grid-template-columns: 1fr;
+  }
+}

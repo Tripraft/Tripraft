@@ -49,3 +49,15 @@ it('uses real poll response shapes and supports switching and removing a demo vo
   const removed=await demoRequest('POST',endpoint,{body:{option_index:1}});
   expect(removed.data.voted_by).not.toContain('demo-alex');
 });
+it('lets owners and admins assign and clear responsibilities without promoting access', async () => {
+  const path='/v1/group-planner/groups/demo-kyoto/members/demo-marcus/crew-role';
+  const assigned=await demoRequest('PATCH',path,{body:{crew_role:'treasurer'}});
+  expect(assigned.data).toMatchObject({role:'member',crew_role:'treasurer'});
+  localStorage.setItem(DEMO_VIEWER_KEY,'demo-sarah');
+  const cleared=await demoRequest('PATCH',path,{body:{crew_role:null}});
+  expect(cleared.data).toMatchObject({role:'member',crew_role:null});
+  const owner=await demoRequest('PATCH','/v1/group-planner/groups/demo-kyoto/members/demo-alex/crew-role',{body:{crew_role:'navigator'}});
+  expect(owner.data).toMatchObject({role:'creator',crew_role:'navigator'});
+  localStorage.setItem(DEMO_VIEWER_KEY,'demo-marcus');
+  await expect(demoRequest('PATCH',path,{body:{crew_role:'treasurer'}})).rejects.toMatchObject({status:403});
+});
