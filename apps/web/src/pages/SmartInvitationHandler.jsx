@@ -31,8 +31,9 @@ export default function SmartInvitationHandler() {
   useEffect(() => {
     let cancelled = false;
     setIsDetecting(true);
-    if (location.pathname.startsWith('/invitation/') || location.pathname.startsWith('/invitations/')) {
-      setInvitationType(location.pathname.startsWith('/invitations/') ? 'group' : 'expense');
+    if (location.pathname.startsWith('/invitation/') || location.pathname.startsWith('/invitations/') ||
+        location.pathname.startsWith('/trips/invite/') || location.pathname.startsWith('/expenses/invite/')) {
+      setInvitationType(location.pathname.startsWith('/invitations/') || location.pathname.startsWith('/trips/invite/') ? 'group' : 'expense');
       setIsDetecting(false);
       return;
     }

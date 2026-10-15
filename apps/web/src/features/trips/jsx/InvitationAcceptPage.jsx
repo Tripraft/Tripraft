@@ -1,131 +1,144 @@
-// Purpose: Renders the Invitation Accept Page interface within apps\web\src\features\trips\jsx.
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../../context/AuthContext';
 import groupPlannerApi from '../../../services/groupPlannerApi';
-
-/**
- * Accepts a group-planner (travel group) invitation.
- *
- * SmartInvitationHandler has imported this module since the first commit, but
- * the file was never added, so `vite build` failed to resolve it and the
- * frontend could not be built at all. The API it needs already existed on both
- * sides (`GET /invitations/:id`, `POST /invitations/:id/accept`); only the page
- * was missing.
- *
- * Expense invitations are handled by pages/jsx/InvitationAccept instead.
- */
+import { readAuthStorage, removeAuthStorage } from '../../auth/utils/authForms';
+const unwrap = (response) => response?.data ?? response ?? {};
 export default function InvitationAcceptPage({ invitationId: invitationIdProp }) {
   const { invitationId: pathInvitationId } = useParams();
   const [searchParams] = useSearchParams();
-  const invitationId =
-    invitationIdProp || pathInvitationId || searchParams.get('id');
-
-  const { currentUser, signOut } = useAuth();
+  const invitationId = invitationIdProp || pathInvitationId || searchParams.get('id');
+  const { currentUser, signOut, loading: authLoading } = useAuth();
+  const userId = currentUser?.uid || currentUser?.id;
+  const userEmail = currentUser?.email || '';
   const navigate = useNavigate();
-
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState('loading');
-  const [message, setMessage] = useState('Preparing your invitation…');
+  const [message, setMessage] = useState('Preparing your invitation...');
   const [invitation, setInvitation] = useState(null);
   const [wrongAccount, setWrongAccount] = useState(false);
-
-  // Both effects below can fire twice under StrictMode; accepting twice would
-  // surface a spurious "already accepted" error.
-  const ranRef = useRef(false);
-
-  const unwrap = (response) => response?.data ?? response ?? {};
-
+  const [retry, setRetry] = useState(0);
+  const requestRef = useRef(null);
+  const loginPath = `/login?redirect=invitation&invitationId=${encodeURIComponent(invitationId || '')}&type=group`;
   const goToGroup = useCallback(
-    (groupId) => {
-      navigate(groupId ? `/group-planner?group=${groupId}` : '/group-planner', {
+    (groupId) =>
+      navigate(groupId ? `/group-planner/${encodeURIComponent(groupId)}` : '/group-planner', {
         replace: true,
-      });
-    },
-    [navigate]
+      }),
+    [navigate],
   );
-
-  const accept = useCallback(async () => {
-    try {
-      setStatus('loading');
-      setMessage('Joining the group…');
-      setWrongAccount(false);
-
-      const response = await groupPlannerApi.acceptInvitation(invitationId);
-      const result = unwrap(response);
-
-      setStatus('success');
-      setMessage(
-        result.group_name
-          ? `You've joined "${result.group_name}".`
-          : "You've joined the group."
-      );
-      setTimeout(() => goToGroup(result.group_id), 1800);
-    } catch (error) {
-      const text = String(error?.message || '');
-      setStatus('error');
-
-      if (text.includes('different email')) {
-        setWrongAccount(true);
-        setMessage(
-          invitation?.invited_email
-            ? `This invitation is for ${invitation.invited_email}, but you are signed in as ${currentUser?.email}.`
-            : 'This invitation was sent to a different email address.'
-        );
-      } else if (text.includes('expired')) {
-        setMessage('This invitation has expired. Ask the group to send a new one.');
-      } else if (text.includes('404') || text.includes('not found')) {
-        setMessage('This invitation link is invalid or has already been used.');
-      } else {
-        setMessage(text || 'Could not accept this invitation.');
-      }
-    }
-  }, [invitationId, invitation, currentUser, goToGroup]);
-
   useEffect(() => {
+    if (authLoading) return;
     if (!invitationId) {
-      navigate('/login', { replace: true });
+      setStatus('error');
+      setMessage('This invitation link is missing its invitation ID.');
       return;
     }
-    if (ranRef.current) return;
-    ranRef.current = true;
-
-    if (!currentUser) {
-      // Both endpoints require auth, so send the visitor to sign in first and
-      // come straight back.
-      navigate(
-        `/login?redirect=invitation&invitationId=${encodeURIComponent(invitationId)}`,
-        { replace: true }
-      );
+    if (!userId) {
+      navigate(loginPath, { replace: true });
       return;
     }
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const details = unwrap(
-          await groupPlannerApi.getInvitationDetails(invitationId)
+    let cancelled = false,
+      redirectTimer;
+    setStatus('loading');
+    setMessage('Joining the group...');
+    setWrongAccount(false);
+    const key = `${invitationId}:${userId}:${userEmail}:${retry}`;
+    let record = requestRef.current;
+    if (!record || record.key !== key || record.cancelled) {
+      record = { key, active: true };
+      record.promise = (async () => {
+        const details = unwrap(await groupPlannerApi.getInvitationDetails(invitationId));
+        if (!record.active) {
+          record.cancelled = true;
+          throw new Error('Invitation request cancelled');
+        }
+        if (
+          details.invited_email &&
+          details.invited_email.toLowerCase() !== userEmail.toLowerCase()
+        )
+          throw Object.assign(new Error('different email'), { invitation: details });
+        if (details.status === 'accepted')
+          return { details, groupId: details.group_id, alreadyAccepted: true };
+        if (details.status && details.status !== 'pending')
+          throw Object.assign(
+            new Error(`This invitation is ${details.status}. Ask the group to send a new one.`),
+            { invitation: details },
+          );
+        const result = unwrap(await groupPlannerApi.acceptInvitation(invitationId));
+        return { details, groupId: result.group_id || details.group_id, alreadyAccepted: false };
+      })();
+      requestRef.current = record;
+    }
+    // Share the operation when StrictMode repeats the effect; never submit acceptance twice.
+    record.active = true;
+    record.promise
+      .then(({ details, groupId, alreadyAccepted }) => {
+        if (cancelled) return;
+        setInvitation(details);
+        setStatus('success');
+        if (readAuthStorage('pendingGroupInvitation') === invitationId) {
+          removeAuthStorage('pendingGroupInvitation');
+          removeAuthStorage('groupInvitationEmail');
+        }
+        if (readAuthStorage('pendingInvitation') === invitationId) {
+          removeAuthStorage('pendingInvitation');
+          removeAuthStorage('invitationEmail');
+        }
+        setMessage(
+          alreadyAccepted
+            ? 'You have already accepted this invitation. Opening your group...'
+            : `You've joined ${details.group_name || 'the group'}.`,
         );
-        if (!cancelled) setInvitation(details);
-      } catch {
-        // Details are only used to write a clearer message; accepting is
-        // still worth attempting.
-      }
-      if (!cancelled) accept();
-    })();
-
+        queryClient.invalidateQueries({ queryKey: ['group-planner', 'groups'] });
+        queryClient.invalidateQueries({ queryKey: ['group-planner', 'members', groupId] });
+        redirectTimer = setTimeout(() => goToGroup(groupId), 1200);
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        const details = error.invitation;
+        if (details) setInvitation(details);
+        const text = String(error.message || 'Could not accept this invitation.'),
+          lower = text.toLowerCase();
+        setStatus('error');
+        if (lower.includes('different email')) {
+          setWrongAccount(true);
+          setMessage(
+            details?.invited_email
+              ? `This invitation is for ${details.invited_email}, but you are signed in as ${userEmail}.`
+              : 'Sign in with the email address this invitation was sent to.',
+          );
+        } else if (lower.includes('expired'))
+          setMessage('This invitation has expired. Ask the group to send a new one.');
+        else if (error.status === 404 || lower.includes('not found'))
+          setMessage('This invitation link is invalid or no longer available.');
+        else setMessage(text);
+      });
     return () => {
       cancelled = true;
+      record.active = false;
+      clearTimeout(redirectTimer);
     };
-  }, [invitationId, currentUser, navigate, accept]);
-
+  }, [
+    authLoading,
+    invitationId,
+    userId,
+    userEmail,
+    loginPath,
+    navigate,
+    queryClient,
+    goToGroup,
+    retry,
+  ]);
   const handleSwitchAccount = async () => {
-    await signOut();
-    navigate(
-      `/login?redirect=invitation&invitationId=${encodeURIComponent(invitationId)}`,
-      { replace: true }
-    );
+    try {
+      await signOut();
+      navigate(loginPath, { replace: true });
+    } catch (error) {
+      setMessage(error.message || 'Could not sign out. Please try again.');
+    }
   };
-
   return (
     <div className="gp-invite-accept">
       <div className="gp-invite-card">
@@ -150,6 +163,15 @@ export default function InvitationAcceptPage({ invitationId: invitationIdProp })
 
         {status === 'error' && (
           <div className="gp-invite-actions">
+            {!wrongAccount && (
+              <button
+                type="button"
+                className="gp-invite-btn primary"
+                onClick={() => setRetry((n) => n + 1)}
+              >
+                Try again
+              </button>
+            )}
             {wrongAccount && (
               <button type="button" className="gp-invite-btn primary" onClick={handleSwitchAccount}>
                 Sign in with a different account

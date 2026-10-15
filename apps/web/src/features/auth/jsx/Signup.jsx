@@ -36,6 +36,10 @@ const Signup = ({ onSwitchToLogin }) => {
     const searchParams = new URLSearchParams(location.search);
     const isInvitationRedirect = searchParams.get('redirect') === 'invitation';
     const invitationId = searchParams.get('invitationId');
+    if (isInvitationRedirect && invitationId && searchParams.get('type') === 'group') {
+      setInvitationEmail('');
+      return;
+    }
     
     if (isInvitationRedirect && invitationId) {
       const cachedEmail = rememberExpenseInvitation(invitationId);

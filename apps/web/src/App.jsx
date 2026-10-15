@@ -30,7 +30,7 @@ const GroupPlannerPage = lazy(() => import('./features/trips/jsx/GroupPlannerPag
 
 function GroupPlannerAccess() {
   const [params] = useSearchParams();
-  // Demo requests are intercepted locally and cannot reach the real planner API.
+  // Demo trip changes stay local; public catalog reads are shared.
   return params.get('demo') === '1' ? (
     <GroupPlannerPage />
   ) : (
@@ -85,6 +85,8 @@ export default function App() {
           <Route path="/invitation/:invitationId" element={<SmartInvitationHandler />} />
           <Route path="/invitations/:invitationId" element={<SmartInvitationHandler />} />
           <Route path="/accept-invitation" element={<SmartInvitationHandler />} />
+          <Route path="/trips/invite/:invitationId" element={<SmartInvitationHandler />} />
+          <Route path="/expenses/invite/:invitationId" element={<SmartInvitationHandler />} />
 
           {/* Protected routes */}
           <Route

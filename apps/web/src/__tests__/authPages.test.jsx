@@ -114,6 +114,13 @@ it.each([Login, Signup])('redirects a signed-in invitee to the invitation', asyn
   mount(Component);
   expect(await screen.findByText('/invitations/invite-uuid')).toBeInTheDocument();
 });
+it.each([Login, Signup])('keeps the group invitation type through authentication', async Component => {
+  localStorage.setItem('pendingInvitation', 'unrelated-expense');
+  useAuth.mockReturnValue({ currentUser: { uid: 'uuid' }, loading: false });
+  mount(Component, '/login?redirect=invitation&invitationId=trip-uuid&type=group');
+  expect(await screen.findByText('/invitations/trip-uuid')).toBeInTheDocument();
+  expect(localStorage.getItem('pendingInvitation')).toBe('unrelated-expense');
+});
 it.each([[Login, '/login', 'Sign In'], [Signup, '/signup', 'Create Account']])(
   'waits for session restoration before enabling submission', (Component, path) => {
     useAuth.mockReturnValue({ currentUser: null, loading: true }); mount(Component, path);

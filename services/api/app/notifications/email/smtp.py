@@ -109,8 +109,8 @@ class EmailService:
             invitation_token: Unique invitation token
             invitation_type: Type of invitation ('expense' or 'trip')
         """
-        base_path = 'expenses' if invitation_type == 'expense' else 'trips'
-        invite_url = f'{self._frontend_url}/{base_path}/invite/{invitation_token}'
+        base_path = 'invitation' if invitation_type == 'expense' else 'invitations'
+        invite_url = f'{self._frontend_url}/{base_path}/{invitation_token}'
         safe_inviter_name = escape(inviter_name, quote=True)
         safe_group_name = escape(group_name, quote=True)
         safe_from_name = escape(self._from_name, quote=True)

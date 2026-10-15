@@ -24,7 +24,7 @@ export const rememberExpenseInvitation = invitationId => {
 export const invitationDestination = search => {
   const params = new URLSearchParams(search);
   const directExpenseInvite = params.get('redirect') === 'invitation' && params.get('invitationId');
-  if (directExpenseInvite) return '/invitation/' + encodeURIComponent(directExpenseInvite);
+  if (directExpenseInvite) return (params.get('type') === 'group' ? '/invitations/' : '/invitation/') + encodeURIComponent(directExpenseInvite);
   const groupInvite = readAuthStorage('pendingGroupInvitation');
   if (groupInvite) return '/invitations/' + encodeURIComponent(groupInvite);
   const expenseInvite = readAuthStorage('pendingInvitation');
