@@ -13,6 +13,7 @@
 | `group-planner-features-fix` | Repair empty-catalog startup and Group Planner polls, live updates, complete lists, place payloads, calendar days, trip dates, checklist feedback and dashboard navigation; [complete report](reports/group-planner-feature-fixes-2026-10-14.md) |
 | `group-planner-ui-refresh` | Integrate the supplied travel workspace design with the existing Group Planner APIs, responsive group hub, shared itinerary/map day selection, stop creation, night map, chat/polls drawer, and quick search; [report](reports/group-planner-ui-refresh-2026-10-14.md) |
 | `group-planner-tabs-refresh` | Preserve the shared Tripraft header, complete all six planner tabs, add isolated demo trips and role previews, and enforce checklist/invitation permissions; [report](reports/group-planner-tabs-refresh-2026-10-15.md) |
+| `group-planner-catalog-library` | Use tripraft_places.db for country/state/city choices and scoped Library cards; add optional comma-separated invitations and remove the chat-input poll shortcut; [report](reports/group-planner-catalog-library-2026-10-15.md) |
 
 Each checkpoint has an explanatory commit message. API contracts are documented
 in [personal finance](personal-finance-api.md) and [group finance](group-finance-api.md).
