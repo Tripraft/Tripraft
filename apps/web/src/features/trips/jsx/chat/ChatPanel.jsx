@@ -1,6 +1,8 @@
 // Purpose: Coordinates message rendering, live chat, AI cards, polls, optimistic sends and group-switch state.
 import PollFeed from '../../../polls/PollFeed';
 import { isPlannerDemo } from '../../demo/demoMode';
+import { tripDates } from '../../utils/plannerSchedule';
+import { tripDayNumber, unwrap } from '../../utils/groupPlannerUtils';
 import React, { useMemo, useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 import { useGroupPolls, useGroupMembers, gpKeys } from '../../../../hooks/useGroupPlannerQuery';
@@ -78,7 +80,16 @@ function renderScoutMessage(content) {
  *
  * Props: groupId, destination, showToast
  */
-export default function ChatPanel({ groupId, destination, showToast, isOpen = true }) {
+export default function ChatPanel({
+  groupId,
+  destination,
+  showToast,
+  isOpen = true,
+  draft,
+  canEdit = true,
+  group,
+  activeDay,
+}) {
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
   const { data: pollsRaw } = useGroupPolls(groupId);
@@ -121,6 +132,12 @@ export default function ChatPanel({ groupId, destination, showToast, isOpen = tr
   // --- Chat input state (local) ---
   const [chatMessage, setChatMessage] = useState('');
   const [commsMode, setCommsMode] = useState('chat');
+  useEffect(() => {
+    if (draft?.content) {
+      setChatMessage(draft.content);
+      setCommsMode('chat');
+    }
+  }, [draft]);
   const [mentionPopup, setMentionPopup] = useState({ open: false, filter: '', startIndex: -1 });
   const chatFeedRef = useRef(null);
   const chatInputRef = useRef(null);
@@ -214,6 +231,7 @@ export default function ChatPanel({ groupId, destination, showToast, isOpen = tr
     setCommsMode('chat');
     setMentionPopup({ open: false, filter: '', startIndex: -1 });
     setShowPollForm(false);
+    setPollWinner(null);
     setPollQuestion('');
     setPollOptions(['', '']);
     setPollMultiChoice(false);
@@ -362,6 +380,10 @@ export default function ChatPanel({ groupId, destination, showToast, isOpen = tr
   }, [hasNextPage, isFetchingNextPage, fetchNextPage, unreadScoutCount]);
 
   const [showPollForm, setShowPollForm] = useState(false);
+  const [pollWinner, setPollWinner] = useState(null);
+  const [winnerDate, setWinnerDate] = useState('');
+  const [winnerSaving, setWinnerSaving] = useState(false);
+  const [winnerError, setWinnerError] = useState('');
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState(['', '']);
   const [pollMultiChoice, setPollMultiChoice] = useState(false);
@@ -418,6 +440,43 @@ export default function ChatPanel({ groupId, destination, showToast, isOpen = tr
       showToast('Poll created');
     } catch {
       showToast('Failed to create poll', 'error');
+    }
+  };
+
+  const addPollWinner = async (event) => {
+    event.preventDefault();
+    if (winnerSaving || !pollWinner || !winnerDate) return;
+    setWinnerSaving(true);
+    setWinnerError('');
+    try {
+      const places = toArray(await groupPlannerApi.getGroupPlaces(groupId), 'places');
+      const existing = places.find(
+        (p) => !p.is_deleted && p.name.toLowerCase() === pollWinner.choice.toLowerCase(),
+      );
+      if (existing)
+        await groupPlannerApi.updatePlace(groupId, existing.id, { visit_date: winnerDate });
+      else {
+        const catalog = unwrap(await groupPlannerApi.searchDestinationPlaces(destination));
+        const candidates = Array.isArray(catalog)
+          ? catalog
+          : catalog?.places || catalog?.results || [];
+        const match = candidates.find(
+          (p) => p.name.toLowerCase() === pollWinner.choice.toLowerCase(),
+        );
+        await groupPlannerApi.addPlace(groupId, {
+          ...(match || {}),
+          name: pollWinner.choice,
+          visit_date: winnerDate,
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: gpKeys.places(groupId) });
+      queryClient.invalidateQueries({ queryKey: gpKeys.activities(groupId) });
+      setPollWinner(null);
+      showToast('Poll choice added to the itinerary');
+    } catch (error) {
+      setWinnerError(error.message || 'Could not add this choice.');
+    } finally {
+      setWinnerSaving(false);
     }
   };
 
@@ -480,13 +539,18 @@ export default function ChatPanel({ groupId, destination, showToast, isOpen = tr
 
         {commsMode === 'polls' && (
           <>
-            <button className="gp-open-workspace" onClick={() => setShowPollForm(true)}>
+            <button
+              className="gp-open-workspace"
+              disabled={!canEdit}
+              onClick={() => setShowPollForm(true)}
+            >
               Create a Poll
             </button>
             {polls.length === 0 && (
               <div className="gp-empty-agenda">No polls yet. Put your next decision to a vote.</div>
             )}
             <PollFeed
+              readOnly={!canEdit}
               polls={polls}
               members={members}
               uidStr={uidStr}
@@ -495,6 +559,36 @@ export default function ChatPanel({ groupId, destination, showToast, isOpen = tr
               expandedVoters={expandedVoters}
               setExpandedVoters={setExpandedVoters}
             />
+            {canEdit &&
+              group &&
+              polls.map((poll) => {
+                const maximum = Math.max(0, ...Object.values(poll.votes || {}).map(Number));
+                if (!maximum) return null;
+                const choices = poll.options.filter(
+                  (choice) => Number(poll.votes?.[choice]) === maximum,
+                );
+                return (
+                  <button
+                    className="gp-open-workspace"
+                    key={'winner-' + poll.id}
+                    onClick={() => {
+                      setPollWinner({ poll, choice: choices[0], choices });
+                      const dates = tripDates(group);
+                      setWinnerDate(
+                        dates.find(
+                          (date) =>
+                            String(tripDayNumber(date, group.start_date, dates)) === activeDay,
+                        ) ||
+                          group.start_date ||
+                          '',
+                      );
+                      setWinnerError('');
+                    }}
+                  >
+                    Add top choice from “{poll.name}” to a day
+                  </button>
+                );
+              })}
           </>
         )}
 
@@ -760,6 +854,7 @@ export default function ChatPanel({ groupId, destination, showToast, isOpen = tr
         )}
         <div className="gp-chat-input-row">
           <button
+            disabled={!canEdit}
             className={'gp-chat-poll-btn' + (showPollForm ? ' active' : '')}
             onClick={() => setShowPollForm((v) => !v)}
             title="Create poll"
@@ -771,7 +866,9 @@ export default function ChatPanel({ groupId, destination, showToast, isOpen = tr
               ref={chatInputRef}
               type="text"
               className="gp-chat-input"
-              placeholder="Talk with @scout or @crew..."
+              placeholder={canEdit ? 'Talk with @scout or @crew...' : 'You have view-only access'}
+              disabled={!canEdit}
+              aria-label="Group message"
               value={chatMessage}
               onChange={handleChatInputChange}
               onKeyDown={(e) => {
@@ -783,12 +880,78 @@ export default function ChatPanel({ groupId, destination, showToast, isOpen = tr
                 if (e.key === 'Enter') handleSendChat();
               }}
             />
-            <button className="gp-chat-send-btn" onClick={handleSendChat} aria-label="Send message">
+            <button
+              className="gp-chat-send-btn"
+              onClick={handleSendChat}
+              aria-label="Send message"
+              disabled={!canEdit}
+            >
               <Send size={16} />
             </button>
           </div>
         </div>
       </div>
+
+      {pollWinner && (
+        <div className="gp-modal-overlay" onClick={() => !winnerSaving && setPollWinner(null)}>
+          <form
+            className="gp-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Add Poll Choice"
+            onClick={(event) => event.stopPropagation()}
+            onSubmit={addPollWinner}
+          >
+            <h2 className="gp-modal-title">Turn a decision into a plan</h2>
+            <p className="gp-form-hint">
+              {pollWinner.poll.name}
+              {pollWinner.choices.length > 1
+                ? ' · The top choices are tied. Choose one below.'
+                : ''}
+            </p>
+            <label className="gp-field">
+              Top choice
+              <select
+                className="gp-modal-input"
+                value={pollWinner.choice}
+                onChange={(event) => setPollWinner({ ...pollWinner, choice: event.target.value })}
+              >
+                {pollWinner.choices.map((choice) => (
+                  <option key={choice}>{choice}</option>
+                ))}
+              </select>
+            </label>
+            <label className="gp-field">
+              Visit date
+              <input
+                type="date"
+                className="gp-modal-input"
+                required
+                value={winnerDate}
+                onChange={(event) => setWinnerDate(event.target.value)}
+              />
+            </label>
+            {winnerError && (
+              <p className="gp-form-error" role="alert">
+                {winnerError}
+              </p>
+            )}
+            <div className="gp-modal-actions">
+              <button className="gp-modal-btn-primary" disabled={winnerSaving}>
+                {winnerSaving ? 'Adding...' : 'Add to Itinerary'}
+              </button>
+              <button
+                type="button"
+                className="gp-modal-btn-secondary"
+                disabled={winnerSaving}
+                onClick={() => setPollWinner(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Poll Creation Modal */}
       {showPollForm && (

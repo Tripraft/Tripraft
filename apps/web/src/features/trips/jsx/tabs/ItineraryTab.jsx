@@ -1,17 +1,12 @@
-// Purpose: Renders the Itinerary Tab interface within apps\web\src\features\trips\jsx\tabs.
-import React, { useState, useMemo } from 'react';
+﻿import React, { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { Calendar, Plus, Pencil, Trash2, ArrowUp, ArrowDown, MapPin, Clock } from 'lucide-react';
 import { useGroupPlaces, gpKeys } from '../../../../hooks/useGroupPlannerQuery';
 import groupPlannerApi from '../../../../services/groupPlannerApi';
 import { toArray, tripDayNumber } from '../../utils/groupPlannerUtils';
-import { formatDate, formatDateRange, formatCurrency } from '../../utils/formatters';
-import { Pencil, X, Calendar, Trash2, Plus } from 'lucide-react';
+import { tripDates, distanceKm, stopTimeSlots } from '../../utils/plannerSchedule';
+import { formatDate, formatDateRange } from '../../utils/formatters';
 
-/**
- * Itinerary tab - day-by-day schedule of places.
- *
- * Props: groupId, group, showToast
- */
 export default function ItineraryTab({
   groupId,
   group,
@@ -19,639 +14,370 @@ export default function ItineraryTab({
   activeDay: controlledDay,
   onDayChange,
   onAddStop,
+  selectedPlaceId,
+  onSelectPlace,
+  canEdit = true,
+  onOpenLibrary,
 }) {
-  const queryClient = useQueryClient();
-  const { data: placesRaw } = useGroupPlaces(groupId);
-
-  const places = useMemo(() => toArray(placesRaw, 'places'), [placesRaw]);
-  const itineraryPlaces = useMemo(
-    () => places.filter((p) => p.visit_date && !p.is_deleted),
-    [places],
+  const client = useQueryClient();
+  const { data: raw, isLoading, error } = useGroupPlaces(groupId);
+  const places = useMemo(() => toArray(raw, 'places').filter((p) => !p.is_deleted), [raw]);
+  const dates = useMemo(
+    () =>
+      tripDates(
+        group,
+        places.map((p) => p.visit_date),
+      ),
+    [group, places],
   );
-  const unscheduledPlaces = useMemo(
-    () => places.filter((p) => !p.visit_date && !p.is_deleted),
-    [places],
-  );
-
-  const uniqueDates = useMemo(() => {
-    const dates = new Set();
-    itineraryPlaces.forEach((p) => {
-      if (p.visit_date) dates.add(p.visit_date);
-    });
-    return [...dates].sort();
-  }, [itineraryPlaces]);
-
-  const dayNumbers = useMemo(
-    () => uniqueDates.map((date) => tripDayNumber(date, group?.start_date, uniqueDates)),
-    [uniqueDates, group?.start_date],
-  );
-
-  const tripDuration = useMemo(() => {
-    if (!group?.start_date || !group?.end_date) return null;
-    const diff = Math.ceil((new Date(group.end_date) - new Date(group.start_date)) / 86400000);
-    return Number.isFinite(diff) && diff >= 0 ? diff + 1 : null;
-  }, [group]);
-
   const [localDay, setLocalDay] = useState('all');
-  const activeDay = controlledDay ?? localDay;
-  const setActiveDay = onDayChange || setLocalDay;
-  const [showEditModal, setShowEditModal] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(null);
-  const [editDate, setEditDate] = useState('');
-  const [editTime, setEditTime] = useState('');
-  const [editNotes, setEditNotes] = useState('');
-  const [showGroupNameEdit, setShowGroupNameEdit] = useState(false);
-  const [editGroupName, setEditGroupName] = useState('');
-  const [editingBudget, setEditingBudget] = useState(false);
-  const [budgetInput, setBudgetInput] = useState('');
-  const [editingDates, setEditingDates] = useState(false);
-  const [dateStartInput, setDateStartInput] = useState('');
-  const [dateEndInput, setDateEndInput] = useState('');
-
-  const estimatedBudget = group?.estimated_budget || 0;
-  const budgetCurrency = group?.budget_currency || 'USD';
-
-  function getDayNumber(dateStr) {
-    return tripDayNumber(dateStr, group?.start_date, uniqueDates);
-  }
-
-  // Format 24-hour time to 12-hour with AM/PM
-  function formatTimeWithAMPM(timeStr) {
-    if (!timeStr) return '--:--';
-    const [hours, minutes] = timeStr.split(':');
-    if (!hours) return '--:--';
-
-    const hour = parseInt(hours, 10);
-    const minute = parseInt(minutes, 10) || 0;
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-
-    return `${displayHour}:${String(minute).padStart(2, '0')} ${ampm}`;
-  }
-
-  const filteredItinerary = useMemo(() => {
-    let items = itineraryPlaces.slice();
-    if (activeDay !== 'all') {
-      items = items.filter((p) => getDayNumber(p.visit_date) === parseInt(activeDay));
-    }
-    items.sort((a, b) => {
-      const dayA = getDayNumber(a.visit_date);
-      const dayB = getDayNumber(b.visit_date);
-      if (dayA !== dayB) return dayA - dayB;
-      return (a.suggested_time || a.visit_date || '').localeCompare(
-        b.suggested_time || b.visit_date || '',
-      );
-    });
-    return items;
-  }, [itineraryPlaces, activeDay, group?.start_date]);
-
-  const handleEditPlace = async () => {
-    if (!showEditModal) return;
-    try {
-      const place = places.find((p) => p.id === showEditModal);
-      const origDate = place?.visit_date || '';
-      const origTime = place?.suggested_time || '';
-      const origNotes = place?.remarks || '';
-      const updates = {};
-      if (editDate !== origDate) updates.visit_date = editDate;
-      if (editTime !== origTime) updates.suggested_time = editTime;
-      if (editNotes !== origNotes) updates.remarks = editNotes;
-      if (Object.keys(updates).length === 0) {
-        setShowEditModal(null);
-        return;
-      }
-      await groupPlannerApi.updatePlace(groupId, showEditModal, updates);
-      queryClient.invalidateQueries({ queryKey: gpKeys.places(groupId) });
-      setShowEditModal(null);
-      setEditNotes('');
-      setEditDate('');
-      setEditTime('');
-      showToast('Place updated');
-    } catch {
-      showToast('Failed to update', 'error');
-    }
+  const activeDay = controlledDay ?? localDay,
+    setDay = onDayChange || setLocalDay;
+  const [editing, setEditing] = useState(null),
+    [removing, setRemoving] = useState(null),
+    [saving, setSaving] = useState(false),
+    [formError, setFormError] = useState('');
+  const visible = places
+    .filter(
+      (p) =>
+        p.visit_date &&
+        (activeDay === 'all' ||
+          String(tripDayNumber(p.visit_date, group?.start_date, dates)) === activeDay),
+    )
+    .sort(
+      (a, b) =>
+        a.visit_date.localeCompare(b.visit_date) ||
+        (a.suggested_time || '99:99').localeCompare(b.suggested_time || '99:99'),
+    );
+  const unscheduled = activeDay === 'all' ? places.filter((p) => !p.visit_date) : [];
+  const refresh = () => {
+    client.invalidateQueries({ queryKey: gpKeys.places(groupId) });
+    client.invalidateQueries({ queryKey: gpKeys.activities(groupId) });
   };
-
-  const handleDeletePlace = async (placeId, placeName) => {
+  const save = async (event) => {
+    event.preventDefault();
+    if (saving) return;
+    setSaving(true);
+    setFormError('');
     try {
-      await groupPlannerApi.deletePlace(groupId, placeId);
-      queryClient.invalidateQueries({ queryKey: gpKeys.places(groupId) });
-      setShowEditModal(null);
-      setConfirmDelete(null);
-      showToast(`Removed ${placeName}`);
-    } catch {
-      showToast('Failed to remove place', 'error');
-    }
-  };
-
-  const handleEditGroupName = async () => {
-    if (!editGroupName.trim() || editGroupName.trim() === group?.name) {
-      setShowGroupNameEdit(false);
-      return;
-    }
-    try {
-      await groupPlannerApi.updateGroup(groupId, { name: editGroupName.trim() });
-      queryClient.invalidateQueries({ queryKey: gpKeys.group(groupId) });
-      queryClient.invalidateQueries({ queryKey: gpKeys.groups() });
-      setShowGroupNameEdit(false);
-      showToast('Group renamed');
-    } catch {
-      showToast('Failed to rename group', 'error');
-    }
-  };
-
-  const handleSaveBudget = async () => {
-    const val = parseFloat(budgetInput);
-    if (isNaN(val) || val < 0) {
-      setEditingBudget(false);
-      return;
-    }
-    try {
-      await groupPlannerApi.updateGroup(groupId, { estimated_budget: val });
-      queryClient.invalidateQueries({ queryKey: gpKeys.group(groupId) });
-      setEditingBudget(false);
-      showToast('Budget updated');
-    } catch {
-      showToast('Failed to update budget', 'error');
-    }
-  };
-
-  const handleSaveDates = async () => {
-    try {
-      await groupPlannerApi.updateGroup(groupId, {
-        start_date: dateStartInput,
-        end_date: dateEndInput,
+      await groupPlannerApi.updatePlace(groupId, editing.id, {
+        visit_date: editing.visit_date || '',
+        suggested_time: editing.suggested_time || '',
+        remarks: editing.remarks || '',
+        suggested_duration: editing.suggested_duration || '',
       });
-      queryClient.invalidateQueries({ queryKey: gpKeys.group(groupId) });
-      setEditingDates(false);
-      showToast('Trip dates updated');
-    } catch {
-      showToast('Failed to update dates', 'error');
+      refresh();
+      setEditing(null);
+      showToast('Stop updated');
+    } catch (e) {
+      setFormError(e.message || 'Unable to update this stop.');
+    } finally {
+      setSaving(false);
     }
   };
-
-  const humanMemberCount = group?.member_count || 0;
-
-  return (
-    <div className="gp-view">
-      {/* Header */}
-      <div className="gp-itinerary-header">
-        <div>
-          {showGroupNameEdit ? (
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-              <input
-                type="text"
-                className="gp-modal-input"
-                style={{ marginBottom: 0, fontSize: 18, fontWeight: 600, padding: '6px 12px' }}
-                value={editGroupName}
-                onChange={(e) => setEditGroupName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleEditGroupName()}
-                autoFocus
-              />
-              <button
-                className="gp-modal-btn-primary"
-                style={{ padding: '6px 16px' }}
-                onClick={handleEditGroupName}
-              >
-                Save
-              </button>
-              <button
-                className="gp-modal-btn-secondary"
-                style={{ padding: '6px 12px' }}
-                onClick={() => setShowGroupNameEdit(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <span className="gp-itinerary-group-label">{group?.name || 'Untitled'}</span>
-              <button
-                className="gp-itinerary-edit-btn"
-                onClick={() => {
-                  setEditGroupName(group?.name || '');
-                  setShowGroupNameEdit(true);
-                }}
-                title="Rename group"
-              >
-                <Pencil size={12} />
-              </button>
-            </div>
-          )}
-          {(group?.start_date || group?.end_date) && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-              <span className="gp-itinerary-date-label">
-                {formatDateRange(group.start_date, group.end_date)}
-              </span>
-              <button
-                className="gp-itinerary-edit-btn"
-                onClick={() => {
-                  setEditingDates(true);
-                  setDateStartInput(group?.start_date || '');
-                  setDateEndInput(group?.end_date || '');
-                }}
-                title="Edit dates"
-              >
-                <Pencil size={10} />
-              </button>
-            </div>
-          )}
-          {!group?.start_date && !group?.end_date && !editingDates && (
-            <button
-              className="gp-itinerary-edit-btn"
-              style={{ fontSize: 10, marginBottom: 4 }}
-              onClick={() => {
-                setEditingDates(true);
-                setDateStartInput('');
-                setDateEndInput('');
-              }}
-            >
-              + Set Trip Dates
-            </button>
-          )}
-          {editingDates && (
-            <div className="gp-dates-edit-row">
-              <input
-                type="date"
-                className="gp-date-inline-input"
-                value={dateStartInput}
-                onChange={(e) => setDateStartInput(e.target.value)}
-              />
-              <span style={{ color: '#888' }}>to</span>
-              <input
-                type="date"
-                className="gp-date-inline-input"
-                value={dateEndInput}
-                onChange={(e) => setDateEndInput(e.target.value)}
-              />
-              <button className="gp-itinerary-edit-btn" onClick={handleSaveDates} title="Save">
-                <Pencil size={10} />
-              </button>
-              <button
-                className="gp-itinerary-edit-btn"
-                onClick={() => setEditingDates(false)}
-                title="Cancel"
-              >
-                <X size={10} />
-              </button>
-            </div>
-          )}
-          <h1 className="gp-itinerary-title">
-            {group?.destination ? (
-              <>
-                {group.destination.split(',')[0]} <br />
-              </>
+  const remove = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await groupPlannerApi.deletePlace(groupId, removing.id);
+      refresh();
+      setRemoving(null);
+      showToast('Stop removed');
+    } catch (e) {
+      showToast(e.message || 'Unable to remove stop', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+  const move = async (place, dir) => {
+    if (saving) return;
+    const day = places
+      .filter((p) => p.visit_date === place.visit_date)
+      .sort((a, b) => (a.suggested_time || '99:99').localeCompare(b.suggested_time || '99:99'));
+    const i = day.findIndex((p) => p.id === place.id),
+      j = i + dir;
+    if (j < 0 || j >= day.length) return;
+    setSaving(true);
+    try {
+      const times = stopTimeSlots(day);
+      const ordered = [...day];
+      [ordered[i], ordered[j]] = [ordered[j], ordered[i]];
+      for (let k = 0; k < ordered.length; k++)
+        if (ordered[k].suggested_time !== times[k])
+          await groupPlannerApi.updatePlace(groupId, ordered[k].id, { suggested_time: times[k] });
+      showToast('Stop order updated');
+    } catch (e) {
+      showToast(
+        e.message || 'Some times could not be updated. Review the refreshed schedule.',
+        'error',
+      );
+    } finally {
+      refresh();
+      setSaving(false);
+    }
+  };
+  const time = (value) =>
+    value
+      ? new Date('2000-01-01T' + value.slice(0, 5)).toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+        })
+      : 'Any time';
+  const card = (place, index, list) => (
+    <React.Fragment key={place.id}>
+      {activeDay === 'all' &&
+        place.visit_date &&
+        (index === 0 || list[index - 1].visit_date !== place.visit_date) && (
+          <div className="gp-day-divider">
+            Day {tripDayNumber(place.visit_date, group?.start_date, dates)}
+            <span>{formatDate(place.visit_date)}</span>
+          </div>
+        )}
+      <article className={'gp-stop-row' + (selectedPlaceId === place.id ? ' is-selected' : '')}>
+        <div className="gp-stop-time">
+          {place.visit_date ? time(place.suggested_time) : <Calendar size={15} />}
+          <span>{place.suggested_duration ? `${place.suggested_duration} min` : ''}</span>
+        </div>
+        <div className="gp-stop-card">
+          <button
+            className="gp-stop-select"
+            onClick={() => onSelectPlace?.(place.id)}
+            aria-label={`Show ${place.name} on map`}
+          >
+            {place.photo_url ? (
+              <img src={place.photo_url} alt="" />
             ) : (
-              'Plan'
+              <span className="gp-stop-placeholder">
+                <MapPin size={22} />
+              </span>
             )}
+            <span>
+              <span className="gp-stop-category">{place.category || 'Place'}</span>
+              <h3>{place.name}</h3>
+              {place.address && <span className="gp-stop-address">{place.address}</span>}
+            </span>
+          </button>
+          {(place.remarks || place.description) && <p>{place.remarks || place.description}</p>}
+          <div className="gp-stop-footer">
+            <button onClick={() => onSelectPlace?.(place.id)}>
+              <MapPin size={12} />
+              On map
+            </button>
+            {canEdit && (
+              <>
+                <button
+                  disabled={saving}
+                  onClick={() => {
+                    setEditing({
+                      ...place,
+                      suggested_time: place.suggested_time?.slice(0, 5) || '',
+                    });
+                    setFormError('');
+                  }}
+                  aria-label={`Edit ${place.name}`}
+                >
+                  <Pencil size={12} />
+                  {place.visit_date ? 'Edit' : 'Schedule'}
+                </button>
+                {place.visit_date && (
+                  <>
+                    <button
+                      disabled={
+                        saving || index === 0 || list[index - 1]?.visit_date !== place.visit_date
+                      }
+                      onClick={() => move(place, -1)}
+                      aria-label={`Move ${place.name} up`}
+                    >
+                      <ArrowUp size={13} />
+                    </button>
+                    <button
+                      disabled={
+                        saving ||
+                        index === list.length - 1 ||
+                        list[index + 1]?.visit_date !== place.visit_date
+                      }
+                      onClick={() => move(place, 1)}
+                      aria-label={`Move ${place.name} down`}
+                    >
+                      <ArrowDown size={13} />
+                    </button>
+                  </>
+                )}
+                <button onClick={() => setRemoving(place)} aria-label={`Remove ${place.name}`}>
+                  <Trash2 size={12} />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </article>
+      {index < list.length - 1 &&
+        place.visit_date === list[index + 1].visit_date &&
+        distanceKm(place, list[index + 1]) != null && (
+          <div className="gp-transit-connector">
+            <span />
+            {distanceKm(place, list[index + 1]).toFixed(1)} km to next stop
+          </div>
+        )}
+    </React.Fragment>
+  );
+  return (
+    <div className="gp-view gp-itinerary-view">
+      <div className="gp-itinerary-intro">
+        <div>
+          <span className="gp-eyebrow">YOUR DAILY ADVENTURE</span>
+          <h1 className="gp-itinerary-title">
+            {group?.destination?.split(',')[0] || 'Your itinerary'}
           </h1>
+          <p>
+            {formatDateRange(group?.start_date, group?.end_date) ||
+              'Set your dates in Group Settings'}
+          </p>
         </div>
+        <span className="gp-stop-total">
+          <MapPin size={13} />
+          {places.length} stops
+        </span>
       </div>
-
-      {/* Stats */}
-      <div className="gp-consultation-card">
-        <div className="gp-stat">
-          <span className="gp-stat-label">Duration</span>
-          <span className="gp-stat-value">{tripDuration ? tripDuration + ' Days' : '--'}</span>
-        </div>
-        <div className="gp-stat">
-          <span className="gp-stat-label" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            Est. Budget
-            {!editingBudget && (
-              <Pencil
-                size={9}
-                style={{ opacity: 0.55, cursor: 'pointer' }}
-                onClick={() => {
-                  setBudgetInput(String(estimatedBudget || ''));
-                  setEditingBudget(true);
-                }}
-              />
-            )}
-          </span>
-          {editingBudget ? (
-            <span
-              className="gp-stat-value"
-              style={{ display: 'flex', alignItems: 'center', gap: 4 }}
-            >
-              <input
-                type="text"
-                inputMode="numeric"
-                className="gp-budget-inline-input"
-                value={budgetInput}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  if (/^\d*\.?\d*$/.test(v)) setBudgetInput(v);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleSaveBudget();
-                  if (e.key === 'Escape') setEditingBudget(false);
-                }}
-                autoFocus
-              />
-              <button className="gp-itinerary-edit-btn" onClick={handleSaveBudget} title="Save">
-                <Pencil size={12} />
-              </button>
+      <div className="gp-day-selector">
+        <div className="gp-day-tabs">
+          <button
+            className={'gp-day-tab' + (activeDay === 'all' ? ' active' : '')}
+            onClick={() => setDay('all')}
+          >
+            Full Agenda
+          </button>
+          {dates.map((date) => {
+            const day = String(tripDayNumber(date, group?.start_date, dates));
+            return (
               <button
-                className="gp-itinerary-edit-btn"
-                onClick={() => setEditingBudget(false)}
-                title="Cancel"
+                key={date}
+                className={'gp-day-tab' + (activeDay === day ? ' active' : '')}
+                aria-label={'Day ' + day.padStart(2, '0')}
+                onClick={() => setDay(day)}
               >
-                <X size={12} />
+                Day {day}
+                <small>
+                  {new Date(date + 'T12:00:00').toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </small>
               </button>
-            </span>
-          ) : (
-            <span
-              className="gp-stat-value"
-              style={{ cursor: 'pointer' }}
-              onClick={() => {
-                setBudgetInput(String(estimatedBudget || ''));
-                setEditingBudget(true);
-              }}
-            >
-              {estimatedBudget ? formatCurrency(estimatedBudget, budgetCurrency) : '--'}
-            </span>
-          )}
+            );
+          })}
         </div>
-        <div className="gp-stat">
-          <span className="gp-stat-label">The Circle</span>
-          <span className="gp-stat-value">
-            {humanMemberCount} {humanMemberCount === 1 ? 'Partner' : 'Partners'}
-          </span>
-        </div>
-        <div className="gp-stat gp-stat-bordered">
-          <span className="gp-stat-label">Stops</span>
-          <span className="gp-stat-value">
-            {itineraryPlaces.length + unscheduledPlaces.length} Total
-          </span>
-        </div>
-      </div>
-
-      {/* Day Tabs */}
-      <div className="gp-day-tabs">
-        {onAddStop && (
+        {canEdit && onAddStop && (
           <button className="gp-add-stop" onClick={onAddStop}>
             <Plus size={14} />
             Add Stop
           </button>
         )}
-        <button
-          className={'gp-day-tab' + (activeDay === 'all' ? ' active' : '')}
-          onClick={() => setActiveDay('all')}
-        >
-          Full Agenda
-        </button>
-        {dayNumbers.map((d) => (
-          <button
-            key={d}
-            className={'gp-day-tab' + (activeDay === String(d) ? ' active' : '')}
-            onClick={() => setActiveDay(String(d))}
-          >
-            Day {String(d).padStart(2, '0')}
-          </button>
-        ))}
       </div>
-
-      {/* Timeline */}
-      <div className="gp-calendar">
-        {filteredItinerary.length === 0 && unscheduledPlaces.length === 0 ? (
-          <div className="gp-empty-agenda">No agenda items yet. Add places from the Library.</div>
-        ) : (
-          <>
-            {filteredItinerary.length > 0 &&
-              (() => {
-                let currentDay = null;
-                return filteredItinerary.map((place) => {
-                  const day = getDayNumber(place.visit_date);
-                  const showDayDivider = activeDay === 'all' && currentDay !== day;
-                  if (showDayDivider) currentDay = day;
-                  const dayDate = place.visit_date ? formatDate(place.visit_date) : '';
-                  return (
-                    <React.Fragment key={place.id}>
-                      {showDayDivider && (
-                        <div className="gp-day-divider">
-                          Day {day}
-                          {dayDate ? (
-                            <span
-                              style={{
-                                fontWeight: 400,
-                                fontSize: 9,
-                                marginLeft: 8,
-                                color: '#a1a1aa',
-                                letterSpacing: '0.05em',
-                              }}
-                            >
-                              {dayDate}
-                            </span>
-                          ) : null}
-                        </div>
-                      )}
-                      <div className="gp-timeline-item">
-                        <span className="gp-time-marker">
-                          <div>{formatTimeWithAMPM(place.suggested_time)}</div>
-                          <div
-                            style={{
-                              fontSize: '11px',
-                              fontWeight: 600,
-                              color: '#4f46e5',
-                              marginTop: '2px',
-                            }}
-                          >
-                            {formatDate(place.visit_date)}
-                          </div>
-                        </span>
-                        <div className="gp-place-card">
-                          {place.photo_url ? (
-                            <img
-                              src={place.photo_url}
-                              alt={place.name}
-                              className="gp-place-img"
-                              loading="lazy"
-                            />
-                          ) : (
-                            <div className="gp-place-img gp-place-img-placeholder" />
-                          )}
-                          <div className="gp-place-info">
-                            <div className="gp-place-name-row">
-                              <h3 className="gp-place-name">{place.name}</h3>
-                              <div style={{ display: 'flex', gap: 4 }}>
-                                <button
-                                  className="gp-place-edit-btn"
-                                  onClick={() => {
-                                    setShowEditModal(place.id);
-                                    setEditDate(place.visit_date || '');
-                                    setEditTime(place.suggested_time || '');
-                                    setEditNotes(place.remarks || '');
-                                  }}
-                                  title="Edit schedule"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  className="gp-place-edit-btn"
-                                  style={{ color: '#dc2626' }}
-                                  onClick={() =>
-                                    setConfirmDelete({ id: place.id, name: place.name })
-                                  }
-                                  title="Remove from itinerary"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-                              </div>
-                            </div>
-                            {place.remarks && <p className="gp-place-remarks">{place.remarks}</p>}
-                          </div>
-                        </div>
-                      </div>
-                    </React.Fragment>
-                  );
-                });
-              })()}
-
-            {unscheduledPlaces.length > 0 && activeDay === 'all' && (
-              <>
-                <div className="gp-day-divider gp-day-divider-unassigned">Unassigned</div>
-                {unscheduledPlaces.map((place) => (
-                  <div key={place.id} className="gp-timeline-item gp-timeline-unassigned">
-                    <span className="gp-time-marker gp-time-unset">
-                      <Calendar size={14} />
-                    </span>
-                    <div className="gp-place-card">
-                      {place.photo_url ? (
-                        <img
-                          src={place.photo_url}
-                          alt={place.name}
-                          className="gp-place-img"
-                          loading="lazy"
-                        />
-                      ) : (
-                        <div className="gp-place-img gp-place-img-placeholder" />
-                      )}
-                      <div className="gp-place-info">
-                        <div className="gp-place-name-row">
-                          <h3 className="gp-place-name">{place.name}</h3>
-                          <div style={{ display: 'flex', gap: 4 }}>
-                            <button
-                              className="gp-place-edit-btn"
-                              onClick={() => {
-                                setShowEditModal(place.id);
-                                setEditDate('');
-                                setEditTime('');
-                                setEditNotes(place.remarks || '');
-                              }}
-                              title="Set date"
-                            >
-                              Schedule
-                            </button>
-                            <button
-                              className="gp-place-edit-btn"
-                              style={{ color: '#dc2626' }}
-                              onClick={() => setConfirmDelete({ id: place.id, name: place.name })}
-                              title="Remove from itinerary"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
-                        </div>
-                        {place.remarks && <p className="gp-place-remarks">{place.remarks}</p>}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </>
-            )}
-          </>
-        )}
+      <div className="gp-day-summary">
+        <h2>
+          {activeDay === 'all'
+            ? 'The whole adventure'
+            : `Day ${activeDay} in ${group?.destination?.split(',')[0] || 'your destination'}`}
+        </h2>
+        <span>{visible.length} stops</span>
       </div>
-
-      {/* Edit Place Modal */}
-      {showEditModal && (
-        <div className="gp-modal-overlay" onClick={() => setShowEditModal(null)}>
-          <div className="gp-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="gp-modal-title">Edit Stop</h3>
-            <div style={{ marginBottom: 16 }}>
-              <label className="gp-modal-label">Date</label>
-              <input
-                type="date"
-                className="gp-modal-input"
-                value={editDate}
-                onChange={(e) => setEditDate(e.target.value)}
-              />
-              {editDate && group?.start_date && (
-                <span
-                  style={{
-                    fontSize: 11,
-                    color: '#71717a',
-                    marginTop: -10,
-                    display: 'block',
-                    marginBottom: 8,
-                  }}
-                >
-                  Day {getDayNumber(editDate)}
-                </span>
+      {isLoading ? (
+        <p role="status">Loading itinerary...</p>
+      ) : error ? (
+        <p role="alert">{error.message}</p>
+      ) : (
+        <>
+          <div className="gp-stop-timeline">{visible.map((p, i) => card(p, i, visible))}</div>
+          {unscheduled.length > 0 && (
+            <>
+              <div className="gp-day-divider">
+                Unscheduled<span>Pick a date when you are ready</span>
+              </div>
+              {unscheduled.map((p, i) => card(p, i, unscheduled))}
+            </>
+          )}
+          {visible.length === 0 && unscheduled.length === 0 && (
+            <div className="gp-empty-agenda">
+              <Calendar size={28} />
+              <h3>A little room for adventure</h3>
+              <p>No stops scheduled {activeDay === 'all' ? 'yet' : 'for this day'}.</p>
+              {onOpenLibrary && (
+                <button className="gp-open-workspace" onClick={onOpenLibrary}>
+                  Find places in the Library
+                </button>
               )}
             </div>
-            <div style={{ marginBottom: 16 }}>
-              <label className="gp-modal-label">Time</label>
-              <input
-                type="time"
-                className="gp-modal-input"
-                value={editTime}
-                onChange={(e) => setEditTime(e.target.value)}
-              />
-            </div>
-            <div style={{ marginBottom: 16 }}>
-              <label className="gp-modal-label">Notes</label>
+          )}
+        </>
+      )}
+      {editing && (
+        <div className="gp-modal-overlay" onClick={() => !saving && setEditing(null)}>
+          <form
+            className="gp-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Edit Stop"
+            onClick={(e) => e.stopPropagation()}
+            onSubmit={save}
+          >
+            <h2 className="gp-modal-title">Edit Stop</h2>
+            <p className="gp-form-hint">{editing.name}</p>
+            {[
+              ['visit_date', 'Date', 'date'],
+              ['suggested_time', 'Time', 'time'],
+              ['suggested_duration', 'Duration in minutes', 'number'],
+            ].map(([key, label, type]) => (
+              <label className="gp-field" key={key}>
+                {label}
+                <input
+                  type={type}
+                  className="gp-modal-input"
+                  value={editing[key] || ''}
+                  min={type === 'number' ? 1 : undefined}
+                  onChange={(e) => setEditing({ ...editing, [key]: e.target.value })}
+                />
+              </label>
+            ))}
+            <label className="gp-field">
+              Notes
               <textarea
                 className="gp-modal-input"
-                rows={3}
-                value={editNotes}
-                onChange={(e) => setEditNotes(e.target.value)}
-                placeholder="Add notes for this stop..."
+                value={editing.remarks || ''}
+                onChange={(e) => setEditing({ ...editing, remarks: e.target.value })}
               />
-            </div>
+            </label>
+            {formError && <p role="alert">{formError}</p>}
             <div className="gp-modal-actions">
-              <button className="gp-modal-btn-primary" onClick={handleEditPlace}>
-                Update
+              <button className="gp-modal-btn-primary" disabled={saving}>
+                Save Changes
               </button>
-              <button className="gp-modal-btn-secondary" onClick={() => setShowEditModal(null)}>
+              <button
+                className="gp-modal-btn-secondary"
+                type="button"
+                disabled={saving}
+                onClick={() => setEditing(null)}
+              >
                 Cancel
               </button>
-              <button
-                className="gp-modal-btn-secondary"
-                style={{ color: '#dc2626', borderColor: '#fca5a5', marginLeft: 'auto' }}
-                onClick={() => {
-                  const place = places.find((p) => p.id === showEditModal);
-                  setConfirmDelete({ id: showEditModal, name: place?.name || 'this place' });
-                  setShowEditModal(null);
-                }}
-              >
-                Remove
-              </button>
             </div>
-          </div>
+          </form>
         </div>
       )}
-
-      {/* Delete Confirmation */}
-      {confirmDelete && (
-        <div className="gp-modal-overlay" onClick={() => setConfirmDelete(null)}>
-          <div className="gp-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 380 }}>
-            <h3 className="gp-modal-title" style={{ color: '#dc2626' }}>
-              Remove Place
-            </h3>
-            <p style={{ fontSize: 13, color: '#52525b', margin: '0 0 20px' }}>
-              Remove <strong>{confirmDelete.name}</strong> from the itinerary? This cannot be
-              undone.
-            </p>
+      {removing && (
+        <div className="gp-modal-overlay">
+          <div className="gp-modal" role="dialog" aria-modal="true" aria-label="Remove Stop">
+            <h2 className="gp-modal-title">Remove Stop</h2>
+            <p>Remove {removing.name} from this trip?</p>
             <div className="gp-modal-actions">
-              <button
-                className="gp-modal-btn-secondary"
-                style={{ color: '#dc2626', borderColor: '#fca5a5' }}
-                onClick={() => handleDeletePlace(confirmDelete.id, confirmDelete.name)}
-              >
+              <button className="gp-modal-btn-primary" disabled={saving} onClick={remove}>
                 Remove
               </button>
-              <button className="gp-modal-btn-secondary" onClick={() => setConfirmDelete(null)}>
+              <button
+                className="gp-modal-btn-secondary"
+                disabled={saving}
+                onClick={() => setRemoving(null)}
+              >
                 Cancel
               </button>
             </div>

@@ -1,7 +1,7 @@
 // Purpose: Renders the Map Panel interface within apps\web\src\features\trips\jsx\map.
 import { validCoordinates } from '../../../../utils/coordinates';
-import React, { useEffect, useRef, useState } from 'react';
-import { Moon, Sun } from 'lucide-react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import { Moon, Sun, MessageCircle, Ticket, MapPin } from 'lucide-react';
 import useLeaflet from '../../hooks/useMapRenderer';
 import {
   TILE_URL,
@@ -36,15 +36,35 @@ export default function MapPanel({
   uniqueDates,
   dayNumbers,
   onMapDayChange,
+  selectedPlaceId,
+  onSelectPlace,
+  onAskPlace,
+  onOpenBookings,
 }) {
   const leafletReady = useLeaflet();
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersLayerRef = useRef(null);
+  const markerRefs = useRef(new Map());
   const [nightMap, setNightMap] = useState(false);
 
-  const itineraryPlaces = places.filter((p) => p.visit_date && !p.is_deleted);
-  const unscheduledPlaces = places.filter((p) => !p.visit_date && !p.is_deleted);
+  const itineraryPlaces = useMemo(
+    () => places.filter((p) => p.visit_date && !p.is_deleted),
+    [places],
+  );
+  const unscheduledPlaces = useMemo(
+    () => places.filter((p) => !p.visit_date && !p.is_deleted),
+    [places],
+  );
+  const visibleStops = itineraryPlaces.filter(
+    (p) =>
+      mapDay === 'all' ||
+      String(tripDayNumber(p.visit_date, group?.start_date, uniqueDates)) === mapDay,
+  );
+  const selected =
+    visibleStops.find((p) => p.id === selectedPlaceId) ||
+    visibleStops[0] ||
+    unscheduledPlaces.find((p) => p.id === selectedPlaceId);
 
   function getDayNumber(dateStr) {
     return tripDayNumber(dateStr, group?.start_date, uniqueDates);
@@ -72,6 +92,8 @@ export default function MapPanel({
       zoom: DEFAULT_ZOOM,
       zoomControl: true,
       attributionControl: true,
+      zoomAnimation: false,
+      markerZoomAnimation: false,
     });
     L.tileLayer(nightMap ? TILE_URL.replace('light_all', 'dark_all') : TILE_URL, {
       attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
@@ -83,6 +105,8 @@ export default function MapPanel({
 
     return () => {
       if (mapInstanceRef.current === map) {
+        map.stop?.();
+        map.closePopup?.();
         map.remove();
         mapInstanceRef.current = null;
         markersLayerRef.current = null;
@@ -101,8 +125,12 @@ export default function MapPanel({
   // Render markers
   useEffect(() => {
     if (!mapInstanceRef.current || !markersLayerRef.current || !window.L) return;
+    if (activeTab !== 'itinerary') return;
     const L = window.L;
+    mapInstanceRef.current.stop?.();
+    mapInstanceRef.current.closePopup?.();
     markersLayerRef.current.clearLayers();
+    markerRefs.current.clear();
     const bounds = [];
 
     if (activeTab === 'library') {
@@ -193,7 +221,12 @@ export default function MapPanel({
           '</div>';
       popupHtml += '</div>';
 
-      L.marker([lat, lng], { icon }).addTo(markersLayerRef.current).bindPopup(popupHtml);
+      const marker = L.marker([lat, lng], { icon });
+      marker.addTo(markersLayerRef.current).bindPopup(popupHtml);
+      const popup = marker.getPopup?.();
+      if (popup) popup.options.autoPan = false;
+      marker.on?.('click', () => onSelectPlace?.(p.id));
+      markerRefs.current.set(p.id, marker);
       bounds.push([lat, lng]);
 
       if (!byDay[day]) byDay[day] = [];
@@ -231,7 +264,12 @@ export default function MapPanel({
           '</div>';
       popupHtml += '</div>';
 
-      L.marker([lat, lng], { icon }).addTo(markersLayerRef.current).bindPopup(popupHtml);
+      const marker = L.marker([lat, lng], { icon });
+      marker.addTo(markersLayerRef.current).bindPopup(popupHtml);
+      const popup = marker.getPopup?.();
+      if (popup) popup.options.autoPan = false;
+      marker.on?.('click', () => onSelectPlace?.(p.id));
+      markerRefs.current.set(p.id, marker);
       bounds.push([lat, lng]);
     });
 
@@ -252,6 +290,16 @@ export default function MapPanel({
       mapInstanceRef.current.fitBounds(bounds, { padding: [80, 80], maxZoom: 15 });
     }
   }, [itineraryPlaces, unscheduledPlaces, mapDay, group, activeTab, filteredLibrary, nightMap]);
+
+  useEffect(() => {
+    if (!selectedPlaceId) return;
+    const marker = markerRefs.current.get(selectedPlaceId);
+    marker?.openPopup?.();
+    if (marker?.getLatLng) mapInstanceRef.current?.panTo?.(marker.getLatLng(), { animate: false });
+  }, [selectedPlaceId, mapDay]);
+  useEffect(() => {
+    mapInstanceRef.current?.invalidateSize?.();
+  }, [activeTab]);
 
   return (
     <div className={'gp-map-container' + (nightMap ? ' gp-map-night' : '')}>
@@ -282,6 +330,34 @@ export default function MapPanel({
         ))}
       </div>
       <div ref={mapRef} className="gp-leaflet-map" />
+      {selected && (
+        <div className="gp-map-spot">
+          <div className="gp-map-spot-top">
+            <span>
+              <MapPin size={12} />
+              Selected Stop
+            </span>
+            <span>{selected.suggested_time?.slice(0, 5) || 'Any time'}</span>
+          </div>
+          <div className="gp-map-spot-body">
+            {selected.photo_url && <img src={selected.photo_url} alt="" />}
+            <div>
+              <h3>{selected.name}</h3>
+              <p>{selected.remarks || selected.description || selected.address}</p>
+            </div>
+          </div>
+          <div className="gp-map-spot-actions">
+            <button onClick={() => onOpenBookings?.()}>
+              <Ticket size={13} />
+              View bookings
+            </button>
+            <button onClick={() => onAskPlace?.(selected)}>
+              <MessageCircle size={13} />
+              Ask group
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

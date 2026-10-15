@@ -27,6 +27,8 @@ import Toast from '@tripraft/ui/Toast';
 import { MessageCircle, X, Search, UserPlus } from 'lucide-react';
 import PlannerHeader from './shared/PlannerHeader';
 import AddStopModal from './shared/AddStopModal';
+import RouteOptimizer from './shared/RouteOptimizer';
+import { tripDates } from '../utils/plannerSchedule';
 import { isPlannerDemo, plannerPath } from '../demo/demoMode';
 import '../css/GroupPlannerPage.css';
 
@@ -46,7 +48,7 @@ import CircleTab from './tabs/CircleTab';
 export default function GroupPlannerManager() {
   const { groupId: routeGroupId } = useParams();
   const navigate = useNavigate();
-  const { loading: authLoading } = useAuth();
+  const { currentUser, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
   // -- Orchestrator state --
@@ -57,6 +59,16 @@ export default function GroupPlannerManager() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [addingStop, setAddingStop] = useState(false);
+  const [selectedPlaceId, setSelectedPlaceId] = useState(null);
+  const [chatDraft, setChatDraft] = useState(null);
+  const [tripMode, setTripMode] = useState('planning');
+  const [clockNow, setClockNow] = useState(() => new Date());
+  useEffect(() => {
+    if (tripMode !== 'live') return;
+    setClockNow(new Date());
+    const timer = setInterval(() => setClockNow(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, [tripMode]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -98,6 +110,19 @@ export default function GroupPlannerManager() {
   const members = useMemo(() => toArray(membersRaw, 'members'), [membersRaw]);
   const activities = useMemo(() => toArray(activitiesRaw, 'activities'), [activitiesRaw]);
   const budgetCurrency = group?.budget_currency || 'USD';
+  const myMember = members.find((m) => String(m.user_id || m.id) === String(currentUser?.uid));
+  const canEdit = ['creator', 'admin', 'member'].includes(myMember?.role);
+  const canManage = ['creator', 'admin'].includes(myMember?.role);
+  const today = clockNow.toLocaleDateString('en-CA');
+  const currentTime = `${String(clockNow.getHours()).padStart(2, '0')}:${String(clockNow.getMinutes()).padStart(2, '0')}`;
+  const nextStop = places
+    .filter(
+      (place) =>
+        !place.is_deleted &&
+        place.visit_date === today &&
+        (!place.suggested_time || place.suggested_time.slice(0, 5) >= currentTime),
+    )
+    .sort((a, b) => (a.suggested_time || '99:99').localeCompare(b.suggested_time || '99:99'))[0];
 
   const humanMembers = useMemo(
     () => members.filter((m) => m.is_active !== false && m.type !== 'ai'),
@@ -175,13 +200,14 @@ export default function GroupPlannerManager() {
     () => places.filter((p) => p.visit_date && !p.is_deleted),
     [places],
   );
-  const uniqueDates = useMemo(() => {
-    const dates = new Set();
-    itineraryPlaces.forEach((p) => {
-      if (p.visit_date) dates.add(p.visit_date);
-    });
-    return [...dates].sort();
-  }, [itineraryPlaces]);
+  const uniqueDates = useMemo(
+    () =>
+      tripDates(
+        group,
+        itineraryPlaces.map((p) => p.visit_date),
+      ),
+    [group, itineraryPlaces],
+  );
   const dayNumbers = useMemo(
     () => uniqueDates.map((date) => tripDayNumber(date, group?.start_date, uniqueDates)),
     [uniqueDates, group?.start_date],
@@ -197,6 +223,9 @@ export default function GroupPlannerManager() {
       setChatOpen(false);
       setSearchOpen(false);
       setAddingStop(false);
+      setSelectedPlaceId(null);
+      setChatDraft(null);
+      setTripMode('planning');
       setShowInviteModal(false);
       setInviteEmail('');
     }
@@ -244,6 +273,9 @@ export default function GroupPlannerManager() {
       setChatOpen(false);
       setSearchOpen(false);
       setAddingStop(false);
+      setSelectedPlaceId(null);
+      setChatDraft(null);
+      setTripMode('planning');
       setShowInviteModal(false);
       setInviteEmail('');
       localStorage.setItem(lastGroupKey, String(id));
@@ -305,6 +337,7 @@ export default function GroupPlannerManager() {
     setIsInviting(false);
     setInviteEmail('');
     queryClient.invalidateQueries({ queryKey: gpKeys.members(selectedGroupId) });
+    queryClient.invalidateQueries({ queryKey: [...gpKeys.all, 'invitations', selectedGroupId] });
     if (successCount > 0)
       showToast(successCount === 1 ? 'Invitation created' : `${successCount} invitations created`);
     if (failCount > 0) showToast(`${failCount} invite${failCount > 1 ? 's' : ''} failed`, 'error');
@@ -347,6 +380,13 @@ export default function GroupPlannerManager() {
       }}
       members={humanMembers}
       pulseUnread={pulseUnread}
+      tripMode={tripMode}
+      onToggleTripMode={() => {
+        const mode = tripMode === 'planning' ? 'live' : 'planning';
+        setTripMode(mode);
+        if (mode === 'live' && uniqueDates.includes(today))
+          setMapDay(String(tripDayNumber(today, group.start_date, uniqueDates)));
+      }}
     />
   );
 
@@ -422,6 +462,10 @@ export default function GroupPlannerManager() {
             activeDay={mapDay}
             onDayChange={setMapDay}
             onAddStop={() => setAddingStop(true)}
+            canEdit={canEdit}
+            selectedPlaceId={selectedPlaceId}
+            onSelectPlace={setSelectedPlaceId}
+            onOpenLibrary={() => handleTabChange('library')}
           />
         );
       case 'library':
@@ -431,16 +475,43 @@ export default function GroupPlannerManager() {
             destination={destination}
             group={group}
             showToast={showToast}
+            canEdit={canEdit}
+            onOpenItinerary={() => handleTabChange('itinerary')}
           />
         );
       case 'logistics':
-        return <LogisticsTab groupId={selectedGroupId} showToast={showToast} />;
+        return <LogisticsTab groupId={selectedGroupId} showToast={showToast} canEdit={canEdit} />;
       case 'treasury':
-        return <TreasuryTab groupId={selectedGroupId} budgetCurrency={budgetCurrency} />;
+        return (
+          <TreasuryTab
+            groupId={selectedGroupId}
+            group={group}
+            budgetCurrency={budgetCurrency}
+            showToast={showToast}
+            canEdit={canEdit}
+            canManage={canManage}
+          />
+        );
       case 'pulse':
-        return <PulseTab groupId={selectedGroupId} />;
+        return (
+          <PulseTab
+            groupId={selectedGroupId}
+            onOpenTab={(tab) => {
+              if (tab === 'chat') setChatOpen(true);
+              else handleTabChange(tab);
+            }}
+          />
+        );
       case 'circle':
-        return <CircleTab groupId={selectedGroupId} showToast={showToast} />;
+        return (
+          <CircleTab
+            groupId={selectedGroupId}
+            group={group}
+            showToast={showToast}
+            onInvite={() => setShowInviteModal(true)}
+            onLeave={handleBackToDashboard}
+          />
+        );
       default:
         return null;
     }
@@ -449,33 +520,56 @@ export default function GroupPlannerManager() {
   return (
     <div className="gp-workspace">
       {header}
+      {tripMode === 'live' && (
+        <div className="gp-live-banner">
+          <span className="gp-live-label">Live Trip</span>
+          <div>
+            <strong>
+              {nextStop ? 'Up next: ' + nextStop.name : 'No more scheduled stops today'}
+            </strong>
+            <span>
+              {nextStop
+                ? [nextStop.suggested_time?.slice(0, 5), nextStop.address]
+                    .filter(Boolean)
+                    .join(' · ')
+                : group.name + ' · Open your bookings or review the full agenda.'}
+            </span>
+          </div>
+          <button onClick={() => handleTabChange('logistics')}>Open bookings</button>
+          <button onClick={() => handleTabChange('treasury')}>Quick expense</button>
+        </div>
+      )}
       <div className="gp-workspace-content">
         {/* Body */}
         <div className="gp-workspace-body">
           <section
             key={selectedGroupId}
-            className={
-              'gp-left-pane' +
-              (!['itinerary', 'library'].includes(activeTab) ? ' gp-pane-wide' : '')
-            }
+            className={'gp-left-pane' + (activeTab !== 'itinerary' ? ' gp-pane-wide' : '')}
           >
             <div className="gp-pane-toolbar">
               <span className="gp-eyebrow">{TABS.find((tab) => tab.key === activeTab)?.label}</span>
-              <button className="gp-section-action" onClick={() => setShowInviteModal(true)}>
-                <UserPlus size={14} />
-                Invite Friend
-              </button>
+              {canEdit && (
+                <button className="gp-section-action" onClick={() => setShowInviteModal(true)}>
+                  <UserPlus size={14} />
+                  Invite Friend
+                </button>
+              )}
             </div>
             {renderTab()}
           </section>
           <section
-            className={
-              'gp-right-pane' +
-              (!['itinerary', 'library'].includes(activeTab) ? ' gp-map-secondary' : '')
-            }
+            className={'gp-right-pane' + (activeTab !== 'itinerary' ? ' gp-map-secondary' : '')}
             aria-label="Trip map"
           >
             <div className="gp-map-actions">
+              <RouteOptimizer
+                groupId={selectedGroupId}
+                group={group}
+                places={places}
+                activeDay={mapDay}
+                canEdit={canEdit}
+                showToast={showToast}
+              />
               <button
                 className="gp-comms-toggle"
                 aria-expanded={chatOpen}
@@ -495,6 +589,16 @@ export default function GroupPlannerManager() {
               uniqueDates={uniqueDates}
               dayNumbers={dayNumbers}
               onMapDayChange={setMapDay}
+              selectedPlaceId={selectedPlaceId}
+              onSelectPlace={setSelectedPlaceId}
+              onAskPlace={(place) => {
+                setChatDraft({
+                  content: `What does everyone think about ${place.name}?`,
+                  nonce: Date.now(),
+                });
+                setChatOpen(true);
+              }}
+              onOpenBookings={() => handleTabChange('logistics')}
             />
           </section>
         </div>
@@ -523,11 +627,18 @@ export default function GroupPlannerManager() {
           destination={destination}
           showToast={showToast}
           isOpen={chatOpen}
+          draft={chatDraft}
+          canEdit={canEdit}
+          group={group}
+          activeDay={mapDay}
         />
       </div>
-      {!['itinerary', 'library'].includes(activeTab) && (
+      {activeTab !== 'itinerary' && (
         <button
-          className="gp-floating-chat gp-comms-toggle"
+          className={
+            'gp-floating-chat gp-comms-toggle' +
+            (activeTab === 'library' ? ' gp-chat-above-shortlist' : '')
+          }
           onClick={() => setChatOpen((open) => !open)}
           aria-expanded={chatOpen}
         >
@@ -549,7 +660,7 @@ export default function GroupPlannerManager() {
               <input
                 autoFocus
                 aria-label="Search workspace"
-                placeholder="Search places or jump to a tab?"
+                placeholder="Search places or jump to a tab..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />

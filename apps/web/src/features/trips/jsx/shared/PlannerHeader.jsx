@@ -33,6 +33,8 @@ export default function PlannerHeader({
   onSearch,
   members = [],
   pulseUnread,
+  tripMode = 'planning',
+  onToggleTripMode,
 }) {
   return (
     <header className="gp-topbar">
@@ -87,6 +89,12 @@ export default function PlannerHeader({
         </nav>
       )}
       <div className="gp-topbar-actions">
+        {group && onToggleTripMode && (
+          <button className="gp-mode-toggle" onClick={onToggleTripMode}>
+            <span className={tripMode === 'live' ? 'live' : ''} />
+            {tripMode === 'live' ? 'Live Trip' : 'Planning'}
+          </button>
+        )}
         {group && (
           <>
             <button
