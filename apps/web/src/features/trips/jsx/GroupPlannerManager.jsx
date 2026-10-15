@@ -72,6 +72,8 @@ export default function GroupPlannerManager() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
+  const [creatingGroup, setCreatingGroup] = useState(false);
+  const creatingGroupRef = useRef(false);
   const [toasts, setToasts] = useState([]);
   const [pulseUnread, setPulseUnread] = useState(false);
   const activityCursor = useRef({ groupId: null, newestId: null });
@@ -292,14 +294,45 @@ export default function GroupPlannerManager() {
   }, [navigate]);
 
   const handleCreateGroup = async (groupData) => {
+    if (creatingGroupRef.current) return;
+    creatingGroupRef.current = true;
+    setCreatingGroup(true);
     try {
-      const result = await createGroupMut.mutateAsync(groupData);
+      const { invite_emails: emails = [], ...payload } = groupData;
+      const result = await createGroupMut.mutateAsync(payload);
       const newGroup = unwrap(result);
+      const failed = [];
+      let createdInvites = 0;
+      if (newGroup?.id) {
+        for (const email of emails) {
+          try {
+            await groupPlannerApi.createInvitation(newGroup.id, email);
+            createdInvites++;
+          } catch {
+            failed.push(email);
+          }
+        }
+      }
       setShowCreateModal(false);
-      showToast('Group created');
+      showToast(
+        createdInvites
+          ? `Group created with ${createdInvites} invitation${createdInvites === 1 ? '' : 's'}`
+          : 'Group created',
+      );
       if (newGroup?.id) handleSelectGroup(newGroup.id);
+      if (failed.length) {
+        setInviteEmail(failed.join(', '));
+        setShowInviteModal(true);
+        showToast(
+          'Group created. Some invitations failed; retry the remaining addresses or send them later.',
+          'error',
+        );
+      }
     } catch (err) {
       showToast(err?.message || 'Failed to create group', 'error');
+    } finally {
+      creatingGroupRef.current = false;
+      setCreatingGroup(false);
     }
   };
 
@@ -416,7 +449,7 @@ export default function GroupPlannerManager() {
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
           onCreateGroup={handleCreateGroup}
-          isLoading={createGroupMut.isPending}
+          isLoading={creatingGroup || createGroupMut.isPending}
         />
         {toasts.map((t) => (
           <Toast key={t.id} message={t.message} type={t.type} onClose={() => hideToast(t.id)} />
@@ -471,6 +504,7 @@ export default function GroupPlannerManager() {
       case 'library':
         return (
           <LibraryTab
+            key={`${selectedGroupId}-${group?.destination_type}-${group?.destination_id}-${destination}`}
             groupId={selectedGroupId}
             destination={destination}
             group={group}
@@ -635,10 +669,7 @@ export default function GroupPlannerManager() {
       </div>
       {activeTab !== 'itinerary' && (
         <button
-          className={
-            'gp-floating-chat gp-comms-toggle' +
-            (activeTab === 'library' ? ' gp-chat-above-shortlist' : '')
-          }
+          className="gp-floating-chat gp-comms-toggle"
           onClick={() => setChatOpen((open) => !open)}
           aria-expanded={chatOpen}
         >
@@ -731,7 +762,7 @@ export default function GroupPlannerManager() {
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         onCreateGroup={handleCreateGroup}
-        isLoading={createGroupMut.isPending}
+        isLoading={creatingGroup || createGroupMut.isPending}
       />
 
       {showInviteModal && (
