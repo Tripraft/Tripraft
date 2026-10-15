@@ -345,6 +345,28 @@ def remove_member(group_id, member_id):
         return error_response('Failed to remove member', 500)
 
 
+@groups_bp.route('/groups/<group_id>/members/<member_id>/crew-role', methods=['PATCH'])
+@limit_api(Config.RATE_LIMITS['update'])
+@require_auth
+@require_group_role('admin')
+def update_member_crew_role(group_id, member_id):
+    """Assign an optional responsibility independently from the access role."""
+    from app.trips.services.travel_group_service import group_service
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or 'crew_role' not in data:
+        return error_response('crew_role is required (use null to clear)', 400)
+    crew_role = data['crew_role']
+    if crew_role is not None and not isinstance(crew_role, str):
+        return error_response('crew_role must be a string or null', 400)
+    if isinstance(crew_role, str):
+        crew_role = crew_role.strip().lower() or None
+    success, result = group_service.update_member_crew_role(group_id, member_id, crew_role, g.user_id)
+    if not success:
+        return error_response(result['error'], result.get('status_code', 400))
+    _invalidate_gp_caches()
+    return success_response(data=result['member'])
+
+
 @groups_bp.route('/groups/<group_id>/members/<member_id>/role', methods=['PATCH'])
 @limit_api(Config.RATE_LIMITS['update'])
 @require_auth

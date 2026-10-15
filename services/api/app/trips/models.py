@@ -112,6 +112,7 @@ class TravelGroup(Base):
                         'display_name': m.user.display_name,
                         'photo_url': m.user.photo_url,
                         'role': m.role,
+                        'crew_role': m.crew_role,
                         'is_creator': m.role == 'creator',
                         'joined_at': m.joined_at.isoformat() if m.joined_at else None
                     }
@@ -144,6 +145,7 @@ class TripMember(Base):
     group_id = Column(Uuid, ForeignKey('travel_groups.id', ondelete='CASCADE'), nullable=False)
     user_id = Column(Uuid, ForeignKey('users.id'), nullable=False)  # References shared users table
     role = Column(String(20), default='member')  # creator, admin, member, viewer
+    crew_role = Column(String(32), nullable=True)  # treasurer, navigator, culture_scout
     is_active = Column(Boolean, default=True)
     joined_at = Column(DateTime, default=func.now())
     removed_at = Column(DateTime)
@@ -160,6 +162,7 @@ class TripMember(Base):
             'group_id': str(self.group_id),
             'user_id': str(self.user_id),
             'role': self.role,
+            'crew_role': self.crew_role,
             'is_active': self.is_active,
             'is_creator': self.role == 'creator',
             'joined_at': self.joined_at.isoformat() if self.joined_at else None,

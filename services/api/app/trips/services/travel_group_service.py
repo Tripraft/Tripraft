@@ -973,6 +973,39 @@ class GroupService:
             return False, {'error': 'Failed to update member role'}
 
     @staticmethod
+    def update_member_crew_role(group_id, member_id, crew_role, requester_id):
+        """Owner/admin assignment of responsibilities; access roles remain unchanged."""
+        if crew_role not in (None, 'treasurer', 'navigator', 'culture_scout'):
+            return False, {'error': 'Choose Treasurer, Navigator, Culture Scout, or no responsibility', 'status_code': 400}
+        try:
+            with get_db_session() as session:
+                group = session.get(TravelGroup, group_id)
+                requester = session.query(TripMember).filter_by(
+                    group_id=group_id, user_id=requester_id, is_active=True).first()
+                if not group or not group.is_active:
+                    return False, {'error': 'Group not found', 'status_code': 404}
+                if not requester or requester.role not in {'creator', 'admin'}:
+                    return False, {'error': 'Owner or admin access required', 'status_code': 403}
+                member = session.query(TripMember).filter_by(
+                    group_id=group_id, user_id=member_id, is_active=True).first()
+                if not member:
+                    return False, {'error': 'Active member not found in this group', 'status_code': 404}
+                if member.crew_role != crew_role:
+                    previous = member.crew_role
+                    member.crew_role = crew_role
+                    session.add(GroupActivity(
+                        group_id=group_id, user_id=requester_id, action='member_updated',
+                        entity_type='member', entity_id=member.id,
+                        details={'name': member.user.display_name or member.user.email,
+                                 'message': f"Trip responsibility changed to {(crew_role or 'unassigned').replace('_', ' ')}",
+                                 'previous_crew_role': previous, 'crew_role': crew_role}))
+                    session.commit()
+                return True, {'member': member.to_dict()}
+        except Exception:
+            logger.exception('Could not update trip responsibility')
+            return False, {'error': 'Could not update trip responsibility', 'status_code': 500}
+
+    @staticmethod
     def get_group_members_detailed(group_id: str, user_id: str) -> Tuple[bool, Dict[str, Any]]:
         """
         Get detailed member list with owner indicator and permissions
@@ -996,7 +1029,7 @@ class GroupService:
                 # Get all members with user details
                 members_query = session.query(TripMember, User).join(
                     User, TripMember.user_id == User.id
-                ).filter(TripMember.group_id == group_id)
+                ).filter(TripMember.group_id == group_id, TripMember.is_active == True)
                 
                 members = []
                 for member, user in members_query.all():
@@ -1015,7 +1048,9 @@ class GroupService:
                         'is_creator': member.role == 'creator',
                         'can_remove': can_remove,
                         'joined_at': member.joined_at.isoformat() if member.joined_at else None,
-                        'role': member.role
+                        'role': member.role,
+                        'crew_role': member.crew_role,
+                        'is_active': member.is_active
                     })
                 
                 # Sort with owner first
