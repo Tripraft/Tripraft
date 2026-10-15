@@ -209,8 +209,8 @@ class GroupPlannerApiService {
   // CHECKLIST OPERATIONS
   // =========================================================================
 
-  async addChecklistItem(groupId, itemText) {
-    return apiClient.post(`${BASE}/groups/${groupId}/checklist`, { text: itemText });
+  async addChecklistItem(groupId, itemText, options = {}) {
+    return apiClient.post(`${BASE}/groups/${groupId}/checklist`, { ...options, text: itemText });
   }
 
   async toggleChecklistItem(groupId, itemId) {
@@ -266,7 +266,7 @@ class GroupPlannerApiService {
   // =========================================================================
 
   async getGroupActivities(groupId) {
-    return apiClient.get(`${BASE}/groups/${groupId}/activities?per_page=50`);
+    return this.getAllPages(`${BASE}/groups/${groupId}/activities`);
   }
 
   // =========================================================================
