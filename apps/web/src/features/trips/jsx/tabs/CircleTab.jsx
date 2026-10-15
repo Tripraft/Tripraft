@@ -1,86 +1,577 @@
-// Purpose: Renders the Circle Tab interface within apps\web\src\features\trips\jsx\tabs.
-import React, { useMemo } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useGroupMembers, gpKeys } from '../../../../hooks/useGroupPlannerQuery';
-import groupPlannerApi from '../../../../services/groupPlannerApi';
+﻿import React, { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  Users,
+  UserPlus,
+  Shield,
+  Eye,
+  Check,
+  X,
+  Lock,
+  Settings,
+  Copy,
+  Trash2,
+  Sparkles,
+  LogOut,
+} from 'lucide-react';
 import { useAuth } from '../../../../context/AuthContext';
-import { useRevokeAiConsent } from '../../../../hooks/useAiConsentQuery';
-import { AI_BOTS } from '../../../scout/aiBots';
+import { useGroupMembers, gpKeys } from '../../../../hooks/useGroupPlannerQuery';
+import {
+  useAiConsent,
+  useSubmitAiConsent,
+  useRevokeAiConsent,
+} from '../../../../hooks/useAiConsentQuery';
+import groupPlannerApi from '../../../../services/groupPlannerApi';
 import { toArray } from '../../utils/groupPlannerUtils';
-import { getInitials } from '../../utils/formatters';
-
-
-/**
- * Circle tab - group members and roles.
- *
- * Props: groupId, showToast
- */
-export default function CircleTab({ groupId, showToast }) {
-  const queryClient = useQueryClient();
-  const { currentUser } = useAuth();
-  const revokeConsent = useRevokeAiConsent(groupId);
-  const { data: membersRaw } = useGroupMembers(groupId);
-  const members = useMemo(() => toArray(membersRaw, 'members'), [membersRaw]);
-  const currentMember = members.find(m => String(m.user_id) === String(currentUser?.uid));
-  const canManageRoles = ['creator', 'admin'].includes(currentMember?.role);
-  const allMembers = useMemo(() => [...members, ...AI_BOTS], [members]);
-
-  const handleUpdateMemberRole = async (memberId, newRole) => {
+import { getInitials, formatDate } from '../../utils/formatters';
+import { AI_BOTS } from '../../../scout/aiBots';
+import { isPlannerDemo } from '../../demo/demoMode';
+const roles = {
+  creator: { label: 'Owner', description: 'Owns the trip and its membership.', Icon: Shield },
+  admin: {
+    label: 'Admin',
+    description: 'Keeps plans, settings, and roles organized.',
+    Icon: Settings,
+  },
+  member: {
+    label: 'Member',
+    description: 'Adds ideas and helps shape the adventure.',
+    Icon: Users,
+  },
+  viewer: { label: 'Viewer', description: 'Follows the plan with read-only access.', Icon: Eye },
+};
+const capabilities = [
+  ['View itinerary, bookings, and updates', [1, 1, 1, 1]],
+  ['Add stops, vote, upload, and edit checklists', [1, 1, 1, 0]],
+  ['Invite friends and send group messages', [1, 1, 1, 0]],
+  ['Edit trip settings and budget', [1, 1, 0, 0]],
+  ['Change member roles (except owner)', [1, 1, 0, 0]],
+  ['Remove members or delete the group', [1, 0, 0, 0]],
+];
+export default function CircleTab({ groupId, group, showToast, onInvite, onLeave }) {
+  const client = useQueryClient(),
+    { currentUser } = useAuth(),
+    { data: raw, isLoading, error } = useGroupMembers(groupId),
+    members = toArray(raw, 'members').filter((m) => m.is_active !== false && m.type !== 'ai');
+  const me = members.find((m) => String(m.user_id || m.id) === String(currentUser?.uid)),
+    manage = ['creator', 'admin'].includes(me?.role),
+    owner = me?.role === 'creator',
+    contribute = ['creator', 'admin', 'member'].includes(me?.role);
+  const { data: invitationsRaw, error: invitationError } = useQuery({
+    queryKey: [...gpKeys.all, 'invitations', groupId],
+    queryFn: () => groupPlannerApi.getGroupInvitations(groupId),
+    enabled: manage,
+    staleTime: 0,
+  });
+  const invitations = toArray(invitationsRaw, 'invitations').filter((i) => i.status === 'pending');
+  const { data: consent, error: consentError } = useAiConsent(groupId),
+    submitConsent = useSubmitAiConsent(groupId),
+    revokeConsent = useRevokeAiConsent(groupId);
+  const initial = {
+    name: group?.name || '',
+    description: group?.description || '',
+    start_date: group?.start_date || '',
+    end_date: group?.end_date || '',
+    estimated_budget: group?.estimated_budget ?? '',
+    budget_currency: group?.budget_currency || 'USD',
+  };
+  const [form, setForm] = useState(initial),
+    [saving, setSaving] = useState(false),
+    [formError, setFormError] = useState(''),
+    [busyMember, setBusyMember] = useState(null),
+    [confirm, setConfirm] = useState(null),
+    [confirmName, setConfirmName] = useState('');
+  const refresh = () => {
+    for (const key of [
+      gpKeys.members(groupId),
+      gpKeys.group(groupId),
+      gpKeys.groups(),
+      gpKeys.activities(groupId),
+    ])
+      client.invalidateQueries({ queryKey: key });
+  };
+  const updateRole = async (member, role) => {
+    setBusyMember(member.user_id || member.id);
     try {
-      await groupPlannerApi.updateMemberRole(groupId, memberId, newRole);
-      queryClient.invalidateQueries({ queryKey: gpKeys.members(groupId) });
-      showToast('Role updated');
+      await groupPlannerApi.updateMemberRole(groupId, member.user_id || member.id, role);
+      refresh();
+      showToast('Member role updated');
     } catch (e) {
-      showToast(e?.message || 'Failed to update role', 'error');
+      showToast(e.message || 'Could not update role', 'error');
+    } finally {
+      setBusyMember(null);
     }
   };
-
+  const save = async (e) => {
+    e.preventDefault();
+    if (saving) return;
+    setFormError('');
+    if (form.start_date && form.end_date && form.end_date < form.start_date) {
+      setFormError('End date must be on or after the start date.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await groupPlannerApi.updateGroup(groupId, {
+        ...form,
+        name: form.name.trim(),
+        estimated_budget: Number(form.estimated_budget || 0),
+      });
+      refresh();
+      showToast('Group settings saved');
+    } catch (e) {
+      setFormError(e.message || 'Could not save settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+  const confirmAction = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      if (confirm.type === 'member')
+        await groupPlannerApi.removeMember(groupId, confirm.member.user_id || confirm.member.id);
+      else if (confirm.type === 'leave') await groupPlannerApi.leaveGroup(groupId);
+      else await groupPlannerApi.deleteGroup(groupId);
+      refresh();
+      showToast(
+        confirm.type === 'member'
+          ? 'Member removed'
+          : confirm.type === 'leave'
+            ? 'You left the group'
+            : 'Group deleted',
+      );
+      if (confirm.type !== 'member') onLeave?.();
+      setConfirm(null);
+    } catch (e) {
+      showToast(e.message || 'Action could not be completed', 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
   return (
     <div className="gp-view">
-      <h2 className="gp-section-title">The Circle.</h2>
-      {currentMember && currentMember.role !== 'viewer' && <button className="gp-section-action" disabled={revokeConsent.isPending} onClick={() => revokeConsent.mutate(undefined, {
-        onSuccess: () => showToast('AI consent withdrawn and saved AI data deleted'),
-        onError: error => showToast(error.message || 'Unable to withdraw AI consent', 'error'),
-      })}>{revokeConsent.isPending ? 'Deleting AI data...' : 'Forget my AI data'}</button>}
-      <div className="gp-circle-list">
-        {allMembers.length === 0 ? (
-          <div className="gp-empty-agenda">No members yet.</div>
-        ) : (
-          allMembers.map((m) => (
-            <div key={m.id || m.user_id} className="gp-circle-member">
-              <div className="gp-circle-left">
-                {m.type === 'ai' ? (
-                  <div className="gp-circle-avatar gp-circle-avatar-ai">AI</div>
-                ) : m.photo_url || m.avatar ? (
-                  <img src={m.photo_url || m.avatar} alt={m.display_name || m.name} className="gp-circle-avatar-img" />
-                ) : (
-                  <div className="gp-circle-avatar">{getInitials(m.display_name || m.name || m.email || 'U')}</div>
-                )}
-                <div>
-                  <span className="gp-circle-name">
-                    {m.display_name || m.name || m.email || 'Unknown'}
-                    <span className={'gp-role-badge ' + (m.type === 'ai' ? 'ai' : m.role === 'creator' || m.is_creator ? 'lead' : 'member')}>
-                      {m.type === 'ai' ? 'AI Bot' : m.role === 'creator' ? 'Lead' : m.role || 'Member'}
-                    </span>
-                  </span>
-                  <div className="gp-circle-handle">{m.email || 'Partner'}</div>
-                </div>
-              </div>
-              {canManageRoles && m.type !== 'ai' && m.role !== 'creator' && !m.is_creator && (m.user_id || m.id) && (
-                <select
-                  className="gp-circle-role-select"
-                  value={m.role || 'member'}
-                  onChange={(e) => handleUpdateMemberRole(m.user_id || m.id, e.target.value)}
-                >
-                  <option value="admin">Admin</option>
-                  <option value="member">Member</option>
-                  <option value="viewer">Viewer</option>
-                </select>
-              )}
-            </div>
-          ))
+      <div className="gp-tab-heading">
+        <div>
+          <span className="gp-eyebrow">YOUR PEOPLE. YOUR PLANS.</span>
+          <h1>The Circle</h1>
+          <p>Meet your travel crew and choose how everyone collaborates.</p>
+        </div>
+        {contribute && (
+          <button className="gp-btn-create" onClick={onInvite}>
+            <UserPlus size={16} />
+            Invite Member
+          </button>
         )}
       </div>
+      {isLoading ? (
+        <p role="status">Loading your crew...</p>
+      ) : error ? (
+        <p role="alert">{error.message}</p>
+      ) : (
+        <div className="gp-crew-grid">
+          {members.map((member) => {
+            const role = roles[member.role] || roles.member,
+              Icon = role.Icon,
+              id = member.user_id || member.id;
+            return (
+              <article className="gp-crew-card" key={id}>
+                <div className="gp-crew-card-top">
+                  {member.photo_url || member.avatar ? (
+                    <img src={member.photo_url || member.avatar} alt="" />
+                  ) : (
+                    <span className="gp-crew-initials">
+                      {getInitials(member.display_name || member.email)}
+                    </span>
+                  )}
+                  <span className={'gp-crew-role ' + member.role}>
+                    <Icon size={11} />
+                    {role.label}
+                  </span>
+                </div>
+                <h2>{member.display_name || member.email}</h2>
+                <p>{member.email}</p>
+                <span className="gp-crew-description">{role.description}</span>
+                <div className="gp-crew-controls">
+                  {manage && member.role !== 'creator' ? (
+                    <select
+                      aria-label={'Role for ' + member.display_name}
+                      value={member.role || 'member'}
+                      disabled={busyMember === id}
+                      onChange={(e) => updateRole(member, e.target.value)}
+                    >
+                      <option value="admin">Admin</option>
+                      <option value="member">Member</option>
+                      <option value="viewer">Viewer</option>
+                    </select>
+                  ) : (
+                    <span>
+                      <Lock size={11} />
+                      {member.role === 'creator'
+                        ? 'Owner role is protected'
+                        : role.label + ' access'}
+                    </span>
+                  )}
+                  {owner && member.role !== 'creator' && (
+                    <button
+                      aria-label={'Remove member ' + member.display_name}
+                      onClick={() => setConfirm({ type: 'member', member })}
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  )}
+                  {String(id) === String(currentUser?.uid) && (
+                    <span className="gp-you-chip">You</span>
+                  )}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+      <div className="gp-circle-settings-grid">
+        <section className="gp-feature-card">
+          <div className="gp-feature-heading">
+            <div className="gp-feature-icon">
+              <Settings size={20} />
+            </div>
+            <div>
+              <h2>Group Settings</h2>
+              <p>
+                {manage
+                  ? 'Make this adventure your own.'
+                  : 'Your trip details. Owners and admins can edit these settings.'}
+              </p>
+            </div>
+          </div>
+          <form onSubmit={save}>
+            <fieldset className="gp-settings-fieldset" disabled={!manage || saving}>
+              <label className="gp-field">
+                Group name
+                <input
+                  className="gp-modal-input"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  required
+                  maxLength={200}
+                />
+              </label>
+              <label className="gp-field">
+                Trip description
+                <textarea
+                  className="gp-modal-input"
+                  rows={3}
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  maxLength={1000}
+                />
+              </label>
+              <div className="gp-form-columns">
+                <label className="gp-field">
+                  Start date
+                  <input
+                    type="date"
+                    className="gp-modal-input"
+                    value={form.start_date}
+                    onChange={(e) => setForm({ ...form, start_date: e.target.value })}
+                  />
+                </label>
+                <label className="gp-field">
+                  End date
+                  <input
+                    type="date"
+                    className="gp-modal-input"
+                    min={form.start_date || undefined}
+                    value={form.end_date}
+                    onChange={(e) => setForm({ ...form, end_date: e.target.value })}
+                  />
+                </label>
+              </div>
+              <div className="gp-form-columns">
+                <label className="gp-field">
+                  Trip budget
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="gp-modal-input"
+                    value={form.estimated_budget}
+                    onChange={(e) => setForm({ ...form, estimated_budget: e.target.value })}
+                  />
+                </label>
+                <label className="gp-field">
+                  Budget currency
+                  <select
+                    className="gp-modal-input"
+                    value={form.budget_currency}
+                    onChange={(e) => setForm({ ...form, budget_currency: e.target.value })}
+                  >
+                    {[
+                      ...new Set([
+                        form.budget_currency,
+                        'USD',
+                        'EUR',
+                        'JPY',
+                        'GBP',
+                        'INR',
+                        'CHF',
+                        'CAD',
+                        'AUD',
+                      ]),
+                    ].map((c) => (
+                      <option key={c}>{c}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+            </fieldset>
+            <p className="gp-settings-destination">
+              <strong>Destination</strong>
+              <span>{group?.destination || 'Not set'}</span>
+            </p>
+            {formError && (
+              <p role="alert" className="gp-form-error">
+                {formError}
+              </p>
+            )}
+            {manage && (
+              <button className="gp-modal-btn-primary" disabled={saving}>
+                {saving ? 'Saving...' : 'Save Group Settings'}
+              </button>
+            )}
+          </form>
+        </section>
+        <section className="gp-feature-card">
+          <div className="gp-feature-heading">
+            <div className="gp-feature-icon">
+              <Shield size={20} />
+            </div>
+            <div>
+              <h2>Roles & Permissions</h2>
+              <p>Access follows each member's group role.</p>
+            </div>
+          </div>
+          <div className="gp-permission-table-wrap">
+            <table className="gp-permission-table">
+              <thead>
+                <tr>
+                  <th>Capability</th>
+                  {['Owner', 'Admin', 'Member', 'Viewer'].map((r) => (
+                    <th key={r}>{r}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {capabilities.map(([label, allowed]) => (
+                  <tr key={label}>
+                    <td>{label}</td>
+                    {allowed.map((value, i) => (
+                      <td key={i} aria-label={value ? 'Allowed' : 'Not allowed'}>
+                        {value ? <Check size={14} /> : <span>—</span>}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="gp-form-hint">
+            The owner role is fixed. Expense permissions also follow the linked treasury's
+            membership and payment rules.
+          </p>
+        </section>
+      </div>
+      {manage && (
+        <section className="gp-feature-card gp-pending-invites">
+          <div className="gp-feature-heading">
+            <div className="gp-feature-icon">
+              <UserPlus size={20} />
+            </div>
+            <div>
+              <h2>Pending Invitations</h2>
+              <p>Share a group's invitation link with its intended recipient.</p>
+            </div>
+          </div>
+          {invitationError ? (
+            <p role="alert">{invitationError.message}</p>
+          ) : invitations.length === 0 ? (
+            <p className="gp-form-hint">
+              No pending invitations. Invite a friend to join the crew.
+            </p>
+          ) : (
+            invitations.map((invitation) => (
+              <div className="gp-invitation-row" key={invitation.id}>
+                <div>
+                  <strong>
+                    {invitation.invitee_email || invitation.invited_email || invitation.email}
+                  </strong>
+                  <span>
+                    {invitation.expires_at
+                      ? 'Expires ' + formatDate(invitation.expires_at)
+                      : 'Awaiting response'}
+                  </span>
+                </div>
+                <button
+                  className="gp-hub-button"
+                  onClick={async () => {
+                    try {
+                      const link = isPlannerDemo()
+                        ? `${window.location.origin}/group-planner/${groupId}?demo=1`
+                        : `${window.location.origin}/invitations/${encodeURIComponent(invitation.id || invitation.invitation_id)}`;
+                      await navigator.clipboard.writeText(link);
+                      showToast('Invitation link copied');
+                    } catch {
+                      showToast('Unable to copy the link in this browser.', 'error');
+                    }
+                  }}
+                >
+                  <Copy size={12} />
+                  Copy Link
+                </button>
+              </div>
+            ))
+          )}
+        </section>
+      )}
+      <section className="gp-feature-card gp-ai-crew">
+        <div className="gp-feature-heading">
+          <div className="gp-feature-icon">
+            <Sparkles size={20} />
+          </div>
+          <div>
+            <h2>Your AI Crew</h2>
+            <p>Optional planning help with controls for your own data.</p>
+          </div>
+        </div>
+        <div className="gp-ai-crew-grid">
+          {AI_BOTS.map((bot) => (
+            <div key={bot.id}>
+              <span className="gp-ai-avatar">
+                <Sparkles size={18} />
+              </span>
+              <div>
+                <strong>{bot.display_name}</strong>
+                <p>{bot.email}</p>
+              </div>
+              <span className="gp-eyebrow">AI ASSISTANT</span>
+            </div>
+          ))}
+        </div>
+        {consentError ? (
+          <p role="alert">{consentError.message}</p>
+        ) : (
+          <div className="gp-ai-consent-row">
+            <p>
+              {consent?.has_consent
+                ? 'You have enabled AI assistance for this trip.'
+                : 'AI assistance is optional. You control your participation.'}
+            </p>
+            {!consent?.has_consent ? (
+              <button
+                className="gp-hub-button"
+                disabled={submitConsent.isPending}
+                onClick={() =>
+                  submitConsent.mutate(
+                    { granted: true },
+                    {
+                      onSuccess: () => showToast('AI assistance enabled'),
+                      onError: (e) => showToast(e.message, 'error'),
+                    },
+                  )
+                }
+              >
+                Enable for me
+              </button>
+            ) : (
+              <button
+                className="gp-hub-button"
+                disabled={revokeConsent.isPending}
+                onClick={() =>
+                  revokeConsent.mutate(undefined, {
+                    onSuccess: () =>
+                      showToast('AI consent withdrawn and your saved AI data deleted'),
+                    onError: (e) => showToast(e.message, 'error'),
+                  })
+                }
+              >
+                Forget my AI data
+              </button>
+            )}
+          </div>
+        )}
+      </section>
+      <div className="gp-circle-danger">
+        {owner ? (
+          <button
+            onClick={() => {
+              setConfirmName('');
+              setConfirm({ type: 'delete' });
+            }}
+          >
+            <Trash2 size={14} />
+            Delete Group
+          </button>
+        ) : (
+          me && (
+            <button onClick={() => setConfirm({ type: 'leave' })}>
+              <LogOut size={14} />
+              Leave Group
+            </button>
+          )
+        )}
+      </div>
+      {confirm && (
+        <div className="gp-modal-overlay" onClick={() => !saving && setConfirm(null)}>
+          <div
+            className="gp-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Confirm Group Change"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="gp-modal-title">
+              {confirm.type === 'member'
+                ? 'Remove Member'
+                : confirm.type === 'leave'
+                  ? 'Leave Group'
+                  : 'Delete Group'}
+            </h2>
+            <p className="gp-form-hint">
+              {confirm.type === 'member'
+                ? `Remove ${confirm.member.display_name} from this trip?`
+                : confirm.type === 'leave'
+                  ? 'You will lose access to this group after leaving.'
+                  : 'This deletes the group for its members. Type the group name to confirm.'}
+            </p>
+            {confirm.type === 'delete' && (
+              <label className="gp-field">
+                Confirm group name
+                <input
+                  className="gp-modal-input"
+                  value={confirmName}
+                  onChange={(e) => setConfirmName(e.target.value)}
+                />
+              </label>
+            )}
+            <div className="gp-modal-actions">
+              <button
+                className="gp-danger-button"
+                disabled={saving || (confirm.type === 'delete' && confirmName !== group?.name)}
+                onClick={confirmAction}
+              >
+                {saving ? 'Saving...' : 'Confirm'}
+              </button>
+              <button
+                className="gp-modal-btn-secondary"
+                disabled={saving}
+                onClick={() => setConfirm(null)}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
