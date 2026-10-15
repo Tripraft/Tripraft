@@ -291,6 +291,19 @@ class GroupPlannerApiService {
   // DESTINATION LIBRARY (from places search DB)
   // =========================================================================
 
+  async searchCatalogDestinations(query = '', type = 'all') {
+    const params = new URLSearchParams({ q: query, type, limit: 10 });
+    return apiClient.get(`${BASE}/catalog/destinations?${params}`);
+  }
+
+  async getCatalogPlaces(options) {
+    const params = new URLSearchParams();
+    Object.entries(options).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') params.set(key, value);
+    });
+    return apiClient.get(`${BASE}/catalog/places?${params}`);
+  }
+
   async searchDestinationPlaces(destination, limit = 30) {
     const params = new URLSearchParams({ q: destination, limit, sort_by: 'rank_score', sort_order: 'desc' });
     return apiClient.get(`${GlobalConfig.ENDPOINTS.PLACE_SEARCH}/search?${params}`);

@@ -75,6 +75,28 @@ def create_group():
         validated, errors = validate_request(CreateTravelGroupSchema, data)
         if errors:
             return validation_error_response(errors)
+
+        if validated.get('destination_id') is not None:
+            from app.places.services.planner_catalog_service import catalog_connection, resolve_destination
+            kind = validated.get('destination_type')
+            if kind not in ('country', 'state', 'city'):
+                return error_response('Choose a catalog country, state, or city', 400)
+            try:
+                identity = int(validated['destination_id'])
+            except (ValueError, TypeError):
+                return error_response('Invalid catalog destination ID', 400)
+            if (identity < 1 or isinstance(validated['destination_id'], bool)
+                    or (isinstance(validated['destination_id'], float) and validated['destination_id'] != identity)):
+                return error_response('Invalid catalog destination ID', 400)
+            try:
+                with catalog_connection() as conn:
+                    selected = resolve_destination(conn, kind, identity)
+            except Exception:
+                logger.exception('Cannot validate planner catalog destination')
+                return error_response('Destination catalog is unavailable. Please try again.', 503)
+            if not selected:
+                return error_response('Select a destination from the catalog suggestions', 400)
+            validated['destination_id'] = str(identity)
         
         success, result = group_service.create_group(
             user_id=g.user_id,

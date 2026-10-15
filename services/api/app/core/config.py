@@ -72,6 +72,9 @@ class Config:
     )
     TRAVEL_DATABASE_PATH: Path = Path(os.getenv('TRAVEL_DATABASE_PATH', str(DATABASE_DIR / 'tripraft-canonical.db')))
     DATABASE_PATH: Path = TRAVEL_DATABASE_PATH  # Alias for backward compatibility
+    GROUP_PLANNER_CATALOG_PATH: Path = Path(os.getenv(
+        'GROUP_PLANNER_CATALOG_PATH', str(DATA_DIR / 'catalog' / 'tripraft_places.db')
+    ))
     SEARCH_INDEX_PATH: Path = DATA_DIR / 'search-index.json'
 
     # Travel Data URL (read replica in production)

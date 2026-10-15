@@ -75,6 +75,49 @@ def verify_auth():
 # DESTINATION SEARCH ENDPOINTS
 # ============================================================
 
+@group_planner_v2.route('/catalog/destinations', methods=['GET'])
+@limit_api(Config.RATE_LIMITS['search'])
+def catalog_destinations():
+    """Country/state/city choices exclusively from the configured planner catalog."""
+    from app.places.services.planner_catalog_service import search_destinations
+    kind = request.args.get('type', 'all')
+    if kind not in ('all', 'country', 'state', 'city'):
+        return error_response('Choose country, state, or city', 400)
+    limit = parse_query_int('limit', 10, minimum=1, maximum=20)
+    try:
+        return success_response(data=search_destinations(request.args.get('q', '').strip()[:140], kind, limit))
+    except Exception:
+        logger.exception('Planner catalog destination search failed')
+        return error_response('Destination catalog is unavailable. Please try again.', 503)
+
+
+@group_planner_v2.route('/catalog/places', methods=['GET'])
+@limit_api(Config.RATE_LIMITS['read_light'])
+def catalog_place_cards():
+    """Paginated cards, including records without coordinates, scoped to geography IDs."""
+    from app.places.services.planner_catalog_service import get_place_cards
+    kind = request.args.get('destination_type') or None
+    if kind and kind not in ('country', 'state', 'city'):
+        return error_response('Choose country, state, or city', 400)
+    options = {key: parse_query_int(key, 1) if request.args.get(key) else None
+               for key in ('destination_id', 'state_id', 'city_id')}
+    if any(value is not None and value < 1 for value in options.values()):
+        return error_response('Catalog IDs must be positive integers', 400)
+    if options['destination_id'] and not kind:
+        return error_response('Destination type is required with its ID', 400)
+    page = parse_query_int('page', 1, minimum=1, maximum=100000)
+    per_page = parse_query_int('per_page', 24, minimum=1, maximum=60)
+    try:
+        return success_response(data=get_place_cards(
+            kind=kind, identity=options['destination_id'], name=request.args.get('destination', '')[:250],
+            state_id=options['state_id'], city_id=options['city_id'],
+            search=request.args.get('search', '').strip()[:140], category=request.args.get('category', '')[:50],
+            page=page, per_page=per_page))
+    except Exception:
+        logger.exception('Planner catalog cards failed')
+        return error_response('Place catalog is unavailable. Please try again.', 503)
+
+
 @group_planner_v2.route('/destinations/autocomplete', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['search'])
 @cache_response(key_prefix='gp_dest:autocomplete', ttl=Config.CACHE_TTLS['search'])
