@@ -2,7 +2,7 @@
 export function isPlannerDemo() {
   return (
     typeof window !== 'undefined' &&
-    window.location.pathname.startsWith('/group-planner') &&
+    (window.location.pathname === '/group-planner' || window.location.pathname.startsWith('/group-planner/')) &&
     new URLSearchParams(window.location.search).get('demo') === '1'
   );
 }

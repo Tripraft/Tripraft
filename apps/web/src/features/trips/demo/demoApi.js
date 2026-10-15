@@ -2,7 +2,7 @@ import { createDemoState, demoPeople } from './demoData';
 import { DEMO_STORAGE_KEY, DEMO_VIEWER_KEY } from './demoMode';
 let state;
 const uploads = new Map();
-const clone = value => JSON.parse(JSON.stringify(value));
+const clone = (value) => JSON.parse(JSON.stringify(value));
 export function getDemoState() {
   if (!state) {
     try {
@@ -20,10 +20,17 @@ function save() {
   } catch {
     /* Demo works in memory if storage is unavailable. */
   }
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event('tripraft-demo-updated'));
 }
 export function resetDemo() {
   state = createDemoState();
   uploads.clear();
+  try {
+    for (const key of Object.keys(localStorage))
+      if (key.startsWith('gp_demo_shortlist_')) localStorage.removeItem(key);
+  } catch {
+    /* Demo storage is optional. */
+  }
   save();
 }
 export function getDemoViewer() {
@@ -80,9 +87,10 @@ function moneyGroup(trip) {
   return {
     id: trip.group.expense_group_id,
     name: trip.group.name,
-    currency: trip.group.budget_currency,
+    currency: trip.ledger_currency || trip.group.budget_currency,
     created_by: trip.group.created_by,
     owner_id: trip.group.created_by,
+    my_role: member(trip)?.role === 'creator' ? 'admin' : member(trip)?.role,
     members: trip.members.map((m) => ({
       ...m,
       role: m.role === 'creator' ? 'admin' : m.role,
@@ -129,7 +137,72 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
     db = getDemoState();
   const parts = path.split('/').filter(Boolean),
     base = parts.indexOf('group-planner');
-  if (path.endsWith('/places/search')) return envelope({ places: db.catalog });
+  if (path.endsWith('/places/search')) {
+    const q = (url.searchParams.get('q') || '').toLowerCase();
+    if (q.includes('lisbon'))
+      return envelope({
+        places: [
+          {
+            id: 'lisbon-alfama',
+            name: 'Alfama Neighborhood',
+            address: 'Lisbon, Portugal',
+            ai_summary: 'Explore narrow lanes, tiled facades, and viewpoints.',
+            theme: 'Culture',
+            latitude: 38.713,
+            longitude: -9.128,
+            photo_url: '/images/planner-demo/lisbon.jpg',
+            rating_tourist_priority: 4.6,
+          },
+          {
+            id: 'lisbon-belem',
+            name: 'Belem Riverside Walk',
+            address: 'Lisbon, Portugal',
+            ai_summary: 'A relaxed afternoon beside the Tagus.',
+            theme: 'Culture',
+            latitude: 38.692,
+            longitude: -9.216,
+            photo_url: '/images/planner-demo/lisbon.jpg',
+            rating_tourist_priority: 4.7,
+          },
+        ],
+      });
+    if (q.includes('zermatt'))
+      return envelope({
+        places: [
+          {
+            id: 'alps-trail',
+            name: 'Alpine Viewpoint Trail',
+            address: 'Zermatt, Switzerland',
+            ai_summary: 'A scenic mountain day with time for a picnic.',
+            theme: 'Culture',
+            latitude: 46.02,
+            longitude: 7.75,
+            photo_url: '/images/planner-demo/alps.jpg',
+            rating_tourist_priority: 4.8,
+          },
+        ],
+      });
+    return envelope({ places: db.catalog });
+  }
+  if (path.endsWith('/destinations/autocomplete'))
+    return envelope(
+      Object.values(db.trips)
+        .map((t) => ({
+          name: t.group.destination,
+          display_name: t.group.destination,
+          lat: t.group.destination_lat,
+          lng: t.group.destination_lng,
+          type: 'city',
+        }))
+        .filter((d) =>
+          d.name.toLowerCase().includes((url.searchParams.get('q') || '').toLowerCase()),
+        ),
+    );
+  if (
+    path.endsWith('/group-planner/events') &&
+    !String(url.searchParams.get('destination')).toLowerCase().includes('kyoto')
+  )
+    return envelope({ events: [] });
   if (path.endsWith('/group-planner/events'))
     return envelope({
       events: [
@@ -148,10 +221,12 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
     });
   if (path.endsWith('/group-planner/user/groups'))
     return envelope(
-      Object.values(db.trips).map((t) => ({
-        ...t.group,
-        member_count: t.members.filter((m) => m.is_active !== false).length,
-      })),
+      Object.values(db.trips)
+        .filter((t) => member(t))
+        .map((t) => ({
+          ...t.group,
+          member_count: t.members.filter((m) => m.is_active !== false).length,
+        })),
     );
   if (base >= 0) {
     const route = parts.slice(base + 1);
@@ -213,7 +288,12 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
       const item = trip.checklist.find((i) => i.id === route[1]);
       if (method === 'DELETE') trip.checklist = trip.checklist.filter((i) => i !== item);
       else if (route[2] === 'toggle') item.completed = !item.completed;
-      else Object.assign(item, body, { item: body.text || item.item });
+      else
+        Object.assign(item, body, {
+          item: body.text || item.item,
+          assigned_to_name:
+            trip.members.find((m) => m.user_id === body.assigned_to_id)?.display_name || null,
+        });
       activity(trip, 'checklist_updated', item.item, 'checklist');
       save();
       return envelope(item);
@@ -226,6 +306,12 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
     if (!section) {
       if (method === 'GET')
         return envelope({ ...trip.group, members: trip.members, member_details: trip.members });
+      if (method === 'DELETE') {
+        permit(trip, ['creator']);
+        delete db.trips[trip.group.id];
+        save();
+        return envelope({});
+      }
       permit(trip, ['creator', 'admin']);
       Object.assign(
         trip.group,
@@ -250,8 +336,30 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
       save();
       return envelope(target);
     }
+    if (section === 'leave') {
+      if (member(trip)?.role === 'creator') fail('The owner cannot leave their own trip.');
+      trip.members = trip.members.filter((m) => m.user_id !== getDemoViewer().id);
+      save();
+      return envelope({});
+    }
+    if (section === 'ai' && route[3] === 'consent') {
+      trip.consents ||= {};
+      if (method !== 'GET') {
+        trip.consents[getDemoViewer().id] = method === 'POST' && body.action === 'grant';
+        save();
+      }
+      const consented = trip.consents[getDemoViewer().id] ?? true;
+      return envelope({
+        allowed: consented,
+        needs_prompt: !consented,
+        consented_member_count: Object.values(trip.consents).filter(Boolean).length,
+      });
+    }
     if (section === 'activities') return envelope(trip.activities);
-    if (section === 'invitations') return envelope(trip.invitations);
+    if (section === 'invitations') {
+      permit(trip, ['creator', 'admin']);
+      return envelope(trip.invitations);
+    }
     if (section === 'expense-summary') {
       const money = moneyGroup(trip);
       return envelope({
@@ -346,8 +454,8 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
           created_by_name: getDemoViewer().display_name,
           created_at: new Date().toISOString(),
           options: body.options,
-          votes: Object.fromEntries(body.options.map(text => [text, 0])),
-          votes_detail: Object.fromEntries(body.options.map(text => [text, []])),
+          votes: Object.fromEntries(body.options.map((text) => [text, 0])),
+          votes_detail: Object.fromEntries(body.options.map((text) => [text, []])),
           voted_by: [],
         };
         trip.polls.push(poll);
@@ -362,9 +470,17 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
         if (!option) fail('Invalid choice');
         const userId = getDemoViewer().id;
         const selected = (poll.votes_detail[option] || []).includes(userId);
-        if (!poll.is_multiple_choice) for (const choice of poll.options) poll.votes_detail[choice] = (poll.votes_detail[choice] || []).filter(id => id !== userId);
-        poll.votes_detail[option] = selected ? (poll.votes_detail[option] || []).filter(id => id !== userId) : [...new Set([...(poll.votes_detail[option] || []), userId])];
-        poll.votes = Object.fromEntries(poll.options.map(choice => [choice, (poll.votes_detail[choice] || []).length]));
+        if (!poll.is_multiple_choice)
+          for (const choice of poll.options)
+            poll.votes_detail[choice] = (poll.votes_detail[choice] || []).filter(
+              (id) => id !== userId,
+            );
+        poll.votes_detail[option] = selected
+          ? (poll.votes_detail[option] || []).filter((id) => id !== userId)
+          : [...new Set([...(poll.votes_detail[option] || []), userId])];
+        poll.votes = Object.fromEntries(
+          poll.options.map((choice) => [choice, (poll.votes_detail[choice] || []).length]),
+        );
         poll.voted_by = [...new Set(Object.values(poll.votes_detail).flat())];
       }
       save();

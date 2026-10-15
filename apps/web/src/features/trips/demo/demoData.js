@@ -13,7 +13,7 @@ const photos = {
   'photo-1500648767791-00dcc994a43e': 'marcus',
   'photo-1517841905240-472988babdf9': 'elena',
 };
-const photo = id => '/images/planner-demo/' + photos[id] + '.jpg';
+const photo = (id) => '/images/planner-demo/' + photos[id] + '.jpg';
 export const demoPeople = [
   {
     id: 'demo-alex',
@@ -149,17 +149,15 @@ export function createDemoState() {
     category: theme === 'Dining' ? 'restaurant' : 'attraction',
     official_website: 'https://kyoto.travel/en/',
   }));
-  const places = catalog
-    .slice(0, 7)
-    .map((p, i) => ({
-      ...p,
-      id: 'demo-place-' + p.id,
-      visit_date: i < 4 ? '2026-10-14' : '2026-10-15',
-      suggested_time: ['08:00', '11:30', '14:30', '19:30', '07:30', '10:30', '14:00'][i],
-      suggested_duration: 90,
-      remarks: p.description,
-      added_by: 'demo-alex',
-    }));
+  const places = catalog.slice(0, 7).map((p, i) => ({
+    ...p,
+    id: 'demo-place-' + p.id,
+    visit_date: i < 4 ? '2026-10-14' : '2026-10-15',
+    suggested_time: ['08:00', '11:30', '14:30', '19:30', '07:30', '10:30', '14:00'][i],
+    suggested_duration: 90,
+    remarks: p.description,
+    added_by: 'demo-alex',
+  }));
   const groups = [
     {
       id: 'demo-kyoto',
@@ -255,6 +253,7 @@ export function createDemoState() {
       g.id,
       {
         group: g,
+        ledger_currency: g.budget_currency,
         members: demoPeople.map((p) => ({ ...p })),
         places: g.id === 'demo-kyoto' ? places : [],
         checklist:
@@ -447,7 +446,17 @@ export function createDemoState() {
                 },
               ]
             : [],
-        invitations: [],
+        invitations:
+          g.id === 'demo-kyoto'
+            ? [
+                {
+                  id: 'demo-invite-jamie',
+                  invitee_email: 'jamie@example.test',
+                  status: 'pending',
+                  expires_at: '2026-10-22T23:59:00Z',
+                },
+              ]
+            : [],
         expenses: g.id === 'demo-kyoto' ? expenses : [],
         settlements: [],
       },
@@ -456,9 +465,9 @@ export function createDemoState() {
   for (const trip of Object.values(trips)) {
     for (const poll of trip.polls) {
       const options = poll.options;
-      poll.votes = Object.fromEntries(options.map(o => [o.text, o.votes]));
-      poll.votes_detail = Object.fromEntries(options.map(o => [o.text, o.voted_by]));
-      poll.options = options.map(o => o.text);
+      poll.votes = Object.fromEntries(options.map((o) => [o.text, o.votes]));
+      poll.votes_detail = Object.fromEntries(options.map((o) => [o.text, o.voted_by]));
+      poll.options = options.map((o) => o.text);
     }
   }
   return { version: 1, catalog, trips };

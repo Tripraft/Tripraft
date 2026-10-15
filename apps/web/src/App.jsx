@@ -1,6 +1,6 @@
 // Purpose: Renders the App interface within apps\web\src.
 import React, { lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useSearchParams } from 'react-router-dom';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './features/auth/jsx/ProtectedRoute';
@@ -28,51 +28,100 @@ import PageSkeleton from './components/common/jsx/PageSkeleton';
 // Lazy import for group planner (single reference for both routes)
 const GroupPlannerPage = lazy(() => import('./features/trips/jsx/GroupPlannerPage'));
 
+function GroupPlannerAccess() {
+  const [params] = useSearchParams();
+  // Demo requests are intercepted locally and cannot reach the real planner API.
+  return params.get('demo') === '1' ? (
+    <GroupPlannerPage />
+  ) : (
+    <ProtectedRoute>
+      <GroupPlannerPage />
+    </ProtectedRoute>
+  );
+}
+
 export default function App() {
   return (
     <AuthProvider>
-        <Suspense fallback={<PageSkeleton />}>
+      <Suspense fallback={<PageSkeleton />}>
         <Routes>
-        {/* Public routes */}
-        <Route path="/" element={<HomePage />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/pricing" element={<Pricing/>} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="/verify-email/:token?" element={<VerifyEmail />} />
+          {/* Public routes */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/verify-email/:token?" element={<VerifyEmail />} />
 
-        {/* Public: Place Search & Trip Planner (read-only, no auth) */}
-        <Route path="/places" element={
-          <FeatureErrorBoundary featureName="Place Search"><PlaceSearchPage /></FeatureErrorBoundary>
-        } />
-        <Route path="/place-search" element={
-          <FeatureErrorBoundary featureName="Place Search"><PlaceSearchPage /></FeatureErrorBoundary>
-        } />
-        <Route path="/trip-planner" element={
-          <FeatureErrorBoundary featureName="Trip Planner"><TripPlanner /></FeatureErrorBoundary>
-        } />
+          {/* Public: Place Search & Trip Planner (read-only, no auth) */}
+          <Route
+            path="/places"
+            element={
+              <FeatureErrorBoundary featureName="Place Search">
+                <PlaceSearchPage />
+              </FeatureErrorBoundary>
+            }
+          />
+          <Route
+            path="/place-search"
+            element={
+              <FeatureErrorBoundary featureName="Place Search">
+                <PlaceSearchPage />
+              </FeatureErrorBoundary>
+            }
+          />
+          <Route
+            path="/trip-planner"
+            element={
+              <FeatureErrorBoundary featureName="Trip Planner">
+                <TripPlanner />
+              </FeatureErrorBoundary>
+            }
+          />
 
-        {/* Invitation handler */}
-        <Route path="/invitation/:invitationId" element={<SmartInvitationHandler />} />
-        <Route path="/invitations/:invitationId" element={<SmartInvitationHandler />} />
-        <Route path="/accept-invitation" element={<SmartInvitationHandler />} />
+          {/* Invitation handler */}
+          <Route path="/invitation/:invitationId" element={<SmartInvitationHandler />} />
+          <Route path="/invitations/:invitationId" element={<SmartInvitationHandler />} />
+          <Route path="/accept-invitation" element={<SmartInvitationHandler />} />
 
-        {/* Protected routes */}
-        <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-        <Route path="/expenses/:userId?/:mode?" element={
-          <ProtectedRoute>
-            <FeatureErrorBoundary featureName="Expenses"><ExpensePage /></FeatureErrorBoundary>
-          </ProtectedRoute>
-        } />
-        <Route path="/admin/analysis" element={<ProtectedRoute><ExpenseAnalytics /></ProtectedRoute>} />
-        <Route path="/group-planner/:groupId?" element={
-          <ProtectedRoute>
-            <FeatureErrorBoundary featureName="Group Planner"><GroupPlannerPage /></FeatureErrorBoundary>
-          </ProtectedRoute>
-        } />
-      </Routes>
+          {/* Protected routes */}
+          <Route
+            path="/analytics"
+            element={
+              <ProtectedRoute>
+                <Analytics />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/expenses/:userId?/:mode?"
+            element={
+              <ProtectedRoute>
+                <FeatureErrorBoundary featureName="Expenses">
+                  <ExpensePage />
+                </FeatureErrorBoundary>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/analysis"
+            element={
+              <ProtectedRoute>
+                <ExpenseAnalytics />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/group-planner/:groupId?"
+            element={
+              <FeatureErrorBoundary featureName="Group Planner">
+                <GroupPlannerAccess />
+              </FeatureErrorBoundary>
+            }
+          />
+        </Routes>
       </Suspense>
       {/* React Query DevTools - disabled in production for cleaner UI */}
       {import.meta.env.DEV && import.meta.env.VITE_SHOW_DEVTOOLS === 'true' && (
