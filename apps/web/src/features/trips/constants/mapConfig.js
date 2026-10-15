@@ -1,13 +1,19 @@
 // Purpose: Provides map Config logic and exports for apps\web\src\features\trips\constants.
 /**
  * Map configuration constants for the Group Planner.
- * Leaflet CDN, marker icons, day colors, tile layer URL.
+ * Marker icons, day colors, and authenticated CARTO raster tile URLs.
  */
 
 export const LEAFLET_CSS_URL = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
 export const LEAFLET_JS_URL = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
 
-export const TILE_URL = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+export const TILE_URL = 'https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png';
+
+export function cartoTileUrl(key, night = false) {
+  const trimmed = String(key || '').trim();
+  if (!trimmed) return null;
+  return `${night ? TILE_URL.replace('light_all', 'dark_all') : TILE_URL}?key=${encodeURIComponent(trimmed)}`;
+}
 
 export const DEFAULT_CENTER = [20, 0];
 export const DEFAULT_ZOOM = 2;

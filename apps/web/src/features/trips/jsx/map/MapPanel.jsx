@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Moon, Sun, MessageCircle, Ticket, MapPin } from 'lucide-react';
 import useLeaflet from '../../hooks/useMapRenderer';
 import {
-  TILE_URL,
+  cartoTileUrl,
   DEFAULT_CENTER,
   DEFAULT_ZOOM,
   DAY_COLORS,
@@ -40,6 +40,7 @@ export default function MapPanel({
   onSelectPlace,
   onAskPlace,
   onOpenBookings,
+  mapApiKey = '',
 }) {
   const leafletReady = useLeaflet();
   const mapRef = useRef(null);
@@ -95,9 +96,13 @@ export default function MapPanel({
       zoomAnimation: false,
       markerZoomAnimation: false,
     });
-    L.tileLayer(nightMap ? TILE_URL.replace('light_all', 'dark_all') : TILE_URL, {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-    }).addTo(map);
+    const tileUrl = cartoTileUrl(mapApiKey, nightMap);
+    if (tileUrl)
+      L.tileLayer(tileUrl, {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attribution/">CARTO</a>',
+        maxZoom: 20,
+      }).addTo(map);
     const markersLayer = L.layerGroup().addTo(map);
 
     mapInstanceRef.current = map;
@@ -112,7 +117,7 @@ export default function MapPanel({
         markersLayerRef.current = null;
       }
     };
-  }, [leafletReady, group?.id, nightMap]);
+  }, [leafletReady, group?.id, nightMap, mapApiKey]);
 
   // Re-center on destination change
   useEffect(() => {
@@ -289,7 +294,7 @@ export default function MapPanel({
     if (bounds.length > 0) {
       mapInstanceRef.current.fitBounds(bounds, { padding: [80, 80], maxZoom: 15 });
     }
-  }, [itineraryPlaces, unscheduledPlaces, mapDay, group, activeTab, filteredLibrary, nightMap]);
+  }, [itineraryPlaces, unscheduledPlaces, mapDay, group, activeTab, filteredLibrary, nightMap, mapApiKey]);
 
   useEffect(() => {
     if (!selectedPlaceId) return;

@@ -22,6 +22,7 @@ import {
 } from '../../../hooks/useGroupPlannerQuery';
 import { useQueryClient } from '@tanstack/react-query';
 import groupPlannerApi from '../../../services/groupPlannerApi';
+import GlobalConfig from '../../../config/globalConfig';
 import CreateGroupModal from './CreateGroupModal';
 import Toast from '@tripraft/ui/Toast';
 import { MessageCircle, X, Search, UserPlus } from 'lucide-react';
@@ -615,6 +616,7 @@ export default function GroupPlannerManager() {
               </button>
             </div>
             <MapPanel
+              mapApiKey={GlobalConfig.CARTO_BASEMAPS_KEY}
               group={group}
               places={places}
               filteredLibrary={destinationLibrary}
