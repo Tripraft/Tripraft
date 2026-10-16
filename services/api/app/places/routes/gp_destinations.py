@@ -118,6 +118,24 @@ def catalog_place_cards():
         return error_response('Place catalog is unavailable. Please try again.', 503)
 
 
+@group_planner_v2.route('/catalog/viewport', methods=['GET'])
+@limit_api(Config.RATE_LIMITS['read_light'])
+def catalog_destination_viewport():
+    """Bounds of known coordinates within a selected catalog country/state/city."""
+    from app.places.services.planner_catalog_service import get_destination_viewport
+    kind = request.args.get('destination_type') or None
+    if kind and kind not in ('country', 'state', 'city'):
+        return error_response('Choose country, state, or city', 400)
+    identity = parse_query_int('destination_id', 1) if request.args.get('destination_id') else None
+    if identity is not None and (identity < 1 or not kind):
+        return error_response('A positive destination ID and destination type are required', 400)
+    try:
+        return success_response(data=get_destination_viewport(kind, identity, request.args.get('destination', '')[:250]))
+    except Exception:
+        logger.exception('Planner destination viewport failed')
+        return error_response('Destination location is unavailable. Please try again.', 503)
+
+
 @group_planner_v2.route('/destinations/autocomplete', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['search'])
 @cache_response(key_prefix='gp_dest:autocomplete', ttl=Config.CACHE_TTLS['search'])

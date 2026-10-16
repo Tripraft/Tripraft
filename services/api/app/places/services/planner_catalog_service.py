@@ -1,5 +1,6 @@
 """Read-only Group Planner geography and cards from tripraft_places.db."""
 import sqlite3
+import math
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -146,3 +147,57 @@ def get_place_cards(kind=None, identity=None, name='', state_id=None, city_id=No
         return {'places': [dict(r) for r in rows], 'states': states, 'cities': cities,
                 'destination': scope, 'total': total, 'page': page, 'per_page': per_page,
                 'total_pages': (total + per_page - 1) // per_page}
+
+
+def coordinate_viewport(points, kind):
+    """Catalog point extent, using the shortest longitude arc across the date line."""
+    valid = []
+    for lat, lng in points:
+        try:
+            lat, lng = float(lat), float(lng)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(lat) and math.isfinite(lng) and -90 <= lat <= 90 and -180 <= lng <= 180:
+            valid.append((lat, lng))
+    if not valid:
+        return {'center': None, 'bounds': None, 'zoom': None, 'coordinate_count': 0}
+    south, north = min(p[0] for p in valid), max(p[0] for p in valid)
+    longitudes = sorted(set(p[1] % 360 for p in valid))
+    if len(longitudes) == 1:
+        west = east = longitudes[0]
+    else:
+        gap_index = max(range(len(longitudes)), key=lambda i:
+                        (longitudes[(i + 1) % len(longitudes)] - longitudes[i]) % 360)
+        west = longitudes[(gap_index + 1) % len(longitudes)]
+        east = longitudes[gap_index]
+        if east < west:
+            east += 360
+    if west >= 180:
+        west -= 360
+        east -= 360
+    center_lng = (west + east) / 2
+    if center_lng > 180:
+        center_lng -= 360
+    bounds = [[south, west], [north, east]] if north != south or west != east else None
+    return {'center': [(south + north) / 2, center_lng], 'bounds': bounds,
+            'zoom': {'country': 5, 'state': 7, 'city': 12}[kind],
+            'coordinate_count': len(valid)}
+
+
+def get_destination_viewport(kind=None, identity=None, name=''):
+    """Position a selected catalog geography without calling an external geocoder."""
+    with catalog_connection() as conn:
+        scope = resolve_destination(conn, kind, identity, name)
+        if not scope:
+            return {'destination': None, 'source': 'catalog', 'status': 'unresolved',
+                    'center': None, 'bounds': None, 'zoom': None, 'coordinate_count': 0}
+        column = {'country': 'co.id', 'state': 's.id', 'city': 'ci.id'}[scope['type']]
+        args = [scope['id']]
+        cities = conn.execute(f'SELECT ci.latitude, ci.longitude {GEOGRAPHY} WHERE {ACTIVE} AND {column}=?', args).fetchall()
+        places = conn.execute(f'''SELECT p.latitude, p.longitude FROM places p
+            JOIN cities ci ON ci.id=p.city_id JOIN states s ON s.id=ci.state_id
+            JOIN countries co ON co.id=s.country_id WHERE {ACTIVE}
+            AND p.deleted_at IS NULL AND {column}=?''', args).fetchall()
+        viewport = coordinate_viewport([tuple(row) for row in cities] + [tuple(row) for row in places], scope['type'])
+        return {**viewport, 'destination': scope, 'source': 'catalog',
+                'status': 'available' if viewport['center'] else 'location_unavailable'}

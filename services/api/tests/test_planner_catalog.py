@@ -100,3 +100,29 @@ def test_missing_catalog_reports_unavailable_without_creating_database(app, tmp_
     response = app.test_client().get('/api/v1/group-planner/catalog/destinations?q=Unknown')
     assert response.status_code == 503
     assert not missing.exists()
+
+
+def test_viewport_uses_selected_catalog_scope_and_reports_missing_coordinates(app, catalog):
+    client = app.test_client()
+    base = '/api/v1/group-planner/catalog/viewport'
+    country = payload(client.get(base + '?destination_type=country&destination_id=1'))
+    assert country['destination']['type'] == 'country'
+    assert country['bounds'] == [[1.0, 2.0], [3.0, 4.0]]
+    assert country['source'] == 'catalog'
+    state = payload(client.get(base + '?destination_type=state&destination_id=11'))
+    assert state['center'] == [1.0, 2.0] and state['bounds'] is None
+    city = payload(client.get(base + '?destination_type=city&destination_id=121'))
+    assert city['center'] == [3.0, 4.0] and city['destination']['type'] == 'city'
+    missing = payload(client.get(base + '?destination_type=city&destination_id=113'))
+    assert missing['status'] == 'location_unavailable' and missing['center'] is None
+    ambiguous = payload(client.get(base + '?destination=Springfield'))
+    assert ambiguous['status'] == 'unresolved'
+    assert client.get(base + '?destination_type=country&destination_id=-1').status_code == 400
+
+
+def test_viewport_filters_invalid_points_and_takes_shortest_arc_across_date_line():
+    from app.places.services.planner_catalog_service import coordinate_viewport
+    viewport = coordinate_viewport([(1, 179), (3, -179), (None, 0), (400, 50), ('NaN', 0)], 'country')
+    assert viewport['bounds'] == [[1.0, 179.0], [3.0, 181.0]]
+    assert viewport['coordinate_count'] == 2
+    assert abs(viewport['center'][1]) == 180
