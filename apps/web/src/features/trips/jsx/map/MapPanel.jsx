@@ -1,10 +1,11 @@
 // Purpose: Renders the Map Panel interface within apps\web\src\features\trips\jsx\map.
 import { validCoordinates } from '../../../../utils/coordinates';
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { Moon, Sun, MessageCircle, Ticket, MapPin } from 'lucide-react';
+import { Moon, Sun, MessageCircle, Ticket, MapPin, LocateFixed } from 'lucide-react';
 import useLeaflet from '../../hooks/useMapRenderer';
 import {
-  cartoTileUrl,
+  OPENFREEMAP_STYLES,
+  MAP_ATTRIBUTION,
   DEFAULT_CENTER,
   DEFAULT_ZOOM,
   DAY_COLORS,
@@ -13,6 +14,7 @@ import {
 } from '../../constants/mapConfig';
 import { getMarkerCategory, sanitizePopup, tripDayNumber } from '../../utils/groupPlannerUtils';
 import { formatDate } from '../../utils/formatters';
+import { focusDestination, longitudeNearViewport } from '../../utils/mapViewport';
 
 /**
  * Leaflet map panel for the Group Planner right pane.
@@ -40,14 +42,18 @@ export default function MapPanel({
   onSelectPlace,
   onAskPlace,
   onOpenBookings,
-  mapApiKey = '',
+  destinationViewport,
+  viewportLoading = false,
+  viewportError,
 }) {
   const leafletReady = useLeaflet();
   const mapRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markersLayerRef = useRef(null);
   const markerRefs = useRef(new Map());
+  const basemapRef = useRef(null);
   const [nightMap, setNightMap] = useState(false);
+  const [basemapError, setBasemapError] = useState(false);
 
   const itineraryPlaces = useMemo(
     () => places.filter((p) => p.visit_date && !p.is_deleted),
@@ -96,13 +102,31 @@ export default function MapPanel({
       zoomAnimation: false,
       markerZoomAnimation: false,
     });
-    const tileUrl = cartoTileUrl(mapApiKey, nightMap);
-    if (tileUrl)
-      L.tileLayer(tileUrl, {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attribution/">CARTO</a>',
-        maxZoom: 20,
-      }).addTo(map);
+    setBasemapError(false);
+    if (L.maplibreGL && (!L.supportsVectorMap || L.supportsVectorMap())) {
+      let layer;
+      try {
+        layer = L.maplibreGL({
+          style: nightMap ? OPENFREEMAP_STYLES.night : OPENFREEMAP_STYLES.day,
+          interactive: false,
+          attributionControl: { customAttribution: MAP_ATTRIBUTION },
+        });
+        layer.addTo(map);
+        basemapRef.current = layer;
+        layer.getMaplibreMap?.()?.on('error', () => setBasemapError(true));
+        layer.getMaplibreMap?.()?.on('style.load', () => setBasemapError(false));
+      } catch {
+        setBasemapError(true);
+        if (layer) {
+          if (!layer.getMaplibreMap?.()) layer.onRemove = () => layer.getContainer?.()?.remove();
+          try {
+            map.removeLayer?.(layer);
+          } catch {
+            /* Local overlays still work. */
+          }
+        }
+      }
+    } else setBasemapError(true);
     const markersLayer = L.layerGroup().addTo(map);
 
     mapInstanceRef.current = map;
@@ -115,17 +139,29 @@ export default function MapPanel({
         map.remove();
         mapInstanceRef.current = null;
         markersLayerRef.current = null;
+        basemapRef.current = null;
       }
     };
-  }, [leafletReady, group?.id, nightMap, mapApiKey]);
+  }, [leafletReady, group?.id]);
+
+  useEffect(() => {
+    basemapRef.current
+      ?.getMaplibreMap?.()
+      ?.setStyle(nightMap ? OPENFREEMAP_STYLES.night : OPENFREEMAP_STYLES.day);
+  }, [nightMap]);
 
   // Re-center on destination change
   useEffect(() => {
-    if (!mapInstanceRef.current || !group) return;
-    if (validCoordinates(group.destination_lat, group.destination_lng)) {
-      mapInstanceRef.current.setView([group.destination_lat, group.destination_lng], DEFAULT_ZOOM);
-    }
-  }, [group?.destination_lat, group?.destination_lng]);
+    if (!selectedPlaceId && mapDay === 'all')
+      focusDestination(mapInstanceRef.current, destinationViewport, group);
+  }, [
+    leafletReady,
+    destinationViewport,
+    group?.id,
+    group?.destination_lat,
+    group?.destination_lng,
+    mapDay,
+  ]);
 
   // Render markers
   useEffect(() => {
@@ -209,7 +245,7 @@ export default function MapPanel({
       });
 
       const lat = parseFloat(p.latitude);
-      const lng = parseFloat(p.longitude);
+      const lng = longitudeNearViewport(parseFloat(p.longitude), destinationViewport);
 
       let popupHtml =
         '<div style="padding:4px;"><div style="font-weight:600;margin-bottom:4px;">' +
@@ -255,7 +291,7 @@ export default function MapPanel({
       });
 
       const lat = parseFloat(p.latitude);
-      const lng = parseFloat(p.longitude);
+      const lng = longitudeNearViewport(parseFloat(p.longitude), destinationViewport);
 
       let popupHtml =
         '<div style="padding:4px;"><div style="font-weight:600;margin-bottom:2px;">' +
@@ -291,16 +327,33 @@ export default function MapPanel({
       }).addTo(markersLayerRef.current);
     });
 
-    if (bounds.length > 0) {
+    const hasDestinationLocation =
+      destinationViewport?.center ||
+      validCoordinates(group?.destination_lat, group?.destination_lng);
+    if (bounds.length > 0 && (mapDay !== 'all' || !hasDestinationLocation)) {
       mapInstanceRef.current.fitBounds(bounds, { padding: [80, 80], maxZoom: 15 });
     }
-  }, [itineraryPlaces, unscheduledPlaces, mapDay, group, activeTab, filteredLibrary, nightMap, mapApiKey]);
+  }, [
+    itineraryPlaces,
+    unscheduledPlaces,
+    mapDay,
+    group,
+    activeTab,
+    filteredLibrary,
+    destinationViewport,
+    leafletReady,
+  ]);
 
   useEffect(() => {
     if (!selectedPlaceId) return;
     const marker = markerRefs.current.get(selectedPlaceId);
     marker?.openPopup?.();
-    if (marker?.getLatLng) mapInstanceRef.current?.panTo?.(marker.getLatLng(), { animate: false });
+    if (marker?.getLatLng)
+      mapInstanceRef.current?.setView?.(
+        marker.getLatLng(),
+        Math.max(mapInstanceRef.current.getZoom?.() || 0, 13),
+        { animate: false },
+      );
   }, [selectedPlaceId, mapDay]);
   useEffect(() => {
     mapInstanceRef.current?.invalidateSize?.();
@@ -317,6 +370,42 @@ export default function MapPanel({
         {nightMap ? <Sun size={16} /> : <Moon size={16} />}
         {nightMap ? 'Day Map' : 'Night Radar'}
       </button>
+      <div className="gp-map-destination-card">
+        <span>
+          {destinationViewport?.destination?.type || group?.destination_type || 'Destination'}
+        </span>
+        <strong>
+          {destinationViewport?.destination?.name ||
+            group?.destination?.split(',')[0] ||
+            'Your destination'}
+        </strong>
+        {viewportLoading ? (
+          <small role="status">Locating your destination...</small>
+        ) : viewportError ||
+          destinationViewport?.status === 'location_unavailable' ||
+          destinationViewport?.status === 'unresolved' ? (
+          <small role="status">Destination coordinates are unavailable in the catalog.</small>
+        ) : (
+          <small>Catalog coordinates</small>
+        )}
+        <button
+          className="gp-icon-button"
+          aria-label="Focus destination"
+          onClick={() => {
+            onSelectPlace?.(null);
+            onMapDayChange?.('all');
+            focusDestination(mapInstanceRef.current, destinationViewport, group);
+          }}
+        >
+          <LocateFixed size={15} />
+          Focus destination
+        </button>
+      </div>
+      {basemapError && (
+        <p className="gp-map-background-status" role="status">
+          Map background unavailable. Saved place markers remain visible.
+        </p>
+      )}
       <div className="gp-map-day-selector">
         <button
           className={'gp-map-day-btn' + (mapDay === 'all' ? ' active' : '')}

@@ -20,7 +20,7 @@ export class APIClient {
   async request(method, endpoint, options = {}) {
     // Public catalog reads are shared; every demo mutation stays isolated.
     const publicPlannerCatalog = method === 'GET' &&
-      /^\/v1\/group-planner\/catalog\/(destinations|places)(\?|$)/.test(endpoint);
+      /^\/v1\/group-planner\/catalog\/(destinations|places|viewport)(\?|$)/.test(endpoint);
     if (isPlannerDemo() && !publicPlannerCatalog) {
       const { demoRequest } = await import('../features/trips/demo/demoApi');
       return demoRequest(method, endpoint, options);

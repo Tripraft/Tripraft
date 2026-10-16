@@ -1,19 +1,14 @@
 // Purpose: Provides map Config logic and exports for apps\web\src\features\trips\constants.
 /**
  * Map configuration constants for the Group Planner.
- * Marker icons, day colors, and authenticated CARTO raster tile URLs.
+ * Marker icons, day colors, and OpenFreeMap styles.
  */
 
-export const LEAFLET_CSS_URL = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-export const LEAFLET_JS_URL = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-
-export const TILE_URL = 'https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}{r}.png';
-
-export function cartoTileUrl(key, night = false) {
-  const trimmed = String(key || '').trim();
-  if (!trimmed) return null;
-  return `${night ? TILE_URL.replace('light_all', 'dark_all') : TILE_URL}?key=${encodeURIComponent(trimmed)}`;
-}
+export const OPENFREEMAP_STYLES = {
+  day: 'https://tiles.openfreemap.org/styles/liberty',
+  night: 'https://tiles.openfreemap.org/styles/dark',
+};
+export const MAP_ATTRIBUTION = '<a href="https://openfreemap.org/">OpenFreeMap</a> &copy; <a href="https://www.openmaptiles.org/">OpenMapTiles</a> Data from <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
 
 export const DEFAULT_CENTER = [20, 0];
 export const DEFAULT_ZOOM = 2;

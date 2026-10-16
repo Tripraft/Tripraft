@@ -90,22 +90,27 @@ it('re-centers an existing map when the destination changes to zero coordinates'
   rerender(<MapPanel {...mapProps} group={{ ...mapProps.group, destination_lat: 0, destination_lng: 0 }} />);
   expect(map.setView).toHaveBeenLastCalledWith([0, 0], expect.any(Number));
 });
-it('requests authenticated tiles when a key is added and preserves place overlays', () => {
+it('loads OpenFreeMap without a key, frames the destination and keeps overlays on theme changes', () => {
   useLeaflet.mockReturnValue(true);
   const map = { remove: jest.fn(), setView: jest.fn(), fitBounds: jest.fn() };
   const layers = { clearLayers: jest.fn() };
+  const gl = { on: jest.fn(), setStyle: jest.fn() };
+  const layer = { addTo: jest.fn().mockReturnThis(), getMaplibreMap: () => gl };
   window.L = {
-    map: jest.fn(() => map), tileLayer: jest.fn(() => ({ addTo: jest.fn() })),
+    map: jest.fn(() => map), maplibreGL: jest.fn(() => layer),
     layerGroup: () => ({ addTo: () => layers }), divIcon: jest.fn(),
     marker: jest.fn(() => ({ addTo: () => ({ bindPopup: jest.fn() }) })),
   };
   const places=[{id:'place',name:'Garden',visit_date:'2026-10-20',latitude:1,longitude:2}];
-  const view=render(<MapPanel {...mapProps} places={places} />);
-  expect(window.L.tileLayer).not.toHaveBeenCalled();
+  const viewport={destination:{name:'Country A',type:'country'},center:[4,5],bounds:[[1,2],[7,8]]};
+  render(<MapPanel {...mapProps} places={places} destinationViewport={viewport} />);
+  expect(window.L.maplibreGL).toHaveBeenCalledWith(expect.objectContaining({style:'https://tiles.openfreemap.org/styles/liberty'}));
+  expect(map.fitBounds).toHaveBeenCalledWith(viewport.bounds,expect.objectContaining({maxZoom:6}));
   expect(window.L.marker).toHaveBeenCalledTimes(1);
-  view.rerender(<MapPanel {...mapProps} places={places} mapApiKey="test-key" />);
-  expect(window.L.tileLayer).toHaveBeenCalledWith(expect.stringContaining('?key=test-key'),expect.objectContaining({maxZoom:20}));
-  expect(window.L.marker).toHaveBeenCalledTimes(2);
+  fireEvent.click(screen.getByRole('button',{name:'Switch to night map'}));
+  expect(gl.setStyle).toHaveBeenLastCalledWith('https://tiles.openfreemap.org/styles/dark');
+  expect(window.L.map).toHaveBeenCalledTimes(1);
+  expect(window.L.marker).toHaveBeenCalledTimes(1);
 });
 
 it('uses calendar day numbers for marker filtering when the itinerary has gaps', () => {

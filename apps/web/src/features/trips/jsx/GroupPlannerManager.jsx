@@ -18,11 +18,11 @@ import {
   useDestinationPlaces,
   useDestinationEvents,
   useCreateGroup,
+  useDestinationViewport,
   gpKeys,
 } from '../../../hooks/useGroupPlannerQuery';
 import { useQueryClient } from '@tanstack/react-query';
 import groupPlannerApi from '../../../services/groupPlannerApi';
-import GlobalConfig from '../../../config/globalConfig';
 import CreateGroupModal from './CreateGroupModal';
 import Toast from '@tripraft/ui/Toast';
 import { MessageCircle, X, Search, UserPlus } from 'lucide-react';
@@ -101,6 +101,12 @@ export default function GroupPlannerManager() {
 
   const group = useMemo(() => toObject(groupDetailRaw), [groupDetailRaw]);
   const destination = group?.destination || '';
+  const {
+    data: viewportRaw,
+    isLoading: viewportLoading,
+    error: viewportError,
+  } = useDestinationViewport(group);
+  const destinationViewport = unwrap(viewportRaw);
 
   const { data: destPlacesRaw } = useDestinationPlaces(destination);
   const { data: destEventsRaw } = useDestinationEvents(destination);
@@ -616,7 +622,9 @@ export default function GroupPlannerManager() {
               </button>
             </div>
             <MapPanel
-              mapApiKey={GlobalConfig.CARTO_BASEMAPS_KEY}
+              destinationViewport={destinationViewport}
+              viewportLoading={viewportLoading}
+              viewportError={viewportError}
               group={group}
               places={places}
               filteredLibrary={destinationLibrary}
@@ -624,7 +632,10 @@ export default function GroupPlannerManager() {
               mapDay={mapDay}
               uniqueDates={uniqueDates}
               dayNumbers={dayNumbers}
-              onMapDayChange={setMapDay}
+              onMapDayChange={(day) => {
+                setSelectedPlaceId(null);
+                setMapDay(day);
+              }}
               selectedPlaceId={selectedPlaceId}
               onSelectPlace={setSelectedPlaceId}
               onAskPlace={(place) => {

@@ -17,7 +17,6 @@ const GlobalConfig = {
   // API Configuration
   API_BASE_URL: import.meta.env.VITE_API_BASE_URL || '/api',
   API_TIMEOUT: parseInt(import.meta.env.VITE_API_TIMEOUT || '30000'),
-  CARTO_BASEMAPS_KEY: import.meta.env.VITE_CARTO_BASEMAPS_KEY || '',
   API_MAX_RETRIES: 2,
   RETRY_BACKOFF_BASE_MS: 500,
   

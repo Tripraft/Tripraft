@@ -6266,3 +6266,65 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Destination framing and OpenFreeMap vector background. */
+.gp-page .gp-map-destination-card {
+  position: absolute;
+  top: 76px;
+  left: 18px;
+  right: 18px;
+  z-index: 25;
+  background: #fffffff2;
+  border: 1px solid #e2f0f6;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  box-shadow: 0 4px 18px #102a3a0c;
+}
+.gp-page .gp-map-destination-card > span {
+  text-transform: uppercase;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #087ea4;
+}
+.gp-page .gp-map-destination-card > strong {
+  grid-column: 1;
+  font-size: 14px;
+  color: #102a3a;
+  overflow-wrap: anywhere;
+}
+.gp-page .gp-map-destination-card > small {
+  grid-column: 1;
+  color: #5c7686;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.gp-page .gp-map-destination-card > button {
+  grid-column: 2;
+  grid-row: 1 / 4;
+  align-self: center;
+  font-size: 10px;
+  color: #087ea4;
+  background: #eff8fc;
+  padding: 10px;
+  border-radius: 9px;
+}
+.gp-page .gp-map-background-status {
+  position: absolute;
+  z-index: 25;
+  top: 182px;
+  left: 18px;
+  right: 18px;
+  background: #fff8e8ed;
+  color: #73572d;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.gp-page .leaflet-gl-layer .maplibregl-canvas {
+  outline: none;
+}

@@ -28,6 +28,16 @@ export function useGroups() {
   });
 }
 
+export function useDestinationViewport(group) {
+  const scope = { destination: group?.destination || '', destination_type: group?.destination_type || '', destination_id: group?.destination_id || '' };
+  return useQuery({
+    queryKey: [...gpKeys.all, 'destination-viewport', scope],
+    queryFn: () => groupPlannerApi.getDestinationViewport(scope),
+    enabled: !!(scope.destination_id || scope.destination),
+    staleTime: 6 * 60 * 60 * 1000,
+  });
+}
+
 export function useGroupDetail(groupId) {
   return useQuery({
     queryKey: gpKeys.group(groupId),

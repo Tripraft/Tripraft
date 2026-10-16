@@ -308,6 +308,15 @@ class GroupPlannerApiService {
     return apiClient.get(`${BASE}/catalog/places?${params}`);
   }
 
+  async getDestinationViewport(options) {
+    const params = new URLSearchParams();
+    for (const key of ['destination', 'destination_type', 'destination_id']) {
+      if (options[key] !== undefined && options[key] !== null && options[key] !== '')
+        params.set(key, options[key]);
+    }
+    return apiClient.get(`${BASE}/catalog/viewport?${params}`);
+  }
+
   async searchDestinationPlaces(destination, limit = 30) {
     const params = new URLSearchParams({ q: destination, limit, sort_by: 'rank_score', sort_order: 'desc' });
     return apiClient.get(`${GlobalConfig.ENDPOINTS.PLACE_SEARCH}/search?${params}`);

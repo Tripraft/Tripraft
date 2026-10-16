@@ -14,15 +14,17 @@ it('returns populated demo data without making a real HTTP request, including fo
   await expect(client.post('/v1/expenses/unknown-live-group',{amount:100})).rejects.toThrow('Demo ledger not found');
   expect(global.fetch).not.toHaveBeenCalled();
 });
-it('allows only the two public catalog GET routes through demo isolation', async () => {
+it('allows public catalog GET routes through demo isolation while blocking mutations', async () => {
   fetch.mockResolvedValue({ ok: true, status: 200, headers: { get: () => 'application/json' },
     text: async () => JSON.stringify({ success: true, data: [] }) });
   const client = new APIClient();
   await client.get('/v1/group-planner/catalog/destinations?q=Japan');
   expect(fetch).toHaveBeenCalledWith('/api/v1/group-planner/catalog/destinations?q=Japan', expect.objectContaining({ method: 'GET' }));
+  await client.get('/v1/group-planner/catalog/viewport?destination_type=country&destination_id=1');
+  await expect(client.post('/v1/group-planner/catalog/viewport', { destination: 'Forbidden' })).rejects.toThrow();
   await expect(client.post('/v1/group-planner/catalog/destinations', { name: 'Forbidden' })).rejects.toThrow();
   await expect(client.get('/v1/group-planner/catalog/places-extra')).rejects.toThrow();
-  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(fetch).toHaveBeenCalledTimes(2);
 });
 it('enforces viewer and member restrictions in the demo service itself', async () => {
   localStorage.setItem(DEMO_VIEWER_KEY,'demo-elena');
