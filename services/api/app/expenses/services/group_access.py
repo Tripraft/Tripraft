@@ -61,6 +61,11 @@ def admin(group, member):
     return owner(group, member.user_id) or member.role == 'admin'
 
 
+def require_contributor(member):
+    if member.role == 'viewer':
+        raise AuthorizationError('Viewer access is read-only')
+
+
 def require_admin(group, member):
     if not admin(group, member):
         raise AuthorizationError('Admin access required')
@@ -79,9 +84,10 @@ def require_owner(group, user_id):
 
 def permissions(group, member):
     is_owner, is_admin = owner(group, member.user_id), admin(group, member)
+    contribute = member.role != 'viewer'
     return {
-        'can_view': True, 'can_add_expense': True, 'can_invite': True,
-        'can_edit_own_expenses': True, 'can_delete_own_expenses': True,
+        'can_view': True, 'can_add_expense': contribute, 'can_invite': contribute,
+        'can_edit_own_expenses': contribute, 'can_delete_own_expenses': contribute,
         'can_edit_any_expense': is_owner, 'can_delete_any_expense': is_owner,
         'can_update_group': is_admin, 'can_add_members': is_admin,
         'can_manage_roles': is_owner, 'can_remove_members': is_owner,

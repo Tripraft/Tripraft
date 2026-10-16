@@ -18,10 +18,11 @@ export class APIClient {
   }
 
   async request(method, endpoint, options = {}) {
-    // Public catalog reads are shared; every demo mutation stays isolated.
-    const publicPlannerCatalog = method === 'GET' &&
-      /^\/v1\/group-planner\/catalog\/(destinations|places|viewport)(\?|$)/.test(endpoint);
-    if (isPlannerDemo() && !publicPlannerCatalog) {
+    // Only public reference GETs cross the demo boundary.
+    const publicReference = method === 'GET' && (
+      /^\/v1\/group-planner\/catalog\/(destinations|places|viewport)(\?|$)/.test(endpoint) ||
+      /^\/v1\/(currencies|exchange-rates)(\?|$)/.test(endpoint));
+    if (isPlannerDemo() && !publicReference) {
       const { demoRequest } = await import('../features/trips/demo/demoApi');
       return demoRequest(method, endpoint, options);
     }

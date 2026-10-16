@@ -27,7 +27,6 @@ export default function PlannerHeader({
   group,
   activeTab,
   onTabChange,
-  onSelectGroup,
   onAllGroups,
   onCreateGroup,
   onSearch,
@@ -41,31 +40,17 @@ export default function PlannerHeader({
       <div className="gp-topbar-context">
         <button className="gp-hub-button" aria-label="All Groups" onClick={onAllGroups}>
           <LayoutGrid size={15} />
-          <span>All Groups</span>
           <b>{groups.length}</b>
         </button>
         {group && (
           <>
             <span className="gp-header-divider">/</span>
-            <label className="gp-group-switcher">
+            <div className="gp-group-switcher">
               <span className="gp-trip-icon">
                 <Map size={16} />
               </span>
-              <select
-                aria-label="Active group"
-                value={group.id}
-                onChange={(e) => onSelectGroup(e.target.value)}
-              >
-                {groups.some((g) => String(g.id) === String(group.id)) ? null : (
-                  <option value={group.id}>{group.name}</option>
-                )}
-                {groups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <strong className="gp-current-group-name" title={group.name}>{group.name}</strong>
+            </div>
           </>
         )}
       </div>

@@ -104,11 +104,11 @@ it('loads OpenFreeMap without a key, frames the destination and keeps overlays o
   const places=[{id:'place',name:'Garden',visit_date:'2026-10-20',latitude:1,longitude:2}];
   const viewport={destination:{name:'Country A',type:'country'},center:[4,5],bounds:[[1,2],[7,8]]};
   render(<MapPanel {...mapProps} places={places} destinationViewport={viewport} />);
-  expect(window.L.maplibreGL).toHaveBeenCalledWith(expect.objectContaining({style:'https://tiles.openfreemap.org/styles/liberty'}));
+  expect(gl.setStyle).toHaveBeenCalledWith('https://tiles.openfreemap.org/styles/liberty', expect.objectContaining({transformStyle: expect.any(Function)}));
   expect(map.fitBounds).toHaveBeenCalledWith(viewport.bounds,expect.objectContaining({maxZoom:6}));
   expect(window.L.marker).toHaveBeenCalledTimes(1);
   fireEvent.click(screen.getByRole('button',{name:'Switch to night map'}));
-  expect(gl.setStyle).toHaveBeenLastCalledWith('https://tiles.openfreemap.org/styles/dark');
+  expect(gl.setStyle).toHaveBeenLastCalledWith('https://tiles.openfreemap.org/styles/dark', expect.objectContaining({transformStyle: expect.any(Function)}));
   expect(window.L.map).toHaveBeenCalledTimes(1);
   expect(window.L.marker).toHaveBeenCalledTimes(1);
 });

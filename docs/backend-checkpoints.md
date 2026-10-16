@@ -18,6 +18,7 @@
 | `group-planner-crew-responsibilities` | Owner/admin assignments for Treasurer, Navigator, and Culture Scout alongside access roles, with persistent API/schema support and demo views; [report](reports/group-planner-crew-responsibilities-2026-10-15.md) |
 | `group-planner-map-key-setup` | Historical CARTO Basemaps key setup, superseded by the OpenFreeMap checkpoint below |
 | `group-planner-openfreemap` | OpenFreeMap day/night maps without a key, scoped country/state/city focus using catalog coordinates, and missing-location handling; [setup guide](group-planner-map-setup.md), [report](reports/group-planner-openfreemap-2026-10-16.md) |
+| `group-planner-family-currency-refresh` | Family roles, Treasurer ownership, Library sections, chat menus, group actions, secure live updates and daily currency estimates; [planner audit](reports/group-planner-library-live-audit-2026-10-16.md), [currency/error report](reports/group-planner-currency-errors-2026-10-16.md) |
 
 Each checkpoint has an explanatory commit message. API contracts are documented
 in [personal finance](personal-finance-api.md) and [group finance](group-finance-api.md).

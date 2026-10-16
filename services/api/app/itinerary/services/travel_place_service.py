@@ -79,7 +79,7 @@ class PlaceService:
                     TripMember.is_active == True
                 ).first()
                 
-                if not member:
+                if not member or member.role == 'viewer':
                     return False, {'error': 'Not a member of this group'}
                 
                 # Check if place already exists (case-insensitive)
@@ -96,6 +96,7 @@ class PlaceService:
                     }
                 
                 parsed_visit_date = PlaceService._parse_visit_date(visit_date)
+                PlaceService._validate_trip_date(parsed_visit_date, session.get(TravelGroup, group_id))
                 
                 # Create place
                 place = Place(
@@ -167,6 +168,14 @@ class PlaceService:
         except Exception as e:
             logger.error(f"Add place error: {str(e)}")
             return False, {'error': 'Failed to add place'}
+
+    @staticmethod
+    def _validate_trip_date(visit_date, group):
+        if not group or not group.is_active:
+            raise PlaceValidationError('Group is unavailable')
+        if visit_date and group.start_date:
+            if visit_date < group.start_date or visit_date > (group.end_date or group.start_date):
+                raise PlaceValidationError('Choose a date within the group trip dates')
 
     @staticmethod
     def _parse_visit_date(value: Optional[str]):
@@ -283,7 +292,7 @@ class PlaceService:
                     TripMember.is_active == True
                 ).first()
                 
-                if not member:
+                if not member or member.role == 'viewer':
                     return False, {'error': 'Not a member of this group'}
                 
                 # Get place
@@ -386,7 +395,7 @@ class PlaceService:
                     TripMember.is_active == True
                 ).first()
                 
-                if not member:
+                if not member or member.role == 'viewer':
                     return False, {'error': 'Not a member of this group'}
                 
                 # Get place
@@ -414,7 +423,9 @@ class PlaceService:
                 
                 # Update fields
                 if visit_date is not None:
-                    place.visit_date = PlaceService._parse_visit_date(visit_date)
+                    parsed_date = PlaceService._parse_visit_date(visit_date)
+                    PlaceService._validate_trip_date(parsed_date, session.get(TravelGroup, group_id))
+                    place.visit_date = parsed_date
                 
                 if suggested_duration is not None:
                     place.suggested_duration = suggested_duration
@@ -506,7 +517,7 @@ class PlaceService:
                     TripMember.is_active == True
                 ).first()
                 
-                if not member:
+                if not member or member.role == 'viewer':
                     return False, {'error': 'Not a member of this group'}
                 
                 # Get place

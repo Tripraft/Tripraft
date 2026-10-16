@@ -11,6 +11,9 @@ import {
   Compass,
   KeyRound,
   X,
+  MoreHorizontal,
+  LogOut,
+  Trash2,
 } from 'lucide-react';
 import { formatDateRange, formatCurrency, getInitials } from '../../utils/formatters';
 
@@ -31,7 +34,25 @@ export default function GroupSelector({
   onSelectGroup,
   onCreateGroup,
   onJoinGroup,
+  showToast,
+  currentUserId,
+  onGroupAction,
 }) {
+  const [confirm, setConfirm] = useState(null);
+  const [confirmName, setConfirmName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [actionError, setActionError] = useState('');
+  const groupAction = async () => {
+    if (saving) return;
+    setSaving(true);
+    setActionError('');
+    try {
+      await onGroupAction(confirm.group.id, confirm.type);
+      setConfirm(null);
+      showToast?.(confirm.type === 'delete' ? 'Group deleted' : 'You left the group');
+    } catch (err) { setActionError(err.message || 'Unable to complete this action'); }
+    finally { setSaving(false); }
+  };
   const [search, setSearch] = useState('');
   const [joining, setJoining] = useState(false);
   const [invite, setInvite] = useState('');
@@ -166,7 +187,19 @@ export default function GroupSelector({
           )}
           <div className="gp-groups-grid">
             {filtered.map((g, index) => (
-              <article key={g.id} className="gp-group-card">
+              <article key={g.id} className="gp-group-card" onClick={event => { if (!event.target.closest('button,summary,details,a,input')) onSelectGroup(g.id); }}>
+                <details className="gp-group-card-menu">
+                  <summary aria-label={'Options for ' + g.name}><MoreHorizontal size={18}/></summary>
+                  <div>
+                    <button onClick={event => {
+                      event.currentTarget.closest('details').open = false;
+                      const owned = g.my_role === 'creator' || (currentUserId != null && String(g.created_by) === String(currentUserId));
+                      setConfirm({group: g, type: owned ? 'delete' : 'leave'}); setConfirmName(''); setActionError('');
+                    }}>
+                      {g.my_role === 'creator' || (currentUserId != null && String(g.created_by) === String(currentUserId)) ? <><Trash2 size={14}/>Delete group</> : <><LogOut size={14}/>Leave group</>}
+                    </button>
+                  </div>
+                </details>
                 <div className={'gp-group-cover gp-cover-' + (index % 3)}>
                   {g.group_image && (
                     <img
@@ -280,6 +313,18 @@ export default function GroupSelector({
           </form>
         </div>
       )}
+      {confirm && <div className="gp-modal-overlay" onClick={() => { if (!saving) setConfirm(null); }}>
+        <div className="gp-modal" role="dialog" aria-modal="true" aria-labelledby="gp-card-action-title" onClick={event => event.stopPropagation()}>
+          <h2 id="gp-card-action-title">{confirm.type === 'delete' ? 'Delete group' : 'Leave group'}</h2>
+          <p>{confirm.type === 'delete' ? `Delete ${confirm.group.name} for its members? Linked financial records are retained.` : `Leave ${confirm.group.name}? You will need an invitation to rejoin.`}</p>
+          {confirm.type === 'delete' && <label className="gp-field">Type the group name to confirm<input className="gp-modal-input" value={confirmName} onChange={event => setConfirmName(event.target.value)} autoFocus/></label>}
+          {actionError && <p role="alert">{actionError}</p>}
+          <div className="gp-modal-actions">
+            <button className="gp-modal-btn-primary" disabled={saving || (confirm.type === 'delete' && confirmName !== confirm.group.name)} onClick={groupAction}>{saving ? 'Working...' : confirm.type === 'delete' ? 'Delete group' : 'Leave group'}</button>
+            <button className="gp-modal-btn-secondary" disabled={saving} onClick={() => setConfirm(null)}>Cancel</button>
+          </div>
+        </div>
+      </div>}
     </div>
   );
 }

@@ -233,7 +233,7 @@ class PollService:
                     TripMember.is_active == True
                 ).first()
                 
-                if not member:
+                if not member or member.role == 'viewer':
                     return False, {'error': 'Not a member of this group'}
                 
                 # Get poll

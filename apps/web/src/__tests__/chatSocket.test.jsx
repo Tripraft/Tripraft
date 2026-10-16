@@ -7,17 +7,18 @@ jest.mock('../hooks/useChatQuery',()=>({chatKeys:{messages:id=>['chat','messages
 jest.mock('socket.io-client',()=>({io:jest.fn()}));
 import {io} from 'socket.io-client';import useChatSocket from '../hooks/useChatSocket';import {pageMessages} from '../lib/chatCache';
 import {gpKeys} from '../hooks/useGroupPlannerQuery';
+import sqlAuthService from '../services/sqlAuthService';
 let client,wrapper,socket,events;beforeEach(()=>{client=new QueryClient({defaultOptions:{queries:{retry:false}}});wrapper=({children})=><QueryClientProvider client={client}>{children}</QueryClientProvider>;events={};socket={on:jest.fn((name,handler)=>{events[name]=handler;}),emit:jest.fn(),disconnect:jest.fn(),io:{opts:{reconnection:true}}};io.mockReturnValue(socket);});afterEach(()=>client.clear());
 it('connects with UUID user and group IDs using cookie credentials',async()=>{
  const {result}=renderHook(()=>useChatSocket('0190-group-uuid','0190-user-uuid'),{wrapper});await waitFor(()=>expect(io).toHaveBeenCalled());expect(io.mock.calls[0]).toEqual(['http://localhost:5000',expect.objectContaining({withCredentials:true})]);act(()=>events.connect());expect(result.current.connected).toBe(true);expect(socket.emit).toHaveBeenCalledWith('join_group',{group_id:'0190-group-uuid'});
 });
 it('surfaces authentication rejection and stops reconnection attempts',async()=>{const {result}=renderHook(()=>useChatSocket('group','user-uuid'),{wrapper});await waitFor(()=>expect(io).toHaveBeenCalled());act(()=>events.connect_error(new Error('Unauthorized 401')));expect(result.current.connectionError).toBe('Unauthorized 401');expect(socket.io.opts.reconnection).toBe(false);expect(socket.disconnect).toHaveBeenCalled();});
-it('keeps messages from the current user sent on another device and deduplicates echoes',async()=>{client.setQueryData(['chat','messages','group'],{pages:[{data:{messages:[]}}],pageParams:[undefined]});renderHook(()=>useChatSocket('group','user-uuid'),{wrapper});await waitFor(()=>expect(io).toHaveBeenCalled());const msg={id:'message-uuid',sender_id:'user-uuid',content:'Other device'};act(()=>{events['chat:message'](msg);events['chat:message'](msg);});expect(pageMessages(client.getQueryData(['chat','messages','group']).pages[0])).toEqual([msg]);});
+it('keeps messages from the current user sent on another device and deduplicates echoes',async()=>{client.setQueryData(['chat','messages','group'],{pages:[{data:{messages:[]}}],pageParams:[undefined]});renderHook(()=>useChatSocket('group','user-uuid'),{wrapper});await waitFor(()=>expect(io).toHaveBeenCalled());const msg={group_id:'group',id:'message-uuid',sender_id:'user-uuid',content:'Other device'};act(()=>{events['chat:message'](msg);events['chat:message'](msg);});expect(pageMessages(client.getQueryData(['chat','messages','group']).pages[0])).toEqual([msg]);});
 it('retains a same-text message from another device while a local send is pending',async()=>{
  const pending={id:'temp-local',sender_id:'user-uuid',content:'Hello',_optimistic:true};
  client.setQueryData(['chat','messages','group'],{pages:[{data:{messages:[pending]}}],pageParams:[undefined]});
  renderHook(()=>useChatSocket('group','user-uuid'),{wrapper});await waitFor(()=>expect(io).toHaveBeenCalled());
- const incoming={id:'other-device-uuid',sender_id:'user-uuid',content:'Hello'};
+ const incoming={group_id:'group',id:'other-device-uuid',sender_id:'user-uuid',content:'Hello'};
  act(()=>{events['chat:message'](incoming);events['chat:message'](incoming);});
  expect(pageMessages(client.getQueryData(['chat','messages','group']).pages[0])).toEqual([incoming,pending]);
 });
@@ -31,7 +32,7 @@ it.each([
  const invalidate = jest.spyOn(client, 'invalidateQueries');
  renderHook(() => useChatSocket('group', 'user-uuid'), {wrapper});
  await waitFor(() => expect(events[event]).toBeDefined());
- act(() => events[event]({completed: true}));
+ act(() => events[event]({group_id: 'group', completed: true}));
  expect(invalidate).toHaveBeenCalledWith({queryKey: key('group')});
  expect(invalidate).toHaveBeenCalledWith({queryKey: gpKeys.activities('group')});
 });
@@ -44,4 +45,37 @@ it('refreshes workspace state after reconnecting', async () => {
  for (const key of [gpKeys.group, gpKeys.places, gpKeys.polls, gpKeys.checklist, gpKeys.members, gpKeys.activities]) {
   expect(invalidate).toHaveBeenCalledWith({queryKey: key('group')});
  }
+});
+
+it('ignores another group and applies same-group message edits without losing history', async () => {
+ const mine = {id: 'mine', content: 'Before', group_id: 'group'};
+ client.setQueryData(['chat', 'messages', 'group'], {pages: [{messages: [mine]}], pageParams: [undefined]});
+ renderHook(() => useChatSocket('group', 'user'), {wrapper});
+ await waitFor(() => expect(events['chat:updated']).toBeDefined());
+ act(() => events['chat:updated']({...mine, group_id: 'other', content: 'Leak'}));
+ expect(pageMessages(client.getQueryData(['chat','messages','group']).pages[0])[0].content).toBe('Before');
+ act(() => events['chat:updated']({...mine, content: 'After'}));
+ expect(pageMessages(client.getQueryData(['chat','messages','group']).pages[0])[0].content).toBe('After');
+});
+
+it('clears private planner and chat caches when live access is revoked', async () => {
+ client.setQueryData(gpKeys.group('group'), {data: {name: 'Secret'}});
+ client.setQueryData(gpKeys.places('group'), {data: [{name: 'Private stop'}]});
+ client.setQueryData(['chat','messages','group'], {pages: [{messages: [{id: 'old', content: 'Private'}]}]});
+ renderHook(() => useChatSocket('group', 'user'), {wrapper});
+ await waitFor(() => expect(events['planner:changed']).toBeDefined());
+ await act(async () => events['planner:changed']({group_id: 'group', access_revoked: true}));
+ expect(client.getQueryData(gpKeys.group('group'))).toEqual({data: null});
+ expect(client.getQueryData(gpKeys.places('group'))).toEqual({data: []});
+ expect(client.getQueryData(['chat','messages','group']).pages).toEqual([]);
+});
+
+it('does not start a socket after unmount while authentication is still resolving', async () => {
+ let resolve;
+ io.mockClear();
+ sqlAuthService.getIdToken.mockReturnValueOnce(new Promise(done => {resolve = done;}));
+ const view = renderHook(() => useChatSocket('group', 'user'), {wrapper});
+ view.unmount();
+ await act(async () => resolve(null));
+ expect(io).not.toHaveBeenCalled();
 });

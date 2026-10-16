@@ -503,115 +503,12 @@ def link_expense_group(group_id):
         POST /api/v2/group-planner/groups/<group_id>/link-expense
         Headers: Authorization: Bearer <token>
     """
-    try:
-        from app.expenses.services.expense_group_service import \
-            GroupServiceSQL as expense_group_service_cls
-        expense_group_service = expense_group_service_cls()
-
-        from app.trips.services.travel_group_service import group_service
-
-        # First get the travel group to get its details
-        success, result = group_service.get_group(
-            group_id=group_id,
-            user_id=g.user_id,
-            include_all=True
-        )
-        
-        if not success:
-            return error_response(result.get('error'))
-        
-        group_data = result.get('group', {})
-        
-        # Check if already linked
-        if group_data.get('expense_group_id'):
-            return success_response(
-                data={'expense_group_id': group_data['expense_group_id']},
-                message='Already linked'
-            )
-        
-        # Create expense group
-        expense_success, expense_result = expense_group_service.create_group(
-            user_id=g.user_id,
-            name=group_data.get('name'),
-            description=f"Linked from Group Planner - {group_data.get('destination', 'Trip')}",
-            currency=Config.DEFAULT_CURRENCY
-        )
-        
-        if not expense_success:
-            logger.error("Failed to create expense group: %s", expense_result)
-            return error_response('Failed to create expense group', 500)
-        
-        expense_group_id = expense_result.get('group', {}).get('id')
-        if not expense_group_id:
-            logger.error('Expense-group creation returned no group ID: %s', expense_result)
-            return error_response('Failed to create expense group', 500)
-        logger.info("Created expense group %s for travel group %s", expense_group_id, group_id)
-
-        def remove_unlinked_expense_group():
-            """Compensate a partially-created expense group on link failure."""
-            removed, removal_result = expense_group_service.delete_group(
-                group_id=expense_group_id,
-                user_id=g.user_id,
-            )
-            if not removed:
-                logger.error(
-                    'Could not clean up unlinked expense group %s: %s',
-                    expense_group_id, removal_result.get('error'),
-                )
-        
-        # Add existing members to expense group
-        members = group_data.get('member_details', [])
-        added_count = 0
-        for member in members:
-            member_user_id = member.get('user_id')
-            member_email = member.get('email')
-            
-            # Skip the creator (they're already added as admin)
-            if not member_user_id or str(member_user_id) == str(g.user_id):
-                continue
-            if not member_email:
-                remove_unlinked_expense_group()
-                return error_response('Travel group member is missing an email address', 400)
-            try:
-                add_success, add_result = expense_group_service.add_member(
-                    group_id=expense_group_id,
-                    user_id=g.user_id,
-                    member_email=member_email,
-                    role='member'
-                )
-            except Exception as exc:
-                logger.exception('Error adding member %s to linked expense group', member_email)
-                remove_unlinked_expense_group()
-                return error_response('Failed to synchronize expense-group members', 500)
-            if not add_success:
-                logger.error('Could not add member %s: %s', member_email, add_result.get('error'))
-                remove_unlinked_expense_group()
-                return error_response('Failed to synchronize expense-group members', 400)
-            added_count += 1
-            logger.info("Added member %s to expense group", member_email)
-        
-        logger.info("Added %s members to expense group %s", added_count, expense_group_id)
-        
-        # Link the groups
-        link_success, link_result = group_service.link_expense_group(
-            group_id=group_id,
-            user_id=g.user_id,
-            expense_group_id=expense_group_id
-        )
-        
-        if link_success:
-            _invalidate_gp_caches()
-            return success_response(data={
-                'expense_group_id': expense_group_id,
-                'members_added': added_count
-            })
-        else:
-            remove_unlinked_expense_group()
-            return error_response(link_result.get('error'), link_result.get('status_code', 400))
-            
-    except Exception as e:
-        logger.error("Link expense group error: %s", e)
-        return error_response('Failed to link expense group', 500)
+    from app.trips.services.treasury_service import link_treasury
+    success, result = link_treasury(group_id, g.user_id)
+    if success:
+        _invalidate_gp_caches()
+        return success_response(data=result)
+    return error_response(result.get('error'), result.get('status_code', 400))
 
 
 @groups_bp.route('/groups/<group_id>/unlink-expense', methods=['POST'])

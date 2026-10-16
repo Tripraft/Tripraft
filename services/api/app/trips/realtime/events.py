@@ -83,13 +83,14 @@ def _authenticate_socket(auth) -> dict | None:
 def _verify_group_membership(group_id: str, user_id: str) -> bool:
     """Check that user_id is an active member of group_id."""
     try:
-        from app.trips.models import TripMember
+        from app.trips.models import TripMember, TravelGroup
         from app.core.db.connection import get_db_session
         with get_db_session() as session:
-            member = session.query(TripMember).filter(
+            member = session.query(TripMember).join(TravelGroup).filter(
                 TripMember.group_id == group_id,
                 TripMember.user_id == user_id,
                 TripMember.is_active == True,
+                TravelGroup.is_active.is_(True),
             ).first()
             return member is not None
     except Exception as exc:
@@ -214,10 +215,9 @@ def _refresh_presence(group_id: str, user_id: str, sid: str) -> bool:
 def _broadcast_presence(group_id: str):
     """Push current presence list to the group room."""
     online = _get_presence_list(group_id)
-    socketio.emit(
+    emit_to_group(group_id,
         "presence:update",
         {"group_id": group_id, "online": online, "count": len(online)},
-        room=_room_name(group_id),
     )
 
 
@@ -237,6 +237,7 @@ def handle_connect(auth=None):
         return False
     flask_session["ws_user_id"] = str(ws_user_id)
     flask_session["ws_email"] = payload.get("email", "")
+    join_room(_user_room(ws_user_id))
     logger.debug("WS connect: sid=%s user=%s", request.sid, flask_session["ws_user_id"])
 
 
@@ -267,7 +268,7 @@ def handle_disconnect():
 @socketio.on("join_group")
 def handle_join_group(data):
     """Client joins a group room.  Expects {group_id}."""
-    group_id = data.get("group_id")
+    group_id = data.get("group_id") if isinstance(data, dict) else None
     if not group_id:
         return
 
@@ -293,7 +294,7 @@ def handle_join_group(data):
 @socketio.on("leave_group")
 def handle_leave_group(data):
     """Client leaves a group room.  Expects {group_id}."""
-    group_id = data.get("group_id")
+    group_id = data.get("group_id") if isinstance(data, dict) else None
     if not group_id:
         return
 
@@ -328,46 +329,28 @@ def handle_presence_heartbeat(data):
 # ---- Helper used by services to broadcast to a group ----
 
 def emit_to_group(group_id: str, event: str, payload: dict):
-    """Emit an event to every client in a group room (fire-and-forget)."""
+    """Recheck access at delivery; a stale joined room must not leak group data."""
     try:
-        socketio.emit(event, json_safe(payload), room=_room_name(group_id))
+        from app.core.db.connection import get_db_session
+        from app.trips.models import TripMember, TravelGroup
+        target = (payload.get('metadata_json') or {}).get('target_user_id')
+        with get_db_session() as reader:
+            recipients = [str(row[0]) for row in reader.query(TripMember.user_id).join(TravelGroup).filter(
+                TripMember.group_id == group_id, TripMember.is_active.is_(True),
+                TravelGroup.is_active.is_(True)).all()]
+        safe_payload = json_safe({**payload, 'group_id': str(group_id)})
+        for user_id in recipients:
+            if not target or str(target) == user_id:
+                socketio.emit(event, safe_payload, room=_user_room(user_id))
     except Exception as exc:
         logger.warning("Failed to emit %s to group %s: %s", event, group_id, exc)
 
 
+def _user_room(user_id):
+    return 'planner-user:%s' % user_id
+
+
 # ---- Chat Events ----
-
-@socketio.on("chat:send")
-def handle_chat_send(data):
-    """Client sends a chat message via WebSocket."""
-    from flask import session as flask_session
-    user_id = flask_session.get("ws_user_id")
-    if not user_id:
-        return
-
-    group_id = data.get("group_id")
-    content = data.get("content", "").strip()
-    if not group_id or not content:
-        return
-
-    if not _verify_group_membership(group_id, user_id):
-        return
-
-    try:
-        from app.trips.services.chat_service import ChatService
-        success, result = ChatService.send_message(
-            group_id=group_id,
-            sender_id=user_id,
-            content=content[:5000],
-            msg_type=data.get("type", "text"),
-            metadata_json=data.get("metadata_json"),
-            parent_message_id=data.get("parent_message_id"),
-        )
-        if success:
-            emit("chat:message_ack", {"id": result.get("id")})
-    except Exception as exc:
-        logger.warning("chat:send failed: %s", exc)
-
 
 @socketio.on("chat:typing")
 def handle_chat_typing(data):
@@ -375,18 +358,16 @@ def handle_chat_typing(data):
     from flask import session as flask_session
     user_id = flask_session.get("ws_user_id")
     email = flask_session.get("ws_email", "")
-    group_id = data.get("group_id")
+    group_id = data.get("group_id") if isinstance(data, dict) else None
     if not group_id or not user_id:
         return
     if not _verify_group_membership(group_id, user_id):
         logger.warning('WS typing denied: user %s not member of group %s', user_id, group_id)
         return
 
-    socketio.emit(
+    emit_to_group(group_id,
         "chat:typing",
         {"user_id": user_id, "email": email, "group_id": group_id},
-        room=_room_name(group_id),
-        include_self=False,
     )
 
 
@@ -395,8 +376,8 @@ def handle_chat_read(data):
     """Client marks messages as read."""
     from flask import session as flask_session
     user_id = flask_session.get("ws_user_id")
-    group_id = data.get("group_id")
-    message_id = data.get("message_id")
+    group_id = data.get("group_id") if isinstance(data, dict) else None
+    message_id = data.get("message_id") if isinstance(data, dict) else None
     if not group_id or not user_id or not message_id:
         return
     if not _verify_group_membership(group_id, user_id):

@@ -4,8 +4,9 @@ import { X } from 'lucide-react';
 import groupPlannerApi from '../../../../services/groupPlannerApi';
 import { gpKeys } from '../../../../hooks/useGroupPlannerQuery';
 import { unwrap } from '../../utils/groupPlannerUtils';
+import TripDateSelect from './TripDateSelect';
 
-export default function AddStopModal({ groupId, initialDate, onClose, showToast }) {
+export default function AddStopModal({ groupId, group, initialDate, onClose, showToast }) {
   const client = useQueryClient();
   const [name, setName] = useState('');
   const [date, setDate] = useState(initialDate || '');
@@ -92,9 +93,9 @@ export default function AddStopModal({ groupId, initialDate, onClose, showToast 
         <label className="gp-modal-label" htmlFor="gp-stop-date">
           Visit date
         </label>
-        <input
+        <TripDateSelect
+          group={group}
           id="gp-stop-date"
-          type="date"
           className="gp-modal-input"
           value={date}
           onChange={(e) => setDate(e.target.value)}
@@ -120,8 +121,7 @@ export default function AddStopModal({ groupId, initialDate, onClose, showToast 
           onChange={(e) => setNotes(e.target.value)}
         />
         <p className="gp-form-hint">
-          Leave the date empty to save this stop as unscheduled. Places from the Library include map
-          coordinates.
+          Leave the date empty to save this stop as unscheduled. Library stops appear on the map when coordinates are available.
         </p>
         {error && <p role="alert">{error}</p>}
         <div className="gp-modal-actions">

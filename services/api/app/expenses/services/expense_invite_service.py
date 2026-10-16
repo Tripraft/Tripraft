@@ -1,3 +1,4 @@
+from app.expenses.services.group_access import require_contributor
 """Serialized invitations: validate the recipient, then transition one permanent invitation row."""
 import logging
 from datetime import datetime, timedelta, timezone
@@ -113,6 +114,7 @@ class InvitationServiceSQL:
             raise ValidationError('Valid invitee email is required') from None
         with get_db_session() as session:
             group, member = access(session, group_id, invited_by_user_id, lock=True)
+            require_contributor(member)
             user = session.query(User).filter(func.lower(User.email) == invitee_email).first()
             if user is not None and session.query(GroupMember.id).filter_by(
                 group_id=group.id, user_id=user.id, is_active=True,
@@ -246,6 +248,7 @@ class InvitationServiceSQL:
             if invitation is None:
                 raise NotFoundError('Invitation not found')
             group, member = access(session, invitation.group_id, user_id, lock=True)
+            require_contributor(member)
             session.refresh(invitation)
             if not admin(group, member) and invitation.invited_by != member.user_id:
                 raise AuthorizationError('Only the inviter or a group admin can cancel this invitation')

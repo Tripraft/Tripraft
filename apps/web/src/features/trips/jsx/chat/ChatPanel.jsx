@@ -6,14 +6,15 @@ import { tripDayNumber, unwrap } from '../../utils/groupPlannerUtils';
 import React, { useMemo, useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
 import { useGroupPolls, useGroupMembers, gpKeys } from '../../../../hooks/useGroupPlannerQuery';
-import { useMessages, useSendMessage, useDeleteMessage } from '../../../../hooks/useChatQuery';
-import useChatSocket from '../../../../hooks/useChatSocket';
+import { useMessages, useSendMessage, useDeleteMessage, useEditMessage } from '../../../../hooks/useChatQuery';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../../../hooks/useExpenseQuery';
 import groupPlannerApi from '../../../../services/groupPlannerApi';
 import { toArray } from '../../utils/groupPlannerUtils';
 import { getInitials, formatRelativeTime } from '../../utils/formatters';
-import { Send, Trash2, X, Loader2 } from 'lucide-react';
+import { Send, X, Loader2 } from 'lucide-react';
+import MessageMenu from './MessageMenu';
+import TripDateSelect from '../shared/TripDateSelect';
 import ScoutConsentCard from '../../../scout/ScoutConsentCard';
 import { CrewQuestionCard, CrewConfirmCard, CrewPlaceCard } from '../../../scout/CrewCards';
 
@@ -89,6 +90,8 @@ export default function ChatPanel({
   canEdit = true,
   group,
   activeDay,
+  canManage = false,
+  realtime = {connected: false, typingUsers: [], emitTyping: () => {}, emitRead: () => {}},
 }) {
   const { currentUser } = useAuth();
   const queryClient = useQueryClient();
@@ -113,10 +116,11 @@ export default function ChatPanel({
   } = useMessages(groupId);
   const sendMutation = useSendMessage(groupId);
   const deleteMutation = useDeleteMessage(groupId);
-  const { connected, connectionError, typingUsers, emitTyping, emitRead } = useChatSocket(
-    groupId,
-    uidStr,
-  );
+  const editMutation = useEditMessage(groupId);
+  const [editingMessage, setEditingMessage] = useState(null);
+  const [editContent, setEditContent] = useState('');
+  const [editError, setEditError] = useState('');
+  const { connected, connectionError, typingUsers, emitTyping, emitRead } = realtime;
 
   // Flatten pages into a single messages array (newest first from API)
   const messages = useMemo(() => {
@@ -228,6 +232,9 @@ export default function ChatPanel({
     setGlowMsgIds(new Set());
     setUnreadScoutCount(0);
     setChatMessage('');
+    setEditingMessage(null);
+    setEditContent('');
+    setEditError('');
     setCommsMode('chat');
     setMentionPopup({ open: false, filter: '', startIndex: -1 });
     setShowPollForm(false);
@@ -778,16 +785,17 @@ export default function ChatPanel({
                         : (msg.content ?? '')}
                     </p>
                   )}
-                  <span className="gp-chat-time">{formatRelativeTime(msg.created_at)}</span>
-                  {isMine && !msg._optimistic && (
-                    <button
-                      className="gp-chat-delete-btn"
-                      onClick={() => deleteMutation.mutate(msg.id)}
-                      title="Delete message"
-                    >
-                      <Trash2 size={10} />
-                    </button>
+                  <div className="gp-chat-message-meta">
+                  <span className="gp-chat-time">{formatRelativeTime(msg.created_at)}{msg.metadata_json?.edited_at ? ' · edited' : ''}</span>
+                  {((isMine && canEdit) || canManage) && !isAi && !msg._optimistic && (
+                    <MessageMenu
+                      canEdit={isMine && canEdit && (!msg.type || msg.type === 'text')}
+                      disabled={deleteMutation.isPending}
+                      onEdit={() => { setEditingMessage(msg); setEditContent(msg.content || ''); setEditError(''); }}
+                      onDelete={() => deleteMutation.mutate(msg.id, {onError: err => showToast?.(err.message || 'Could not delete message', 'error')})}
+                    />
                   )}
+                  </div>
                   {msg._optimistic && <span className="gp-chat-sending">Sending...</span>}
                 </div>
               </div>
@@ -823,6 +831,24 @@ export default function ChatPanel({
         </div>
       </div>
 
+      {editingMessage && <div className="gp-modal-overlay" onClick={() => { if (!editMutation.isPending) setEditingMessage(null); }}>
+        <form className="gp-modal" role="dialog" aria-modal="true" aria-labelledby="gp-edit-message-title" onClick={e => e.stopPropagation()} onSubmit={async e => {
+          e.preventDefault();
+          if (editMutation.isPending || !editContent.trim()) return;
+          setEditError('');
+          try { await editMutation.mutateAsync({messageId: editingMessage.id, content: editContent.trim()}); setEditingMessage(null); }
+          catch (err) { setEditError(err.message || 'Could not edit message'); }
+        }}>
+          <h2 id="gp-edit-message-title">Edit message</h2>
+          <label className="gp-modal-label" htmlFor="gp-edit-message-content">Message</label>
+          <textarea id="gp-edit-message-content" className="gp-modal-input" rows={5} maxLength={5000} value={editContent} onChange={e => setEditContent(e.target.value)} autoFocus required/>
+          {editError && <p role="alert">{editError}</p>}
+          <div className="gp-modal-actions">
+            <button className="gp-modal-btn-primary" disabled={editMutation.isPending || !editContent.trim()}>{editMutation.isPending ? 'Saving...' : 'Save changes'}</button>
+            <button type="button" className="gp-modal-btn-secondary" disabled={editMutation.isPending} onClick={() => setEditingMessage(null)}>Cancel</button>
+          </div>
+        </form>
+      </div>}
       {/* Chat Input */}
       <div className="gp-chat-input-area">
         {mentionPopup.open && mentionResults.length > 0 && (
@@ -915,8 +941,8 @@ export default function ChatPanel({
             </label>
             <label className="gp-field">
               Visit date
-              <input
-                type="date"
+              <TripDateSelect
+                group={group}
                 className="gp-modal-input"
                 required
                 value={winnerDate}

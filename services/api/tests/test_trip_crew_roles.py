@@ -51,7 +51,7 @@ def test_admin_can_assign_owner_and_self_and_clear_while_owner_access_is_fixed(a
     assert admin.patch(f'{base}/{owner_id}/role', json={'role': 'member'}).status_code == 400
     downgraded = owner.patch(f'{base}/{admin_id}/role', json={'role': 'viewer'})
     assert downgraded.status_code == 200
-    assert payload(downgraded)['crew_role'] == 'treasurer'
+    assert payload(downgraded)['crew_role'] is None
     assert payload(downgraded)['role'] == 'viewer'
     assert admin.patch(f'{base}/{owner_id}/crew-role', json={'crew_role': 'culture_scout'}).status_code == 403
 

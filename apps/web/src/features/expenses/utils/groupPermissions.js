@@ -4,8 +4,9 @@ export function groupPermissions(group, userId) {
   if (!group || !userId) return {};
   const owner = sameId(group.created_by, userId);
   const admin = owner || group.my_role === 'admin';
+  const contribute = group.my_role !== 'viewer';
   return {
-    can_invite: true, can_add_expense: true,
+    can_invite: contribute, can_add_expense: contribute,
     can_update_group: admin, can_add_members: admin,
     can_manage_roles: owner, can_remove_members: owner, can_delete_group: owner,
     can_leave_group: !owner, can_record_any_settlement: admin,
@@ -15,6 +16,7 @@ export function groupPermissions(group, userId) {
 }
 
 export function expensePermissions(expense, group, userId, mode = 'group') {
+  if (mode === 'group' && group?.my_role === 'viewer') return {can_edit: false, can_delete: false, can_restore: false};
   if (!userId) return { can_edit: false, can_delete: false, can_restore: false };
   if (expense.is_deleted) {
     const own = sameId(expense.created_by, userId) || (mode === 'group' && sameId(group?.created_by, userId));
@@ -26,11 +28,13 @@ export function expensePermissions(expense, group, userId, mode = 'group') {
 }
 
 export function canRecordSettlement(group, userId, from, to) {
+  if (group?.my_role === 'viewer') return false;
   return Boolean(userId) && (groupPermissions(group, userId).can_record_any_settlement ||
     sameId(from, userId) || sameId(to, userId));
 }
 
 export function canDeleteSettlement(settlement, group, userId) {
+  if (group?.my_role === 'viewer') return false;
   if (!userId || settlement.is_deleted) return false;
   return settlement.permissions?.can_delete ?? Boolean(
     groupPermissions(group, userId).can_record_any_settlement ||

@@ -1427,3 +1427,7 @@ button.btn-icon.btn-delete:active {
     gap: 0.125rem;
   }
 }
+
+.expense-personal-currency {display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin:20px 0; color:#334155; font-size:14px;}
+.expense-personal-currency select {max-width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:10px; background:white;}
+.expense-personal-currency small {color:#64748b;}

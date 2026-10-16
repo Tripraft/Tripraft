@@ -9,6 +9,7 @@ jest.mock('../services/groupPlannerApi', () => ({
   default: {
     searchCatalogDestinations: jest.fn(),
     getCatalogPlaces: jest.fn(),
+    addPlace: jest.fn(),
   },
 }));
 const country = {
@@ -33,12 +34,12 @@ it('requires an actual catalog selection and clears its ID when the destination 
   const create = jest.fn();
   render(<CreateGroupModal isOpen onClose={jest.fn()} onCreateGroup={create} />);
   fireEvent.change(screen.getByLabelText('Group Name *'), { target: { value: 'Summer' } });
-  fireEvent.change(screen.getByRole('combobox'), { target: { value: 'An invented city' } });
+  fireEvent.change(screen.getByRole('combobox', {name: 'Destination *'}), { target: { value: 'An invented city' } });
   fireEvent.click(screen.getByRole('button', { name: 'Create Group' }));
   expect(create).not.toHaveBeenCalled();
   expect(screen.getByRole('alert')).toHaveTextContent('Select a country, state, or city');
   await chooseCountry();
-  fireEvent.change(screen.getByRole('combobox'), { target: { value: 'Changed country' } });
+  fireEvent.change(screen.getByRole('combobox', {name: 'Destination *'}), { target: { value: 'Changed country' } });
   fireEvent.click(screen.getByRole('button', { name: 'Create Group' }));
   expect(create).not.toHaveBeenCalled();
 });
@@ -112,9 +113,10 @@ it('uses ID-scoped cards and resets city and pagination when changing the state'
   expect(
     await screen.findByRole('heading', { name: 'A place without coordinates' }),
   ).toBeInTheDocument();
-  expect(
-    screen.queryByRole('button', { name: /Shortlist|View details|Push to Itinerary/ }),
-  ).not.toBeInTheDocument();
+  expect(screen.getByRole('button', {name: 'View details'})).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', {name: 'Restaurants'}));
+  await waitFor(() => expect(planner.getCatalogPlaces).toHaveBeenLastCalledWith(expect.objectContaining({section: 'restaurants', page: 1})));
+  await screen.findByRole('button', {name: 'View details'});
   fireEvent.change(screen.getByRole('combobox', { name: 'Library city' }), {
     target: { value: '111' },
   });
@@ -136,5 +138,24 @@ it('uses ID-scoped cards and resets city and pagination when changing the state'
     ),
   );
   view.unmount();
+  client.clear();
+});
+
+it('shows available details and adds an ungeocoded Library stop without inventing coordinates', async () => {
+  const place = {id: 3, name: 'Dinner spot', description: 'Local menu', cuisine: 'Indian', city_name: 'Pune', state_name: 'Maharashtra', latitude: null, longitude: null};
+  planner.getCatalogPlaces.mockResolvedValue({success: true, data: {places: [place], destination: {type: 'city'}, total: 1}});
+  planner.addPlace.mockResolvedValue({success: true, data: {...place, id: 'saved-stop'}});
+  const client = new QueryClient({defaultOptions: {queries: {retry: false}}});
+  const added = jest.fn();
+  render(<QueryClientProvider client={client}><LibraryTab groupId="trip" group={{destination: 'Pune'}} destination="Pune" canEdit onPlaceAdded={added}/></QueryClientProvider>);
+  fireEvent.click(await screen.findByRole('button', {name: 'View details'}));
+  expect(screen.getByRole('dialog')).toHaveTextContent('Indian');
+  expect(screen.getByRole('dialog')).toHaveTextContent('Map coordinates are not available yet');
+  fireEvent.click(screen.getByRole('button', {name: 'Add to plan'}));
+  await waitFor(() => expect(added).toHaveBeenCalledWith(expect.objectContaining({id: 'saved-stop'})));
+  const request = planner.addPlace.mock.calls[0][1];
+  expect(request).not.toHaveProperty('latitude');
+  expect(request).not.toHaveProperty('longitude');
+  expect(request.name).toBe('Dinner spot');
   client.clear();
 });

@@ -200,6 +200,12 @@ class GroupServiceSQL:
         with get_db_session() as session:
             group, requester = access(session, group_id, user_id, lock=True)
             require_owner(group, requester.user_id)
+            from app.trips.models import TravelGroup, TripMember
+            trip_viewer = session.query(TripMember.id).join(TravelGroup).filter(
+                TravelGroup.expense_group_id == group.id, TripMember.user_id == identifier(member_id),
+                TripMember.is_active.is_(True), TripMember.role == 'viewer').first()
+            if trip_viewer:
+                raise ConflictError('Change Viewer access in Group Planner before changing their expense role')
             member_id = identifier(member_id)
             if owner(group, member_id):
                 raise ConflictError('The group owner role cannot be changed')

@@ -35,6 +35,23 @@ class SendMessageSchema(Schema):
             raise ValidationError('Content must not be empty after sanitization.')
         return cleaned
 
+    @validates('metadata_json')
+    def protect_server_metadata(self, value, **kwargs):
+        if value and set(value) & {'agent', 'target_user_id', 'needs_consent', 'pending_key', 'edited_at', 'intent'}:
+            raise ValidationError('Server message metadata cannot be supplied by users.')
+
+
+class EditMessageSchema(Schema):
+    class Meta:
+        unknown = EXCLUDE
+
+    content = fields.String(required=True, validate=validate.Length(min=1, max=5000))
+
+    @validates('content')
+    def validate_content(self, value, **kwargs):
+        if not bleach.clean(value, tags=[], strip=True).strip():
+            raise ValidationError('Content must not be empty after sanitization.')
+
 
 class ReadReceiptSchema(Schema):
     class Meta:

@@ -1,5 +1,6 @@
 // Purpose: Renders the Transaction Modal interface within apps\web\src\features\expenses\jsx.
 import ExpenseDialog from './ExpenseDialog';
+import CurrencySelect from '../../../components/common/jsx/CurrencySelect';
 import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
@@ -19,6 +20,7 @@ const TransactionModal = ({
   const customSplit = mode === 'group' && editingTransaction && String(editingTransaction.split_type || 'equal').toLowerCase() !== 'equal';
   const [formData, setFormData] = useState({
     type: 'expense',
+    currency: currency || 'USD',
     description: '',
     amount: '',
     category: 'Food',
@@ -83,6 +85,7 @@ const TransactionModal = ({
       setFormData({
         type: isIncome ? 'income' : 'expense',
         description: editingTransaction.description || '',
+        currency: editingTransaction.currency || currency || 'USD',
         amount: editingTransaction.amount || '',
         category: editingTransaction.category || 'Food',
         date: dateValue,
@@ -99,7 +102,7 @@ const TransactionModal = ({
         splitWith: allMemberIds
       }));
     }
-  }, [editingTransaction, mode, members, currentUser, activeGroup]);
+  }, [editingTransaction, mode, members, currentUser, activeGroup, currency]);
 
   // When type changes to income, set category to Salary
   const handleTypeChange = (newType) => {
@@ -125,6 +128,7 @@ const TransactionModal = ({
       amount: parseFloat(formData.amount),
       category: formData.category,
       expense_date: formData.date,
+      ...(mode === 'personal' && !editingTransaction && {currency: formData.currency}),
       ...(mode === 'group' && {
         paidBy: formData.paidBy,
         splitWith: formData.splitWith,
@@ -186,6 +190,11 @@ const TransactionModal = ({
             </div>
           )}
 
+          {mode === 'personal' && <div className="form-group">
+            <label htmlFor="transaction-currency">Currency</label>
+            <CurrencySelect id="transaction-currency" value={formData.currency} disabled={saving || !!editingTransaction}
+              onChange={event => setFormData(prev => ({...prev, currency: event.target.value}))} />
+          </div>}
           <div className="form-group">
             <label htmlFor="description">Description</label>
             <input 
@@ -201,7 +210,7 @@ const TransactionModal = ({
           <div className="form-group">
             <label htmlFor="amount">Amount</label>
             <div className="expense-amount-field">
-              <span className="expense-amount-currency">{currency || activeGroup?.currency || 'USD'}</span>
+              <span className="expense-amount-currency">{mode === 'personal' ? formData.currency : currency || activeGroup?.currency || 'USD'}</span>
               <input 
                 type="number" 
                 id="amount"

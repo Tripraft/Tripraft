@@ -107,12 +107,15 @@ def catalog_place_cards():
         return error_response('Destination type is required with its ID', 400)
     page = parse_query_int('page', 1, minimum=1, maximum=100000)
     per_page = parse_query_int('per_page', 24, minimum=1, maximum=60)
+    section = request.args.get('section', 'all')
+    if section not in ('all', 'places', 'restaurants', 'festivals'):
+        return error_response('Choose places, restaurants, or festivals', 400)
     try:
         return success_response(data=get_place_cards(
             kind=kind, identity=options['destination_id'], name=request.args.get('destination', '')[:250],
             state_id=options['state_id'], city_id=options['city_id'],
             search=request.args.get('search', '').strip()[:140], category=request.args.get('category', '')[:50],
-            page=page, per_page=per_page))
+            page=page, per_page=per_page, section=section))
     except Exception:
         logger.exception('Planner catalog cards failed')
         return error_response('Place catalog is unavailable. Please try again.', 503)

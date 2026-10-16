@@ -95,9 +95,9 @@ function moneyGroup(trip) {
     id: trip.group.expense_group_id,
     name: trip.group.name,
     currency: trip.ledger_currency || trip.group.budget_currency,
-    created_by: trip.group.created_by,
-    owner_id: trip.group.created_by,
-    my_role: member(trip)?.role === 'creator' ? 'admin' : member(trip)?.role,
+    created_by: trip.treasury_owner_id || trip.group.created_by,
+    owner_id: trip.treasury_owner_id || trip.group.created_by,
+    my_role: getDemoViewer().id === (trip.treasury_owner_id || trip.group.created_by) ? 'owner' : member(trip)?.role === 'creator' ? 'admin' : member(trip)?.role,
     members: trip.members.map((m) => ({
       ...m,
       role: m.role === 'creator' ? 'admin' : m.role,
@@ -232,6 +232,7 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
         .filter((t) => member(t))
         .map((t) => ({
           ...t.group,
+          my_role: member(t)?.role,
           member_count: t.members.filter((m) => m.is_active !== false).length,
         })),
     );
@@ -279,8 +280,19 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
       for (const t of Object.values(db.trips)) {
         const message = t.messages.find((m) => m.id === route[1]);
         if (message) {
-          if (message.sender_id !== getDemoViewer().id)
-            fail('Only your messages can be removed', 403);
+          if (!member(t)) fail('Not a member of this group', 403);
+          if (method === 'PATCH') {
+            permit(t);
+            if (message.sender_id !== getDemoViewer().id || message.sender_type !== 'user' || message.type !== 'text') fail('Only the author can edit this text message', 403);
+            if (!body.content?.trim() || body.content.length > 5000) fail('Invalid message');
+            message.content = body.content.trim();
+            message.metadata_json = {...message.metadata_json, edited_at: new Date().toISOString()};
+            save();
+            return envelope(message);
+          }
+          if (method !== 'DELETE') fail('Unsupported message operation', 405);
+          if (message.sender_id !== getDemoViewer().id && !['creator', 'admin'].includes(member(t)?.role)) fail('Only your messages can be removed', 403);
+          permit(t);
           t.messages = t.messages.filter((m) => m !== message);
           save();
           return envelope({});
@@ -337,6 +349,11 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
         const crewRole = body.crew_role || null;
         if (![null, 'treasurer', 'navigator', 'culture_scout'].includes(crewRole))
           fail('Invalid responsibility');
+        if (crewRole === 'treasurer' && target.role === 'viewer') fail('A Viewer cannot own the treasury');
+        if (crewRole === 'treasurer') {
+          for (const other of trip.members) if (other.user_id !== target.user_id && other.crew_role === 'treasurer') other.crew_role = null;
+          trip.treasury_owner_id = target.user_id;
+        } else if (target.crew_role === 'treasurer') trip.treasury_owner_id = trip.group.created_by;
         target.crew_role = crewRole;
         activity(trip, 'member_updated', target.display_name + ' responsibility changed', 'member');
         trip.activities[0].details.message = `${target.display_name}: ${crewRole ? crewRole.replace('_', ' ') : 'responsibility cleared'}`;
@@ -344,10 +361,14 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
         return envelope(target);
       }
       if (target.role === 'creator') fail('The owner role cannot be changed');
-      if (method === 'DELETE') trip.members = trip.members.filter((m) => m !== target);
+      if (method === 'DELETE') {
+        if (trip.treasury_owner_id === target.user_id) trip.treasury_owner_id = trip.group.created_by;
+        trip.members = trip.members.filter((m) => m !== target);
+      }
       else {
         if (!['admin', 'member', 'viewer'].includes(body.role)) fail('Invalid role');
         target.role = body.role;
+        if (body.role === 'viewer' && target.crew_role === 'treasurer') { target.crew_role = null; trip.treasury_owner_id = trip.group.created_by; }
       }
       activity(trip, 'member_updated', target.display_name + ' role changed', 'member');
       save();
@@ -355,6 +376,7 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
     }
     if (section === 'leave') {
       if (member(trip)?.role === 'creator') fail('The owner cannot leave their own trip.');
+      if (trip.treasury_owner_id === getDemoViewer().id) trip.treasury_owner_id = trip.group.created_by;
       trip.members = trip.members.filter((m) => m.user_id !== getDemoViewer().id);
       save();
       return envelope({});

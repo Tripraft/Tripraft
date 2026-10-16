@@ -1,14 +1,14 @@
 ﻿import { validCoordinates } from '../../../utils/coordinates';
 
 export function tripDates(group, scheduledDates = []) {
-  const dates = new Set(scheduledDates.filter(Boolean));
+  const dates = new Set();
   const start = Date.parse((group?.start_date || '') + 'T00:00:00Z');
   const end = Date.parse((group?.end_date || group?.start_date || '') + 'T00:00:00Z');
   const count = Math.floor((end - start) / 86400000) + 1;
   if (Number.isFinite(count) && count > 0 && count <= 366)
     for (let i = 0; i < count; i++)
       dates.add(new Date(start + i * 86400000).toISOString().slice(0, 10));
-  return [...dates].sort();
+  return dates.size ? [...dates].sort() : [...new Set(scheduledDates.filter(Boolean))].sort();
 }
 export function distanceKm(a, b) {
   if (!validCoordinates(a.latitude, a.longitude) || !validCoordinates(b.latitude, b.longitude))

@@ -21,10 +21,14 @@ it('allows public catalog GET routes through demo isolation while blocking mutat
   await client.get('/v1/group-planner/catalog/destinations?q=Japan');
   expect(fetch).toHaveBeenCalledWith('/api/v1/group-planner/catalog/destinations?q=Japan', expect.objectContaining({ method: 'GET' }));
   await client.get('/v1/group-planner/catalog/viewport?destination_type=country&destination_id=1');
+  await client.get('/v1/currencies');
+  await client.get('/v1/exchange-rates?base=USD&quote=INR');
+  await expect(client.post('/v1/exchange-rates', {rate: 100})).rejects.toThrow();
+  await expect(client.get('/v1/currencies-extra')).rejects.toThrow();
   await expect(client.post('/v1/group-planner/catalog/viewport', { destination: 'Forbidden' })).rejects.toThrow();
   await expect(client.post('/v1/group-planner/catalog/destinations', { name: 'Forbidden' })).rejects.toThrow();
   await expect(client.get('/v1/group-planner/catalog/places-extra')).rejects.toThrow();
-  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(fetch).toHaveBeenCalledTimes(4);
 });
 it('enforces viewer and member restrictions in the demo service itself', async () => {
   localStorage.setItem(DEMO_VIEWER_KEY,'demo-elena');

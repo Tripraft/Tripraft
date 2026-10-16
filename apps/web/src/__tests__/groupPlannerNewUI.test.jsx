@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import GroupSelector from '../features/trips/jsx/shared/GroupSelector';
 import AddStopModal from '../features/trips/jsx/shared/AddStopModal';
 import { gpKeys } from '../hooks/useGroupPlannerQuery';
+import TripDateSelect from '../features/trips/jsx/shared/TripDateSelect';
 jest.mock('../services/groupPlannerApi', () => ({
   __esModule: true,
   default: { addPlace: jest.fn(), updatePlace: jest.fn() },
@@ -13,6 +14,36 @@ import planner from '../services/groupPlannerApi';
 beforeEach(() => {
   localStorage.clear();
   jest.resetAllMocks();
+});
+
+it('opens a group by clicking card content and keeps leave actions separate', async () => {
+  const select = jest.fn(), action = jest.fn().mockResolvedValue();
+  render(<GroupSelector groups={[{id: 'one', name: 'Friends', my_role: 'member', destination: 'Tokyo'}]} onSelectGroup={select} onGroupAction={action}/>);
+  fireEvent.click(screen.getByText('Tokyo'));
+  expect(select).toHaveBeenCalledWith('one');
+  select.mockClear();
+  fireEvent.click(screen.getByLabelText('Options for Friends'));
+  fireEvent.click(screen.getByRole('button', {name: 'Leave group'}));
+  expect(select).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('dialog').querySelector('.gp-modal-btn-primary'));
+  await waitFor(() => expect(action).toHaveBeenCalledWith('one', 'leave'));
+});
+
+it('requires the owner to type the group name before deletion', async () => {
+  const action = jest.fn().mockResolvedValue();
+  render(<GroupSelector groups={[{id: 'one', name: 'Family', my_role: 'creator'}]} onGroupAction={action}/>);
+  fireEvent.click(screen.getByLabelText('Options for Family'));
+  fireEvent.click(screen.getByRole('button', {name: 'Delete group'}));
+  const button = screen.getByRole('dialog').querySelector('.gp-modal-btn-primary');
+  expect(button).toBeDisabled();
+  fireEvent.change(screen.getByLabelText('Type the group name to confirm'), {target: {value: 'Family'}});
+  fireEvent.click(button);
+  await waitFor(() => expect(action).toHaveBeenCalledWith('one', 'delete'));
+});
+
+it('offers only the created trip dates or unscheduled', () => {
+  render(<TripDateSelect aria-label="Visit date" group={{start_date: '2026-11-01', end_date: '2026-11-03'}} value="" onChange={jest.fn()}/>);
+  expect(screen.getAllByRole('option').map(option => option.value)).toEqual(['', '2026-11-01', '2026-11-02', '2026-11-03']);
 });
 const groups = [
   {

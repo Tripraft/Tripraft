@@ -1,6 +1,7 @@
 # Purpose: Group-planner group-level validation schemas.
 """Group-planner group-level validation schemas."""
 from app.core.config import Config
+from app.core.schemas.fields import CurrencyCode
 from marshmallow import EXCLUDE, Schema, fields, validate
 
 
@@ -30,8 +31,7 @@ class CreateTravelGroupSchema(Schema):
         validate=validate.Range(min=0, max=Config.MAX_BUDGET_AMOUNT),
         load_default=None,
     )
-    budget_currency = fields.String(
-        validate=validate.Length(max=10),
+    budget_currency = CurrencyCode(
         load_default=Config.DEFAULT_CURRENCY,
     )
 
@@ -49,7 +49,7 @@ class UpdateTravelGroupSchema(Schema):
         validate=validate.Range(min=0, max=Config.MAX_BUDGET_AMOUNT),
         load_default=None,
     )
-    budget_currency = fields.String(validate=validate.Length(max=10), load_default=None)
+    budget_currency = CurrencyCode(load_default=None)
 
 
 class UpdateBudgetSchema(Schema):
@@ -60,7 +60,7 @@ class UpdateBudgetSchema(Schema):
         required=True,
         validate=validate.Range(min=0, max=Config.MAX_BUDGET_AMOUNT),
     )
-    budget_currency = fields.String(load_default=None)
+    budget_currency = CurrencyCode(load_default=None)
 
 
 class UpdateItineraryDocumentSchema(Schema):

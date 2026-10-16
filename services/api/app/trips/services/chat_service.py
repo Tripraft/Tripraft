@@ -6,6 +6,7 @@ Handles message CRUD, read receipts, unread counts.
 No AI logic here (deferred to Phase 5).
 """
 import logging
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 from uuid import UUID
 
@@ -39,6 +40,25 @@ class ChatService:
                 return False, {'error': 'Message content is empty'}
 
             with get_db_session() as session:
+                if sender_type == 'user':
+                    from app.trips.models import TripMember, TravelGroup
+                    from app.core.schemas.gp_chat import SendMessageSchema
+                    if SendMessageSchema().validate({'content': content, 'type': msg_type,
+                                                    **({'metadata_json': metadata_json} if metadata_json is not None else {})}):
+                        return False, {'error': 'Invalid message'}
+                    member = session.query(TripMember).join(TravelGroup).filter(
+                        TripMember.group_id == group_id, TripMember.user_id == sender_id,
+                        TripMember.is_active.is_(True), TravelGroup.is_active.is_(True),
+                        TripMember.role.in_(('creator', 'admin', 'member'))).first()
+                    if not member:
+                        return False, {'error': 'Not authorized to send messages'}
+                if parent_message_id:
+                    parent = session.get(ChatMessage, parent_message_id)
+                    if not parent or str(parent.group_id) != str(group_id):
+                        return False, {'error': 'Reply must belong to this group'}
+                    target = (parent.metadata_json or {}).get('target_user_id')
+                    if sender_type == 'user' and target and str(target) != str(sender_id):
+                        return False, {'error': 'Reply is not accessible'}
                 msg = ChatMessage(
                     group_id=group_id,
                     sender_id=sender_id,
@@ -74,6 +94,7 @@ class ChatService:
         group_id: str,
         before_id: Optional[UUID] = None,
         limit: int = 50,
+        user_id: str = None,
     ) -> Tuple[bool, List[Dict]]:
         try:
             limit = min(max(limit, 1), 100)
@@ -85,6 +106,10 @@ class ChatService:
                 )
                 if before_id:
                     q = q.filter(ChatMessage.id < before_id)
+                # Filter private assistant cards before pagination so another
+                # member cannot retrieve their payload through REST history.
+                target = ChatMessage.metadata_json['target_user_id'].as_string()
+                q = q.filter((target.is_(None)) | (target == str(user_id)))
                 messages = q.order_by(ChatMessage.id.desc()).limit(limit).all()
                 return True, [m.to_dict() for m in messages]
         except Exception as exc:
@@ -112,7 +137,7 @@ class ChatService:
                     TripMember.user_id == user_id,
                     TripMember.is_active == True,
                 ).first()
-                if membership is None:
+                if membership is None or membership.role == 'viewer':
                     return False, {'error': 'Not a member of this group'}
                 can_delete_others = (
                     is_admin and membership.role in {'admin', 'creator'}
@@ -138,6 +163,31 @@ class ChatService:
     # ------------------------------------------------------------------
     # Read receipts
     # ------------------------------------------------------------------
+    @staticmethod
+    def edit_message(message_id, user_id, content):
+        from app.trips.models import TripMember, TravelGroup
+        sanitized = bleach.clean(content, tags=[], strip=True).strip()
+        if not sanitized or len(content) > 5000:
+            return False, {'error': 'Message content is invalid', 'status': 400}
+        with get_db_session() as session:
+            msg = session.get(ChatMessage, message_id)
+            if not msg or msg.is_deleted or msg.is_archived:
+                return False, {'error': 'Message not found', 'status': 404}
+            member = session.query(TripMember).join(TravelGroup).filter(
+                TripMember.group_id == msg.group_id, TripMember.user_id == user_id,
+                TripMember.is_active.is_(True), TravelGroup.is_active.is_(True),
+                TripMember.role.in_(('creator', 'admin', 'member'))).first()
+            if not member or str(msg.sender_id) != str(user_id) or msg.sender_type != 'user' or msg.type != 'text':
+                return False, {'error': 'Only the author can edit this text message', 'status': 403}
+            msg.content = sanitized
+            msg.metadata_json = {**(msg.metadata_json or {}), 'edited_at': datetime.now(timezone.utc).isoformat()}
+            session.flush()
+            result = msg.to_dict()
+            session.commit()
+        from app.trips.realtime.events import emit_to_group
+        emit_to_group(result['group_id'], 'chat:updated', result)
+        return True, result
+
     @staticmethod
     def mark_read(group_id: str, user_id: str, message_id: UUID) -> Tuple[bool, Dict]:
         try:
@@ -217,6 +267,8 @@ class ChatService:
                     ChatMessage.is_deleted.is_(False),
                     ChatMessage.is_archived.is_(False),
                 )
+                target = ChatMessage.metadata_json['target_user_id'].as_string()
+                unread = unread.filter(target.is_(None) | (target == str(user_id)))
                 # UUID primary keys cannot be compared with integer zero.
                 # With no receipt every non-deleted message is unread.
                 if read_row is not None:

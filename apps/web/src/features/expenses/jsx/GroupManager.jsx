@@ -4,7 +4,7 @@ import { Users, Plus, Mail, Trash2, Clock, Settings, Link, Send } from 'lucide-r
 import { formatDateLocal } from '../../../utils/timezoneUtils';
 import expenseApi from '../../../services/expenseApi';
 import { groupPermissions } from '../utils/groupPermissions';
-import { currencies } from '../utils/currencies';
+import CurrencySelect from '../../../components/common/jsx/CurrencySelect';
 import ExpenseDialog from './ExpenseDialog';
 import { formatMoney } from '../../../utils/money';
 
@@ -375,7 +375,7 @@ const GroupManager = ({
     </>}
     {actionError && !confirmation && <p role="alert">{actionError}</p>}
     {activeGroup && confirmation && <ExpenseDialog label="Confirm group action" onClose={() => !actionBusy && setConfirmation(null)} busy={actionBusy} className="expense-group-confirm"><div role="alertdialog" aria-label="Confirm group action"><h2>Confirm group action</h2><p>{confirmation.message}</p>{actionError && <p role="alert">{actionError}</p>}<div><button className="expense-primary-button" disabled={actionBusy} onClick={() => runAction(confirmation.action)}>{actionBusy ? 'Saving...' : 'Confirm'}</button><button className="expense-secondary-button" disabled={actionBusy} onClick={() => { setConfirmation(null); setActionError(''); }}>Cancel</button></div></div></ExpenseDialog>}
-    {!compact && <form className="create-group-form expense-legacy-create" onSubmit={handleCreateGroup}><input type="text" placeholder="New group name..." value={newGroupName} maxLength={100} onChange={event => setNewGroupName(event.target.value)} required disabled={creating} /><select aria-label="New group currency" value={newGroupCurrency} onChange={event => setNewGroupCurrency(event.target.value)} disabled={creating}>{Object.values(currencies).map(value => <option key={value.code} value={value.code}>{value.symbol} {value.code} - {value.name}</option>)}</select><button className="expense-primary-button" disabled={creating}><Plus size={16} />{creating ? 'Creating...' : 'Create Group'}</button></form>}
+    {!compact && <form className="create-group-form expense-legacy-create" onSubmit={handleCreateGroup}><input type="text" placeholder="New group name..." value={newGroupName} maxLength={100} onChange={event => setNewGroupName(event.target.value)} required disabled={creating} /><CurrencySelect aria-label="New group currency" value={newGroupCurrency} onChange={event => setNewGroupCurrency(event.target.value)} disabled={creating} /><button className="expense-primary-button" disabled={creating}><Plus size={16} />{creating ? 'Creating...' : 'Create Group'}</button></form>}
   </div>;
 };
 

@@ -1,3 +1,4 @@
+from app.expenses.services.group_access import require_contributor
 # Purpose: SQL-based Settlement Service Handles settling debts between users.
 """
 SQL-based Settlement Service
@@ -82,6 +83,7 @@ class SettlementServiceSQL:
                 # A member cannot record payments between two other people.
                 # Owners/admins are the explicit exception for bookkeeping.
                 requester = memberships[str(user_id)]
+                require_contributor(requester)
                 is_group_admin = admin(group, requester)
                 if (
                     str(user_id) not in {str(from_user_id), str(to_user_id)}
@@ -299,7 +301,8 @@ class SettlementServiceSQL:
                 if not settlement or settlement.is_deleted:
                     return False, {'error': 'Settlement not found'}
                 
-                group, _ = access(session, settlement.group_id, user_id)
+                group, requester = access(session, settlement.group_id, user_id)
+                require_contributor(requester)
                 # Verify membership
                 member = session.query(GroupMember).filter(
                     GroupMember.group_id == settlement.group_id,

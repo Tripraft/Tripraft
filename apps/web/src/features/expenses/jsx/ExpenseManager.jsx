@@ -24,6 +24,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import ExpenseSummary from './ExpenseSummary';
+import CurrencySelect from '../../../components/common/jsx/CurrencySelect';
+import CurrencyConversion from '../../../components/common/jsx/CurrencyConversion';
+import {isPersonalIncome} from '../utils/personalTransactions';
 
 import TransactionModal from './TransactionModal';
 import GroupManager from './GroupManager';
@@ -64,6 +67,7 @@ const unwrapEnvelope = (r) => (r && typeof r === 'object' && 'success' in r && '
 
 const ExpenseManager = () => {
   const navigate = useNavigate();
+  const [personalCurrency, setPersonalCurrency] = useState('USD');
   const { userId: routeUserId, mode: routeMode } = useParams();
   const [searchParams] = useSearchParams();
   const mode = routeMode === 'group' || (!routeMode && searchParams.get('view') === 'group') ? 'group' : 'personal';
@@ -202,7 +206,7 @@ const ExpenseManager = () => {
   // Get current transactions based on mode
   const getCurrentTransactions = () => {
     if (mode === 'personal') {
-      return personalExpenses || [];
+      return (personalExpenses || []).filter(expense => (expense.currency || 'USD') === personalCurrency);
     }
     if (!activeGroupId) return [];
     return activeGroupExpenses || [];
@@ -395,6 +399,7 @@ const ExpenseManager = () => {
           });
           showToast('Transaction created!', 'success');
         }
+        if (transactionData.currency) setPersonalCurrency(transactionData.currency);
         await refetchPersonalExpenses();
       } else {
         // Group expense
@@ -550,7 +555,7 @@ const ExpenseManager = () => {
         settlements: activeGroupSettlements || [],
         members: activeGroupMembers || [],
         balances: getCurrentBalances() || [],
-        currency: mode === 'group' ? (activeGroupData?.currency || 'USD') : 'USD',
+        currency: mode === 'group' ? (activeGroupData?.currency || 'USD') : personalCurrency,
         userName: currentUser?.display_name || currentUser?.email || 'User'
       });
       
@@ -636,15 +641,23 @@ const ExpenseManager = () => {
       />}
       {mode === 'group' && activeGroupId && groupDetailLoading && !activeGroupData && <p role="status">Loading group…</p>}
 
+      {mode === 'personal' && <label className="expense-personal-currency">Personal ledger currency
+        <CurrencySelect aria-label="Personal ledger currency" value={personalCurrency} onChange={event => setPersonalCurrency(event.target.value)} />
+        <small>Summary, history and exports show this currency only.</small>
+      </label>}
       {/* Personal Expense Summary */}
       {mode === 'personal' && (
         <ExpenseSummary 
           transactions={getCurrentTransactions()}
           mode={mode}
-          currency='USD'
+          currency={personalCurrency}
         />
       )}
 
+      {mode === 'personal' && <CurrencyConversion base={personalCurrency} amounts={[
+        {label: 'Total expenses', amount: getCurrentTransactions().filter(t => !t.is_deleted && !isPersonalIncome(t)).reduce((sum, t) => sum + Number(t.amount || 0), 0)},
+        {label: 'Total income', amount: getCurrentTransactions().filter(t => !t.is_deleted && isPersonalIncome(t)).reduce((sum, t) => sum + Number(t.amount || 0), 0)},
+      ]} />}
       {mode === 'group' && activeGroupId && activeGroupData && (() => {
         const transactions = getCurrentTransactions();
         const balances = getCurrentBalances() || [];
@@ -654,6 +667,11 @@ const ExpenseManager = () => {
           <GroupDetailHeader group={activeGroupData} members={activeGroupMembers || []} overview={overview}
             busy={mutationLoading || groupDetailLoading} onBack={() => { setExpenseView('group'); refetchGroups(); }}
             onCreate={() => setShowNewGroup(true)} onAdd={handleOpenModal} onSettle={() => openGroupTab('settleup')} />
+          <CurrencyConversion key={activeGroupId} base={activeGroupData.currency || 'USD'} amounts={[
+            {label: 'Total group spend', amount: transactions.filter(t => !t.is_deleted).reduce((sum, t) => sum + Number(t.amount || 0), 0)},
+            {label: 'Outstanding balances', amount: remainingBalance},
+            {label: 'Settled', amount: (activeGroupSettlements || []).reduce((sum, t) => sum + Number(t.amount || 0), 0)},
+          ]} />
           <GroupSummaryCards remainingBalance={remainingBalance}
             totalSettlements={(activeGroupSettlements || []).reduce((sum, settlement) => sum + (Number(settlement.amount) || 0), 0)}
             settlementCount={(activeGroupSettlements || []).length}
@@ -733,7 +751,7 @@ const ExpenseManager = () => {
           onDelete={(id) => showConfirm('Are you sure you want to delete this transaction?', () => handleDeleteTransaction(id))}
           onRestore={handleRestoreTransaction}
           currentUserId={currentUser?.uid || currentUser?.user_id}
-          currency="USD"
+          currency={personalCurrency}
           onExportPDF={handleExportPDF}
         />
       )}
@@ -747,7 +765,7 @@ const ExpenseManager = () => {
           activeGroup={activeGroupData}
           members={activeGroupMembers || []}
           editingTransaction={editingTransaction}
-          currency={mode === 'group' ? activeGroupData?.currency : 'USD'}
+          currency={mode === 'group' ? activeGroupData?.currency : personalCurrency}
           currentUser={currentUser}
           onSave={handleSaveTransaction}
           onClose={() => setShowTransactionModal(false)}

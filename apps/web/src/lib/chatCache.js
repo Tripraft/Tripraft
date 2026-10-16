@@ -1,6 +1,10 @@
 // Purpose: Deduplicates message IDs across cached pages and reconciles optimistic send results.
 export const pageMessages = page => page?.data?.messages ?? page?.messages ?? [];
 const withMessages = (page, messages) => page?.data ? { ...page, data: { ...page.data, messages } } : { ...page, messages };
+export function updateMessage(cache, message) {
+  if (!cache?.pages || !message?.id) return cache;
+  return { ...cache, pages: cache.pages.map(page => withMessages(page, pageMessages(page).map(old => String(old.id) === String(message.id) ? {...old, ...message} : old))) };
+}
 export function removeMessage(cache, id) {
   if (!cache?.pages) return cache;
   return { ...cache, pages: cache.pages.map(p => withMessages(p, pageMessages(p).filter(m => String(m.id) !== String(id)))) };

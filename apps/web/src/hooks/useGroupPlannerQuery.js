@@ -14,8 +14,6 @@ export const gpKeys = {
   expenses:  (groupId) => [...gpKeys.all, 'expenses', groupId],
   vault:     (groupId) => [...gpKeys.all, 'vault', groupId],
   activities:(groupId) => [...gpKeys.all, 'activities', groupId],
-  destPlaces:(dest) => [...gpKeys.all, 'dest-places', dest],
-  destEvents:(dest) => [...gpKeys.all, 'dest-events', dest],
 };
 
 // ── Query Hooks ─────────────────────────────────────────────────────────────
@@ -203,25 +201,5 @@ export function useGroupActivities(groupId) {
     queryFn: () => groupPlannerApi.getGroupActivities(groupId),
     enabled: !!groupId,
     staleTime: 15_000,
-  });
-}
-
-// ── Destination Library (places search DB) ──────────────────────────────────
-
-export function useDestinationPlaces(destination) {
-  return useQuery({
-    queryKey: gpKeys.destPlaces(destination),
-    queryFn: () => groupPlannerApi.searchDestinationPlaces(destination),
-    enabled: !!destination,
-    staleTime: 300_000, // 5 min — city data rarely changes
-  });
-}
-
-export function useDestinationEvents(destination) {
-  return useQuery({
-    queryKey: gpKeys.destEvents(destination),
-    queryFn: () => groupPlannerApi.getDestinationEvents(destination),
-    enabled: !!destination,
-    staleTime: 300_000,
   });
 }

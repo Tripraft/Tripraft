@@ -1,0 +1,20 @@
+.currency-conversion {margin: 18px 0; padding: 20px; background: #f4fbfe; border: 1px solid #d6eaf2; border-radius: 18px; color: #17394c;}
+.currency-conversion-heading {display: flex; flex-wrap: wrap; align-items: end; gap: 14px;}
+.currency-conversion-heading > div {flex: 1 1 220px;}
+.currency-conversion h3 {margin: 0 0 5px; font-size: 17px;}
+.currency-conversion p {margin: 5px 0; font-size: 13px;}
+.currency-conversion label {display: flex; flex-direction: column; gap: 5px; font-size: 12px; font-weight: 600;}
+.currency-conversion select, .currency-conversion input {padding: 10px; border-radius: 9px; border: 1px solid #bdd9e5; background: white; color: #17394c; font: inherit; max-width: 100%;}
+.currency-conversion select {width: 240px;}
+.currency-conversion-heading button {padding: 11px 14px; border: 1px solid #bdd9e5; border-radius: 9px; color: #006b8e; background: white; cursor: pointer;}
+.currency-conversion-heading button:disabled {opacity: .55; cursor: default;}
+.currency-conversion .currency-conversion-amount {margin-top: 14px; max-width: 210px;}
+.currency-conversion .currency-rate {display: flex; flex-direction: column; gap: 5px; margin-top: 15px; line-height: 1.6;}
+.currency-rate small, .currency-status {color: #526f80; font-size: 12px;}
+.currency-conversion-values {margin: 16px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px;}
+.currency-conversion-values > div {padding-top: 10px; border-top: 1px solid #d6eaf2;}
+.currency-conversion-values dt {font-size: 12px; color: #526f80; margin-bottom: 5px;}
+.currency-conversion-values dd {margin: 0; display: flex; flex-wrap: wrap; gap: 12px; font-size: 16px; align-items: center;}
+.currency-conversion-values small {font-size: 11px;}
+.currency-conversion .currency-conversion-note {color: #526f80; font-size: 12px;}
+@media(max-width: 600px) {.currency-conversion {padding: 16px;} .currency-conversion-heading > label {max-width: 100%;} .currency-conversion-values dd {font-size: 14px; gap: 8px;}}

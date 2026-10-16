@@ -126,3 +126,22 @@ def test_viewport_filters_invalid_points_and_takes_shortest_arc_across_date_line
     assert viewport['bounds'] == [[1.0, 179.0], [3.0, 181.0]]
     assert viewport['coordinate_count'] == 2
     assert abs(viewport['center'][1]) == 180
+
+
+def test_library_separates_restaurants_and_scopes_catalog_festivals(app, catalog):
+    with sqlite3.connect(catalog) as conn:
+        conn.executescript('''CREATE TABLE festivals (id INTEGER PRIMARY KEY, place_id INTEGER,
+            city_id INTEGER, festival_name TEXT, month_label TEXT, notes TEXT);
+            INSERT INTO festivals VALUES (1,1002,111,'Spring lanterns','April','City celebration'),
+                (2,1004,211,'Foreign festival','June','Elsewhere');''')
+    client = app.test_client()
+    base = '/api/v1/group-planner/catalog/places?destination_type=country&destination_id=1'
+    places = payload(client.get(base + '&section=places'))
+    assert {p['id'] for p in places['places']} == {1001, 1002}
+    food = payload(client.get(base + '&section=restaurants'))
+    assert [p['id'] for p in food['places']] == [1003]
+    festivals = payload(client.get(base + '&section=festivals'))
+    assert [p['name'] for p in festivals['places']] == ['Spring lanterns']
+    assert festivals['places'][0]['month_label'] == 'April'
+    assert payload(client.get(base + '&section=festivals&city_id=211'))['total'] == 0
+    assert client.get(base + '&section=unknown').status_code == 400

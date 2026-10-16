@@ -39,6 +39,10 @@ class ChatApiService {
     return apiClient.delete(`${BASE}/messages/${messageId}`);
   }
 
+  async editMessage(messageId, content) {
+    return apiClient.patch(`${BASE}/messages/${messageId}`, {content});
+  }
+
   /**
    * Mark messages as read up to messageId.
    * @param {string} groupId

@@ -1,3 +1,4 @@
+from app.expenses.services.group_access import require_contributor
 # Purpose: SQL-based Expense Service Handles expense operations using local SQL database.
 """
 SQL-based Expense Service
@@ -103,6 +104,8 @@ class ExpenseServiceSQL:
                     logger.warning(f"User {user_id} is not a member of group {group_id}")
                     return False, {'error': 'Not a member of this group'}
                 
+                require_contributor(member)
+
                 # Verify payer is a member
                 payer_member = session.query(GroupMember).filter(
                     GroupMember.group_id == group_id,
@@ -792,6 +795,7 @@ class ExpenseServiceSQL:
 
                 # Always reauthorize against the active group, including former members.
                 group, member = access(session, expense.group_id, user_id)
+                require_contributor(member)
                 # Check if user can edit (creator or group owner)
                 is_group_owner = group and group.created_by == user_id
                 is_expense_creator = expense.created_by == user_id
@@ -1053,6 +1057,7 @@ class ExpenseServiceSQL:
                         return False, {'error': 'You can only delete your own personal expenses'}
                 else:
                     group, member = access(session, expense.group_id, user_id)
+                    require_contributor(member)
                     # Check if user can delete (creator or group owner)
                     is_group_owner = group and group.created_by == user_id
                     is_expense_creator = expense.created_by == user_id
@@ -1131,7 +1136,8 @@ class ExpenseServiceSQL:
                     if expense.created_by != user_id:
                         return False, {'error': 'You can only restore your own personal expenses', 'status_code': 403}
                 else:
-                    group, _ = access(session, expense.group_id, user_id)
+                    group, member = access(session, expense.group_id, user_id)
+                    require_contributor(member)
                     if user_id not in (group.created_by, expense.created_by):
                         return False, {'error': 'You can only restore expenses you created', 'status_code': 403}
 

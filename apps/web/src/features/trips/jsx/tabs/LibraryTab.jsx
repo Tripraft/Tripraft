@@ -1,10 +1,19 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { MapPin, Star, Search, Compass, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { MapPin, Star, Search, Compass, ChevronLeft, ChevronRight, X, Plus, Utensils, CalendarDays } from 'lucide-react';
 import groupPlannerApi from '../../../../services/groupPlannerApi';
 import { unwrap } from '../../utils/groupPlannerUtils';
+import { gpKeys } from '../../../../hooks/useGroupPlannerQuery';
+import { validCoordinates } from '../../../../utils/coordinates';
+import TripDateSelect from '../shared/TripDateSelect';
 
-export default function LibraryTab({ destination, group }) {
+export default function LibraryTab({ destination, group, groupId, canEdit = false, showToast, onPlaceAdded }) {
+  const client = useQueryClient();
+  const [section, setSection] = useState('places');
+  const [selected, setSelected] = useState(null);
+  const [date, setDate] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [filters, setFilters] = useState({ state_id: '', city_id: '', page: 1 });
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -20,7 +29,7 @@ export default function LibraryTab({ destination, group }) {
     destination_id: group?.destination_id || '',
     destination: destination || group?.destination || '',
   };
-  const options = { ...scope, ...filters, search: debouncedSearch, per_page: 24 };
+  const options = { ...scope, ...filters, section, search: debouncedSearch, per_page: 24 };
   const {
     data: raw,
     isLoading,
@@ -45,6 +54,34 @@ export default function LibraryTab({ destination, group }) {
     return [...grouped.values()];
   }, [places]);
   const kind = data.destination?.type || scope.destination_type;
+  const addToPlan = async (event) => {
+    event.preventDefault();
+    if (saving || !canEdit || !selected) return;
+    setSaving(true);
+    setSaveError('');
+    try {
+      const item = selected;
+      const rating = Number.parseFloat(item.rating);
+      const hasCoordinates = validCoordinates(item.latitude, item.longitude);
+      const place = unwrap(await groupPlannerApi.addPlace(groupId, {
+        name: item.name,
+        category: section === 'restaurants' ? 'restaurant' : section === 'festivals' ? 'event' : 'attraction',
+        description: (item.description || '').slice(0, 1000),
+        address: (item.address || [item.city_name, item.state_name, item.country_name].filter(Boolean).join(', ')).slice(0, 500),
+        ...(hasCoordinates ? {latitude: Number(item.latitude), longitude: Number(item.longitude)} : {}),
+        ...(Number.isFinite(rating) && rating >= 0 && rating <= 5 ? {rating} : {}),
+        ...(date ? {visit_date: date} : {}),
+        photo_url: /^https?:\/\//i.test(item.photo_url || '') ? item.photo_url : '',
+        website: /^https?:\/\//i.test(item.website || '') ? item.website : '',
+      }));
+      await Promise.all([gpKeys.places(groupId), gpKeys.group(groupId), gpKeys.activities(groupId)].map(queryKey => client.invalidateQueries({queryKey})));
+      showToast?.('Added to your plan');
+      setSelected(null);
+      if (place?.id) onPlaceAdded?.(place);
+    } catch (err) {
+      setSaveError(err.message || 'Unable to add this place. Please try again.');
+    } finally { setSaving(false); }
+  };
   return (
     <div className="gp-view gp-library-view">
       <div className="gp-tab-heading">
@@ -61,9 +98,16 @@ export default function LibraryTab({ destination, group }) {
         </div>
         <span className="gp-tab-count">
           <Compass size={15} />
-          {(data.total || 0).toLocaleString()} places
+          {(data.total || 0).toLocaleString()} {section}
         </span>
       </div>
+      <nav className="gp-library-sections" aria-label="Library categories">
+        {[[ 'places', 'Places', Compass ], [ 'restaurants', 'Restaurants', Utensils ], [ 'festivals', 'Festivals', CalendarDays ]].map(([key, label, Icon]) => (
+          <button key={key} aria-current={section === key ? 'page' : undefined} onClick={() => { setSection(key); setFilters({state_id: '', city_id: '', page: 1}); setSelected(null); }}>
+            <Icon size={16}/>{label}
+          </button>
+        ))}
+      </nav>
       <div className="gp-catalog-toolbar">
         {kind === 'country' && (
           <label className="gp-field">
@@ -123,7 +167,7 @@ export default function LibraryTab({ destination, group }) {
       ) : places.length === 0 ? (
         <div className="gp-empty-agenda">
           <Compass size={30} />
-          <h3>No places found</h3>
+          <h3>No {section} found</h3>
           <p>
             {data.destination
               ? 'Try another city, state, or search.'
@@ -135,7 +179,7 @@ export default function LibraryTab({ destination, group }) {
           <p className="gp-catalog-results-note">
             Showing {((data.page || 1) - 1) * (data.per_page || 24) + 1}-
             {Math.min((data.page || 1) * (data.per_page || 24), data.total)} of{' '}
-            {data.total.toLocaleString()} places
+            {data.total.toLocaleString()} {section}
           </p>
           {regions.map((region) => (
             <section
@@ -190,6 +234,8 @@ export default function LibraryTab({ destination, group }) {
                         <p className="gp-discovery-description">
                           {item.description || item.address || 'Explore this place on your trip.'}
                         </p>
+                        {item.month_label && <p>{item.month_label}</p>}
+                        <button className="gp-open-workspace" onClick={() => { setSelected(item); setDate(''); setSaveError(''); }}>View details</button>
                       </div>
                     </article>
                   );
@@ -221,6 +267,33 @@ export default function LibraryTab({ destination, group }) {
             </nav>
           )}
         </>
+      )}
+      {selected && (
+        <div className="gp-modal-overlay" onClick={() => { if (!saving) setSelected(null); }}>
+          <form className="gp-modal gp-library-detail" role="dialog" aria-modal="true" aria-labelledby="gp-library-detail-title" onClick={e => e.stopPropagation()} onSubmit={addToPlan} onKeyDown={e => { if (e.key === 'Escape' && !saving) setSelected(null); }}>
+            <div className="gp-section-header">
+              <h2 id="gp-library-detail-title">{selected.name}</h2>
+              <button className="gp-icon-button" type="button" aria-label="Close place details" disabled={saving} onClick={() => setSelected(null)} autoFocus><X size={18}/></button>
+            </div>
+            <p>{[selected.city_name, selected.state_name, selected.country_name].filter(Boolean).join(', ')}</p>
+            {selected.description && <p className="gp-library-description">{selected.description}</p>}
+            <dl className="gp-library-facts">
+              {Object.entries({Category: selected.category, Address: selected.address, 'Festival season': selected.month_label, Cuisine: selected.cuisine, 'Price range': selected.price_band, Cost: selected.cost, 'Suggested duration': selected.suggested_duration, 'Best time to visit': selected.best_time_to_visit, 'Travel tip': selected.place_tip, 'Advance booking': selected.advanced_booking, 'Vegetarian options': selected.veg_flag, Access: selected.access_status, Rating: selected.rating}).filter(([,value]) => value !== null && value !== undefined && value !== '').map(([label,value]) => <React.Fragment key={label}><dt>{label}</dt><dd>{String(value)}</dd></React.Fragment>)}
+            </dl>
+            {/^https?:\/\//i.test(selected.website || '') && <a href={selected.website} target="_blank" rel="noopener noreferrer">Official website</a>}
+            {!validCoordinates(selected.latitude, selected.longitude) && <p className="gp-form-hint">Map coordinates are not available yet. You can still add this to your plan.</p>}
+            {canEdit && <>
+              <label className="gp-modal-label" htmlFor="gp-library-visit-date">Visit date (optional)</label>
+              <TripDateSelect className="gp-modal-input" id="gp-library-visit-date" group={group} value={date} onChange={e => setDate(e.target.value)}/>
+              <p className="gp-form-hint">Leave empty to keep this stop unscheduled.</p>
+            </>}
+            {saveError && <p role="alert">{saveError}</p>}
+            <div className="gp-modal-actions">
+              {canEdit && <button className="gp-modal-btn-primary" disabled={saving} type="submit"><Plus size={15}/>{saving ? 'Adding...' : 'Add to plan'}</button>}
+              <button className="gp-modal-btn-secondary" type="button" disabled={saving} onClick={() => setSelected(null)}>Close</button>
+            </div>
+          </form>
+        </div>
       )}
     </div>
   );

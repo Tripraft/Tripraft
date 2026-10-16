@@ -58,3 +58,4 @@ it('shows the validation reason and retains the name so the user can retry', asy
   expect(screen.getByRole('button', { name: 'Create Group' })).toBeEnabled();
   expect(fetch).toHaveBeenCalledTimes(1);
 });
+jest.mock('../services/currencyApi', () => ({getCurrencies: jest.fn().mockResolvedValue({currencies: [{code: 'USD', name: 'US Dollar'}, {code: 'INR', name: 'Indian Rupee'}]})}));

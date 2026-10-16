@@ -3,6 +3,7 @@ import { X, MapPin, Users, Calendar, Loader2, Mail } from 'lucide-react';
 import groupPlannerApi from '../../../services/groupPlannerApi';
 import { unwrap } from '../utils/groupPlannerUtils';
 import '../css/CreateGroupModal.css';
+import CurrencySelect from '../../../components/common/jsx/CurrencySelect';
 
 export default function CreateGroupModal({ isOpen, onClose, onCreateGroup, isLoading = false }) {
   const [name, setName] = useState('');
@@ -11,6 +12,7 @@ export default function CreateGroupModal({ isOpen, onClose, onCreateGroup, isLoa
   const [destination, setDestination] = useState(null);
   const [dates, setDates] = useState({ start: '', end: '' });
   const [emails, setEmails] = useState('');
+  const [currency, setCurrency] = useState('USD');
   const [suggestions, setSuggestions] = useState([]);
   const [open, setOpen] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -26,6 +28,7 @@ export default function CreateGroupModal({ isOpen, onClose, onCreateGroup, isLoa
     setDestination(null);
     setDates({ start: '', end: '' });
     setEmails('');
+    setCurrency('USD');
     setErrors({});
     setOpen(false);
     setSuggestions([]);
@@ -96,6 +99,7 @@ export default function CreateGroupModal({ isOpen, onClose, onCreateGroup, isLoa
       start_date: dates.start || null,
       end_date: dates.end || null,
       invite_emails: inviteEmails,
+      budget_currency: currency,
     });
   };
   if (!isOpen) return null;
@@ -333,6 +337,10 @@ export default function CreateGroupModal({ isOpen, onClose, onCreateGroup, isLoa
                 {errors.emails}
               </span>
             )}
+          </div>
+          <div className="cgm-field">
+            <label className="cgm-label" htmlFor="trip-budget-currency">Trip budget currency</label>
+            <CurrencySelect id="trip-budget-currency" className="cgm-input" value={currency} onChange={e => setCurrency(e.target.value)} disabled={isLoading} />
           </div>
           <div className="cgm-actions">
             <button type="button" className="cgm-cancel-btn" disabled={isLoading} onClick={onClose}>

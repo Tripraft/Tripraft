@@ -14,7 +14,7 @@ import { isPlannerDemo } from '../features/trips/demo/demoMode';
 import sqlAuthService from '../services/sqlAuthService';
 import GlobalConfig from '../config/globalConfig';
 import { chatKeys } from './useChatQuery';
-import { mergeMessage } from '../lib/chatCache';
+import { mergeMessage, updateMessage } from '../lib/chatCache';
 import { gpKeys } from './useGroupPlannerQuery';
 
 const TYPING_EXPIRE_MS = 3_000;
@@ -37,10 +37,24 @@ export default function useChatSocket(groupId, userId) {
   // Typing expiry timers per user
   const typingTimersRef = useRef({});
 
+  // Recover authoritative state when live delivery is interrupted.
+  useEffect(() => {
+    if (isPlannerDemo() || connected || !userId) return;
+    const timer = setInterval(() => {
+      if (document.visibilityState === 'hidden') return;
+      queryClient.invalidateQueries({queryKey: gpKeys.groups()});
+      if (groupId) {
+        for (const key of [gpKeys.group, gpKeys.places, gpKeys.polls, gpKeys.checklist, gpKeys.members, gpKeys.activities, gpKeys.vault, gpKeys.expenses]) queryClient.invalidateQueries({queryKey: key(groupId)});
+        queryClient.invalidateQueries({queryKey: chatKeys.messages(groupId)});
+      }
+    }, 15000);
+    return () => clearInterval(timer);
+  }, [connected, userId, groupId, queryClient]);
+
   // --- Connect / disconnect lifecycle ---
   useEffect(() => {
     if (isPlannerDemo()) return;
-    if (!groupId || !userId) return;
+    if (!userId) return;
     lastReadRef.current = { id: null, time: 0 };
     setConnectionError(null);
 
@@ -49,6 +63,7 @@ export default function useChatSocket(groupId, userId) {
 
     const connect = async () => {
       const token = await sqlAuthService.getIdToken();
+      if (cancelled) return;
       // Derive base URL from API base (strip /api suffix)
       const baseUrl = (GlobalConfig.API_BASE_URL || '/api').replace(/\/api\/?$/, '') || window.location.origin;
 
@@ -75,12 +90,13 @@ export default function useChatSocket(groupId, userId) {
         }
       });
 
-      if (cancelled) { socket.disconnect(); return; }
       socketRef.current = socket;
 
       socket.on('connect', () => {
         setConnected(true);
         setConnectionError(null);
+        queryClient.invalidateQueries({ queryKey: gpKeys.groups() });
+        if (!groupId) return;
         queryClient.invalidateQueries({ queryKey: chatKeys.messages(groupId) });
         // One joined socket serves both chat and the collaborative workspace.
         // Reconnects must recover changes made while this client was offline.
@@ -103,7 +119,24 @@ export default function useChatSocket(groupId, userId) {
       });
 
       // --- Chat events ---
+      const belongsHere = data => groupId && String(data?.group_id) === String(groupId);
+      socket.on('planner:changed', async data => {
+        queryClient.invalidateQueries({queryKey: gpKeys.groups()});
+        if (!belongsHere(data)) return;
+        if (data.access_revoked) {
+          const privateQuery = query => (query.queryKey[0] === 'group-planner' || query.queryKey[0] === 'chat') && query.queryKey.includes(groupId);
+          await queryClient.cancelQueries({predicate: privateQuery});
+          queryClient.removeQueries({predicate: privateQuery});
+          queryClient.setQueryData(gpKeys.group(groupId), {data: null});
+          queryClient.setQueryData(gpKeys.members(groupId), {data: []});
+          queryClient.setQueryData(gpKeys.places(groupId), {data: []});
+          queryClient.setQueryData(chatKeys.messages(groupId), {pages: [], pageParams: []});
+          return;
+        }
+        queryClient.invalidateQueries({predicate: query => query.queryKey[0] === 'group-planner' && query.queryKey.includes(groupId)});
+      });
       socket.on('chat:message', (msg) => {
+        if (!belongsHere(msg)) return;
         // Content cannot identify a send: another device can post the same text.
         // Keep every server UUID; the POST acknowledgement replaces its temp ID.
         queryClient.setQueryData(chatKeys.messages(groupId), old => mergeMessage(old, msg));
@@ -112,6 +145,7 @@ export default function useChatSocket(groupId, userId) {
       });
 
       socket.on('chat:deleted', (data) => {
+        if (!belongsHere(data)) return;
         queryClient.setQueryData(chatKeys.messages(groupId), (old) => {
           if (!old) return old;
           return {
@@ -132,7 +166,12 @@ export default function useChatSocket(groupId, userId) {
         });
       });
 
+      socket.on('chat:updated', data => {
+        if (belongsHere(data)) queryClient.setQueryData(chatKeys.messages(groupId), old => updateMessage(old, data));
+      });
+
       socket.on('chat:typing', (data) => {
+        if (!belongsHere(data)) return;
         if (data.user_id === userId) return;
         setTypingUsers((prev) => {
           if (prev.some((u) => u.user_id === data.user_id)) return prev;
@@ -150,6 +189,7 @@ export default function useChatSocket(groupId, userId) {
       });
 
       socket.on('chat:typing_stop', (data) => {
+        if (!belongsHere(data)) return;
         setTypingUsers((prev) => prev.filter((u) => u.user_id !== data.user_id));
         if (typingTimersRef.current[data.user_id]) {
           clearTimeout(typingTimersRef.current[data.user_id]);
@@ -158,6 +198,7 @@ export default function useChatSocket(groupId, userId) {
       });
 
       socket.on('chat:read', (data) => {
+        if (!belongsHere(data)) return;
         queryClient.invalidateQueries({ queryKey: chatKeys.unread(groupId) });
       });
 
@@ -174,7 +215,8 @@ export default function useChatSocket(groupId, userId) {
         'member:joined': [gpKeys.members, gpKeys.group],
       };
       for (const [event, keys] of Object.entries(workspaceEvents)) {
-        socket.on(event, () => {
+        socket.on(event, data => {
+          if (!belongsHere(data)) return;
           for (const key of [...keys, gpKeys.activities]) {
             queryClient.invalidateQueries({ queryKey: key(groupId) });
           }
@@ -188,7 +230,7 @@ export default function useChatSocket(groupId, userId) {
       cancelled = true;
       clearInterval(presenceHeartbeat);
       if (socketRef.current) {
-        socketRef.current.emit('leave_group', { group_id: groupId });
+        if (groupId) socketRef.current.emit('leave_group', { group_id: groupId });
         socketRef.current.disconnect();
         socketRef.current = null;
       }

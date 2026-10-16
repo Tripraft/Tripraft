@@ -6,6 +6,7 @@ import groupPlannerApi from '../../../../services/groupPlannerApi';
 import { toArray, tripDayNumber } from '../../utils/groupPlannerUtils';
 import { tripDates, distanceKm, stopTimeSlots } from '../../utils/plannerSchedule';
 import { formatDate, formatDateRange } from '../../utils/formatters';
+import TripDateSelect from '../shared/TripDateSelect';
 
 export default function ItineraryTab({
   groupId,
@@ -144,17 +145,8 @@ export default function ItineraryTab({
             onClick={() => onSelectPlace?.(place.id)}
             aria-label={`Show ${place.name} on map`}
           >
-            {place.photo_url ? (
-              <img src={place.photo_url} alt="" />
-            ) : (
-              <span className="gp-stop-placeholder">
-                <MapPin size={22} />
-              </span>
-            )}
             <span>
-              <span className="gp-stop-category">{place.category || 'Place'}</span>
               <h3>{place.name}</h3>
-              {place.address && <span className="gp-stop-address">{place.address}</span>}
             </span>
           </button>
           {(place.remarks || place.description) && <p>{place.remarks || place.description}</p>}
@@ -330,13 +322,13 @@ export default function ItineraryTab({
             ].map(([key, label, type]) => (
               <label className="gp-field" key={key}>
                 {label}
-                <input
+                {key === 'visit_date' ? <TripDateSelect group={group} className="gp-modal-input" value={editing[key] || ''} onChange={e => setEditing({...editing, [key]: e.target.value})}/> : <input
                   type={type}
                   className="gp-modal-input"
                   value={editing[key] || ''}
                   min={type === 'number' ? 1 : undefined}
                   onChange={(e) => setEditing({ ...editing, [key]: e.target.value })}
-                />
+                />}
               </label>
             ))}
             <label className="gp-field">

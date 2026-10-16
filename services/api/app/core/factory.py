@@ -206,6 +206,8 @@ def _init_socketio(app):
         import app.trips.realtime.events  # noqa: F401
         from app.expenses.realtime import init_expense_realtime
         init_expense_realtime()
+        from app.trips.realtime.changes import init_planner_realtime
+        init_planner_realtime()
 
         logger.info("WebSocket event handlers registered")
     except Exception as exc:
@@ -220,6 +222,8 @@ def _init_socketio(app):
 
 def _register_blueprints(app):
     """Register all API route blueprints."""
+    from app.expenses.routes.currencies import currencies_bp
+    app.register_blueprint(currencies_bp)
     api_prefix = app.config.get("API_PREFIX", "/api/v1")
 
     # --- Health ---

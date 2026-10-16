@@ -1,7 +1,7 @@
 export const CREW_ROLES = {
   treasurer: {
     label: 'Treasurer',
-    description: 'Coordinates shared expenses, receipts, and settlements.',
+    description: 'Owns the linked shared-expense group and manages receipts, expenses, and settlements. One lead Treasurer per trip.',
   },
   navigator: {
     label: 'Navigator',

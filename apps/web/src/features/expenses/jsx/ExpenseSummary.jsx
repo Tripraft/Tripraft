@@ -1,15 +1,14 @@
 // Purpose: Renders the Expense Summary interface within apps\web\src\features\expenses\jsx.
 import React from 'react';
 import { Wallet, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import {formatMoney} from '../../../utils/money';
 import { isPersonalIncome } from '../utils/personalTransactions';
 
-const ExpenseSummary = ({ transactions, mode = 'personal' }) => {
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-  };
+const ExpenseSummary = ({ transactions, mode = 'personal', currency = 'USD' }) => {
+  const formatCurrency = amount => formatMoney(amount, currency);
 
   // Filter out deleted transactions for calculations
-  const activeTransactions = transactions.filter(t => !t.is_deleted);
+  const activeTransactions = transactions.filter(t => !t.is_deleted && (t.currency || currency) === currency);
   
   // For group mode: only show total expenses
   if (mode === 'group') {

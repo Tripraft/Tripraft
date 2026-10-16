@@ -1743,27 +1743,6 @@
   display: block;
 }
 
-.gp-chat-delete-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #5c7686;
-  padding: 2px;
-  opacity: 0;
-  transition: opacity 0.15s;
-  position: absolute;
-  top: 4px;
-  right: 4px;
-}
-
-.gp-chat-bubble:hover .gp-chat-delete-btn {
-  opacity: 1;
-}
-
-.gp-chat-delete-btn:hover {
-  color: #ef4444;
-}
-
 .gp-chat-sending {
   font-size: 10px;
   color: #5c7686;
@@ -3117,15 +3096,6 @@
   gap: 6px;
   min-width: 0;
 }
-.gp-group-switcher select {
-  border: 0;
-  color: var(--gp-navy);
-  font-weight: 700;
-  background: transparent;
-  max-width: 160px;
-  padding: 7px 0;
-  text-overflow: ellipsis;
-}
 .gp-trip-icon {
   width: 32px;
   height: 32px;
@@ -4008,9 +3978,6 @@
   .gp-header-divider,
   .gp-member-avatars {
     display: none;
-  }
-  .gp-group-switcher select {
-    max-width: 140px;
   }
   .gp-topbar-actions {
     gap: 6px;
@@ -6268,49 +6235,6 @@
 }
 
 /* Destination framing and OpenFreeMap vector background. */
-.gp-page .gp-map-destination-card {
-  position: absolute;
-  top: 76px;
-  left: 18px;
-  right: 18px;
-  z-index: 25;
-  background: #fffffff2;
-  border: 1px solid #e2f0f6;
-  border-radius: 12px;
-  padding: 12px 14px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 4px 12px;
-  box-shadow: 0 4px 18px #102a3a0c;
-}
-.gp-page .gp-map-destination-card > span {
-  text-transform: uppercase;
-  font-size: 9px;
-  letter-spacing: 1px;
-  color: #087ea4;
-}
-.gp-page .gp-map-destination-card > strong {
-  grid-column: 1;
-  font-size: 14px;
-  color: #102a3a;
-  overflow-wrap: anywhere;
-}
-.gp-page .gp-map-destination-card > small {
-  grid-column: 1;
-  color: #5c7686;
-  font-size: 10px;
-  line-height: 1.5;
-}
-.gp-page .gp-map-destination-card > button {
-  grid-column: 2;
-  grid-row: 1 / 4;
-  align-self: center;
-  font-size: 10px;
-  color: #087ea4;
-  background: #eff8fc;
-  padding: 10px;
-  border-radius: 9px;
-}
 .gp-page .gp-map-background-status {
   position: absolute;
   z-index: 25;
@@ -6328,3 +6252,45 @@
 .gp-page .leaflet-gl-layer .maplibregl-canvas {
   outline: none;
 }
+
+.gp-page .gp-current-group-name { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; }
+.gp-page .gp-library-sections { display: flex; gap: 8px; margin: 18px 0; flex-wrap: wrap; }
+.gp-page .gp-library-sections button { display: inline-flex; align-items: center; gap: 7px; padding: 10px 14px; border: 1px solid #dcecf4; border-radius: 10px; background: white; color: #5c7686; }
+.gp-page .gp-library-sections button[aria-current] { color: white; background: #087ea4; border-color: #087ea4; }
+.gp-page .gp-library-description { white-space: pre-wrap; line-height: 1.7; }
+.gp-page .gp-library-detail .gp-modal-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.gp-page .gp-map-spot-body p { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.gp-page .gp-library-facts { display: grid; grid-template-columns: minmax(100px, 1fr) minmax(0, 2fr); gap: 8px 16px; line-height: 1.6; }
+.gp-page .gp-library-facts dt { font-weight: 600; color: #5c7686; }
+.gp-page .gp-library-facts dd { margin: 0; overflow-wrap: anywhere; }
+.gp-page .gp-map-location-status { position: absolute; z-index: 25; top: 76px; left: 18px; right: 18px; margin: 0; padding: 8px 12px; border-radius: 9px; background: #fff8e8ed; color: #73572d; font-size: 11px; }
+.gp-page .gp-map-coordinate-note { padding: 0 16px; font-size: 11px; color: #5c7686; }
+.gp-page .gp-message-menu { position: relative; display: inline-block; margin-left: 8px; }
+.gp-page .gp-chat-bubble { min-width: 135px; max-width: 90%; }
+.gp-page .gp-chat-message-meta { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 5px; }
+.gp-page .gp-chat-message-meta .gp-chat-time { margin: 0; font-size: 10px; }
+.gp-page .gp-chat-mine .gp-chat-text { color: #fff; }
+.gp-page .gp-chat-mine .gp-chat-time { color: #fff; font-size: 11px; font-weight: 500; }
+.gp-page .gp-chat-mine .gp-chat-sending { color: #fff; }
+.gp-page .gp-chat-mine .gp-chat-link { color: #fff; text-decoration: underline; }
+.gp-page .gp-chat-bubble { padding: 12px 15px; border-radius: 16px; }
+.gp-page .gp-chat-text { font-size: 14px; line-height: 1.6; overflow-wrap: anywhere; }
+.gp-page .gp-stop-title { gap: 0; }
+.gp-page .gp-stop-card > p { line-height: 1.65; }
+.gp-page .gp-comms-drawer { width: min(430px, calc(100vw - 24px)); }
+.gp-page .gp-group-card { position: relative; }
+.gp-page .gp-group-open { position: static; }
+.gp-page .gp-group-open::after { content: ''; position: absolute; inset: 0; z-index: 1; cursor: pointer; border-radius: 22px; }
+.gp-page .gp-group-open:focus-visible::after { outline: 3px solid #087ea4; outline-offset: 3px; }
+.gp-page .gp-group-card .gp-pin-button { z-index: 3; }
+.gp-page .gp-group-card-menu { position: absolute; right: 18px; top: 160px; z-index: 3; }
+.gp-page .gp-group-card-menu summary { list-style: none; display: grid; place-items: center; padding: 7px; border-radius: 9px; background: #eff8fc; color: #087ea4; cursor: pointer; }
+.gp-page .gp-group-card-menu summary::-webkit-details-marker { display: none; }
+.gp-page .gp-group-card-menu > div { position: absolute; right: 0; min-width: 150px; padding: 6px; background: white; border: 1px solid #dcecf4; border-radius: 10px; box-shadow: 0 8px 24px #102a3a24; }
+.gp-page .gp-group-card-menu button { display: flex; gap: 8px; align-items: center; white-space: nowrap; padding: 10px; font-size: 12px; }
+.gp-page .gp-message-menu > button { padding: 2px 5px; vertical-align: middle; }
+.gp-page .gp-message-menu [role="menu"] { position: absolute; right: 0; bottom: 100%; min-width: 130px; padding: 5px; background: white; border: 1px solid #dcecf4; border-radius: 10px; box-shadow: 0 8px 24px #102a3a24; z-index: 50; }
+.gp-page .gp-message-menu [role="menuitem"] { display: flex; align-items: center; gap: 8px; width: 100%; padding: 10px; border-radius: 7px; text-align: left; color: #102a3a; font-size: 12px; }
+.gp-page .gp-message-menu [role="menuitem"]:hover, .gp-page .gp-message-menu [role="menuitem"]:focus { background: #eff8fc; }
+.gp-page .gp-message-menu [role="menu"].gp-menu-below { bottom: auto; top: 100%; }
+@media (max-width: 760px) { .gp-page .gp-current-group-name { max-width: 145px; } }

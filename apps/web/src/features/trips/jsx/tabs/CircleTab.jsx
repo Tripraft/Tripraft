@@ -1,3 +1,4 @@
+import CurrencySelect from '../../../../components/common/jsx/CurrencySelect';
 ﻿import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -175,6 +176,8 @@ export default function CircleTab({ groupId, group, showToast, onInvite, onLeave
           <span className="gp-eyebrow">YOUR PEOPLE. YOUR PLANS.</span>
           <h1>The Circle</h1>
           <p>Meet your travel crew and choose how everyone collaborates.</p>
+          <p>{members.length} group members · Owner and admins manage access roles; the owner can remove members.</p>
+          {manage && <p className="gp-form-hint">Assigning a Treasurer replaces the current Treasurer and transfers ownership of linked expenses. Clearing the duty returns treasury ownership to the trip owner.</p>}
         </div>
         {contribute && (
           <button className="gp-btn-create" onClick={onInvite}>
@@ -229,7 +232,7 @@ export default function CircleTab({ groupId, group, showToast, onInvite, onLeave
                     >
                       <option value="">Not assigned</option>
                       {Object.entries(CREW_ROLES).map(([value, info]) => (
-                        <option key={value} value={value}>
+                        <option key={value} value={value} disabled={value === 'treasurer' && member.role === 'viewer'}>
                           {info.label}
                         </option>
                       ))}
@@ -378,27 +381,8 @@ export default function CircleTab({ groupId, group, showToast, onInvite, onLeave
                 </label>
                 <label className="gp-field">
                   Budget currency
-                  <select
-                    className="gp-modal-input"
-                    value={form.budget_currency}
-                    onChange={(e) => setForm({ ...form, budget_currency: e.target.value })}
-                  >
-                    {[
-                      ...new Set([
-                        form.budget_currency,
-                        'USD',
-                        'EUR',
-                        'JPY',
-                        'GBP',
-                        'INR',
-                        'CHF',
-                        'CAD',
-                        'AUD',
-                      ]),
-                    ].map((c) => (
-                      <option key={c}>{c}</option>
-                    ))}
-                  </select>
+                  <CurrencySelect className="gp-modal-input" value={form.budget_currency}
+                    onChange={e => setForm({...form, budget_currency: e.target.value})} />
                 </label>
               </div>
             </fieldset>

@@ -8,6 +8,7 @@ Uses shared users table with expense_engine
 """
 
 import logging
+from app.core.exceptions import AppError
 import secrets
 import string
 from datetime import datetime, timezone
@@ -906,22 +907,10 @@ class GroupService:
                 member_name = user.display_name if user else "Unknown User"
                 member_email = user.email if user else "unknown@email.com"
                 
-                # Remove from expense group if linked
-                if group.expense_group_id:
-                    try:
-                        from expense_engine.services.group_service import \
-                            group_service as group_service
-                        success, result = group_service.remove_member(
-                            group_id=group.expense_group_id,
-                            member_email=member_email,
-                            requester_id=requester_id
-                        )
-                        if not success:
-                            logger.warning(f"Failed to remove member from expense group: {result}")
-                    except Exception as e:
-                        logger.error(f"Error removing member from expense group: {str(e)}")
-                
-                # Remove from travel group
+                from app.trips.services.treasury_service import sync_treasury
+                member.is_active = False
+                member.crew_role = None
+                sync_treasury(session, group, member_id)
                 session.delete(member)
                 session.commit()
                 
@@ -937,6 +926,8 @@ class GroupService:
                     'reinvite_message': f'To add {member_name} back to the group, send them a new invitation'
                 }
                 
+        except AppError as exc:
+            return False, {'error': exc.message, 'status_code': exc.status_code}
         except Exception as e:
             logger.error(f"Remove member error: {str(e)}")
             return False, {'error': 'Failed to remove member'}
@@ -950,6 +941,12 @@ class GroupService:
 
         try:
             with get_db_session() as session:
+                from app.trips.services.treasury_service import lock_trip
+                trip = lock_trip(session, group_id)
+                requester = session.query(TripMember).filter_by(group_id=group_id, user_id=requester_id, is_active=True).first()
+                if not trip or not requester or requester.role not in ('creator', 'admin'):
+                    return False, {'error': 'Owner or admin access required', 'status_code': 403}
+
                 member = session.query(TripMember).filter(
                     TripMember.group_id == group_id,
                     TripMember.user_id == member_id,
@@ -962,12 +959,19 @@ class GroupService:
                 if member.role == 'creator':
                     return False, {'error': 'Cannot change the creator role'}
 
+                from app.trips.services.treasury_service import sync_treasury
+                if new_role == 'viewer' and member.crew_role == 'treasurer':
+                    member.crew_role = None
                 member.role = new_role
+                trip = session.get(TravelGroup, group_id)
+                sync_treasury(session, trip)
                 session.commit()
 
                 logger.info(f"Member {member_id} role updated to {new_role} in group {group_id} by {requester_id}")
                 return True, {'member': member.to_dict()}
 
+        except AppError as exc:
+            return False, {'error': exc.message, 'status_code': exc.status_code}
         except Exception as e:
             logger.error(f"Update member role error: {str(e)}")
             return False, {'error': 'Failed to update member role'}
@@ -979,7 +983,8 @@ class GroupService:
             return False, {'error': 'Choose Treasurer, Navigator, Culture Scout, or no responsibility', 'status_code': 400}
         try:
             with get_db_session() as session:
-                group = session.get(TravelGroup, group_id)
+                from app.trips.services.treasury_service import lock_trip
+                group = lock_trip(session, group_id)
                 requester = session.query(TripMember).filter_by(
                     group_id=group_id, user_id=requester_id, is_active=True).first()
                 if not group or not group.is_active:
@@ -990,6 +995,13 @@ class GroupService:
                     group_id=group_id, user_id=member_id, is_active=True).first()
                 if not member:
                     return False, {'error': 'Active member not found in this group', 'status_code': 404}
+                if crew_role == 'treasurer' and member.role == 'viewer':
+                    return False, {'error': 'A Viewer cannot own the shared treasury. Change their access role first.', 'status_code': 400}
+                from app.trips.services.treasury_service import sync_treasury
+                if crew_role == 'treasurer':
+                    for other in session.query(TripMember).filter_by(group_id=group.id, crew_role='treasurer', is_active=True):
+                        if other.user_id != member.user_id:
+                            other.crew_role = None
                 if member.crew_role != crew_role:
                     previous = member.crew_role
                     member.crew_role = crew_role
@@ -999,8 +1011,11 @@ class GroupService:
                         details={'name': member.user.display_name or member.user.email,
                                  'message': f"Trip responsibility changed to {(crew_role or 'unassigned').replace('_', ' ')}",
                                  'previous_crew_role': previous, 'crew_role': crew_role}))
-                    session.commit()
+                sync_treasury(session, group)
+                session.commit()
                 return True, {'member': member.to_dict()}
+        except AppError as exc:
+            return False, {'error': exc.message, 'status_code': exc.status_code}
         except Exception:
             logger.exception('Could not update trip responsibility')
             return False, {'error': 'Could not update trip responsibility', 'status_code': 500}
@@ -1104,6 +1119,10 @@ class GroupService:
                 user = session.get(User, user_id)
                 display_name = user.display_name if user else 'Unknown'
 
+                from app.trips.services.treasury_service import sync_treasury
+                member.is_active = False
+                member.crew_role = None
+                sync_treasury(session, group, user_id)
                 session.delete(member)
 
                 # Log activity
@@ -1119,6 +1138,8 @@ class GroupService:
                 logger.info("User %s left group %s", user_id, group_id)
                 return True, {'message': 'You have left the group'}
 
+        except AppError as exc:
+            return False, {'error': exc.message, 'status_code': exc.status_code}
         except Exception as e:
             logger.error("Leave group error: %s", e)
             return False, {'error': 'Failed to leave group'}

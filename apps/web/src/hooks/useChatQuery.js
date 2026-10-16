@@ -7,7 +7,7 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import chatApi from '../services/chatApi';
 import { useAuth } from '../context/AuthContext';
-import { mergeMessage, removeMessage } from '../lib/chatCache';
+import { mergeMessage, removeMessage, updateMessage } from '../lib/chatCache';
 
 export const chatKeys = {
   all:        ['chat'],
@@ -86,8 +86,20 @@ export function useDeleteMessage(groupId) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (messageId) => chatApi.deleteMessage(messageId),
-    onSuccess: () => {
+    onSuccess: (_response, messageId) => {
+      queryClient.setQueryData(chatKeys.messages(groupId), old => updateMessage(old, {id: messageId, is_deleted: true, content: ''}));
       queryClient.invalidateQueries({ queryKey: chatKeys.messages(groupId) });
+    },
+  });
+}
+
+export function useEditMessage(groupId) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({messageId, content}) => chatApi.editMessage(messageId, content),
+    onSuccess: response => {
+      queryClient.setQueryData(chatKeys.messages(groupId), old => updateMessage(old, response?.data ?? response));
+      queryClient.invalidateQueries({queryKey: chatKeys.messages(groupId)});
     },
   });
 }

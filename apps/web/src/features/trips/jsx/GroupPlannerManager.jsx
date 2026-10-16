@@ -9,14 +9,13 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
+import useChatSocket from '../../../hooks/useChatSocket';
 import {
   useGroups,
   useGroupDetail,
   useGroupPlaces,
   useGroupMembers,
   useGroupActivities,
-  useDestinationPlaces,
-  useDestinationEvents,
   useCreateGroup,
   useDestinationViewport,
   gpKeys,
@@ -54,6 +53,7 @@ export default function GroupPlannerManager() {
 
   // -- Orchestrator state --
   const [selectedGroupId, setSelectedGroupId] = useState(routeGroupId || null);
+  const realtime = useChatSocket(selectedGroupId, currentUser?.uid);
   const [activeTab, setActiveTab] = useState('itinerary');
   const [mapDay, setMapDay] = useState('all');
   const [chatOpen, setChatOpen] = useState(false);
@@ -61,7 +61,6 @@ export default function GroupPlannerManager() {
   const [searchTerm, setSearchTerm] = useState('');
   const [addingStop, setAddingStop] = useState(false);
   const [selectedPlaceId, setSelectedPlaceId] = useState(null);
-  const [chatDraft, setChatDraft] = useState(null);
   const [tripMode, setTripMode] = useState('planning');
   const [clockNow, setClockNow] = useState(() => new Date());
   useEffect(() => {
@@ -103,13 +102,9 @@ export default function GroupPlannerManager() {
   const destination = group?.destination || '';
   const {
     data: viewportRaw,
-    isLoading: viewportLoading,
     error: viewportError,
   } = useDestinationViewport(group);
   const destinationViewport = unwrap(viewportRaw);
-
-  const { data: destPlacesRaw } = useDestinationPlaces(destination);
-  const { data: destEventsRaw } = useDestinationEvents(destination);
 
   const createGroupMut = useCreateGroup();
 
@@ -137,73 +132,6 @@ export default function GroupPlannerManager() {
     () => members.filter((m) => m.is_active !== false && m.type !== 'ai'),
     [members],
   );
-
-  const destinationLibrary = useMemo(() => {
-    const items = [];
-    const searchData = unwrap(destPlacesRaw);
-    const searchItems =
-      searchData?.places ||
-      searchData?.data ||
-      searchData?.results ||
-      (Array.isArray(searchData) ? searchData : []);
-    if (Array.isArray(searchItems)) {
-      searchItems.forEach((p) => {
-        const tags = (p.tags || []).join(' ').toLowerCase();
-        const nameLC = (p.name || '').toLowerCase();
-        let label = 'PLACE';
-        if (
-          tags.includes('restaurant') ||
-          tags.includes('food') ||
-          tags.includes('dining') ||
-          nameLC.includes('restaurant')
-        )
-          label = 'RES';
-        else if (
-          tags.includes('event') ||
-          tags.includes('entertainment') ||
-          tags.includes('nightlife')
-        )
-          label = 'EVENT';
-        items.push({
-          _source: 'search',
-          id: 'search-' + p.id,
-          sourceId: p.id,
-          name: p.name,
-          description: p.ai_summary || '',
-          address:
-            p.address ||
-            (p.city_name ? p.city_name + (p.state_name ? ', ' + p.state_name : '') : ''),
-          latitude: p.latitude,
-          longitude: p.longitude,
-          photo_url: p.photo_url || (p.photos && p.photos[0]?.url) || '',
-          rating: p.rating_tourist_priority,
-          category: label,
-          website: p.official_website || '',
-        });
-      });
-    }
-    const eventsData = unwrap(destEventsRaw);
-    const events = eventsData?.events || (Array.isArray(eventsData) ? eventsData : []);
-    if (Array.isArray(events)) {
-      events.forEach((e) => {
-        items.push({
-          _source: 'event',
-          id: 'event-' + e.id,
-          sourceId: e.id,
-          name: e.name,
-          description: e.venue ? e.venue + ' \u2014 ' + (e.date || '') : e.date || '',
-          address: e.address || e.venue || '',
-          latitude: e.latitude,
-          longitude: e.longitude,
-          photo_url: e.image_url || '',
-          rating: null,
-          category: 'EVENT',
-          website: e.url || '',
-        });
-      });
-    }
-    return items;
-  }, [destPlacesRaw, destEventsRaw]);
 
   const itineraryPlaces = useMemo(
     () => places.filter((p) => p.visit_date && !p.is_deleted),
@@ -233,7 +161,6 @@ export default function GroupPlannerManager() {
       setSearchOpen(false);
       setAddingStop(false);
       setSelectedPlaceId(null);
-      setChatDraft(null);
       setTripMode('planning');
       setShowInviteModal(false);
       setInviteEmail('');
@@ -283,7 +210,6 @@ export default function GroupPlannerManager() {
       setSearchOpen(false);
       setAddingStop(false);
       setSelectedPlaceId(null);
-      setChatDraft(null);
       setTripMode('planning');
       setShowInviteModal(false);
       setInviteEmail('');
@@ -411,7 +337,6 @@ export default function GroupPlannerManager() {
       group={selectedGroupId ? group : null}
       activeTab={activeTab}
       onTabChange={handleTabChange}
-      onSelectGroup={handleSelectGroup}
       onAllGroups={handleBackToDashboard}
       onCreateGroup={() => setShowCreateModal(true)}
       onSearch={() => {
@@ -444,6 +369,13 @@ export default function GroupPlannerManager() {
     return (
       <>
         <GroupSelector
+          currentUserId={currentUser?.uid}
+          onGroupAction={async (id, type) => {
+            if (type === 'delete') await groupPlannerApi.deleteGroup(id);
+            else await groupPlannerApi.leaveGroup(id);
+            await queryClient.invalidateQueries({queryKey: gpKeys.groups()});
+          }}
+          showToast={showToast}
           groups={groups}
           groupsLoading={groupsLoading}
           error={groupsError}
@@ -500,7 +432,7 @@ export default function GroupPlannerManager() {
             group={group}
             showToast={showToast}
             activeDay={mapDay}
-            onDayChange={setMapDay}
+            onDayChange={(day) => { setSelectedPlaceId(null); setMapDay(day); }}
             onAddStop={() => setAddingStop(true)}
             canEdit={canEdit}
             selectedPlaceId={selectedPlaceId}
@@ -517,7 +449,11 @@ export default function GroupPlannerManager() {
             group={group}
             showToast={showToast}
             canEdit={canEdit}
-            onOpenItinerary={() => handleTabChange('itinerary')}
+            onPlaceAdded={(place) => {
+              setSelectedPlaceId(place.id);
+              setMapDay(place.visit_date ? String(tripDayNumber(place.visit_date, group.start_date, uniqueDates)) : 'all');
+              handleTabChange('itinerary');
+            }}
           />
         );
       case 'logistics':
@@ -623,11 +559,9 @@ export default function GroupPlannerManager() {
             </div>
             <MapPanel
               destinationViewport={destinationViewport}
-              viewportLoading={viewportLoading}
               viewportError={viewportError}
               group={group}
               places={places}
-              filteredLibrary={destinationLibrary}
               activeTab={activeTab}
               mapDay={mapDay}
               uniqueDates={uniqueDates}
@@ -638,14 +572,6 @@ export default function GroupPlannerManager() {
               }}
               selectedPlaceId={selectedPlaceId}
               onSelectPlace={setSelectedPlaceId}
-              onAskPlace={(place) => {
-                setChatDraft({
-                  content: `What does everyone think about ${place.name}?`,
-                  nonce: Date.now(),
-                });
-                setChatOpen(true);
-              }}
-              onOpenBookings={() => handleTabChange('logistics')}
             />
           </section>
         </div>
@@ -670,11 +596,12 @@ export default function GroupPlannerManager() {
           </button>
         </div>
         <ChatPanel
+          realtime={realtime}
+          canManage={canManage}
           groupId={selectedGroupId}
           destination={destination}
           showToast={showToast}
           isOpen={chatOpen}
-          draft={chatDraft}
           canEdit={canEdit}
           group={group}
           activeDay={mapDay}
@@ -761,6 +688,7 @@ export default function GroupPlannerManager() {
       {/* Modals */}
       {addingStop && (
         <AddStopModal
+          group={group}
           groupId={selectedGroupId}
           initialDate={
             uniqueDates.find(

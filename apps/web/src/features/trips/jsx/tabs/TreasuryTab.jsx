@@ -15,6 +15,7 @@ import { suggestedSettlements } from '../../utils/plannerMoney';
 import { canRecordSettlement } from '../../../expenses/utils/groupPermissions';
 import SettlementModal from '../../../expenses/jsx/SettlementModal';
 import PlannerExpenseModal from '../shared/PlannerExpenseModal';
+import CurrencyConversion from '../../../../components/common/jsx/CurrencyConversion';
 export default function TreasuryTab({
   groupId,
   group,
@@ -55,12 +56,8 @@ export default function TreasuryTab({
   const [modal, setModal] = useState(null),
     [settlement, setSettlement] = useState(null),
     [linking, setLinking] = useState(false),
-    [showAll, setShowAll] = useState(false),
-    [conversion, setConversion] = useState(false),
-    [displayCurrency, setDisplayCurrency] = useState(''),
-    [rate, setRate] = useState(1);
-  const displayRate = displayCurrency && displayCurrency !== currency ? Number(rate) || 1 : 1;
-  const display = (value) => formatMoney(value * displayRate, displayCurrency || currency);
+    [showAll, setShowAll] = useState(false);
+  const display = (value) => formatMoney(value, currency);
   const name = (id) => {
     const m = members.find((m) => String(m.user_id || m.id) === String(id));
     return m?.display_name || m?.user?.display_name || m?.email || 'Member';
@@ -102,6 +99,7 @@ export default function TreasuryTab({
   if (error || summary?.error) return <p role="alert">{error?.message || summary.error}</p>;
   return (
     <div className="gp-view">
+      {ledger && <p className="gp-form-hint">Shared treasury owner: {name(ledger.created_by || ledger.owner_id)}. Trip access roles are managed in the Circle.</p>}
       <div className="gp-tab-heading">
         <div>
           <span className="gp-eyebrow">LESS MATH. MORE MEMORIES.</span>
@@ -155,22 +153,19 @@ export default function TreasuryTab({
           {percent > 100 && (
             <span className="gp-over-budget">{display(total - budget)} over budget</span>
           )}
-          {displayCurrency && displayCurrency !== currency && (
-            <p className="gp-form-hint">
-              Display estimate at your entered rate: 1 {currency} = {rate} {displayCurrency}
-            </p>
-          )}
         </div>
-        <button className="gp-hub-button" onClick={() => setConversion(true)}>
-          <ArrowLeftRight size={14} />
-          {displayCurrency || currency}
-        </button>
       </div>
+      <CurrencyConversion key={groupId} base={currency} amounts={[
+        {label: 'Total Trip Spend', amount: total},
+        ...(budget ? [{label: 'Trip budget', amount: budget}] : []),
+        {label: 'Per person', amount: total / Math.max(1, members.length || summary?.member_count || group?.member_count || 1)},
+      ]} />
       {!ledgerId ? (
         <div className="gp-feature-card gp-treasury-connect">
           <Wallet size={33} />
           <h2>Bring your shared costs into this trip</h2>
           <p>Connect a treasury for this group to log expenses and view balances.</p>
+          <p className="gp-form-hint">The assigned Treasurer owns linked expenses. The trip owner takes this responsibility when no Treasurer is assigned.</p>
           {canManage ? (
             <button className="gp-modal-btn-primary" disabled={linking} onClick={link}>
               <Link2 size={14} />
@@ -311,67 +306,6 @@ export default function TreasuryTab({
           showToast?.('Settlement recorded');
         }}
       />
-      {conversion && (
-        <div className="gp-modal-overlay" onClick={() => setConversion(false)}>
-          <form
-            className="gp-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Display Currency"
-            onClick={(e) => e.stopPropagation()}
-            onSubmit={(e) => {
-              e.preventDefault();
-              setConversion(false);
-            }}
-          >
-            <h2 className="gp-modal-title">Display Currency</h2>
-            <p className="gp-form-hint">
-              Amounts are stored in {currency}. Enter a rate to preview another currency.
-            </p>
-            <label className="gp-field">
-              Display currency
-              <select
-                className="gp-modal-input"
-                value={displayCurrency || currency}
-                onChange={(e) => {
-                  setDisplayCurrency(e.target.value);
-                  if (e.target.value === currency) setRate(1);
-                }}
-              >
-                {[...new Set([currency, 'USD', 'EUR', 'JPY', 'GBP', 'INR', 'CHF'])].map((c) => (
-                  <option key={c}>{c}</option>
-                ))}
-              </select>
-            </label>
-            <label className="gp-field">
-              Units per 1 {currency}
-              <input
-                className="gp-modal-input"
-                type="number"
-                min="0.000001"
-                step="any"
-                required
-                value={rate}
-                onChange={(e) => setRate(e.target.value)}
-              />
-            </label>
-            <div className="gp-modal-actions">
-              <button className="gp-modal-btn-primary">Apply Display Rate</button>
-              <button
-                className="gp-modal-btn-secondary"
-                type="button"
-                onClick={() => {
-                  setDisplayCurrency('');
-                  setRate(1);
-                  setConversion(false);
-                }}
-              >
-                Use {currency}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
     </div>
   );
 }

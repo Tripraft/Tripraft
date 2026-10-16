@@ -15,7 +15,7 @@ night mode. The required attribution is included. The former
 The selected destination comes from `data/catalog/tripraft_places.db`.
 The planner reads `/api/v1/group-planner/catalog/viewport` to obtain the extent
 of known city/place coordinates within that country, state, or city. The All
-view frames this extent, and Focus destination restores it after browsing.
+view frames this extent, and All restores it after browsing.
 A day filter or a selected stop focuses the itinerary instead.
 
 These extents come from catalog points, not official border polygons. A sparse
@@ -30,7 +30,11 @@ an external geocoder, invent coordinates, or write anything back to the catalog.
 Adding verified latitude/longitude to catalog cities or places will allow those
 destinations to be framed on a later fetch. OpenFreeMap provides the background;
 it does not supply the application's destination coordinates or road directions.
-The Library continues to display cards only.
+The Library separates Places, Restaurants, and Festivals. Cards open available
+catalog details and let members add a stop to a date or keep it unscheduled.
+Places with saved coordinates receive map markers; missing coordinates are
+shown honestly. Catalog coordinates are copied when a stop is added, rather
+than automatically rewriting existing plans after a catalog import.
 
 ## Browser requirements
 
@@ -43,5 +47,7 @@ The map styles are configured in
 `apps/web/src/features/trips/constants/mapConfig.js`. Changes to the public
 service or its style URLs may require an application update.
 
-For the checks and saved checkpoint, see the
-[October 16 report](reports/group-planner-openfreemap-2026-10-16.md).
+For the provider setup checks, see the
+[OpenFreeMap report](reports/group-planner-openfreemap-2026-10-16.md), and for the
+latest Library, message menu, and live-update changes, see the
+[workspace report](reports/group-planner-library-live-audit-2026-10-16.md).
