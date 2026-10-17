@@ -95,6 +95,7 @@ function moneyGroup(trip) {
     id: trip.group.expense_group_id,
     name: trip.group.name,
     currency: trip.ledger_currency || trip.group.budget_currency,
+    display_currency: trip.group.budget_currency,
     created_by: trip.treasury_owner_id || trip.group.created_by,
     owner_id: trip.treasury_owner_id || trip.group.created_by,
     my_role: getDemoViewer().id === (trip.treasury_owner_id || trip.group.created_by) ? 'owner' : member(trip)?.role === 'creator' ? 'admin' : member(trip)?.role,
@@ -332,6 +333,7 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
         return envelope({});
       }
       permit(trip, ['creator', 'admin']);
+      if (trip.group.expense_group_id) trip.ledger_currency ||= trip.group.budget_currency || 'USD';
       Object.assign(
         trip.group,
         Object.fromEntries(Object.entries(body).filter(([, v]) => v !== undefined && v !== null)),
@@ -344,7 +346,8 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
       if (method === 'GET') return envelope(trip.members);
       const target = trip.members.find((m) => m.user_id === id);
       if (!target) fail('Member not found', 404);
-      permit(trip, method === 'DELETE' ? ['creator'] : ['creator', 'admin']);
+      permit(trip, ['creator', 'admin']);
+      if (method === 'DELETE' && target.user_id === getDemoViewer().id) fail('Use Leave group to leave yourself', 400);
       if (method === 'PATCH' && route[4] === 'crew-role') {
         const crewRole = body.crew_role || null;
         if (![null, 'treasurer', 'navigator', 'culture_scout'].includes(crewRole))

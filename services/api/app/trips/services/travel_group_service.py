@@ -289,10 +289,11 @@ class GroupService:
                     TripMember.is_active == True
                 ).first()
                 
-                if not member:
-                    return False, {'error': 'Not a member of this group'}
+                if not member or member.role not in ('creator', 'admin'):
+                    return False, {'error': 'Owner or admin access required', 'status': 403}
                 
-                group = session.get(TravelGroup, group_id)
+                from app.trips.services.treasury_service import lock_trip, sync_trip_settings
+                group = lock_trip(session, group_id)
                 if not group or not group.is_active:
                     return False, {'error': 'Group not found'}
                 
@@ -339,6 +340,7 @@ class GroupService:
                 
                 group.updated_at = datetime.now(timezone.utc)
                 
+                sync_trip_settings(session, group)
                 session.commit()
                 session.refresh(group)
                 
@@ -346,6 +348,8 @@ class GroupService:
                 
                 return True, {'group': group.to_dict(include_members=True)}
                 
+        except AppError as exc:
+            return False, {'error': exc.message, 'status': exc.status_code}
         except Exception as e:
             logger.error(f"Update group error: {str(e)}")
             return False, {'error': 'Failed to update group'}
@@ -475,10 +479,11 @@ class GroupService:
                     TripMember.is_active == True
                 ).first()
                 
-                if not member:
-                    return False, {'error': 'Not a member of this group'}
+                if not member or member.role not in ('creator', 'admin'):
+                    return False, {'error': 'Owner or admin access required', 'status': 403}
                 
-                group = session.get(TravelGroup, group_id)
+                from app.trips.services.treasury_service import lock_trip, sync_trip_settings
+                group = lock_trip(session, group_id)
                 if not group or not group.is_active:
                     return False, {'error': 'Group not found'}
                 
@@ -487,12 +492,15 @@ class GroupService:
                     group.budget_currency = budget_currency
                 group.updated_at = datetime.now(timezone.utc)
                 
+                sync_trip_settings(session, group)
                 session.commit()
                 
                 logger.info(f"Budget updated for group {group_id}")
                 
                 return True, {'estimated_budget': estimated_budget}
                 
+        except AppError as exc:
+            return False, {'error': exc.message, 'status': exc.status_code}
         except Exception as e:
             logger.error(f"Update budget error: {str(e)}")
             return False, {'error': 'Failed to update budget'}
@@ -875,23 +883,27 @@ class GroupService:
     @staticmethod
     def remove_member(group_id: str, member_id: str, requester_id: str) -> Tuple[bool, Dict[str, Any]]:
         """
-        Remove a member from the group (only owner can remove others)
+        Remove another member as an active owner/admin, preserving treasury history.
         Also removes them from linked expense group
         """
         try:
             with get_db_session() as session:
                 # Get the group
-                group = session.query(TravelGroup).filter(TravelGroup.id == group_id).first()
+                from app.trips.services.treasury_service import lock_trip
+                group = lock_trip(session, group_id)
                 if not group:
                     return False, {'error': 'Group not found'}
                 
-                # Check permissions - only owner can remove others (except themselves)
-                if str(group.created_by) != str(requester_id):
-                    return False, {'error': 'Only the group owner can remove members'}
+                requester = session.query(TripMember).filter_by(
+                    group_id=group_id, user_id=requester_id, is_active=True).first()
+                if not requester or requester.role not in ('creator', 'admin'):
+                    return False, {'error': 'Owner or admin access required', 'status_code': 403}
+                if str(member_id) == str(requester_id):
+                    return False, {'error': 'Use Leave group to leave yourself', 'status_code': 400}
                 
                 # Prevent owner from removing themselves
                 if str(member_id) == str(group.created_by):
-                    return False, {'error': 'Group owner cannot remove themselves from the group'}
+                    return False, {'error': 'The group owner cannot be removed', 'status_code': 403}
                 
                 # Get the member to remove
                 member = session.query(TripMember).filter(
@@ -914,7 +926,7 @@ class GroupService:
                 session.delete(member)
                 session.commit()
                 
-                logger.info(f"Member {member_name} ({member_id}) removed from group {group_id} by owner {requester_id}")
+                logger.info(f"Member {member_name} ({member_id}) removed from group {group_id} by manager {requester_id}")
                 
                 return True, {
                     'message': f'{member_name} has been removed from the group and expenses',
@@ -1030,14 +1042,15 @@ class GroupService:
                 # Verify user is member of this group
                 is_member = session.query(TripMember).filter(
                     TripMember.group_id == group_id,
-                    TripMember.user_id == user_id
+                    TripMember.user_id == user_id,
+                    TripMember.is_active.is_(True)
                 ).first()
                 
                 if not is_member:
                     return False, {'error': 'Access denied - not a member of this group'}
                 
                 # Get group details
-                group = session.query(TravelGroup).filter(TravelGroup.id == group_id).first()
+                group = session.query(TravelGroup).filter(TravelGroup.id == group_id, TravelGroup.is_active.is_(True)).first()
                 if not group:
                     return False, {'error': 'Group not found'}
                 
@@ -1050,7 +1063,7 @@ class GroupService:
                 for member, user in members_query.all():
                     is_owner = user.id == group.created_by
                     # can_remove: I'm the owner AND this member is not the owner AND it's not me
-                    can_remove = (user_id == group.created_by) and not is_owner and (user.id != user_id)
+                    can_remove = is_member.role in ('creator', 'admin') and not is_owner and str(user.id) != str(user_id)
                     
                     members.append({
                         'id': user.id,

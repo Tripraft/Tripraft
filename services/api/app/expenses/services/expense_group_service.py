@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from marshmallow import ValidationError as SchemaError
 from sqlalchemy import case, func
-from sqlalchemy.orm import joinedload, selectinload
+from sqlalchemy.orm import joinedload, selectinload, object_session
 
 from app.core.config import Config
 from app.core.db.connection import get_db_session
@@ -41,8 +41,16 @@ def _member_dict(group, member):
     }
 
 
-def group_dict(group, member):
+def group_dict(group, member, trips=None):
     data = group.to_dict()
+    from app.trips.models import TravelGroup
+    session = object_session(group)
+    trip = trips.get(group.id) if trips is not None else (session.query(TravelGroup).filter_by(expense_group_id=group.id, is_active=True).first() if session else None)
+    data['display_currency'] = trip.budget_currency if trip else group.currency
+    if trip:
+        data['trip_group_id'] = str(trip.id)
+        data['trip_start_date'] = trip.start_date.isoformat() if trip.start_date else None
+        data['trip_end_date'] = trip.end_date.isoformat() if trip.end_date else None
     data['members'] = [_member_dict(group, row) for row in group.members if row.is_active]
     data['my_role'] = 'owner' if owner(group, member.user_id) else member.role
     data['permissions'] = permissions(group, member)
@@ -131,8 +139,10 @@ class GroupServiceSQL:
                 GroupMember.user_id == identifier(user_id), GroupMember.is_active.is_(True),
                 Group.is_active.is_(True),
             ).order_by(Group.updated_at.desc(), Group.id.desc()).all()
+            from app.trips.models import TravelGroup
+            trips = {trip.expense_group_id: trip for trip in session.query(TravelGroup).filter(TravelGroup.expense_group_id.in_([group.id for group, _ in rows]), TravelGroup.is_active.is_(True))}
             summaries = group_summaries(session, [group.id for group, _ in rows], user_id)
-            return {'groups': [{**group_dict(group, member), 'summary': summaries[group.id]}
+            return {'groups': [{**group_dict(group, member, trips), 'summary': summaries[group.id]}
                                for group, member in rows]}
 
     @staticmethod

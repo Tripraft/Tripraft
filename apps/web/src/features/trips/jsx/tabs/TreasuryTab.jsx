@@ -15,6 +15,7 @@ import { suggestedSettlements } from '../../utils/plannerMoney';
 import { canRecordSettlement } from '../../../expenses/utils/groupPermissions';
 import SettlementModal from '../../../expenses/jsx/SettlementModal';
 import PlannerExpenseModal from '../shared/PlannerExpenseModal';
+import useExchangeRate from '../../../../hooks/useExchangeRate';
 import CurrencyConversion from '../../../../components/common/jsx/CurrencyConversion';
 export default function TreasuryTab({
   groupId,
@@ -45,19 +46,21 @@ export default function TreasuryTab({
     currency = ledger?.currency || budgetCurrency || 'USD',
     expenses = (ledger?.expenses || summary?.expenses || []).filter((e) => !e.is_deleted),
     members = (ledger?.members || []).filter((m) => m.is_active !== false);
+  const displayCurrency = group?.budget_currency || budgetCurrency || currency;
+  const exchange = useExchangeRate(currency, displayCurrency, 0);
   const total = ledger
-      ? expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0)
-      : Number(summary?.total_spent || 0),
-    budget =
-      currency === (group?.budget_currency || currency)
-        ? Number(group?.estimated_budget || summary?.estimated_budget || 0)
-        : 0,
-    percent = budget ? Math.round((total / budget) * 100) : 0;
+    ? expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0)
+    : Number(summary?.total_spent || 0);
+  const budget = Number(group?.estimated_budget || summary?.estimated_budget || 0);
+  const convertedTotal = exchange.data ? total * exchange.data.rate : null;
+  const percent = budget && convertedTotal !== null ? Math.round(convertedTotal / budget * 100) : 0;
   const [modal, setModal] = useState(null),
     [settlement, setSettlement] = useState(null),
     [linking, setLinking] = useState(false),
     [showAll, setShowAll] = useState(false);
-  const display = (value) => formatMoney(value, currency);
+  const display = value => displayCurrency !== currency && exchange.data
+    ? <span className="currency-paired-money"><span>{formatMoney(value * exchange.data.rate, displayCurrency)}</span><small>{formatMoney(value, currency, {currencyDisplay: 'code'})}</small></span>
+    : formatMoney(value, currency);
   const name = (id) => {
     const m = members.find((m) => String(m.user_id || m.id) === String(id));
     return m?.display_name || m?.user?.display_name || m?.email || 'Member';
@@ -135,7 +138,7 @@ export default function TreasuryTab({
           }}
         >
           <span>
-            <strong>{budget ? percent + '%' : '--'}</strong>
+            <strong>{budget && convertedTotal !== null ? percent + '%' : '--'}</strong>
             <small>{budget ? 'of budget' : 'Set budget'}</small>
           </span>
         </div>
@@ -143,7 +146,7 @@ export default function TreasuryTab({
           <span>Total Trip Spend</span>
           <h2>{display(total)}</h2>
           <p>
-            {budget ? <>of {display(budget)} budget · </> : null}
+            {budget ? <>of {formatMoney(budget, displayCurrency)} budget · </> : null}
             {display(
               total /
                 Math.max(1, members.length || summary?.member_count || group?.member_count || 1),
@@ -151,15 +154,16 @@ export default function TreasuryTab({
             / person
           </p>
           {percent > 100 && (
-            <span className="gp-over-budget">{display(total - budget)} over budget</span>
+            <span className="gp-over-budget">{formatMoney(convertedTotal - budget, displayCurrency)} over budget</span>
           )}
         </div>
       </div>
-      <CurrencyConversion key={groupId} base={currency} amounts={[
+      <CurrencyConversion key={groupId} base={currency} preferredCurrency={displayCurrency} amounts={[
         {label: 'Total Trip Spend', amount: total},
-        ...(budget ? [{label: 'Trip budget', amount: budget}] : []),
+        ...(budget ? [{label: 'Trip budget', amount: budget, currency: displayCurrency}] : []),
         {label: 'Per person', amount: total / Math.max(1, members.length || summary?.member_count || group?.member_count || 1)},
       ]} />
+      {exchange.error && <p role="status" className="gp-form-hint">Amounts shown in {currency}; the {displayCurrency} display rate is unavailable.</p>}
       {!ledgerId ? (
         <div className="gp-feature-card gp-treasury-connect">
           <Wallet size={33} />

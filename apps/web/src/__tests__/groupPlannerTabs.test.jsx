@@ -113,6 +113,9 @@ it.each(['owner', 'admin', 'member', 'viewer'])(
       ).not.toBeInTheDocument();
     }
     expect(screen.queryByRole('combobox', { name: 'Role for Alex' })).not.toBeInTheDocument();
+    for (const name of ['Alex', 'Sarah', 'Marcus', 'Elena']) expect(screen.getByRole('heading', {name})).toBeInTheDocument();
+    expect(screen.queryByRole('button', {name:'Remove member Alex'})).not.toBeInTheDocument();
+    expect(!!screen.queryByRole('button', {name:'Remove member Marcus'})).toBe(['owner','admin'].includes(role));
     if (role === 'owner')
       expect(screen.getByRole('button', { name: 'Delete Group' })).toBeInTheDocument();
     else expect(screen.queryByRole('button', { name: 'Delete Group' })).not.toBeInTheDocument();

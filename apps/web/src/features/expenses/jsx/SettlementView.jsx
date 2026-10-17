@@ -1,13 +1,14 @@
+import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 // Purpose: Responsive settlement summary and suggested payments with permission-aware recording.
 import React, { useState } from 'react';
 import { ArrowRight, CheckCircle2, History, Handshake } from 'lucide-react';
-import { formatMoney } from '../../../utils/money';
 import { canRecordSettlement } from '../utils/groupPermissions';
 import SettlementModal from './SettlementModal';
 import SettlementHistoryModal from './SettlementHistoryModal';
 
 export default function SettlementView({ group, balances = [], members = [], allMembersMap = {}, settlementHistory = [],
   onSettlementSuccess, onSettlementDelete, currentUserId, currency = 'USD' }) {
+  const formatMoney = useMoneyDisplay(currency, group?.display_currency || currency);
   const [selected, setSelected] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
   const name = id => {

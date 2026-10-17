@@ -21,7 +21,7 @@ from datetime import datetime, timezone
 from app.core.json_utils import json_safe
 from app.trips.realtime.socketio_ext import socketio
 from flask import request
-from flask_socketio import disconnect, emit, join_room, leave_room
+from flask_socketio import ConnectionRefusedError, disconnect, emit, join_room, leave_room
 
 logger = logging.getLogger(__name__)
 
@@ -226,15 +226,13 @@ def handle_connect(auth=None):
     payload = _authenticate_socket(auth)
     if not payload:
         logger.warning("WS connect rejected: invalid/missing JWT sid=%s", request.sid)
-        disconnect()
-        return False
+        raise ConnectionRefusedError('Authentication required')
     # Store user identity on the socket session for later use
     from flask import session as flask_session
     ws_user_id = payload.get("user_id") or payload.get("sub")
     if not ws_user_id:
         logger.warning("WS connect rejected: token carries no subject sid=%s", request.sid)
-        disconnect()
-        return False
+        raise ConnectionRefusedError('Authentication required')
     flask_session["ws_user_id"] = str(ws_user_id)
     flask_session["ws_email"] = payload.get("email", "")
     join_room(_user_room(ws_user_id))

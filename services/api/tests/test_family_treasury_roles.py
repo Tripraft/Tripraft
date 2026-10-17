@@ -105,3 +105,35 @@ def test_removing_treasurer_returns_ownership_and_revokes_finance_access(trip):
     assert owner.delete(f'{BASE}/groups/{gid}/members/{fid}').status_code == 200
     assert payload(owner.get('/api/v1/expenses/groups/' + ledger))['group']['my_role'] == 'owner'
     assert friend.get('/api/v1/expenses/groups/' + ledger).status_code == 403
+
+
+def test_admin_removes_other_members_but_owner_and_self_are_protected(trip, make_user):
+    owner, oid, admin, aid, gid = trip
+    other, uid, _ = make_user('crew')
+    with get_db_session() as session:
+        session.add(TripMember(group_id=gid, user_id=uid, role='member', is_active=True))
+        session.commit()
+    assert other.delete(f'{BASE}/groups/{gid}/members/{aid}').status_code == 403
+    assert owner.patch(f'{BASE}/groups/{gid}/members/{aid}/role', json={'role':'admin'}).status_code == 200
+    assert admin.delete(f'{BASE}/groups/{gid}/members/{oid}').status_code == 403
+    assert admin.delete(f'{BASE}/groups/{gid}/members/{aid}').status_code == 400
+    assert admin.delete(f'{BASE}/groups/{gid}/members/{uid}').status_code == 200
+    assert other.get(f'{BASE}/groups/{gid}/members').status_code == 403
+
+
+def test_trip_settings_update_linked_name_dates_and_display_currency_without_relabelling_expenses(trip):
+    owner, oid, _, _, gid = trip
+    ledger = link(owner, gid)
+    assert owner.post('/api/v1/expenses', json={'group_id':ledger,'description':'Dinner','amount':'100','paid_by':oid}).status_code == 201
+    response = owner.put(f'{BASE}/groups/{gid}', json={'name':'Family renamed','description':'Updated trip','budget_currency':'INR','estimated_budget':96000,'start_date':'2026-12-01','end_date':'2026-12-03'})
+    assert response.status_code == 200, response.get_json()
+    finance = payload(owner.get('/api/v1/expenses/groups/' + ledger))['group']
+    assert finance['name'] == 'Family renamed'
+    assert finance['display_currency'] == 'INR'
+    assert finance['currency'] == 'USD'
+    assert finance['trip_start_date'] == '2026-12-01'
+    assert finance['trip_end_date'] == '2026-12-03'
+    from app.expenses.models import Expense
+    with get_db_session() as session:
+        expense = session.query(Expense).filter_by(group_id=ledger).one()
+        assert expense.currency == 'USD' and float(expense.amount) == 100

@@ -1,5 +1,5 @@
 import CurrencySelect from '../../../../components/common/jsx/CurrencySelect';
-﻿import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Users,
@@ -51,7 +51,8 @@ const capabilities = [
   ['Invite friends and send group messages', [1, 1, 1, 0]],
   ['Edit trip settings and budget', [1, 1, 0, 0]],
   ['Change member roles (except owner)', [1, 1, 0, 0]],
-  ['Remove members or delete the group', [1, 0, 0, 0]],
+  ['Remove other members (except owner)', [1, 1, 0, 0]],
+  ['Delete the group', [1, 0, 0, 0]],
 ];
 export default function CircleTab({ groupId, group, showToast, onInvite, onLeave }) {
   const client = useQueryClient(),
@@ -86,7 +87,12 @@ export default function CircleTab({ groupId, group, showToast, onInvite, onLeave
     [busyMember, setBusyMember] = useState(null),
     [confirm, setConfirm] = useState(null),
     [confirmName, setConfirmName] = useState('');
+  const formDirty = useRef(false);
+  useEffect(() => {
+    if (!formDirty.current) setForm({name: group?.name || '', description: group?.description || '', start_date: group?.start_date || '', end_date: group?.end_date || '', estimated_budget: group?.estimated_budget ?? '', budget_currency: group?.budget_currency || 'USD'});
+  }, [group?.name, group?.description, group?.start_date, group?.end_date, group?.estimated_budget, group?.budget_currency]);
   const refresh = () => {
+    client.invalidateQueries({predicate: query => (query.queryKey[0] === 'group-planner' && query.queryKey.includes(groupId)) || ['group','groups','mega-bootstrap','expenses','settlements'].includes(query.queryKey[0])});
     for (const key of [
       gpKeys.members(groupId),
       gpKeys.group(groupId),
@@ -138,6 +144,7 @@ export default function CircleTab({ groupId, group, showToast, onInvite, onLeave
         estimated_budget: Number(form.estimated_budget || 0),
       });
       refresh();
+      formDirty.current = false;
       showToast('Group settings saved');
     } catch (e) {
       setFormError(e.message || 'Could not save settings');
@@ -176,7 +183,7 @@ export default function CircleTab({ groupId, group, showToast, onInvite, onLeave
           <span className="gp-eyebrow">YOUR PEOPLE. YOUR PLANS.</span>
           <h1>The Circle</h1>
           <p>Meet your travel crew and choose how everyone collaborates.</p>
-          <p>{members.length} group members · Owner and admins manage access roles; the owner can remove members.</p>
+          <p>{members.length} group members · Owner and admins manage access roles; owners and admins can remove members.</p>
           {manage && <p className="gp-form-hint">Assigning a Treasurer replaces the current Treasurer and transfers ownership of linked expenses. Clearing the duty returns treasury ownership to the trip owner.</p>}
         </div>
         {contribute && (
@@ -261,7 +268,7 @@ export default function CircleTab({ groupId, group, showToast, onInvite, onLeave
                         : role.label + ' access'}
                     </span>
                   )}
-                  {owner && member.role !== 'creator' && (
+                  {manage && member.role !== 'creator' && String(id) !== String(group?.created_by) && String(id) !== String(currentUser?.uid) && (
                     <button
                       aria-label={'Remove member ' + member.display_name}
                       onClick={() => setConfirm({ type: 'member', member })}
@@ -325,7 +332,7 @@ export default function CircleTab({ groupId, group, showToast, onInvite, onLeave
             </div>
           </div>
           <form onSubmit={save}>
-            <fieldset className="gp-settings-fieldset" disabled={!manage || saving}>
+            <fieldset onChange={() => {formDirty.current = true;}} className="gp-settings-fieldset" disabled={!manage || saving}>
               <label className="gp-field">
                 Group name
                 <input
@@ -381,7 +388,7 @@ export default function CircleTab({ groupId, group, showToast, onInvite, onLeave
                 </label>
                 <label className="gp-field">
                   Budget currency
-                  <CurrencySelect className="gp-modal-input" value={form.budget_currency}
+                  <CurrencySelect aria-label="Budget currency" className="gp-modal-input" value={form.budget_currency}
                     onChange={e => setForm({...form, budget_currency: e.target.value})} />
                 </label>
               </div>

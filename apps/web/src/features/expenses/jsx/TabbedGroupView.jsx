@@ -169,6 +169,7 @@ const TabbedGroupView = ({
               onSettlementDelete={onSettlementDelete}
               currentUserId={currentUserId}
               currency={group?.currency || 'USD'}
+              displayCurrency={group?.display_currency || group?.currency || 'USD'}
             />
           </div>
         )}
@@ -180,6 +181,7 @@ const TabbedGroupView = ({
               expenses={transactions || []}
               members={activeGroupMembers || []}
               currency={group?.currency || 'USD'}
+              displayCurrency={group?.display_currency || group?.currency || 'USD'}
               currentUserId={currentUserId}
             />
           </div>
@@ -255,6 +257,7 @@ const TabbedGroupView = ({
               onRestore={onRestore}
               onFilterChange={onFilterChange}
               currency={group?.currency || 'USD'}
+              displayCurrency={group?.display_currency || group?.currency || 'USD'}
               isInTab={true}
             />
           </div>
@@ -267,6 +270,7 @@ const TabbedGroupView = ({
               expenses={transactions || []}
               members={activeGroupMembers || []}
               currency={group?.currency || 'USD'}
+              displayCurrency={group?.display_currency || group?.currency || 'USD'}
               mode="group"
               currentUserId={currentUserId}
               groupName={group?.name}

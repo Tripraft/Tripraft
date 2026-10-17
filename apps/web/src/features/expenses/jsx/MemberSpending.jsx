@@ -1,3 +1,4 @@
+import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 // Purpose: Renders the Member Spending interface within apps\web\src\features\expenses\jsx.
 /**
  * MemberSpending Component
@@ -11,6 +12,7 @@ const MemberSpending = ({
   expenses = [], 
   members = [], 
   currency = 'USD',
+  displayCurrency = currency,
   currentUserId 
 }) => {
   // Calculate spending per member
@@ -51,12 +53,7 @@ const MemberSpending = ({
   const totalGroupSpend = memberSpending.reduce((sum, m) => sum + m.totalPaid, 0);
   const maxSpend = Math.max(...memberSpending.map(m => m.totalPaid), 1);
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
-      currency: currency 
-    }).format(amount);
-  };
+  const formatCurrency = useMoneyDisplay(currency, displayCurrency);
 
   if (memberSpending.length === 0) {
     return <div className="expense-analysis-empty"><Users size={28} /><h3>No member spending yet</h3><p>Member contributions will appear when you add an expense.</p></div>;

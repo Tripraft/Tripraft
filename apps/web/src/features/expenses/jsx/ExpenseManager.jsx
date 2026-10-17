@@ -667,7 +667,7 @@ const ExpenseManager = () => {
           <GroupDetailHeader group={activeGroupData} members={activeGroupMembers || []} overview={overview}
             busy={mutationLoading || groupDetailLoading} onBack={() => { setExpenseView('group'); refetchGroups(); }}
             onCreate={() => setShowNewGroup(true)} onAdd={handleOpenModal} onSettle={() => openGroupTab('settleup')} />
-          <CurrencyConversion key={activeGroupId} base={activeGroupData.currency || 'USD'} amounts={[
+          <CurrencyConversion key={activeGroupId} base={activeGroupData.currency || 'USD'} preferredCurrency={activeGroupData.display_currency || activeGroupData.currency || 'USD'} amounts={[
             {label: 'Total group spend', amount: transactions.filter(t => !t.is_deleted).reduce((sum, t) => sum + Number(t.amount || 0), 0)},
             {label: 'Outstanding balances', amount: remainingBalance},
             {label: 'Settled', amount: (activeGroupSettlements || []).reduce((sum, t) => sum + Number(t.amount || 0), 0)},
@@ -676,7 +676,7 @@ const ExpenseManager = () => {
             totalSettlements={(activeGroupSettlements || []).reduce((sum, settlement) => sum + (Number(settlement.amount) || 0), 0)}
             settlementCount={(activeGroupSettlements || []).length}
             changeCount={transactions.filter(transaction => transaction.is_edited).length}
-            currency={activeGroupData.currency || 'USD'} onSettlementCardClick={() => setIsHistoryModalOpen(true)}
+            currency={activeGroupData.currency || 'USD'} displayCurrency={activeGroupData.display_currency || activeGroupData.currency || 'USD'} onSettlementCardClick={() => setIsHistoryModalOpen(true)}
             onSettleClick={() => openGroupTab('settleup')} onHistoryClick={() => openGroupTab('transactions')} />
           <SettlementHistoryModal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)}
             settlements={activeGroupSettlements || []} group={activeGroupData}

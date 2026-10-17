@@ -1,3 +1,4 @@
+import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 // Purpose: Renders the Group Balances interface within apps\web\src\features\expenses\jsx.
 import React, { useState } from 'react';
 import SettlementModal from './SettlementModal';
@@ -38,12 +39,8 @@ const GroupBalances = ({
       await onSettlementSuccess(settlementData);
     }
   };
-  const formatCurrency = (amount, currency = 'USD') => {
-    return new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
-      currency: currency 
-    }).format(Math.abs(amount));
-  };
+  const displayMoney = useMoneyDisplay(group?.currency || 'USD', group?.display_currency || group?.currency || 'USD');
+  const formatCurrency = (amount, currency) => displayMoney(Math.abs(amount), currency);
 
   // Helper function to get member display name
   // Phase 17 Bug Fix: Also check allMembersMap for removed members

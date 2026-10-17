@@ -319,7 +319,7 @@ def update_itinerary_document(group_id):
 @require_group_role('admin')
 def remove_member(group_id, member_id):
     """
-    Remove a member from group (creator only)
+    Remove another member as owner/admin; owner membership is protected.
     
     Request:
         DELETE /api/v2/group-planner/groups/<group_id>/members/<member_id>
@@ -338,7 +338,7 @@ def remove_member(group_id, member_id):
             _invalidate_gp_caches()
             return success_response(message=result.get('message'))
         else:
-            return error_response(result.get('error'))
+            return error_response(result.get('error'), result.get('status_code', 400))
             
     except Exception as e:
         logger.error("Remove member error: %s", e)
@@ -591,6 +591,7 @@ def get_group_activities(group_id):
 @groups_bp.route('/groups/<group_id>/members', methods=['GET'])
 @limit_api(Config.RATE_LIMITS['read_light'])
 @require_auth
+@require_group_role('viewer')
 @cache_response(key_prefix='gp_groups:members', ttl=Config.CACHE_TTLS['members'], vary_on_user=True)
 def get_group_members(group_id: str):
     """

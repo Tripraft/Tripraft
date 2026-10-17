@@ -1,8 +1,8 @@
 // Purpose: Normalizes currency amounts, whole-cent splits and UUID payer changes.
-export function formatMoney(amount, currency = 'USD') {
+export function formatMoney(amount, currency = 'USD', options = {}) {
   const value = Number(amount);
   const safe = Number.isFinite(value) ? value : 0;
-  try { return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(safe); }
+  try { return new Intl.NumberFormat('en-US', { style: 'currency', currency, ...options }).format(safe); }
   catch { return safe.toFixed(2) + ' ' + String(currency || 'USD'); }
 }
 

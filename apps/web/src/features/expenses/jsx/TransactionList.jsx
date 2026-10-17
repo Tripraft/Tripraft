@@ -1,9 +1,9 @@
+import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 // Purpose: Renders the Transaction List interface within apps\web\src\features\expenses\jsx.
 import ExpenseDialog from './ExpenseDialog';
 import TransactionActivity from './TransactionActivity';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Edit2, Trash2, FolderOpen, Info, ChevronLeft, ChevronRight, History, RefreshCw, Utensils, Car, Home, ShoppingBag, Plane, Heart, Zap, Film, Gift, Coffee, Hotel, Gamepad2, Shirt, Pill, Briefcase, Music, Dumbbell, Banknote, CircleDollarSign, HelpCircle } from 'lucide-react';
-import { formatMoney } from '../../../utils/money';
 import { formatDateLocal } from '../../../utils/timezoneUtils';
 import ExpenseHistoryModal from './ExpenseHistoryModal';
 import { expensePermissions } from '../utils/groupPermissions';
@@ -123,7 +123,7 @@ const TransactionList = ({
   }, [transactions, selectedTransaction, showDetailsModal]);
 
 
-  const formatCurrency = (amount) => formatMoney(amount, currency);
+  const formatCurrency = useMoneyDisplay(currency, activeGroup?.display_currency || currency);
 
   // Helper function to get member display name
   // Phase 17 Bug Fix: Also check allMembersMap for removed members

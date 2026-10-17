@@ -7,7 +7,7 @@ import useExpenseLiveUpdates from '../hooks/useExpenseLiveUpdates';
 
 jest.mock('socket.io-client', () => ({ io: jest.fn() }));
 jest.mock('../config/globalConfig', () => ({ __esModule: true, default: { API_BASE_URL: 'http://localhost:5000/api' } }));
-jest.mock('../services/sqlAuthService', () => ({ __esModule: true, default: { getIdToken: jest.fn().mockResolvedValue(null) } }));
+jest.mock('../services/sqlAuthService', () => ({ __esModule: true, default: { getIdToken: jest.fn().mockResolvedValue(null), refreshAccessToken: jest.fn().mockResolvedValue({success:false}) } }));
 
 let client, wrapper, socket, events;
 beforeEach(() => {
@@ -15,7 +15,7 @@ beforeEach(() => {
   client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } });
   wrapper = ({ children }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   events = {};
-  socket = { connected: true, on: jest.fn((name, handler) => { events[name] = handler; }), connect: jest.fn(), disconnect: jest.fn() };
+  socket = { io: {opts:{reconnection:true}}, connected: true, on: jest.fn((name, handler) => { events[name] = handler; }), connect: jest.fn(), disconnect: jest.fn() };
   io.mockReset().mockReturnValue(socket);
   authService.getIdToken.mockReset().mockResolvedValue(null);
 });
@@ -95,4 +95,22 @@ it('does not create an orphan socket after logout during token loading', async (
   unmount();
   await act(async () => resolve(null));
   expect(io).not.toHaveBeenCalled();
+});
+
+it('keeps its connection when the selected expense group changes', async () => {
+ const view=renderHook(({group})=>useExpenseLiveUpdates('member',group),{wrapper,initialProps:{group:'first'}});
+ await waitFor(()=>expect(io).toHaveBeenCalled());
+ view.rerender({group:'second'});
+ expect(io).toHaveBeenCalledTimes(1);
+ expect(socket.disconnect).not.toHaveBeenCalled();
+});
+it('renews a rejected session once before reconnecting', async () => {
+ authService.refreshAccessToken.mockResolvedValueOnce({success:true});
+ renderHook(()=>useExpenseLiveUpdates('member','group'),{wrapper});
+ await waitFor(()=>expect(events.connect_error).toBeDefined());
+ await act(async()=>events.connect_error(new Error('Authentication required')));
+ expect(socket.connect).toHaveBeenCalled();
+ expect(socket.auth).toEqual({});
+ await act(async()=>events.connect_error(new Error('Authentication required')));
+ expect(socket.disconnect).toHaveBeenCalled();
 });

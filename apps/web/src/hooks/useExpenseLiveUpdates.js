@@ -1,5 +1,5 @@
 // Receive private change notifications; authenticated API reads remain the source of ledger data.
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { io } from 'socket.io-client';
 import authService from '../services/sqlAuthService';
@@ -7,16 +7,18 @@ import GlobalConfig from '../config/globalConfig';
 
 export default function useExpenseLiveUpdates(userId, activeGroupId) {
   const queryClient = useQueryClient();
+  const activeGroupRef = useRef(activeGroupId);
+  useEffect(() => {activeGroupRef.current = activeGroupId;}, [activeGroupId]);
   useEffect(() => {
     if (!userId) return;
-    let cancelled = false, connecting = false, socket, timer;
+    let cancelled = false, connecting = false, socket, timer, authRecoveryUsed = false;
     const groups = new Set(), expenses = new Set();
     const invalidate = key => queryClient.invalidateQueries({ queryKey: key, refetchType: 'active' });
     const refresh = () => {
       if (cancelled || document.hidden || navigator.onLine === false) return;
       invalidate(['groups']);
       invalidate(['invitations']);
-      if (activeGroupId) groups.add(activeGroupId);
+      if (activeGroupRef.current) groups.add(activeGroupRef.current);
       for (const id of groups) {
         for (const prefix of ['group', 'expenses', 'settlements', 'recent-history', 'mega-bootstrap']) invalidate([prefix, id]);
       }
@@ -52,20 +54,39 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
         if (cancelled) return;
         const base = (GlobalConfig.API_BASE_URL || '/api').replace(/\/api\/?$/, '').replace(/\/$/, '') || window.location.origin;
         socket = io(`${base}/expenses`, {
-          transports: ['websocket', 'polling'], withCredentials: true, forceNew: true,
+          transports: ['polling', 'websocket'], withCredentials: true, forceNew: true,
           reconnection: true, reconnectionDelay: 1000, reconnectionDelayMax: 10000,
           ...(token ? { auth: { token } } : {}),
         });
         socket.on('expenses:changed', onChange);
-        socket.on('connect', refresh); // Initial join and every reconnect catch up.
-        socket.on('connect_error', error => {
-          if (/auth|unauthor|forbidden|401|403|refused/i.test(error.message || '')) socket.disconnect();
+        socket.on('connect', () => {authRecoveryUsed = false; refresh();}); // Initial join and every reconnect catch up.
+        socket.on('connect_error', async error => {
+          const message = error.message || '';
+          const authError = /auth|unauthor|401|connection rejected/i.test(message);
+          if (cancelled) return;
+          if (authError && !authRecoveryUsed) {
+            authRecoveryUsed = true;
+            socket.io.opts.reconnection = false;
+            try {
+              const restored = await authService.refreshAccessToken();
+              if (cancelled) return;
+              if (restored.success) {
+                const token = await authService.getIdToken();
+                if (cancelled) return;
+                socket.auth = token ? {token} : {};
+                socket.io.opts.reconnection = true;
+                socket.connect();
+                return;
+              }
+            } catch { /* Stop repeated authentication failures. */ }
+          }
+          if (authError || /forbidden|403/i.test(message)) socket.disconnect();
         });
       } catch { /* Focus/online recovery and polling continue when connection setup fails. */ }
       finally { connecting = false; }
     };
     connect();
-    const recover = () => { refresh(); if (!socket) connect(); else if (!socket.connected) socket.connect(); };
+    const recover = () => { refresh(); if (!socket) connect(); else if (!socket.connected && !authRecoveryUsed) socket.connect(); };
     window.addEventListener('online', recover);
     window.addEventListener('focus', recover);
     document.addEventListener('visibilitychange', recover);
@@ -84,5 +105,5 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
       document.removeEventListener('visibilitychange', recover);
       socket?.disconnect();
     };
-  }, [userId, activeGroupId, queryClient]);
+  }, [userId, queryClient]);
 }

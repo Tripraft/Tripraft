@@ -2,7 +2,7 @@
 import logging
 from collections import defaultdict
 
-from flask_socketio import join_room
+from flask_socketio import ConnectionRefusedError, join_room
 from sqlalchemy import event
 from sqlalchemy.orm import Session
 
@@ -24,7 +24,7 @@ def connect_expenses(auth=None):
     payload = _authenticate_socket(auth)
     user_id = (payload or {}).get('user_id') or (payload or {}).get('sub')
     if not user_id:
-        return False
+        raise ConnectionRefusedError('Authentication required')
     # The server selects the room from the verified JWT. Clients cannot select
     # another user or join the group-planner's unrelated group rooms here.
     from app.expenses.services.group_access import identifier

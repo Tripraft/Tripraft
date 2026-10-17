@@ -1,13 +1,14 @@
 // Purpose: Reference-inspired insight cards, split-aware category analysis and daily spending charts.
 import React, { useId, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, ChartNoAxesCombined, Download, Flame, Receipt, Sparkles, TrendingUp, Users } from 'lucide-react';
-import { formatMoney } from '../../../utils/money';
+import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 import { analyzeExpenses } from '../utils/expenseAnalysis';
 import '../css/ExpenseAnalysisView.css';
 
 const dayLabel = date => new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-export function SpendAreaChart({ daily, currency = 'USD' }) {
+export function SpendAreaChart({ daily, currency = 'USD', displayCurrency = currency }) {
+  const formatMoney = useMoneyDisplay(currency, displayCurrency);
   const id = `spend-${useId().replace(/:/g, '')}`;
   const max = Math.max(...daily.map(day => Number(day.amount) || 0), 1);
   const points = daily.map((day, index) => ({ ...day, x: 14 + index / Math.max(1, daily.length - 1) * 572, y: 146 - Number(day.amount) / max * 120 }));
@@ -27,11 +28,11 @@ export function SpendAreaChart({ daily, currency = 'USD' }) {
 }
 
 export default function ExpenseAnalysisView({ mode = 'personal', expenses = [], settlements = [], members = [],
-  currentUserId, groupName, currency = 'USD', onExportPDF, onBack }) {
+  currentUserId, groupName, currency = 'USD', displayCurrency = currency, onExportPDF, onBack }) {
   const [range, setRange] = useState('all');
   const [scope, setScope] = useState('group');
   const analysis = useMemo(() => analyzeExpenses(expenses, { range, scope, mode, userId: currentUserId }), [expenses, range, scope, mode, currentUserId]);
-  const money = value => formatMoney(value, currency);
+  const money = useMoneyDisplay(currency, displayCurrency);
   const topCategory = analysis.categoryData[0], largest = analysis.topExpenses[0];
   const insights = [
     { Icon: Flame, title: 'Top category', value: topCategory?.name || 'No spending yet', description: topCategory ? `${Math.round(topCategory.percent)}% of ${scope === 'share' ? 'your share' : 'spending'} · ${money(topCategory.value)}` : 'Your categories will appear here.' },
@@ -72,7 +73,7 @@ export default function ExpenseAnalysisView({ mode = 'personal', expenses = [], 
           <div className="expense-analysis-bars">{analysis.categoryData.map(category => <div className="expense-analysis-bar" key={category.name}><span>{category.name}</span><strong>{money(category.value)}</strong><span className="expense-analysis-bar-track"><i style={{ background: category.color, width: `${category.value / topCategory.value * 100}%` }} /></span></div>)}</div>
         </article>
       </div>
-      <article className="expense-analysis-panel expense-analysis-daily"><div className="expense-analysis-panel-heading"><h3>Daily spending</h3><span>14 days ending {dayLabel(analysis.daily[13].date)}</span></div><SpendAreaChart daily={analysis.daily} currency={currency} /></article>
+      <article className="expense-analysis-panel expense-analysis-daily"><div className="expense-analysis-panel-heading"><h3>Daily spending</h3><span>14 days ending {dayLabel(analysis.daily[13].date)}</span></div><SpendAreaChart daily={analysis.daily} currency={currency} displayCurrency={displayCurrency} /></article>
       <article className="expense-analysis-panel"><div className="expense-analysis-panel-heading"><h3>Top expenses</h3><span>{scope === 'share' ? 'Your split amount' : 'Largest first'}</span></div>
         <ol className="expense-analysis-top-list">{analysis.topExpenses.map((expense, index) => <li key={expense.id || expense.expense_id || index}><span className="expense-analysis-rank">{index + 1}</span><div><strong>{expense.description || 'Expense'}</strong><small>{expense.category || 'Other'}{expense.day ? ` · ${dayLabel(expense.day)}` : ''}</small></div><b>{money(expense.value)}</b><ArrowUpRight size={16} /></li>)}</ol>
       </article>

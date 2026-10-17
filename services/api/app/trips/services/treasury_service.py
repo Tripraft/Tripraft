@@ -49,3 +49,16 @@ def link_treasury(group_id, requester_id):
                                       entity_type='group', details={'message': 'Linked shared treasury', 'treasurer_user_id': str(owner_id)}))
         session.commit()
         return {'expense_group_id': str(trip.expense_group_id), 'members_added': max(0, len(members) - 1)}
+
+
+def sync_trip_settings(session, trip):
+    """Refresh linked-group metadata and notify finance devices without relabelling money."""
+    if not trip.expense_group_id:
+        return
+    sync_treasury(session, trip)
+    from app.expenses.models import Group
+    from datetime import datetime, timezone
+    ledger = session.get(Group, trip.expense_group_id)
+    ledger.name = trip.name
+    ledger.description = trip.description or ('Shared treasury for ' + trip.name)
+    ledger.updated_at = datetime.now(timezone.utc)

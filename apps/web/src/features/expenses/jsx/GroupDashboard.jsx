@@ -1,7 +1,7 @@
 // Purpose: Shows a selectable overview of the user's expense groups and a first-group empty state.
 import React, { useId, useState } from 'react';
 import { ArrowDownLeft, ArrowUpRight, Check, Plus, Search, Users } from 'lucide-react';
-import { formatMoney } from '../../../utils/money';
+import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 import { groupOverview, groupDateRange } from '../utils/groupOverview';
 
 export function MemberAvatars({ members = [] }) {
@@ -16,7 +16,8 @@ export function MemberAvatars({ members = [] }) {
   </span>;
 }
 
-export function GroupPosition({ net, currency }) {
+export function GroupPosition({ net, currency, displayCurrency = currency }) {
+  const formatMoney = useMoneyDisplay(currency, displayCurrency);
   const Icon = net > 0.005 ? ArrowUpRight : net < -0.005 ? ArrowDownLeft : Check;
   return <span className={`expense-position ${net > 0.005 ? 'is-positive' : net < -0.005 ? 'is-negative' : 'is-settled'}`}>
     <Icon size={16} />
@@ -56,13 +57,22 @@ export default function GroupDashboard({ groups, currentUserId, loading, error, 
       </div> : <>
         <label className="expense-group-search"><Search size={18} /><input type="search" placeholder="Search groups…" aria-label="Search groups" value={search} onChange={event => setSearch(event.target.value)} /></label>
         <div className="expense-group-grid">
-          {visible.map(group => {
+          {visible.map(group => <ExpenseGroupCard key={group.id || group.group_id} group={group} currentUserId={currentUserId} onSelect={onSelect}/>)}
+          <button className="expense-new-group-card" onClick={onCreate}><span><Plus size={26} /></span><strong>Create a new group</strong><small>Bring your next adventure together</small></button>
+        </div>
+        {!visible.length && <p className="expense-search-empty" role="status">No groups match “{search}”. Try another name.</p>}
+      </>}
+  </section>;
+}
+
+function ExpenseGroupCard({group, currentUserId, onSelect}) {
             const overview = groupOverview(group, currentUserId);
             const currency = group.currency || 'USD';
+            const formatMoney = useMoneyDisplay(currency, group.display_currency || currency);
             const members = group.members || [];
             return <button type="button" className="expense-group-card" key={group.id || group.group_id} onClick={() => onSelect(group.id || group.group_id)} aria-label={`Open ${group.name}`}>
               <span className="expense-group-card-title">{group.name}<ArrowUpRight size={18} /></span>
-              <span className="expense-group-dates">{groupDateRange(overview.start, overview.end)}</span>
+              <span className="expense-group-dates">{groupDateRange(group.trip_start_date || overview.start, group.trip_end_date || overview.end)}</span>
               <span className="expense-group-members"><MemberAvatars members={members} /><span>{members.length} member{members.length === 1 ? '' : 's'}</span></span>
               <SpendSparkline daily={overview.daily} />
               <span className="expense-card-metrics">
@@ -70,13 +80,8 @@ export default function GroupDashboard({ groups, currentUserId, loading, error, 
                 <span><span>Your share</span><strong>{formatMoney(overview.share, currency)}</strong></span>
                 <span><span>You paid</span><strong>{formatMoney(overview.paid, currency)}</strong></span>
               </span>
-              <GroupPosition net={overview.net} currency={currency} />
+              <GroupPosition net={overview.net} currency={currency} displayCurrency={group.display_currency || currency} />
               <span className="expense-group-top-category">{overview.topCategory ? <>Top category: <strong>{overview.topCategory.name} · {overview.topCategory.percentage}%</strong></> : 'No spending yet. Make your first memory.'}</span>
             </button>;
-          })}
-          <button className="expense-new-group-card" onClick={onCreate}><span><Plus size={26} /></span><strong>Create a new group</strong><small>Bring your next adventure together</small></button>
-        </div>
-        {!visible.length && <p className="expense-search-empty" role="status">No groups match “{search}”. Try another name.</p>}
-      </>}
-  </section>;
+
 }
