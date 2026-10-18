@@ -1,0 +1,198 @@
+{
+  "schema_version": 1,
+  "client_date": "2026-10-18",
+  "phase": "0",
+  "engineering_status": "baseline_delivered_with_existing_failures",
+  "commercial_exit_gate": "OPEN",
+  "checkpoint_branch": "unified-marketplace-phase-0",
+  "baseline_parent_commit": "1e08d3d",
+  "versions": {
+    "node": "v24.11.0",
+    "pnpm": "10.34.6",
+    "python": "Python 3.11.4",
+    "Flask": "2.3.2",
+    "SQLAlchemy": "2.0.45",
+    "alembic": "1.18.4",
+    "pytest": "8.3.4",
+    "ruff": "0.14.0",
+    "psycopg2-binary": "2.9.11",
+    "react": "18.3.1",
+    "vite": "5.4.21",
+    "turbo": "2.11.7",
+    "typescript": "5.9.3",
+    "jest": "29.7.0"
+  },
+  "checks": [
+    {
+      "name": "structure-check",
+      "exit_code": 0,
+      "duration_seconds": 15.047
+    },
+    {
+      "name": "lint",
+      "exit_code": 0,
+      "duration_seconds": 50.438
+    },
+    {
+      "name": "typecheck",
+      "exit_code": 0,
+      "duration_seconds": 19.375
+    },
+    {
+      "name": "test",
+      "exit_code": 1,
+      "duration_seconds": 2.125
+    },
+    {
+      "name": "build",
+      "exit_code": 0,
+      "duration_seconds": 99.734
+    }
+  ],
+  "independent_workspace_tests": {
+    "exit_code": 0,
+    "api": {
+      "passed": 410,
+      "warnings": 532
+    },
+    "web": {
+      "suites_passed": 39,
+      "passed": 356
+    },
+    "admin": {
+      "suites_passed": 1,
+      "passed": 3
+    },
+    "total_application_tests_passed": 769
+  },
+  "new_tool_tests": {
+    "passed": 25,
+    "inventory": 13,
+    "backup_restore": 12
+  },
+  "new_tool_ruff": "passed",
+  "root_test_failures": [
+    "test_running_pids_lifecycle",
+    "test_stop_existing_frees_pids_and_ports",
+    "test_stop_stale_services_terminates_only_saved_pids",
+    "test_startup_failure_cleans_only_the_created_child"
+  ],
+  "preexisting_user_edits_preserved": [
+    "infra/tests/test_launcher.py",
+    "script/table_scripts/README.md",
+    "script/table_scripts/core.py",
+    "script/table_scripts/run_all.py"
+  ],
+  "database_snapshots": [
+    {
+      "source": "data/catalog/tripraft-canonical.db",
+      "status": "verified",
+      "places": 0,
+      "countries": 0,
+      "foreign_key_violations": 0,
+      "restoration_matches": true,
+      "snapshot_file_sha256": "dc468a8f03d344b1516d64224184de41bcccd3ecac82313103039aff7c361916",
+      "snapshot_set_started_at_utc": "2026-10-18T17:46:09.499458+00:00"
+    },
+    {
+      "source": "data/catalog/tripraft_places.db",
+      "status": "verified",
+      "places": 30339,
+      "countries": 191,
+      "foreign_key_violations": 0,
+      "restoration_matches": true,
+      "snapshot_file_sha256": "71facec2597c61c47cb10c0b7fbc0131d22f7be76e45cb6538d0a4605baf8a9b",
+      "snapshot_set_started_at_utc": "2026-10-18T17:46:09.499458+00:00"
+    },
+    {
+      "source": "data/catalog/travel_data_complete.db",
+      "status": "verified",
+      "places": 16830,
+      "countries": 82,
+      "foreign_key_violations": 5,
+      "restoration_matches": true,
+      "snapshot_file_sha256": "2ed39117ddaf8c0adcf02d7f85e813293a818e244de1fdb9e5b8fd3693cff299",
+      "snapshot_set_started_at_utc": "2026-10-18T17:46:09.499458+00:00"
+    },
+    {
+      "source": "data/runtime/tripraft.db",
+      "status": "verified",
+      "places": null,
+      "countries": null,
+      "foreign_key_violations": 0,
+      "restoration_matches": true,
+      "snapshot_file_sha256": "3fc2950adef030c2407d27eca9042cb106181cf0156586452a7d7e3b2eb7be1a",
+      "snapshot_set_started_at_utc": "2026-10-18T17:46:09.499458+00:00"
+    },
+    {
+      "source": "data/runtime/dev/tripraft.db",
+      "status": "verified",
+      "places": null,
+      "countries": null,
+      "foreign_key_violations": 0,
+      "restoration_matches": true,
+      "snapshot_file_sha256": "98b6b968d55054d5d2e05dab2afa1d80f9112246f9d3d9f09e34f21a7e310f67",
+      "snapshot_set_started_at_utc": "2026-10-18T17:46:09.499458+00:00"
+    },
+    {
+      "source": "tripraft.db",
+      "status": "verified",
+      "places": 0,
+      "countries": 0,
+      "foreign_key_violations": 0,
+      "restoration_matches": true,
+      "snapshot_file_sha256": "bf137920ca78f20bca0cb9860c5c39be46936af2e322bfb61b3e5ff96c3d866f",
+      "snapshot_set_started_at_utc": "2026-10-18T17:46:09.499458+00:00"
+    },
+    {
+      "source": "script/data/catalog/tripraft_places.enriched.db",
+      "status": "verified",
+      "places": 30339,
+      "countries": 191,
+      "foreign_key_violations": 0,
+      "restoration_matches": true,
+      "snapshot_file_sha256": "b694d9ef9a419b83c04809756f3b1189dfda8830c8d96fa7d5891c8573662ba3",
+      "snapshot_set_started_at_utc": "2026-10-18T17:47:12.928063+00:00"
+    },
+    {
+      "source": "script/data/catalog/tripraft_places.enriched.db.backup-20261014-142422-445649.db",
+      "status": "verified",
+      "places": 22925,
+      "countries": 190,
+      "foreign_key_violations": 0,
+      "restoration_matches": true,
+      "snapshot_file_sha256": "d06779347a39f18f2e126b8b9b73204da5a4ecdaa7f360cb0255367f87a364a5",
+      "snapshot_set_started_at_utc": "2026-10-18T17:47:12.928063+00:00"
+    },
+    {
+      "source": "script/data/catalog/tripraft_places.table_enriched_v2.db",
+      "status": "verified",
+      "places": 30339,
+      "countries": 191,
+      "foreign_key_violations": 0,
+      "restoration_matches": true,
+      "snapshot_file_sha256": "894c20e2f3ba6c1b134713e03e1777c44866f779a2512376f3a96a726cf1d6d4",
+      "snapshot_set_started_at_utc": "2026-10-18T17:47:12.928063+00:00"
+    },
+    {
+      "source": "script/data/catalog/tripraft_places.table_enriched_v2.db.checkpoints.sqlite3",
+      "status": "verified",
+      "places": null,
+      "countries": null,
+      "foreign_key_violations": 0,
+      "restoration_matches": true,
+      "snapshot_file_sha256": "22579f959af7a69c06ae391913b11a85cb94be059b396a8c27e07f9f8020b644",
+      "snapshot_set_started_at_utc": "2026-10-18T17:47:12.928063+00:00"
+    }
+  ],
+  "all_snapshot_restores_verified": true,
+  "snapshot_alignment": "Independent online snapshots; not a cross-database transaction.",
+  "configuration_evidence": "static source references; effective running environment not verified",
+  "user_confirmed_open_decisions": [
+    "legal_entity_country",
+    "receiving_bank_country",
+    "initial_supplier_country"
+  ],
+  "private_evidence_root": ".tripraft/phase0/2026-10-18/",
+  "runtime_rows_or_credentials_exported": false
+}

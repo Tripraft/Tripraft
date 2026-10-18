@@ -30,9 +30,17 @@ it never overwrites or silently migrates an incompatible database. The initializ
 checks the complete schema, SQLite integrity, and foreign key consistency.
 
 The generated database and its journal files are ignored by Git. The SQL schema
-is versioned. All travel readers and ingestion use `TRAVEL_DATABASE_PATH`; the
-ORM travel URL defaults to the same path. `TRAVEL_DATABASE_DIR` can relocate the
-catalog. Any explicit `TRAVEL_DATA_URL` must identify the same source or its replica.
+is versioned. Generic travel readers and ingestion use `TRAVEL_DATABASE_PATH`;
+the ORM travel URL defaults to the same path. `TRAVEL_DATABASE_DIR` can relocate
+the catalog. Any explicit `TRAVEL_DATA_URL` must identify the same source or its replica.
+
+The Group Planner has a separate read-only reader configured with
+`GROUP_PLANNER_CATALOG_PATH`, defaulting to `data/catalog/tripraft_places.db`.
+That populated local file is distinct from the initialized canonical database;
+do not assume a fresh clone contains it. Preserve both sources and their IDs
+until the [catalog release and mapping review](../../docs/decisions/marketplace-catalog-boundary.md)
+is complete. The [phase-zero runbook](../../docs/runbooks/commerce/phase0-baseline.md)
+describes read-only inventory, consistent snapshots and isolated restore checks.
 
 `travel_data_complete.db` is preserved as a legacy reference and is no longer
 the default database. User accounts, trips, and expenses continue to use their
