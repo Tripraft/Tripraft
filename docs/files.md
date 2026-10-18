@@ -220,31 +220,20 @@ Every published source/configuration file is listed below. Legal source formats 
 | `docs/api.md` | Explains API envelopes, cookie authentication, generated client use and remaining schema coverage. |
 | `docs/architecture.md` | Explains app/service/package boundaries, data ownership, auth and deployment architecture. |
 | `docs/backend-checkpoints.md` | Lists local implementation checkpoints and explains shared Git/Sapling Interactive Smartlog use. |
-| `docs/decisions/marketplace-catalog-boundary.md` | Records catalog separation, observed sources and the non-destructive ID/release selection boundary. |
-| `docs/decisions/marketplace-phase0-decisions.md` | Records open commercial inputs, technical directions, responsible owners and the marketplace production gates. |
-| `docs/decisions/marketplace-provider-capabilities.md` | Compares documented provider capabilities and identifies account eligibility evidence still needed. |
 | `docs/files.md` | Explains every published file, including strict JSON, generated artifacts and binary assets that cannot contain comments. |
 | `docs/plans/enterprise-platform-implementation-plan.md` | Maps the enterprise platform blueprint to proposed workspace, organization and agency implementation. |
-| `docs/plans/unified-marketplace-reseller/README.md` | Explains the unified commerce scope, current repository findings, decisions and planning package. |
-| `docs/plans/unified-marketplace-reseller/architecture-and-files.md` | Maps proposed commerce modules, UI surfaces, file structure and existing integration points. |
-| `docs/plans/unified-marketplace-reseller/data-and-api.md` | Defines proposed transactional tables, immutable quotes, finance rules, state machines and APIs. |
-| `docs/plans/unified-marketplace-reseller/phases-and-backlog.md` | Orders all implementation phases, acceptance gates, estimates and initial issue backlog. |
-| `docs/plans/unified-marketplace-reseller/verification-and-operations.md` | Defines future failure tests, release requirements, dashboards, recovery procedures and launch gates. |
-| `docs/reports/marketplace-phase0-baseline-2026-10-18.json` | Stores the sanitized phase-zero verification and recovery summary without application records or credentials. |
-| `docs/reports/marketplace-phase0-baseline-2026-10-18.md` | Records delivered phase-zero tooling, private recovery evidence, tests, existing failures and remaining decisions. |
+| `docs/plans/places-search-tour-packages/README.md` | Defines the updated agent tour-package scope, existing Places Search integration and footer partner entry. |
+| `docs/plans/places-search-tour-packages/architecture-and-files.md` | Maps portal/search/admin routes, proposed files, authentication boundaries and existing integration points. |
+| `docs/plans/places-search-tour-packages/data-api-and-publishing.md` | Defines tour records, API projections, price visibility, selective publishing automation and transaction rules. |
+| `docs/plans/places-search-tour-packages/phases-and-acceptance.md` | Orders the implementation phases, first sprint, backlog, regression tests and release gates. |
 | `docs/runbook.md` | Documents operation, verification, backups, and deployment prerequisites. |
-| `docs/runbooks/commerce/phase0-baseline.md` | Explains repeatable inventory, SQLite snapshots, isolated restore checks and verification capture. |
 | `docs/startup.md` | Documents the single-file launcher, one-time setup, runtime modes, ports, data and troubleshooting. |
 | `infra/docker/.env.example` | Documents public configuration keys and placeholder values; copy locally and keep real credentials out of Git. |
 | `infra/docker/docker-compose.yml` | Runs local PostgreSQL, Redis, API, and optional worker with persistent database/catalog/upload volumes. |
 | `infra/github/workflows/ci.yml` | Canonical CI: install locked dependencies, check source, run tests/builds, and verify generated API declarations. |
 | `infra/github/workflows/deploy.yml` | Canonical release workflow: verify source, then call the configured staging or production deployment hook. |
 | `infra/terraform/README.md` | Documents README for infra\terraform. |
-| `infra/tests/test_backup_sqlite.py` | Tests WAL-aware backup, isolated restore content checks, timeouts, source protection and refusal to overwrite prior output. |
-| `infra/tests/test_catalog_inventory.py` | Tests source-preserving inventory, identifier quoting, metadata quality, WAL handling and private-value omission. |
 | `infra/tests/test_launcher.py` | Regression tests for launcher, including success and failure behavior. |
-| `infra/tools/backup_sqlite.py` | Creates consistent SQLite online snapshots and verifies isolated restoration using schema, counts, integrity and content digests. |
-| `infra/tools/catalog_inventory.py` | Inventories SQLite catalog/runtime metadata read-only, detects WAL/live changes, and records static reader references without row or secret exports. |
 | `infra/tools/check_python.py` | Validates backend Python files against the Python 3.11 grammar used by CI and Docker. |
 | `infra/tools/check_structure.py` | Checks required workspace files, discovered workflows, and Python/JavaScript/TypeScript import targets. |
 | `infra/tools/dev-env.ps1` | Creates the optional isolated development environment without replacing archived local environments. |

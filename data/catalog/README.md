@@ -38,9 +38,9 @@ The Group Planner has a separate read-only reader configured with
 `GROUP_PLANNER_CATALOG_PATH`, defaulting to `data/catalog/tripraft_places.db`.
 That populated local file is distinct from the initialized canonical database;
 do not assume a fresh clone contains it. Preserve both sources and their IDs
-until the [catalog release and mapping review](../../docs/decisions/marketplace-catalog-boundary.md)
-is complete. The [phase-zero runbook](../../docs/runbooks/commerce/phase0-baseline.md)
-describes read-only inventory, consistent snapshots and isolated restore checks.
+during tour-package implementation. Existing discovery continues using its
+configured readers; new agent packages use separate operational records. See the
+[Places Search tour-package plan](../../docs/plans/places-search-tour-packages/README.md).
 
 `travel_data_complete.db` is preserved as a legacy reference and is no longer
 the default database. User accounts, trips, and expenses continue to use their

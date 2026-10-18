@@ -2,7 +2,7 @@
 
 | Branch/bookmark | Checkpoint |
 | --- | --- |
-| `unified-marketplace-phase-0` | Start the marketplace implementation with catalog inventory, consistent SQLite snapshots/restore verification, reproducible baseline evidence and commercial decision records; [phase-zero report](reports/marketplace-phase0-baseline-2026-10-18.md) |
+| `places-search-tour-packages-plan` | Replace the superseded marketplace plan with the updated Places Search tour-package specification, footer partner entry, package review/automation and phased delivery; [active plan](plans/places-search-tour-packages/README.md) |
 | `personal-finance-backend` | Personal income, expense edits/deletion, balances and analytics; `43990e456750` |
 | `group-expenses-backend` | Descendant checkpoint for group lifecycle, invitations, permissions and group ledger/reporting |
 | `group-expenses-create-fix` | Fix expense group creation HTTP 422, show validation details, and verify form/API contracts; [findings](reports/expense-group-creation-fix.md) |
