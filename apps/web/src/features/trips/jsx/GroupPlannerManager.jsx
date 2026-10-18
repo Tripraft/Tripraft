@@ -24,7 +24,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import groupPlannerApi from '../../../services/groupPlannerApi';
 import CreateGroupModal from './CreateGroupModal';
 import Toast from '@tripraft/ui/Toast';
-import { MessageCircle, X, Search, UserPlus } from 'lucide-react';
+import { MessageCircle, X, Search, UserPlus, GripHorizontal, RotateCcw } from 'lucide-react';
+import useFloatingPosition from '../hooks/useFloatingPosition';
 import PlannerHeader from './shared/PlannerHeader';
 import AddStopModal from './shared/AddStopModal';
 import RouteOptimizer from './shared/RouteOptimizer';
@@ -57,6 +58,8 @@ export default function GroupPlannerManager() {
   const [activeTab, setActiveTab] = useState('itinerary');
   const [mapDay, setMapDay] = useState('all');
   const [chatOpen, setChatOpen] = useState(false);
+  const chatPosition = useFloatingPosition('gp_chat_panel_position', chatOpen);
+  const launcherPosition = useFloatingPosition('gp_chat_launcher_position', !!selectedGroupId && activeTab !== 'itinerary');
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [addingStop, setAddingStop] = useState(false);
@@ -579,14 +582,20 @@ export default function GroupPlannerManager() {
 
       <div
         id="gp-comms-drawer"
-        className={'gp-comms-drawer' + (chatOpen ? ' is-open' : '')}
+        ref={chatPosition.ref}
+        style={chatPosition.style}
+        className={'gp-comms-drawer' + (chatOpen ? ' is-open' : '') + (chatPosition.moving ? ' is-moving' : '')}
         hidden={!chatOpen}
       >
         <div className="gp-drawer-heading">
-          <div>
+          <button type="button" className="gp-chat-drag-handle" aria-label="Move group chat" title="Drag to move; use arrow keys when focused" {...chatPosition.handle}>
+            <GripHorizontal size={17} aria-hidden="true" />
+            <span className="gp-chat-heading-copy">
             <strong>Travel together, talk together</strong>
             <span>Group chat, decisions &amp; your AI crew</span>
-          </div>
+            </span>
+          </button>
+          <button type="button" className="gp-icon-button" onClick={chatPosition.reset} aria-label="Reset chat position" title="Reset chat position"><RotateCcw size={14} /></button>
           <button
             className="gp-icon-button"
             onClick={() => setChatOpen(false)}
@@ -609,9 +618,14 @@ export default function GroupPlannerManager() {
       </div>
       {activeTab !== 'itinerary' && (
         <button
-          className="gp-floating-chat gp-comms-toggle"
+          ref={launcherPosition.ref}
+          style={launcherPosition.style}
+          className={'gp-floating-chat gp-comms-toggle gp-draggable-chat-launcher' + (launcherPosition.moving ? ' is-moving' : '')}
+          {...launcherPosition.handle}
+          title="Click to open chat; drag or use arrow keys to move"
           onClick={() => setChatOpen((open) => !open)}
           aria-expanded={chatOpen}
+          aria-controls="gp-comms-drawer"
         >
           <MessageCircle size={17} />
           Group Chat &amp; Polls
