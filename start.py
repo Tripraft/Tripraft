@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-# Purpose: Sets up isolated dependencies once, starts API/web/admin, checks readiness, and stops only its owned services.
+# Purpose: Set up and start TripRaft, replace existing development-port listeners, and clean up child services.
 """Set up once, then start TripRaft's API, web app, and admin console.
 
-Usage: python start.py [--setup | --check | --smoke] [--docker] [--no-browser]
+Usage: python start.py [--setup | --check | --smoke | --stop] [--docker] [--no-browser]
 Requires Node >=22 and Python 3.11 for native mode, or Docker for Docker mode.
-Only this repository's child processes are stopped; existing data is preserved.
+Starting replaces listeners on ports 5000, 5173 and 5174. Ctrl+C stops launched services.
+Windows native services also stop when the launcher window closes.
+Existing configuration and data are preserved; no additional launcher module is required.
 """
 import argparse
+import ctypes
 import hashlib
 import json
 import os
@@ -20,7 +23,9 @@ import time
 import urllib.error
 import urllib.request
 import webbrowser
+from functools import lru_cache
 from pathlib import Path
+from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parent
 LOCAL = ROOT / '.tripraft'
@@ -31,6 +36,144 @@ PNPM_HOME = LOCAL / 'tools/pnpm'
 PNPM_SCRIPT = PNPM_HOME / 'node_modules/pnpm/bin/pnpm.cjs'
 COMPOSE = ROOT / 'infra/docker/docker-compose.yml'
 STATE = LOCAL / 'setup-state.json'
+
+
+@lru_cache(maxsize=1)
+def windows_api():
+    from ctypes import wintypes as w
+    api = ctypes.WinDLL('kernel32', use_last_error=True)
+    signatures = {
+        'CreateJobObjectW': ([ctypes.c_void_p, w.LPCWSTR], w.HANDLE),
+        'OpenJobObjectW': ([w.DWORD, w.BOOL, w.LPCWSTR], w.HANDLE),
+        'SetInformationJobObject': ([w.HANDLE, ctypes.c_int, ctypes.c_void_p, w.DWORD], w.BOOL),
+        'AssignProcessToJobObject': ([w.HANDLE, w.HANDLE], w.BOOL),
+        'GetCurrentProcess': ([], w.HANDLE),
+        'CloseHandle': ([w.HANDLE], w.BOOL),
+        'OpenProcess': ([w.DWORD, w.BOOL, w.DWORD], w.HANDLE),
+        'GetProcessTimes': ([w.HANDLE] + [ctypes.POINTER(w.FILETIME)] * 4, w.BOOL),
+        'WaitForSingleObject': ([w.HANDLE, w.DWORD], w.DWORD),
+    }
+    for name, (arguments, result) in signatures.items():
+        function = getattr(api, name)
+        function.argtypes, function.restype = arguments, result
+    return api
+
+
+def _creation_time(handle):
+    from ctypes.wintypes import FILETIME
+    times = [FILETIME() for _ in range(4)]
+    if not windows_api().GetProcessTimes(handle, *(ctypes.byref(value) for value in times)):
+        return None
+    return str((times[0].dwHighDateTime << 32) | times[0].dwLowDateTime)
+
+
+def process_identity(pid):
+    """A live process's creation identity, so old PID files cannot kill reused PIDs."""
+    if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 4:
+        return None
+    if os.name == 'nt':
+        api = windows_api()
+        handle = api.OpenProcess(0x1000 | 0x100000, False, pid)
+        if not handle:
+            return None
+        try:
+            return _creation_time(handle) if api.WaitForSingleObject(handle, 0) == 258 else None
+        finally:
+            api.CloseHandle(handle)
+    try:
+        stat = Path(f'/proc/{pid}/stat').read_text()
+        boot = Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+        return boot + ':' + stat.rsplit(')', 1)[1].split()[19]
+    except (OSError, IndexError):
+        try:
+            value = subprocess.check_output(['ps', '-p', str(pid), '-o', 'lstart='], text=True).strip()
+            return value or None
+        except (OSError, subprocess.CalledProcessError):
+            return None
+
+
+class WindowsJob:
+    """The launcher owns the only job handle; its death kills the full service tree."""
+    def __init__(self):
+        self.handle = None
+        self.name = None
+        if os.name != 'nt':
+            return
+        from ctypes import wintypes as w
+
+        class Limits(ctypes.Structure):
+            _fields_ = [('process_time', ctypes.c_int64), ('job_time', ctypes.c_int64),
+                        ('flags', w.DWORD), ('min_working_set', ctypes.c_size_t),
+                        ('max_working_set', ctypes.c_size_t), ('active_processes', w.DWORD),
+                        ('affinity', ctypes.c_size_t), ('priority', w.DWORD), ('scheduling', w.DWORD)]
+
+        class ExtendedLimits(ctypes.Structure):
+            _fields_ = [('basic', Limits), ('io', ctypes.c_uint64 * 6),
+                        ('process_memory', ctypes.c_size_t), ('job_memory', ctypes.c_size_t),
+                        ('peak_process_memory', ctypes.c_size_t), ('peak_job_memory', ctypes.c_size_t)]
+
+        self.name = f'Local\\Tripraft-{os.getpid()}-{uuid4().hex}'
+        self.handle = windows_api().CreateJobObjectW(None, self.name)
+        if not self.handle:
+            raise ctypes.WinError(ctypes.get_last_error())
+        limits = ExtendedLimits()
+        limits.basic.flags = 0x2000  # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+        if not windows_api().SetInformationJobObject(self.handle, 9, ctypes.byref(limits), ctypes.sizeof(limits)):
+            error = ctypes.WinError(ctypes.get_last_error())
+            self.close()
+            raise error
+
+    def close(self):
+        if self.handle:
+            windows_api().CloseHandle(self.handle)
+            self.handle = None
+
+
+def owned_child(job_name, command):
+    """Join before launching a service, eliminating the spawn/assignment race."""
+    api = windows_api()
+    job = api.OpenJobObjectW(0x1, False, job_name)  # JOB_OBJECT_ASSIGN_PROCESS
+    if not job:
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        if not api.AssignProcessToJobObject(job, api.GetCurrentProcess()):
+            raise ctypes.WinError(ctypes.get_last_error())
+    finally:
+        # Never retain a second job handle: only the launcher controls lifetime.
+        api.CloseHandle(job)
+    child = subprocess.Popen(command, stdin=subprocess.DEVNULL, stdout=sys.stdout,
+                             stderr=sys.stderr, creationflags=subprocess.CREATE_NO_WINDOW)
+    return child.wait()
+
+
+def stop_verified_pid(pid, expected):
+    """Stop a verified tree; holding its Windows handle prevents PID reuse races."""
+    if not expected or pid == os.getpid() or pid <= 4:
+        return False
+    if os.name == 'nt':
+        api = windows_api()
+        handle = api.OpenProcess(0x1000 | 0x100000, False, pid)
+        if not handle:
+            return False
+        try:
+            if _creation_time(handle) != expected or api.WaitForSingleObject(handle, 0) != 258:
+                return False
+            result = subprocess.run(['taskkill', '/PID', str(pid), '/T', '/F'],
+                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return result.returncode == 0
+        finally:
+            api.CloseHandle(handle)
+    if process_identity(pid) != expected:
+        return False
+    try:
+        # Only use a process group when this PID is its actual leader.
+        if os.getpgid(pid) == pid:
+            os.killpg(pid, signal.SIGTERM)
+        else:
+            os.kill(pid, signal.SIGTERM)
+        return True
+    except (ProcessLookupError, PermissionError):
+        return False
 
 
 def run(command, *, cwd=ROOT, env=None, capture=False):
@@ -187,7 +330,130 @@ def require_free_ports(ports):
             try:
                 probe.bind(('127.0.0.1', port))
             except OSError as exc:
-                raise RuntimeError(f'Port {port} is already in use. Stop its existing service before starting TripRaft.') from exc
+                raise RuntimeError(f'Port {port} is already in use. Stop its existing service (run \'python start.py --stop\') before starting TripRaft.') from exc
+
+
+def pid_file():
+    return LOCAL / 'running-pids.json'
+
+
+def _running_state():
+    try:
+        state = json.loads(pid_file().read_text(encoding='utf-8'))
+        if (isinstance(state, dict) and state.get('version') == 2
+                and state.get('workspace') == str(ROOT.resolve())
+                and isinstance(state.get('processes'), list)):
+            return state
+    except (OSError, ValueError):
+        pass
+    # Legacy PID-only files do not prove ownership after a PID has been reused.
+    return {}
+
+
+def save_running_pids(pids, *, ports=None, docker=False):
+    """Persist creation identities, not just PIDs, for safe later recovery."""
+    records = []
+    for pid in pids:
+        identity = process_identity(pid)
+        if identity:
+            records.append({'pid': pid, 'created': identity})
+    state = {'version': 2, 'workspace': str(ROOT.resolve()), 'owner_pid': os.getpid(),
+             'processes': records, 'ports': ports or [5000, 5173, 5174], 'docker': docker}
+    LOCAL.mkdir(parents=True, exist_ok=True)
+    temporary = pid_file().with_suffix(f'.{os.getpid()}.tmp')
+    temporary.write_text(json.dumps(state, indent=2), encoding='utf-8')
+    temporary.replace(pid_file())
+
+
+def clear_running_pids(owner_pid=None):
+    """An old launcher must never delete a newer launcher's ownership file."""
+    try:
+        if owner_pid is not None and _running_state().get('owner_pid') != owner_pid:
+            return
+        pid_file().unlink(missing_ok=True)
+    except OSError:
+        pass
+
+
+def read_running_pids():
+    return [row['pid'] for row in _running_state().get('processes', [])
+            if isinstance(row, dict) and isinstance(row.get('pid'), int)
+            and not isinstance(row['pid'], bool) and row['pid'] > 4 and row.get('created')]
+
+
+def stop_pid(pid, expected=None):
+    """Verified recorded processes, or current owners of explicitly managed ports only."""
+    if not isinstance(pid, int) or isinstance(pid, bool) or pid <= 4 or pid == os.getpid():
+        return False
+    if expected is None:
+        expected = next((row.get('created') for row in _running_state().get('processes', [])
+                         if isinstance(row, dict) and row.get('pid') == pid), None)
+    return stop_verified_pid(pid, expected)
+
+
+def pids_for_port(port):
+    """Only TCP listeners on the exact local port, never clients connected to it."""
+    try:
+        if os.name == 'nt':
+            output = subprocess.check_output(['netstat', '-ano', '-p', 'tcp'], text=True, stderr=subprocess.DEVNULL)
+            pids = set()
+            for line in output.splitlines():
+                fields = line.split()
+                if (len(fields) == 5 and fields[0] == 'TCP' and fields[3] == 'LISTENING'
+                        and fields[1].rsplit(':', 1)[-1] == str(port) and fields[4].isdigit()):
+                    pids.add(int(fields[4]))
+        else:
+            output = subprocess.check_output(['lsof', '-nP', f'-tiTCP:{port}', '-sTCP:LISTEN'], text=True, stderr=subprocess.DEVNULL)
+            pids = {int(line) for line in output.splitlines() if line.isdigit()}
+        return {pid for pid in pids if pid > 4 and pid != os.getpid()}
+    except (OSError, subprocess.CalledProcessError):
+        return set()
+
+
+def wait_ports_free(ports, timeout=5):
+    """Wait until all specified ports are released and bindable."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        all_free = True
+        for port in ports:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as probe:
+                try:
+                    probe.bind(('127.0.0.1', port))
+                except OSError:
+                    all_free = False
+                    break
+        if all_free:
+            return True
+        time.sleep(0.1)
+    return False
+
+
+def stop_stale_services():
+    """Recover verified services left by a previous run."""
+    for pid in read_running_pids():
+        stop_pid(pid)
+
+
+def stop_existing(docker=False, quiet=False):
+    """Stop prior recorded services and listeners on TripRaft's configured ports."""
+    state = _running_state()
+    if docker or state.get('docker'):
+        # Release this project's published ports through Compose before PID cleanup.
+        run(docker_command() + ['stop'])
+    stopped_any = False
+    for pid in read_running_pids():
+        stopped_any = stop_pid(pid) or stopped_any
+    for port in [5000, 5173, 5174]:
+        for pid in pids_for_port(port):
+            identity = process_identity(pid)
+            # Recheck that this verified process still owns this particular port.
+            if identity and pid in pids_for_port(port):
+                stopped_any = stop_pid(pid, identity) or stopped_any
+    if not wait_ports_free([5000, 5173, 5174], timeout=5):
+        raise RuntimeError('Could not release ports 5000, 5173, 5174. Close their remaining service or check process permissions.')
+    clear_running_pids()
+    if not quiet:
+        print('TripRaft services stopped and ports freed.' if stopped_any else 'No running TripRaft services found.', flush=True)
 
 
 def wait_ready(url, process, timeout=90):
@@ -212,34 +478,62 @@ def stop_child(process):
     if os.name == 'nt':
         subprocess.run(['taskkill', '/PID', str(process.pid), '/T', '/F'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     else:
-        os.killpg(process.pid, signal.SIGTERM)
+        try:
+            os.killpg(process.pid, signal.SIGTERM)
+        except (ProcessLookupError, PermissionError, OSError):
+            pass
     try:
         process.wait(timeout=5)
     except subprocess.TimeoutExpired:
         if os.name == 'nt':
-            process.kill()
+            subprocess.run(['taskkill', '/PID', str(process.pid), '/T', '/F'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            try:
+                process.kill()
+            except OSError:
+                pass
         else:
-            os.killpg(process.pid, signal.SIGKILL)
-        process.wait()
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except (ProcessLookupError, PermissionError, OSError):
+                pass
+        try:
+            process.wait(timeout=5)
+        except (subprocess.TimeoutExpired, OSError):
+            pass
 
 
 def start(node, docker, smoke, no_browser):
     env = child_env()
-    require_free_ports([5173, 5174] + ([] if docker else [5000]))
+    managed_ports = [5173, 5174] + ([] if docker else [5000])
+    stop_existing(docker=docker, quiet=True)
+    require_free_ports(managed_ports)
     processes, logs = [], []
     compose = docker_command() if docker else None
     compose_started = False
     log_dir = LOCAL / 'logs'
     log_dir.mkdir(parents=True, exist_ok=True)
+    job = WindowsJob()
 
     def launch(name, command, cwd):
         log = (log_dir / f'{name}.log').open('w', encoding='utf-8')
         logs.append(log)
         options = {'creationflags': subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == 'nt' else {'start_new_session': True}
+        if job.name:
+            command = [sys.executable, str(ROOT / 'start.py'), '--owned-child', job.name, '--', *command]
         process = subprocess.Popen(command, cwd=cwd, env=env, stdout=log, stderr=subprocess.STDOUT, **options)
         processes.append(process)
+        save_running_pids([p.pid for p in processes if getattr(p, 'pid', None) and isinstance(p.pid, int)], ports=managed_ports, docker=docker)
         return process
 
+    previous_signals = {}
+    def request_shutdown(signum, frame):
+        raise KeyboardInterrupt
+    for signum in (signal.SIGTERM, getattr(signal, 'SIGBREAK', None), getattr(signal, 'SIGHUP', None)):
+        if signum is not None:
+            try:
+                previous_signals[signum] = signal.signal(signum, request_shutdown)
+            except (ValueError, OSError):
+                pass
     try:
         if docker:
             # Refuse to take ownership of an existing Compose session.
@@ -260,7 +554,8 @@ def start(node, docker, smoke, no_browser):
             process = launch(name, [node, str(app / 'node_modules/vite/bin/vite.js'), '--host', '127.0.0.1', '--strictPort', '--port', str(port)], app)
             wait_ready(f'http://127.0.0.1:{port}', process)
         print('TripRaft is ready. Web: http://localhost:5173 | Admin: http://localhost:5174 | API: http://localhost:5000', flush=True)
-        print('Press Ctrl+C to stop. Logs: .tripraft/logs', flush=True)
+        print(('Press Ctrl+C to stop.' if docker else 'Press Ctrl+C or close this launcher to stop.')
+              + ' Logs: .tripraft/logs', flush=True)
         if smoke:
             print('Startup smoke check passed; stopping owned services.', flush=True)
             return
@@ -271,13 +566,51 @@ def start(node, docker, smoke, no_browser):
                 raise RuntimeError('A project service stopped. See .tripraft/logs.')
             time.sleep(1)
     finally:
-        for process in reversed(processes):
-            stop_child(process)
-        for log in logs:
-            log.close()
-        if compose_started:
-            # Stop the launched services, retaining all database/catalog/upload volumes.
-            run(compose + ['stop'])
+        sigint_handler = None
+        try:
+            sigint_handler = signal.signal(signal.SIGINT, signal.SIG_IGN)
+        except (ValueError, OSError):
+            pass
+        try:
+            for process in reversed(processes):
+                try:
+                    stop_child(process)
+                except Exception:
+                    pass
+            for log in logs:
+                try:
+                    log.close()
+                except Exception:
+                    pass
+            if compose_started and compose:
+                try:
+                    run(compose + ['stop'])
+                except Exception:
+                    pass
+            # Closing the job also kills descendants whose immediate parent exited.
+            job.close()
+            for process in processes:
+                try:
+                    process.wait(timeout=5)
+                except (subprocess.TimeoutExpired, OSError):
+                    pass
+            released = wait_ports_free(managed_ports, timeout=5)
+            if released:
+                clear_running_pids(owner_pid=os.getpid())
+            else:
+                print('TripRaft shutdown: some managed ports remain busy; run python start.py --stop.', file=sys.stderr)
+        finally:
+            job.close()
+            for signum, handler in previous_signals.items():
+                try:
+                    signal.signal(signum, handler)
+                except (ValueError, OSError):
+                    pass
+            if sigint_handler is not None:
+                try:
+                    signal.signal(signal.SIGINT, sigint_handler)
+                except (ValueError, OSError):
+                    pass
 
 
 def main():
@@ -286,14 +619,17 @@ def main():
     action.add_argument('--setup', action='store_true', help='Install dependencies/configuration without starting services')
     action.add_argument('--check', action='store_true', help='Check prerequisites/setup status without installing or starting')
     action.add_argument('--smoke', action='store_true', help='Start all services, verify HTTP readiness, then stop')
+    action.add_argument('--stop', action='store_true', help='Stop running TripRaft services and free ports')
     parser.add_argument('--docker', action='store_true', help='Use PostgreSQL, Redis, API and worker in Docker')
     parser.add_argument('--no-browser', action='store_true', help='Keep the browser closed')
     args = parser.parse_args()
+    if args.stop:
+        stop_existing(args.docker)
+        return
     node = node_runtime()
     if args.check:
         docker_command() if args.docker else python_runtime()
         state = json.loads(STATE.read_text()) if STATE.is_file() else {}
-        mode = 'docker' if args.docker else 'native'
         if not setup_ready(state, args.docker):
             raise RuntimeError('Setup is missing or dependencies changed. Run python start.py --setup first.')
         print('Prerequisites and saved setup are ready.')
@@ -305,6 +641,8 @@ def main():
 
 if __name__ == '__main__':
     try:
+        if os.name == 'nt' and len(sys.argv) >= 5 and sys.argv[1] == '--owned-child' and sys.argv[3] == '--':
+            sys.exit(owned_child(sys.argv[2], sys.argv[4:]))
         main()
     except KeyboardInterrupt:
         print('\nTripRaft stopped.')
