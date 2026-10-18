@@ -460,7 +460,9 @@ def wait_ready(url, process, timeout=90):
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         if process is not None and process.poll() is not None:
-            raise RuntimeError('A service exited during startup. See .tripraft/logs for details.')
+            name = getattr(process, 'tripraft_service', 'service')
+            raise RuntimeError(f'{name} exited during startup (exit {process.returncode}). '
+                               f'See {LOCAL / "logs" / (name + ".log")}.')
         try:
             with urllib.request.urlopen(url, timeout=2) as response:
                 if response.status == 200:
@@ -519,8 +521,13 @@ def start(node, docker, smoke, no_browser):
         logs.append(log)
         options = {'creationflags': subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == 'nt' else {'start_new_session': True}
         if job.name:
-            command = [sys.executable, str(ROOT / 'start.py'), '--owned-child', job.name, '--', *command]
+            # Windows venv redirectors create separate parent jobs. Using the base
+            # interpreter keeps every helper in the same job hierarchy; the API
+            # command still uses .venv for its installed dependencies.
+            helper_python = getattr(sys, '_base_executable', None) or sys.executable
+            command = [helper_python, str(ROOT / 'start.py'), '--owned-child', job.name, '--', *command]
         process = subprocess.Popen(command, cwd=cwd, env=env, stdout=log, stderr=subprocess.STDOUT, **options)
+        process.tripraft_service = name
         processes.append(process)
         save_running_pids([p.pid for p in processes if getattr(p, 'pid', None) and isinstance(p.pid, int)], ports=managed_ports, docker=docker)
         return process
