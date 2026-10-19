@@ -100,8 +100,9 @@ durability. Staff console hosting, background workers and optional AI providers
 are separate deployment work; this Blueprint does not provision them. This task
 does not certify every existing app feature or promise production availability.
 
-The local machine had no Docker CLI available. A Linux image build, actual
-PostgreSQL migration, Redis TLS, Gmail OAuth authorization and remote collaboration
+The local machine had no Docker CLI available. CI now builds the beta Linux image
+on develop pushes and PRs targeting develop, checking assets and secret exclusions.
+An actual PostgreSQL migration, Redis TLS, Gmail OAuth authorization and remote collaboration
 must be validated on the configured hosting environment. Provider credentials
 were not supplied, so cloud acceptance remains pending.
 

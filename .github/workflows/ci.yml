@@ -7,6 +7,17 @@ on:
 permissions:
   contents: read
 jobs:
+  beta-image:
+    if: github.ref == 'refs/heads/develop' || github.base_ref == 'develop'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the shared beta image without credentials
+        run: docker build --file infra/remote-beta/Dockerfile --tag tripraft-beta:ci .
+      - name: Check built assets and exclude workstation secrets
+        run: |
+          docker run --rm --entrypoint python tripraft-beta:ci -c "from pathlib import Path; root = Path('/opt/tripraft'); assert (root / 'apps/web/dist/index.html').is_file(); assert (root / 'data/catalog/tripraft_places.db').is_file(); assert not (root / 'services/api/.env').exists(); assert not (root / 'data/runtime/dev/tripraft.db').exists(); print('Beta image contains built web assets and catalogs; local secrets and operational DB are excluded.')"
   verify:
     runs-on: ubuntu-latest
     steps:

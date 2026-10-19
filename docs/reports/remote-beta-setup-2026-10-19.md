@@ -27,7 +27,8 @@ Verification completed:
 
 Not executed:
 
-- Docker/Linux image build: Docker CLI is unavailable on this laptop.
+- Local Docker/Linux image build: Docker CLI is unavailable on this laptop. A
+  GitHub CI image-build and asset/secret-exclusion job was added for develop.
 - Cloud provisioning, PostgreSQL beta migrations, Redis TLS connection and Gmail
   OAuth authorization: the user has not created/configured those accounts yet.
 - Actual email delivery and cross-country invitation/realtime acceptance.
