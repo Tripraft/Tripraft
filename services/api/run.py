@@ -34,6 +34,7 @@ def main():
     """Main entry point."""
     config = get_config()
     app = create_app()
+    reload_source = os.getenv('TRIPRAFT_DEV_RELOAD') == '1' and config.FLASK_ENV != 'production'
 
     logger.info(
         "Starting TripRaft Backend | env=%s | http://%s:%s",
@@ -45,9 +46,11 @@ def main():
     try:
         # Use SocketIO runner if available (enables WebSocket transport)
         from app.trips.realtime.socketio_ext import socketio
-        socketio.run(app, host=config.HOST, port=config.PORT, debug=config.DEBUG)
+        socketio.run(app, host=config.HOST, port=config.PORT, debug=config.DEBUG,
+                     use_reloader=reload_source or config.DEBUG)
     except ImportError:
-        app.run(host=config.HOST, port=config.PORT, debug=config.DEBUG)
+        app.run(host=config.HOST, port=config.PORT, debug=config.DEBUG,
+                use_reloader=reload_source or config.DEBUG)
     except Exception as exc:
         logger.critical("Failed to start server: %s", exc)
         sys.exit(1)

@@ -53,3 +53,8 @@ The web API base defaults to `/api` on the current origin, so opening the
 site on another device does not send login requests to that device's localhost.
 Vite proxies `/api` and `/socket.io` to the local backend. A separately hosted
 API can still be selected with `VITE_API_BASE_URL`.
+
+Supplier onboarding uses separate `/api/v1/partners/*` endpoints, partner-only
+JWT types and `partner_*` cookies. Its mutations echo `partner_csrf_token` in
+`X-CSRF-Token`; general admin review uses the normal administrator cookie/CSRF
+contract. See the [partner API and implementation report](reports/partners-onboarding-foundation-2026-10-18.md).

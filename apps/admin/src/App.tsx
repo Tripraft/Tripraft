@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { createApiClient, type components } from '@tripraft/api-client';
 import type { AuthUser } from '@tripraft/types';
+import { PartnerReviewPanel } from './PartnerReviewPanel';
 const api = createApiClient(import.meta.env.VITE_API_BASE_URL || '');
 type Audit = components['schemas']['AuditData'];
 type Health = components['schemas']['Health'];
@@ -170,6 +171,7 @@ export function App() {
               <p>{refreshing ? 'Loading…' : 'No audit result available.'}</p>
             )}
           </section>
+          <PartnerReviewPanel />
         </>
       )}
     </main>

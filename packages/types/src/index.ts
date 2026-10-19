@@ -1,6 +1,7 @@
 // Purpose: Provides index logic and exports for packages\types\src.
 /** UUIDs remain strings at application and API boundaries. */
 export type UUID = string;
+export type { PartnerStatus, PartnerDecision, PartnerApplication, PartnerApplicationInput, PartnerSnapshot, PartnerReviewList } from './partners';
 export type Money = number;
 export interface ApiEnvelope<T> {
   success: boolean;

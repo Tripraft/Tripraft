@@ -74,7 +74,15 @@ def _authenticate_socket(auth) -> dict | None:
         from app.auth.security.jwt import decode_token, verify_token
         if not verify_token(token, token_type="access"):
             return None
-        return decode_token(token)
+        payload = decode_token(token)
+        from uuid import UUID
+        from app.auth.models import User
+        from app.core.db.connection import get_db_session
+        with get_db_session() as session:
+            user = session.get(User, UUID(payload['sub']))
+            if not user or not user.is_active or user.portal_kind != 'traveler':
+                return None
+        return payload
     except Exception as exc:
         logger.warning("Socket JWT verification failed: %s", exc)
         return None

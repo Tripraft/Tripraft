@@ -174,6 +174,8 @@ class AuthService:
                     return False, {'error': 'Invalid email or password'}
                 
                 # Successful authentication — clear any lockout counter
+                if user.portal_kind != 'traveler':
+                    return False, {'error': 'Use the partner sign-in page for this account.'}
                 clear_lockout(email)
                 
                 # Generate tokens
@@ -341,6 +343,8 @@ class AuthService:
                 user = session.get(User, user_id)
                 if not user or not user.is_active:
                     return False, {'error': 'User not found or inactive'}
+                if user.portal_kind != 'traveler':
+                    return False, {'error': 'Use the partner portal to refresh this session.'}
                 
                 # Generate new tokens
                 new_access_token = create_access_token(

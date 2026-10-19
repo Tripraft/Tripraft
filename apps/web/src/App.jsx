@@ -20,6 +20,7 @@ const AuthPage = lazy(() => import('./features/auth/jsx/AuthPage'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const SmartInvitationHandler = lazy(() => import('./pages/SmartInvitationHandler'));
 const PlaceSearchPage = lazy(() => import('./features/discover/jsx/PlaceSearchPage'));
+const PartnerPortal = lazy(() => import('./features/partners/PartnerPortal'));
 
 // These are lightweight wrappers, loaded eagerly
 import FeatureErrorBoundary from './components/common/jsx/FeatureErrorBoundary';
@@ -54,6 +55,7 @@ export default function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/auth" element={<AuthPage />} />
           <Route path="/verify-email/:token?" element={<VerifyEmail />} />
+          <Route path="/partners/*" element={<PartnerPortal />} />
 
           {/* Public: Place Search & Trip Planner (read-only, no auth) */}
           <Route

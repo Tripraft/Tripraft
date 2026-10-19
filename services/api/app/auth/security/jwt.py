@@ -117,6 +117,17 @@ def create_refresh_token(user_id: str, session_id: Optional[str] = None) -> str:
 _EMAIL_VERIFY_EXPIRES = timedelta(hours=24)
 
 
+def create_partner_token(user_id, session_id, *, refresh=False):
+    """Supplier tokens have distinct types; traveler endpoints reject them."""
+    now = _utc_now()
+    return jwt.encode({
+        'sub': str(user_id), 'sid': str(session_id),
+        'type': 'partner_refresh' if refresh else 'partner_access',
+        'jti': secrets.token_urlsafe(16), 'iat': now,
+        'exp': now + (REFRESH_TOKEN_EXPIRES if refresh else ACCESS_TOKEN_EXPIRES),
+    }, _get_signing_key(), algorithm=JWT_ALGORITHM, headers={'kid': _CURRENT_KID})
+
+
 def create_email_verification_token(user_id: str, email: str) -> str:
     """Create a short-lived JWT for email verification (24h)."""
     now = _utc_now()

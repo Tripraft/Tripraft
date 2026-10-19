@@ -222,6 +222,8 @@ def _init_socketio(app):
 
 def _register_blueprints(app):
     """Register all API route blueprints."""
+    from app.partners.routes import partners_bp
+    app.register_blueprint(partners_bp)
     from app.expenses.routes.currencies import currencies_bp
     app.register_blueprint(currencies_bp)
     api_prefix = app.config.get("API_PREFIX", "/api/v1")

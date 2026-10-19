@@ -7,8 +7,8 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '\\.(css|svg)$': '<rootDir>/tests/styleMock.cjs',
   },
-  transform: { '^.+\\.(js|jsx)$': 'babel-jest' },
+  transform: { '^.+\\.(js|jsx|ts|tsx)$': 'babel-jest' },
   testMatch: ['**/__tests__/**/*.test.[jt]s?(x)'],
-  moduleFileExtensions: ['js', 'jsx', 'json'],
+  moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json'],
   clearMocks: true,
 };

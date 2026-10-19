@@ -32,6 +32,7 @@ const Footer = () => {
             <ul className="footer-links">
               <li><Link to="/about">About Us</Link></li>
               <li><Link to="/contact">Contact</Link></li>
+              <li><Link to="/partners">Partner with TripRaft</Link></li>
             </ul>
           </div>
           

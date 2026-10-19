@@ -106,6 +106,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/partners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        get: operations["partners_list_applications_get_api_v1_admin_partners"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/partners/{agent_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        post: operations["partners_review_application_post_api_v1_admin_partners_agent_id_decision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/photos": {
         parameters: {
             query?: never;
@@ -449,6 +483,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/currencies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["currencies_currencies_get_api_v1_currencies"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/exchange-rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["currencies_rates_get_api_v1_exchange_rates"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/expenses": {
         parameters: {
             query?: never;
@@ -461,6 +529,142 @@ export interface paths {
         put?: never;
         /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
         post: operations["expenses_sql_create_expense_post_api_v1_expenses"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/analytics/group/{group_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["group_finance_group_analytics_get_api_v1_expenses_analytics_group_group_id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/analytics/group/{group_id}/trends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["group_finance_group_trends_get_api_v1_expenses_analytics_group_group_id_trends"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/analytics/user/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["personal_finance_user_analytics_get_api_v1_expenses_analytics_user_user_id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/balances/group/{group_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["group_finance_group_balances_get_api_v1_expenses_balances_group_group_id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/balances/group/{group_id}/recalculate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        post: operations["group_finance_recalculate_balances_post_api_v1_expenses_balances_group_group_id_recalculate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/balances/group/{group_id}/simplified": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["group_finance_group_debts_get_api_v1_expenses_balances_group_group_id_simplified"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/balances/user/{user_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["group_finance_user_balances_get_api_v1_expenses_balances_user_user_id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/balances/user/{user_id}/group/{group_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["group_finance_member_balance_get_api_v1_expenses_balances_user_user_id_group_group_id"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -535,7 +739,8 @@ export interface paths {
         delete: operations["groups_sql_delete_group_delete_api_v1_expenses_groups_group_id"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        patch: operations["groups_sql_update_group_patch_api_v1_expenses_groups_group_id"];
         trace?: never;
     };
     "/api/v1/expenses/groups/{group_id}/full": {
@@ -604,6 +809,62 @@ export interface paths {
         delete: operations["groups_sql_remove_member_delete_api_v1_expenses_groups_group_id_members_member_id"];
         options?: never;
         head?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        patch: operations["groups_sql_update_member_role_patch_api_v1_expenses_groups_group_id_members_member_id"];
+        trace?: never;
+    };
+    "/api/v1/expenses/incomes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["personal_finance_list_incomes_get_api_v1_expenses_incomes"];
+        put?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        post: operations["personal_finance_create_income_post_api_v1_expenses_incomes"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/incomes/{income_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["personal_finance_get_income_get_api_v1_expenses_incomes_income_id"];
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        put: operations["personal_finance_update_income_put_api_v1_expenses_incomes_income_id"];
+        post?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        delete: operations["personal_finance_delete_income_delete_api_v1_expenses_incomes_income_id"];
+        options?: never;
+        head?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        patch: operations["personal_finance_update_income_patch_api_v1_expenses_incomes_income_id"];
+        trace?: never;
+    };
+    "/api/v1/expenses/incomes/{income_id}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["personal_finance_income_history_get_api_v1_expenses_incomes_income_id_history"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
         patch?: never;
         trace?: never;
     };
@@ -619,6 +880,23 @@ export interface paths {
         put?: never;
         /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
         post: operations["invitations_sql_send_invitation_post_api_v1_expenses_invitations"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/invitations/group/{group_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["invitations_sql_get_group_invitations_get_api_v1_expenses_invitations_group_group_id"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -659,6 +937,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/expenses/invitations/{invitation_id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        post: operations["invitations_sql_cancel_invitation_post_api_v1_expenses_invitations_invitation_id_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/expenses/invitations/{invitation_id}/decline": {
         parameters: {
             query?: never;
@@ -670,6 +965,40 @@ export interface paths {
         put?: never;
         /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
         post: operations["invitations_sql_decline_invitation_post_api_v1_expenses_invitations_invitation_id_decline"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/invitations/{invitation_id}/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["invitations_sql_get_invitation_details_get_api_v1_expenses_invitations_invitation_id_details"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/invitations/{invitation_id}/resend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        post: operations["invitations_sql_resend_invitation_post_api_v1_expenses_invitations_invitation_id_resend"];
         delete?: never;
         options?: never;
         head?: never;
@@ -702,6 +1031,57 @@ export interface paths {
         };
         /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
         get: operations["expenses_sql_get_personal_expenses_get_api_v1_expenses_personal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/personal/analytics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["personal_finance_personal_analytics_get_api_v1_expenses_personal_analytics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/personal/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["personal_finance_personal_summary_get_api_v1_expenses_personal_summary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/personal/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["personal_finance_personal_transactions_get_api_v1_expenses_personal_transactions"];
         put?: never;
         post?: never;
         delete?: never;
@@ -846,7 +1226,8 @@ export interface paths {
         delete: operations["expenses_sql_delete_expense_delete_api_v1_expenses_expense_id"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        patch: operations["expenses_sql_update_expense_patch_api_v1_expenses_expense_id"];
         trace?: never;
     };
     "/api/v1/expenses/{expense_id}/history": {
@@ -860,6 +1241,23 @@ export interface paths {
         get: operations["expenses_sql_get_expense_history_get_api_v1_expenses_expense_id_history"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/{expense_id}/restore": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        post: operations["expenses_sql_restore_expense_post_api_v1_expenses_expense_id_restore"];
         delete?: never;
         options?: never;
         head?: never;
@@ -894,6 +1292,57 @@ export interface paths {
         put?: never;
         /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
         post: operations["group_planner_v2_verify_auth_post_api_v1_group_planner_auth_verify"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/group-planner/catalog/destinations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["group_planner_v2_catalog_destinations_get_api_v1_group_planner_catalog_destinations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/group-planner/catalog/places": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["group_planner_v2_catalog_place_cards_get_api_v1_group_planner_catalog_places"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/group-planner/catalog/viewport": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["group_planner_v2_catalog_destination_viewport_get_api_v1_group_planner_catalog_viewport"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1471,6 +1920,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/group-planner/groups/{group_id}/members/{member_id}/crew-role": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        patch: operations["gp_groups_update_member_crew_role_patch_api_v1_group_planner_groups_group_id_members_member_id_crew_role"];
+        trace?: never;
+    };
     "/api/v1/group-planner/groups/{group_id}/members/{member_id}/role": {
         parameters: {
             query?: never;
@@ -1832,7 +2298,8 @@ export interface paths {
         delete: operations["gp_chat_delete_message_delete_api_v1_group_planner_messages_message_id"];
         options?: never;
         head?: never;
-        patch?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        patch: operations["gp_chat_edit_message_patch_api_v1_group_planner_messages_message_id"];
         trace?: never;
     };
     "/api/v1/group-planner/metrics": {
@@ -2192,6 +2659,142 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/partners/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        post: operations["partners_login_post_api_v1_partners_login"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        post: operations["partners_logout_post_api_v1_partners_logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        get: operations["partners_me_get_api_v1_partners_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/me/application": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        patch: operations["partners_update_application_patch_api_v1_partners_me_application"];
+        trace?: never;
+    };
+    "/api/v1/partners/me/application/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        post: operations["partners_submit_application_post_api_v1_partners_me_application_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        post: operations["partners_refresh_post_api_v1_partners_refresh"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        post: operations["partners_register_post_api_v1_partners_register"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/resend-verification": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        post: operations["partners_resend_verification_post_api_v1_partners_resend_verification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/place-search": {
         parameters: {
             query?: never;
@@ -2469,6 +3072,43 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ApplicationSubmit */
+        ApplicationSubmit: {
+            /**
+             * Information Attestation
+             * @constant
+             */
+            information_attestation: true;
+            /** Version */
+            version: number;
+        };
+        /** ApplicationUpdate */
+        ApplicationUpdate: {
+            /** Business Name */
+            business_name: string;
+            /**
+             * Business Type
+             * @enum {string}
+             */
+            business_type: "tour_operator" | "travel_agency";
+            /** Contact Email */
+            contact_email: string | "";
+            /** Country Code */
+            country_code: string;
+            /** Operating Regions */
+            operating_regions: string[];
+            /** Phone */
+            phone: string;
+            /** Representative Name */
+            representative_name: string;
+            /** Version */
+            version: number;
+            /**
+             * Website
+             * @default
+             */
+            website: string;
+        };
         AuditData: {
             logs: components["schemas"]["AuditRecord"][];
             total: number;
@@ -2504,6 +3144,102 @@ export interface components {
             };
             message?: string;
             success: boolean;
+        };
+        PartnerApplication: {
+            business_name: string;
+            /** @enum {string} */
+            business_type: "tour_operator" | "travel_agency";
+            contact_email: string;
+            country_code: string;
+            /** Format: uuid */
+            id: string;
+            operating_regions: string[];
+            phone: string;
+            representative_name: string;
+            review_reason: string | null;
+            /** @enum {string} */
+            status: "DRAFT_APPLICATION" | "UNDER_REVIEW" | "CHANGES_REQUESTED" | "APPROVED" | "SUSPENDED" | "REJECTED";
+            /** Format: date-time */
+            submitted_at: string | null;
+            /** Format: date-time */
+            updated_at: string;
+            version: number;
+            website: string;
+        };
+        PartnerError: {
+            data?: null;
+            error: string | {
+                code: string;
+                details?: {
+                    [key: string]: string[];
+                };
+                message: string;
+            };
+            success: boolean;
+        };
+        /** PartnerLogin */
+        PartnerLogin: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Password */
+            password: string;
+        };
+        /** PartnerRegister */
+        PartnerRegister: {
+            /** Display Name */
+            display_name: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Password */
+            password: string;
+        };
+        PartnerReviewListResponse: {
+            data: {
+                applications: components["schemas"]["PartnerApplication"][];
+                total: number;
+            };
+            message?: string;
+            success: boolean;
+        };
+        PartnerSnapshot: {
+            application: components["schemas"]["PartnerApplication"];
+            capabilities: {
+                can_edit_application: boolean;
+                can_manage_packages: boolean;
+                can_submit_application: boolean;
+                can_view_dashboard: boolean;
+            };
+            user: {
+                display_name: string | null;
+                email: string;
+                email_verified: boolean;
+                /** Format: uuid */
+                id: string;
+            };
+            verification_email_sent?: boolean;
+        };
+        PartnerSnapshotResponse: {
+            data: components["schemas"]["PartnerSnapshot"];
+            message?: string;
+            success: boolean;
+        };
+        /** ReviewDecision */
+        ReviewDecision: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "APPROVED" | "CHANGES_REQUESTED" | "REJECTED" | "SUSPENDED";
+            /** Reason */
+            reason: string;
+            /** Version */
+            version: number;
         };
         User: {
             display_name?: string | null;
@@ -2685,6 +3421,180 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    partners_list_applications_get_api_v1_admin_partners: {
+        parameters: {
+            query?: {
+                status?: "DRAFT_APPLICATION" | "UNDER_REVIEW" | "CHANGES_REQUESTED" | "APPROVED" | "SUSPENDED" | "REJECTED";
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerReviewListResponse"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_review_application_post_api_v1_admin_partners_agent_id_decision: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required with cookie authentication. */
+                "X-CSRF-Token"?: string;
+            };
+            path: {
+                agent_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReviewDecision"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PartnerApplication"];
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
                 };
             };
         };
@@ -3162,6 +4072,46 @@ export interface operations {
             };
         };
     };
+    currencies_currencies_get_api_v1_currencies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    currencies_rates_get_api_v1_exchange_rates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     expenses_sql_list_expenses_get_api_v1_expenses: {
         parameters: {
             query?: never;
@@ -3187,6 +4137,183 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    group_finance_group_analytics_get_api_v1_expenses_analytics_group_group_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    group_finance_group_trends_get_api_v1_expenses_analytics_group_group_id_trends: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    personal_finance_user_analytics_get_api_v1_expenses_analytics_user_user_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    group_finance_group_balances_get_api_v1_expenses_balances_group_group_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    group_finance_recalculate_balances_post_api_v1_expenses_balances_group_group_id_recalculate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    group_finance_group_debts_get_api_v1_expenses_balances_group_group_id_simplified: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    group_finance_user_balances_get_api_v1_expenses_balances_user_user_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                user_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    group_finance_member_balance_get_api_v1_expenses_balances_user_user_id_group_group_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+                user_id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -3350,6 +4477,28 @@ export interface operations {
             };
         };
     };
+    groups_sql_update_group_patch_api_v1_expenses_groups_group_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     groups_sql_get_group_full_get_api_v1_expenses_groups_group_id_full: {
         parameters: {
             query?: never;
@@ -3461,6 +4610,179 @@ export interface operations {
             };
         };
     };
+    groups_sql_update_member_role_patch_api_v1_expenses_groups_group_id_members_member_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+                member_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    personal_finance_list_incomes_get_api_v1_expenses_incomes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    personal_finance_create_income_post_api_v1_expenses_incomes: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    personal_finance_get_income_get_api_v1_expenses_incomes_income_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                income_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    personal_finance_update_income_put_api_v1_expenses_incomes_income_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                income_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    personal_finance_delete_income_delete_api_v1_expenses_incomes_income_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                income_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    personal_finance_update_income_patch_api_v1_expenses_incomes_income_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                income_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    personal_finance_income_history_get_api_v1_expenses_incomes_income_id_history: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                income_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     invitations_sql_get_user_invitations_get_api_v1_expenses_invitations: {
         parameters: {
             query?: never;
@@ -3486,6 +4808,28 @@ export interface operations {
             query?: never;
             header?: never;
             path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    invitations_sql_get_group_invitations_get_api_v1_expenses_invitations_group_group_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+            };
             cookie?: never;
         };
         requestBody?: never;
@@ -3545,7 +4889,73 @@ export interface operations {
             };
         };
     };
+    invitations_sql_cancel_invitation_post_api_v1_expenses_invitations_invitation_id_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     invitations_sql_decline_invitation_post_api_v1_expenses_invitations_invitation_id_decline: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    invitations_sql_get_invitation_details_get_api_v1_expenses_invitations_invitation_id_details: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    invitations_sql_resend_invitation_post_api_v1_expenses_invitations_invitation_id_resend: {
         parameters: {
             query?: never;
             header?: never;
@@ -3588,6 +4998,66 @@ export interface operations {
         };
     };
     expenses_sql_get_personal_expenses_get_api_v1_expenses_personal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    personal_finance_personal_analytics_get_api_v1_expenses_personal_analytics: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    personal_finance_personal_summary_get_api_v1_expenses_personal_summary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    personal_finance_personal_transactions_get_api_v1_expenses_personal_transactions: {
         parameters: {
             query?: never;
             header?: never;
@@ -3843,7 +5313,51 @@ export interface operations {
             };
         };
     };
+    expenses_sql_update_expense_patch_api_v1_expenses_expense_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                expense_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     expenses_sql_get_expense_history_get_api_v1_expenses_expense_id_history: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                expense_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    expenses_sql_restore_expense_post_api_v1_expenses_expense_id_restore: {
         parameters: {
             query?: never;
             header?: never;
@@ -3888,6 +5402,66 @@ export interface operations {
         };
     };
     group_planner_v2_verify_auth_post_api_v1_group_planner_auth_verify: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    group_planner_v2_catalog_destinations_get_api_v1_group_planner_catalog_destinations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    group_planner_v2_catalog_place_cards_get_api_v1_group_planner_catalog_places: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    group_planner_v2_catalog_destination_viewport_get_api_v1_group_planner_catalog_viewport: {
         parameters: {
             query?: never;
             header?: never;
@@ -4843,6 +6417,29 @@ export interface operations {
             };
         };
     };
+    gp_groups_update_member_crew_role_patch_api_v1_group_planner_groups_group_id_members_member_id_crew_role: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                group_id: string;
+                member_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     gp_groups_update_member_role_patch_api_v1_group_planner_groups_group_id_members_member_id_role: {
         parameters: {
             query?: never;
@@ -5464,6 +7061,28 @@ export interface operations {
             };
         };
     };
+    gp_chat_edit_message_patch_api_v1_group_planner_messages_message_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                message_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     group_planner_v2_get_metrics_get_api_v1_group_planner_metrics: {
         parameters: {
             query?: never;
@@ -5898,6 +7517,647 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    partners_login_post_api_v1_partners_login: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartnerLogin"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerSnapshotResponse"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_logout_post_api_v1_partners_logout: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required with cookie authentication. */
+                "X-CSRF-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            signed_out?: boolean;
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_me_get_api_v1_partners_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerSnapshotResponse"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_update_application_patch_api_v1_partners_me_application: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required with cookie authentication. */
+                "X-CSRF-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerSnapshotResponse"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_submit_application_post_api_v1_partners_me_application_submit: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required with cookie authentication. */
+                "X-CSRF-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationSubmit"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerSnapshotResponse"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_refresh_post_api_v1_partners_refresh: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required with cookie authentication. */
+                "X-CSRF-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            refreshed?: boolean;
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_register_post_api_v1_partners_register: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartnerRegister"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerSnapshotResponse"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_resend_verification_post_api_v1_partners_resend_verification: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required with cookie authentication. */
+                "X-CSRF-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            message?: string;
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
                 };
             };
         };

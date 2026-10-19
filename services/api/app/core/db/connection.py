@@ -171,6 +171,7 @@ def _import_all_models():
     import_module('app.expenses.models')
     import_module('app.trips.models')
     import_module('app.scout.models')
+    import_module('app.partners.models')
 
 
 def init_db(app: Optional[Flask] = None) -> None:

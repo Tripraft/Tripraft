@@ -108,6 +108,7 @@ def test_existing_uuid_database_gains_missing_fields_without_losing_rows(tmp_pat
         _assert_current_schema(engine, config)
         with Session(engine) as session:
             assert session.get(User, owner_id).display_name == 'Owner'
+            assert session.get(User, owner_id).portal_kind == 'traveler'
             assert session.get(User, owner_id).email_verified_at is None
             assert session.get(Settlement, settlement_id).amount == 12
             assert session.get(Settlement, settlement_id).deleted_at is None
@@ -226,7 +227,11 @@ def test_fresh_install_sql_can_be_generated_without_a_database(url, monkeypatch)
     config = _config(url, monkeypatch, output)
     command.upgrade(config, 'head', sql=True)
     sql = output.getvalue()
-    assert sql.count('CREATE TABLE ') == 32  # 31 application tables plus Alembic version.
+    assert sql.count('CREATE TABLE ') == 35  # 34 application tables plus Alembic version.
+    assert 'CREATE TABLE agents' in sql
+    assert 'CREATE TABLE agent_users' in sql
+    assert 'CREATE TABLE agent_reviews' in sql
+    assert 'portal_kind' in sql
     assert 'CREATE TABLE gp_vault_documents' in sql
     assert 'suggested_time VARCHAR(10)' in sql
     assert 'CREATE MATERIALIZED VIEW' not in sql

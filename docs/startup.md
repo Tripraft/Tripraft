@@ -16,10 +16,21 @@ also performs setup automatically. Later starts reuse setup unless dependencies
 change. On Windows, `py start.py` also works; no activation or execution-policy
 changes are required.
 
-The web app is http://localhost:5173, admin http://localhost:5174, and API
-http://localhost:5000. Keep the launcher's terminal open and press Ctrl+C to stop
-its services. The launcher refuses occupied ports rather than killing unrelated
-processes. Logs live in ignored `.tripraft/logs`.
+The web app is http://127.0.0.1:5173, admin http://127.0.0.1:5174, and API
+http://127.0.0.1:5000. The browser opens after all three services are ready.
+Keep the launcher's terminal open and press Ctrl+C to stop its services.
+Starting again reuses an existing healthy TripRaft session and opens the site;
+it does not stop that session. If recovery is needed, startup replaces listeners
+on the three development ports, checking process creation identities before
+stopping them; use those ports for TripRaft only.
+`python start.py --stop` also releases a previous run. Logs live in ignored `.tripraft/logs`.
+
+Web and admin run Vite development servers: saving React, TypeScript or CSS
+updates the open page through hot module replacement. Native API Python changes
+restart the API automatically through the development reloader, preserving the
+API's configured development debug behavior. After adding migrations or changing `.env`,
+run `python start.py --stop`, then `python start.py` so startup checks run again. Docker API source changes
+require rebuilding/restarting the container; the local React servers still update live.
 
 ## Data and integrations
 
@@ -35,6 +46,12 @@ or migrate the older, unversioned `data/runtime/tripraft.db`. Sign up to create 
 account in the development database. An existing configured database must already
 have the correct Alembic migration history; never stamp or drop a legacy database
 to suppress migration errors. Back up and migrate legacy data separately.
+
+Native startup uses the same database URL as Flask. If migrations are pending on
+an existing SQLite database, it first writes a consistent backup under ignored
+`.tripraft/backups/`, then upgrades to the current revision. It preserves existing
+traveler accounts and application data. PostgreSQL deployments retain their normal
+external backup requirement.
 
 Native mode disables Redis by default. Ordinary web/auth/trip/expense features run;
 Redis-dependent workers and one-use financial AI confirmations require a real
@@ -61,6 +78,9 @@ and launcher commands were checked statically. Native startup was exercised live
 `python start.py --smoke --no-browser` starts all three native HTTP services,
 verifies readiness, and stops them. Add `--docker` to test the Docker mode where
 Docker is installed. Re-run `--setup` after changing dependency manifests.
+If a native session is already healthy, `--smoke` checks and reuses it without
+stopping its services. A failed child now reports its name, exit code and exact
+log path in the launcher terminal.
 
 For source verification after setup, prepend `.venv/Scripts` (Windows) or
 `.venv/bin` (Unix) and `.tripraft/tools/pnpm/node_modules/.bin` to your PATH,

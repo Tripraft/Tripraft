@@ -99,6 +99,9 @@ importers:
       '@tanstack/react-virtual':
         specifier: ^3.13.23
         version: 3.14.13(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@tripraft/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@tripraft/ui':
         specifier: workspace:*
         version: link:../../packages/ui
@@ -149,6 +152,9 @@ importers:
         specifier: ^7.28.5
         version: 7.29.7(@babel/core@7.29.7)
       '@babel/preset-react':
+        specifier: ^7.28.5
+        version: 7.29.7(@babel/core@7.29.7)
+      '@babel/preset-typescript':
         specifier: ^7.28.5
         version: 7.29.7(@babel/core@7.29.7)
       '@testing-library/jest-dom':

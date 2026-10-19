@@ -67,7 +67,10 @@ class LauncherTests(unittest.TestCase):
 
     def test_startup_failure_cleans_only_the_created_child(self):
         child = mock.Mock()
+        child.pid = 12345
         with mock.patch.object(start, 'require_free_ports'), mock.patch.object(start, 'run'), \
+                mock.patch.object(start, 'stop_existing'), mock.patch.object(start, 'save_running_pids'), \
+                mock.patch.object(start, 'wait_ports_free', return_value=True), \
                 mock.patch.object(start, 'wait_ready', side_effect=RuntimeError('startup failed')), \
                 mock.patch.object(start.subprocess, 'Popen', return_value=child), \
                 mock.patch.object(start, 'stop_child') as stop:
@@ -82,6 +85,73 @@ class LauncherTests(unittest.TestCase):
             target.write_text('dependency manifest')
         saved = {'native': start.fingerprint(False)}
         self.assertFalse(start.setup_ready(saved, False))
+
+    def test_running_pids_lifecycle(self):
+        self.assertEqual(start.read_running_pids(), [])
+        with mock.patch.object(start, 'process_identity', side_effect=lambda pid: f'created-{pid}'):
+            start.save_running_pids([12345, 67890])
+        self.assertEqual(start.read_running_pids(), [12345, 67890])
+        start.clear_running_pids()
+        self.assertEqual(start.read_running_pids(), [])
+
+    def test_stop_stale_services_terminates_only_saved_pids(self):
+        with mock.patch.object(start, 'process_identity', return_value='created-12345'):
+            start.save_running_pids([12345])
+        with mock.patch.object(start, 'stop_pid') as mock_stop_pid, \
+                mock.patch.object(start, 'wait_ports_free') as mock_wait:
+            start.stop_stale_services()
+        mock_stop_pid.assert_called_once_with(12345)
+        self.assertEqual(start.read_running_pids(), [])
+        mock_wait.assert_called_once()
+
+    def test_stop_existing_frees_pids_and_ports(self):
+        with mock.patch.object(start, 'process_identity', return_value='created-54321'):
+            start.save_running_pids([54321])
+        with mock.patch.object(start, 'stop_pid') as mock_stop_pid, \
+                mock.patch.object(start, 'pids_for_port', return_value=set()), \
+                mock.patch.object(start, 'wait_ports_free') as mock_wait:
+            start.stop_existing(docker=False)
+        mock_stop_pid.assert_called_once_with(54321)
+        self.assertEqual(start.read_running_pids(), [])
+        mock_wait.assert_called_once_with([5000, 5173, 5174], timeout=5)
+
+    def test_reused_pid_does_not_get_stopped(self):
+        with mock.patch.object(start, 'process_identity', return_value='original-creation'):
+            start.save_running_pids([54321])
+        with mock.patch.object(start, 'stop_verified_pid', return_value=False) as stop:
+            start.stop_pid(54321)
+        stop.assert_called_once_with(54321, 'original-creation')
+
+    def test_child_environment_exposes_package_tools_without_pythonpath(self):
+        with mock.patch.dict(start.os.environ, {'PYTHONPATH': 'archived-dependencies'}):
+            env = start.child_env()
+        self.assertNotIn('PYTHONPATH', env)
+        self.assertIn(str(start.venv_python().parent), env['PATH'])
+        self.assertIn(str(start.PNPM_HOME / 'node_modules/.bin'), env['PATH'])
+
+    def test_failed_service_reports_name_exit_code_and_its_log(self):
+        child = mock.Mock(tripraft_service='api')
+        child.poll.return_value = 3
+        with self.assertRaisesRegex(RuntimeError, r'api stopped \(exit 3\).*api\.log'):
+            start.check_services([child])
+
+    def test_second_start_reuses_healthy_session_and_opens_site(self):
+        with mock.patch.object(start, 'native_services_ready', return_value=True), \
+                mock.patch.object(start, 'stop_existing') as stop, \
+                mock.patch.object(start.webbrowser, 'open') as browser, \
+                mock.patch.object(start.subprocess, 'Popen') as spawn:
+            start.start('node', docker=False, smoke=False, no_browser=False)
+        stop.assert_not_called()
+        spawn.assert_not_called()
+        browser.assert_called_once_with('http://127.0.0.1:5173')
+
+    def test_smoke_does_not_stop_a_healthy_existing_session(self):
+        with mock.patch.object(start, 'native_services_ready', return_value=True), \
+                mock.patch.object(start, 'stop_existing') as stop, \
+                mock.patch.object(start.webbrowser, 'open') as browser:
+            start.start('node', docker=False, smoke=True, no_browser=False)
+        stop.assert_not_called()
+        browser.assert_not_called()
 
 
 if __name__ == '__main__':

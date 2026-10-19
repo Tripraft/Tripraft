@@ -63,3 +63,5 @@ td {
   padding: 12px 8px;
   border-bottom: 1px solid #e1e9e6;
 }
+/* Partner business review uses the same internal authorization boundary as the console. */
+.partner-admin-card{border:1px solid #cbd5e1;border-radius:10px;padding:20px;margin:18px 0;background:white}.partner-admin-card dl{display:grid;grid-template-columns:150px 1fr;gap:10px}.partner-admin-card dt{font-weight:600}.partner-admin-card dd{margin:0;overflow-wrap:anywhere}.partner-admin-card label{display:flex;flex-direction:column;gap:8px}.partner-admin-card textarea{min-height:80px;max-width:700px;font:inherit;padding:10px}.partner-admin-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}.partner-admin-actions button{text-transform:capitalize}.toolbar select{font:inherit;padding:8px}@media(max-width:600px){.partner-admin-card dl{grid-template-columns:1fr}.partner-admin-card dt{margin-top:8px}}

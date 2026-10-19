@@ -17,10 +17,12 @@ Every published source/configuration file is listed below. Legal source formats 
 | `apps/admin/jest.config.cjs` | Provides jest.config logic and exports for apps\admin. |
 | `apps/admin/package.json` | Declares dependencies, exports and development commands for the apps\admin workspace package. |
 | `apps/admin/src/App.tsx` | Renders the admin console with initialized server-account authorization, readiness and ingestion audit results. |
+| `apps/admin/src/PartnerReviewPanel.tsx` | Reviews supplier business applications with version checks and agent-visible decision reasons. |
 | `apps/admin/src/env.d.ts` | Renders the admin console with initialized server-account authorization, readiness and ingestion audit results. |
 | `apps/admin/src/main.tsx` | Renders the admin console with initialized server-account authorization, readiness and ingestion audit results. |
 | `apps/admin/src/styles.css` | Styles the styles interface, including its layout and interaction states. |
 | `apps/admin/tests/access.test.jsx` | Regression tests for access, including success and failure behavior. |
+| `apps/admin/tests/partners.test.jsx` | Checks review payloads, version conflicts and applicant-visible decision reasons. |
 | `apps/admin/tests/viteEnvTransform.cjs` | Test fixture/configuration helper for vite Env Transform. |
 | `apps/admin/tsconfig.json` | Selects TypeScript compiler options and checked source for apps\admin. |
 | `apps/admin/vite.config.ts` | Configures the React build and local API proxy for apps\admin. |
@@ -136,6 +138,11 @@ Every published source/configuration file is listed below. Legal source formats 
 | `apps/web/src/features/itinerary/jsx/TripMap.jsx` | Renders itinerary map markers and safe DOM-based popups. |
 | `apps/web/src/features/itinerary/jsx/TripPlanCard.jsx` | Renders the Trip Plan Card interface within apps\web\src\features\itinerary\jsx. |
 | `apps/web/src/features/itinerary/jsx/TripTips.jsx` | Renders the Trip Tips interface within apps\web\src\features\itinerary\jsx. |
+| `apps/web/src/features/partners/PartnerPortal.tsx` | Provides the partner landing, supplier-only sign-in and business application/status flow. |
+| `apps/web/src/features/partners/__tests__/PartnerPortal.test.tsx` | Verifies the applicant journey, protected status routes and honest package capability boundary. |
+| `apps/web/src/features/partners/__tests__/partnerApi.test.ts` | Checks isolated partner CSRF cookies, refresh reads and non-replayed mutations. |
+| `apps/web/src/features/partners/partnerApi.ts` | Uses isolated httpOnly partner sessions and CSRF without traveler-token refresh or mutation replay. |
+| `apps/web/src/features/partners/partners.css` | Styles the responsive partner landing, onboarding forms and review-status pages. |
 | `apps/web/src/features/polls/PollFeed.jsx` | Renders poll choices, vote counts and voter panels using state and handlers supplied by chat. |
 | `apps/web/src/features/scout/CrewCards.jsx` | Renders Crew question, confirmation, place and success cards. |
 | `apps/web/src/features/scout/ScoutConsentCard.jsx` | Displays Scout consent choices and retries the original request after consent. |
@@ -226,6 +233,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `docs/plans/places-search-tour-packages/architecture-and-files.md` | Maps portal/search/admin routes, proposed files, authentication boundaries and existing integration points. |
 | `docs/plans/places-search-tour-packages/data-api-and-publishing.md` | Defines tour records, API projections, price visibility, selective publishing automation and transaction rules. |
 | `docs/plans/places-search-tour-packages/phases-and-acceptance.md` | Orders the implementation phases, first sprint, backlog, regression tests and release gates. |
+| `docs/reports/partners-onboarding-foundation-2026-10-18.md` | Records delivered partner onboarding, launcher fixes, verification and remaining rollout work. |
 | `docs/runbook.md` | Documents operation, verification, backups, and deployment prerequisites. |
 | `docs/startup.md` | Documents the single-file launcher, one-time setup, runtime modes, ports, data and troubleshooting. |
 | `infra/docker/.env.example` | Documents public configuration keys and placeholder values; copy locally and keep real credentials out of Git. |
@@ -238,7 +246,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `infra/tools/check_structure.py` | Checks required workspace files, discovered workflows, and Python/JavaScript/TypeScript import targets. |
 | `infra/tools/dev-env.ps1` | Creates the optional isolated development environment without replacing archived local environments. |
 | `infra/tools/document_files.py` | Adds valid file-purpose headers and regenerates this complete source/configuration file guide. |
-| `infra/tools/export_openapi.py` | Exports registered Flask paths and explicit admin schemas using a migrated disposable database. |
+| `infra/tools/export_openapi.py` | Exports registered Flask routes and explicit admin/partner schemas against a migrated disposable database. |
 | `infra/tools/sync-workflows.mjs` | Copies canonical workflows into the .github/workflows paths GitHub discovers. |
 | `infra/tools/validate_infra.py` | Checks Compose paths, volumes and dependencies plus workflow YAML without claiming live deployment. |
 | `package.json` | Defines workspace commands, pinned package-manager version, and shared development dependencies. |
@@ -254,6 +262,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `packages/types/eslint.config.js` | Applies the shared syntax/error lint rules to packages\types. |
 | `packages/types/package.json` | Declares dependencies, exports and development commands for the packages\types workspace package. |
 | `packages/types/src/index.ts` | Exports shared UUID, money, account, API envelope and service-health TypeScript contracts. |
+| `packages/types/src/partners.ts` | Defines the private partner onboarding and internal review API contracts. |
 | `packages/types/tsconfig.json` | Selects TypeScript compiler options and checked source for packages\types. |
 | `packages/ui/eslint.config.js` | Applies the shared syntax/error lint rules to packages\ui. |
 | `packages/ui/package.json` | Declares dependencies, exports and development commands for the packages\ui workspace package. |
@@ -368,6 +377,12 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/app/notifications/services/__init__.py` | Declares the services\api\app\notifications\services Python package and its public exports. |
 | `services/api/app/notifications/services/email_service.py` | Email Service Professional email handling for expense engine. |
 | `services/api/app/notifications/services/notification_service.py` | Notification Service for Group Planner Handles creating, querying, and managing in-app notifications. |
+| `services/api/app/partners/__init__.py` | Declares the supplier-only partner onboarding domain. |
+| `services/api/app/partners/models.py` | Stores supplier applications, scoped staff membership and immutable review decisions. |
+| `services/api/app/partners/routes.py` | Exposes supplier-only onboarding/session APIs and authenticated internal review operations. |
+| `services/api/app/partners/schemas.py` | Validates partner input without accepting role, approval or ownership fields from clients. |
+| `services/api/app/partners/security.py` | Isolates partner cookies/token types and validates revocable supplier sessions. |
+| `services/api/app/partners/services.py` | Implements atomic supplier-only registration, revocable sessions and versioned application review. |
 | `services/api/app/places/__init__.py` | Place and location domain models for geographic data. |
 | `services/api/app/places/location_models.py` | Data models for places API Provides query methods for places, cities, states, and countries. |
 | `services/api/app/places/location_repository.py` | Location Database Utilities Thin wrapper around the shared DatabaseConnection pool from repository.py. |
@@ -417,10 +432,8 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/app/trips/services/trip_invite_service.py` | Invitation Service for Group Planner Handles group invitations using unified SQL database (tripraft.db). |
 | `services/api/app/trips/services/vault_service.py` | Vault Service for Group Planner Handles file upload/download for the logistics vault. |
 | `services/api/docker-entrypoint.sh` | Initializes the empty canonical catalog, applies API migrations and starts the supplied server/worker command. |
-| `services/api/init_travel_db.py` | Creates and validates the canonical travel database without loading seed data or overwriting existing databases. |
-| `services/api/schema/tripraft-canonical-schema.sql` | Preserved older schema reference; initialization uses sql_database/tripraft-global-schema-v2.1.sql. |
-| `services/api/tests/test_canonical_catalog.py` | Verifies empty creation, existing-data preservation, rejection of incompatible schemas and shared connection settings. |
 | `services/api/gunicorn.conf.py` | Gunicorn Configuration Production server settings with graceful shutdown and worker recycling. |
+| `services/api/init_travel_db.py` | Creates and validates the canonical travel database without loading seed data or overwriting existing databases. |
 | `services/api/migrations/README` | Configures README for services\api\migrations. |
 | `services/api/migrations/env.py` | Alembic Environment Configuration Connects Alembic to the app's SQLAlchemy metadata and database URL. |
 | `services/api/migrations/script.py.mako` | Configures script.py for services\api\migrations. |
@@ -430,6 +443,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/migrations/versions/75118e6ab634_initial_schema.py` | Frozen UUID-native application schema (2026-10-02). Revision ID: 75118e6ab634. |
 | `services/api/migrations/versions/83f1d84d08e4_add_ai_consent_preferences_agent_logs.py` | add_ai_consent_preferences_agent_logs Revision ID: 83f1d84d08e4. |
 | `services/api/migrations/versions/a0a12823fc65_materialized_views_postgresql.py` | materialized_views_postgresql PostgreSQL-only migration: creates two materialized views for. |
+| `services/api/migrations/versions/a18b2c3d4e5f_partner_onboarding.py` | Adds supplier-only identity classification, onboarding profiles, membership and review history. |
 | `services/api/migrations/versions/a5b6c7d8e9f0_add_checklist_metadata_and_chat_fks.py` | Persist checklist metadata and protect chat message references. Revision ID: a5b6c7d8e9f0. |
 | `services/api/migrations/versions/b7c8d9e0f1a2_complete_vault_and_place_time_schema.py` | Complete vault/time coverage and validate UUID-native existing databases. Revision ID: b7c8d9e0f1a2. |
 | `services/api/migrations/versions/c4d5e6f7a8b9_add_chat_tables.py` | add_chat_tables Revision ID: c4d5e6f7a8b9. |
@@ -444,9 +458,11 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/requirements.txt` | Pins the Flask API runtime dependencies, database drivers, authentication, workers and export integrations. |
 | `services/api/ruff.toml` | Configures ruff for services\api. |
 | `services/api/run.py` | TripRaft Backend -- Main Entry Point Run this file to start the Flask server. |
+| `services/api/schema/tripraft-canonical-schema.sql` | Preserved older schema reference; initialization uses sql_database/tripraft-global-schema-v2.1.sql. |
 | `services/api/tests/conftest.py` | Test fixture/configuration helper for conftest. |
 | `services/api/tests/test_ai_consent.py` | Regression tests for ai consent, including success and failure behavior. |
 | `services/api/tests/test_auth_tokens.py` | Regression tests for auth tokens, including success and failure behavior. |
+| `services/api/tests/test_canonical_catalog.py` | Verifies empty creation, existing-data preservation, rejection of incompatible schemas and shared connection settings. |
 | `services/api/tests/test_crew_expense_deletion.py` | Regression tests for crew expense deletion, including success and failure behavior. |
 | `services/api/tests/test_csrf.py` | Regression tests for csrf, including success and failure behavior. |
 | `services/api/tests/test_endpoint_inventory.py` | Regression tests for endpoint inventory, including success and failure behavior. |
@@ -457,11 +473,12 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/tests/test_money_concurrency.py` | Regression tests for money concurrency, including success and failure behavior. |
 | `services/api/tests/test_money_integrity.py` | Regression tests for money integrity, including success and failure behavior. |
 | `services/api/tests/test_p3_contracts.py` | Regression tests for p3 contracts, including success and failure behavior. |
+| `services/api/tests/test_partners.py` | Exercises supplier isolation, versioned onboarding, review history and revocable cookie sessions. |
 | `services/api/tests/test_phase1_contracts.py` | Regression tests for phase1 contracts, including success and failure behavior. |
 | `services/api/tests/test_phase2_continued.py` | Regression tests for phase2 continued, including success and failure behavior. |
 | `services/api/tests/test_phase2_contracts.py` | Regression tests for phase2 contracts, including success and failure behavior. |
 | `services/api/tests/test_security_hardening.py` | Regression tests for security hardening, including success and failure behavior. |
 | `services/api/tests/test_uuid_ids.py` | Regression tests for uuid ids, including success and failure behavior. |
 | `services/api/tests/test_websocket_auth.py` | Regression tests for websocket auth, including success and failure behavior. |
-| `start.py` | Sets up isolated dependencies once, starts API/web/admin, checks readiness, and stops only its owned services. |
+| `start.py` | Starts API/web/admin, backs up pending SQLite upgrades, reuses healthy sessions, opens the site and manages live development services. |
 | `turbo.json` | Orders and caches workspace build/lint/type-check tasks while keeping tests fresh and development processes persistent. |

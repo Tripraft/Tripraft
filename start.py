@@ -4,7 +4,7 @@
 
 Usage: python start.py [--setup | --check | --smoke | --stop] [--docker] [--no-browser]
 Requires Node >=22 and Python 3.11 for native mode, or Docker for Docker mode.
-Starting replaces listeners on ports 5000, 5173 and 5174. Ctrl+C stops launched services.
+Starting reuses healthy owned services; otherwise it replaces development-port listeners.
 Windows native services also stop when the launcher window closes.
 Existing configuration and data are preserved; no additional launcher module is required.
 """
@@ -188,6 +188,9 @@ def run(command, *, cwd=ROOT, env=None, capture=False):
 
 def node_runtime():
     node = shutil.which('node')
+    if not node and os.name == 'nt':
+        installed = Path(os.environ.get('ProgramFiles', 'C:/Program Files')) / 'nodejs/node.exe'
+        node = str(installed) if installed.is_file() else None
     if not node:
         raise RuntimeError('Install Node.js 22 or newer, then run this file again.')
     version = run([node, '--version'], capture=True)
@@ -219,6 +222,11 @@ def child_env():
     """Make local package tools available to nested pnpm/Turbo commands."""
     env = os.environ.copy()
     directories = [str(PNPM_HOME / 'node_modules/.bin'), str(venv_python().parent)]
+    # Windows .py associations and newly installed Node may have a stale PATH.
+    node = shutil.which('node')
+    fallback = Path(os.environ.get('ProgramFiles', 'C:/Program Files')) / 'nodejs/node.exe'
+    if node or (os.name == 'nt' and fallback.is_file()):
+        directories.insert(0, str(Path(node or fallback).parent))
     env['PATH'] = os.pathsep.join(directories + [env.get('PATH', '')])
     # A real isolated environment must not inherit archived dependency overrides.
     env.pop('PYTHONPATH', None)
@@ -230,7 +238,56 @@ def fingerprint(docker):
     digest = hashlib.sha256(f'{PNPM_VERSION}:{docker}'.encode())
     for name in ['pnpm-lock.yaml', 'services/api/requirements.txt', 'services/api/requirements-dev.txt']:
         digest.update((ROOT / name).read_bytes())
+    manifests = [ROOT / 'package.json', ROOT / 'pnpm-workspace.yaml']
+    for folder in ('apps', 'packages', 'services'):
+        manifests.extend(sorted((ROOT / folder).glob('*/package.json')))
+    for manifest in manifests:
+        if manifest.is_file():
+            digest.update(str(manifest.relative_to(ROOT)).encode())
+            digest.update(manifest.read_bytes())
     return digest.hexdigest()
+
+
+def migrate_native():
+    """Use the API's exact configuration and back up SQLite before an upgrade."""
+    from datetime import datetime, timezone
+    import sqlite3
+    from contextlib import closing
+    from dotenv import load_dotenv
+    from alembic import command
+    from alembic.config import Config as AlembicConfig
+    from alembic.migration import MigrationContext
+    from alembic.script import ScriptDirectory
+    from sqlalchemy import create_engine
+    from sqlalchemy.engine import make_url
+
+    load_dotenv(API / '.env')
+    sys.path.insert(0, str(API))
+    from app.core.config import Config
+    config = AlembicConfig(str(API / 'alembic.ini'))
+    config.set_main_option('script_location', str(API / 'migrations'))
+    # Alembic and Flask must use the same selected database, including defaults.
+    os.environ['DATABASE_URL'] = Config.DATABASE_URL
+    selected = make_url(Config.DATABASE_URL)
+    if selected.get_backend_name() == 'sqlite' and selected.database not in (None, '', ':memory:'):
+        database = Path(selected.database).resolve()
+        database.parent.mkdir(parents=True, exist_ok=True)
+        if database.is_file() and database.stat().st_size:
+            engine = create_engine(Config.DATABASE_URL)
+            try:
+                with engine.connect() as connection:
+                    current = set(MigrationContext.configure(connection).get_current_heads())
+                pending = current != set(ScriptDirectory.from_config(config).get_heads())
+            finally:
+                engine.dispose()
+            if pending:
+                destination = LOCAL / 'backups' / (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ') + '-before-migration.db')
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                with closing(sqlite3.connect(database.as_uri() + '?mode=ro', uri=True)) as source:
+                    with closing(sqlite3.connect(destination)) as backup:
+                        source.backup(backup)
+                print(f'Pre-migration SQLite backup: {destination}', flush=True)
+    command.upgrade(config, 'head')
 
 
 def setup_ready(saved, docker):
@@ -432,6 +489,9 @@ def stop_stale_services():
     """Recover verified services left by a previous run."""
     for pid in read_running_pids():
         stop_pid(pid)
+    if not wait_ports_free(_running_state().get('ports', [5000, 5173, 5174]), timeout=5):
+        raise RuntimeError('Recorded services still hold their ports. Run python start.py --stop.')
+    clear_running_pids()
 
 
 def stop_existing(docker=False, quiet=False):
@@ -473,6 +533,34 @@ def wait_ready(url, process, timeout=90):
     raise RuntimeError(f'Service did not become ready: {url}. See .tripraft/logs.')
 
 
+def check_services(processes):
+    """Report the actual failed child rather than an unhelpful generic shutdown."""
+    for process in processes:
+        code = process.poll()
+        if code is not None:
+            name = getattr(process, 'tripraft_service', 'service')
+            raise RuntimeError(f'{name} stopped (exit {code}). See {LOCAL / "logs" / (name + ".log")}.')
+
+
+def native_services_ready():
+    """Do not terminate a healthy session when a second terminal starts TripRaft."""
+    state = _running_state()
+    records = state.get('processes', [])
+    if state.get('docker') or len(records) != 3:
+        return False
+    if any(not isinstance(row, dict) or not row.get('created')
+           or process_identity(row.get('pid')) != row['created'] for row in records):
+        return False
+    for url in ('http://127.0.0.1:5000/api/health/live', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'):
+        try:
+            with urllib.request.urlopen(url, timeout=2) as response:
+                if response.status != 200:
+                    return False
+        except (urllib.error.URLError, TimeoutError, OSError):
+            return False
+    return True
+
+
 def stop_child(process):
     """Stop only a process tree this launcher created, without touching unrelated services."""
     if process.poll() is not None:
@@ -505,6 +593,12 @@ def stop_child(process):
 
 
 def start(node, docker, smoke, no_browser):
+    if not docker and native_services_ready():
+        print('TripRaft is already running. Web: http://127.0.0.1:5173 | Partners: http://127.0.0.1:5173/partners', flush=True)
+        print('Reusing healthy services; their existing launcher keeps live updates running.', flush=True)
+        if not no_browser and not smoke:
+            webbrowser.open('http://127.0.0.1:5173')
+        return
     env = child_env()
     managed_ports = [5173, 5174] + ([] if docker else [5000])
     stop_existing(docker=docker, quiet=True)
@@ -551,26 +645,31 @@ def start(node, docker, smoke, no_browser):
             run(compose + ['up', '--build', '--detach', '--wait', '--wait-timeout', '180'])
             wait_ready('http://127.0.0.1:5000/api/health/live', None)
         else:
+            env.update({'FLASK_HOST': '127.0.0.1', 'FLASK_PORT': '5000', 'TRIPRAFT_DEV_RELOAD': '1'})
             run([str(venv_python()), str(API / 'init_travel_db.py')], cwd=API, env=env)
             print('Applying database migrations; existing configuration is respected.', flush=True)
-            run([str(venv_python()), '-m', 'alembic', 'upgrade', 'head'], cwd=API, env=env)
+            run([str(venv_python()), str(ROOT / 'start.py'), '--migrate-native'], cwd=API, env=env)
             api_process = launch('api', [str(venv_python()), str(API / 'run.py')], API)
             wait_ready('http://127.0.0.1:5000/api/health/live', api_process)
         for name, port in [('web', 5173), ('admin', 5174)]:
             app = ROOT / 'apps' / name
             process = launch(name, [node, str(app / 'node_modules/vite/bin/vite.js'), '--host', '127.0.0.1', '--strictPort', '--port', str(port)], app)
             wait_ready(f'http://127.0.0.1:{port}', process)
-        print('TripRaft is ready. Web: http://localhost:5173 | Admin: http://localhost:5174 | API: http://localhost:5000', flush=True)
+        # The reloader's parent and worker must both survive initial readiness.
+        for _ in range(8):
+            check_services(processes)
+            time.sleep(.25)
+        print('TripRaft is ready. Web: http://127.0.0.1:5173 | Admin: http://127.0.0.1:5174 | API: http://127.0.0.1:5000', flush=True)
+        print('Frontend live updates are enabled. Native API Python edits reload automatically.', flush=True)
         print(('Press Ctrl+C to stop.' if docker else 'Press Ctrl+C or close this launcher to stop.')
               + ' Logs: .tripraft/logs', flush=True)
         if smoke:
             print('Startup smoke check passed; stopping owned services.', flush=True)
             return
         if not no_browser:
-            webbrowser.open('http://localhost:5173')
+            webbrowser.open('http://127.0.0.1:5173')
         while True:
-            if any(process.poll() is not None for process in processes):
-                raise RuntimeError('A project service stopped. See .tripraft/logs.')
+            check_services(processes)
             time.sleep(1)
     finally:
         sigint_handler = None
@@ -648,6 +747,9 @@ def main():
 
 if __name__ == '__main__':
     try:
+        if sys.argv[1:] == ['--migrate-native']:
+            migrate_native()
+            sys.exit(0)
         if os.name == 'nt' and len(sys.argv) >= 5 and sys.argv[1] == '--owned-child' and sys.argv[3] == '--':
             sys.exit(owned_child(sys.argv[2], sys.argv[4:]))
         main()

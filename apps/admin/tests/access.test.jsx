@@ -5,6 +5,7 @@ const mockGet = jest.fn();
 jest.mock('@tripraft/api-client', () => ({ createApiClient: () => ({ GET: (...args) => mockGet(...args) }) }));
 import { App } from '../src/App';
 
+beforeEach(() => { global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ success: true, data: { applications: [], total: 0 } }) }); });
 afterEach(() => { cleanup(); mockGet.mockReset(); });
 const identity = is_admin => ({ data: { data: { user: { id: '019af385-ff28-7000-8000-000000000001', email: 'ops@example.test', is_admin } } }, response: { ok: true, status: 200 } });
 test('waits for identity before requesting privileged operations', async () => {
@@ -13,6 +14,7 @@ test('waits for identity before requesting privileged operations', async () => {
   render(<App />);
   expect(screen.getByRole('status')).toHaveTextContent('Checking account');
   expect(mockGet).toHaveBeenCalledTimes(1);
+  expect(fetch).not.toHaveBeenCalled();
   resolve(identity(false));
   expect(await screen.findByRole('alert')).toHaveTextContent('does not have administrator access');
   expect(mockGet).toHaveBeenCalledTimes(1);

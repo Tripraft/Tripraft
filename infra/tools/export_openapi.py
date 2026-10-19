@@ -1,4 +1,4 @@
-# Purpose: Exports registered Flask paths and explicit admin schemas using a migrated disposable database.
+# Purpose: Exports registered Flask paths and explicit admin/partner schemas using a migrated disposable database.
 """Export registered Flask routes without opening or modifying the user's database.
 
 Known operations have explicit response schemas. Other response payloads remain
@@ -31,6 +31,7 @@ def envelope(data):
 
 
 def build(application):
+    from app.partners.schemas import ApplicationSubmit, ApplicationUpdate, PartnerLogin, PartnerRegister, ReviewDecision
     schemas = {
         'User': {'type': 'object', 'required': ['id', 'email', 'is_admin'], 'properties': {
             'id': {'type': 'string', 'format': 'uuid'}, 'email': {'type': 'string'},
@@ -53,6 +54,43 @@ def build(application):
         'MeResponse': envelope({'type': 'object', 'required': ['user'], 'properties': {'user': ref('User')}}),
         'AuditResponse': envelope(ref('AuditData')),
     }
+    for model in (PartnerRegister, PartnerLogin, ApplicationUpdate, ApplicationSubmit, ReviewDecision):
+        schemas[model.__name__] = model.model_json_schema()
+    status_values = ['DRAFT_APPLICATION', 'UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'SUSPENDED', 'REJECTED']
+    application_fields = {name: {'type': 'string'} for name in (
+        'business_name', 'representative_name', 'contact_email', 'phone', 'country_code', 'website',
+    )}
+    application_fields.update({
+        'id': {'type': 'string', 'format': 'uuid'}, 'version': {'type': 'integer', 'minimum': 1},
+        'status': {'type': 'string', 'enum': status_values},
+        'business_type': {'type': 'string', 'enum': ['tour_operator', 'travel_agency']},
+        'operating_regions': {'type': 'array', 'items': {'type': 'string'}},
+        'review_reason': {'type': ['string', 'null']},
+        'submitted_at': {'type': ['string', 'null'], 'format': 'date-time'},
+        'updated_at': {'type': 'string', 'format': 'date-time'},
+    })
+    schemas['PartnerApplication'] = {'type': 'object', 'required': list(application_fields), 'properties': application_fields}
+    schemas['PartnerSnapshot'] = {'type': 'object', 'required': ['user', 'application', 'capabilities'], 'properties': {
+        'user': {'type': 'object', 'required': ['id', 'email', 'display_name', 'email_verified'], 'properties': {
+            'id': {'type': 'string', 'format': 'uuid'}, 'email': {'type': 'string'},
+            'display_name': {'type': ['string', 'null']}, 'email_verified': {'type': 'boolean'},
+        }},
+        'application': ref('PartnerApplication'), 'verification_email_sent': {'type': 'boolean'},
+        'capabilities': {'type': 'object', 'required': ['can_edit_application', 'can_submit_application', 'can_view_dashboard', 'can_manage_packages'], 'properties': {
+            name: {'type': 'boolean'} for name in ('can_edit_application', 'can_submit_application', 'can_view_dashboard', 'can_manage_packages')
+        }},
+    }}
+    schemas['PartnerSnapshotResponse'] = envelope(ref('PartnerSnapshot'))
+    schemas['PartnerReviewListResponse'] = envelope({'type': 'object', 'required': ['applications', 'total'], 'properties': {
+        'applications': {'type': 'array', 'items': ref('PartnerApplication')}, 'total': {'type': 'integer'},
+    }})
+    schemas['PartnerError'] = {'type': 'object', 'required': ['success', 'error'], 'properties': {
+        'success': {'type': 'boolean'}, 'data': {'type': 'null'},
+        'error': {'oneOf': [{'type': 'string'}, {'type': 'object', 'required': ['code', 'message'], 'properties': {
+            'code': {'type': 'string'}, 'message': {'type': 'string'},
+            'details': {'type': 'object', 'additionalProperties': {'type': 'array', 'items': {'type': 'string'}}},
+        }}]},
+    }}
     paths = {}
     for rule in sorted(application.url_map.iter_rules(), key=lambda r: (r.rule, r.endpoint)):
         if not (rule.rule.startswith('/api/v1/') or rule.rule.startswith('/api/health/')):
@@ -81,11 +119,47 @@ def build(application):
                     {'name': name, 'in': 'query', 'schema': {'type': 'integer', 'minimum': 0}}
                     for name in ('limit', 'offset')
                 ]
+            if rule.endpoint.startswith('partners.'):
+                operation['description'] = 'Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.'
+                action = rule.endpoint.split('.')[-1]
+                inputs = {'register': 'PartnerRegister', 'login': 'PartnerLogin', 'update_application': 'ApplicationUpdate',
+                          'submit_application': 'ApplicationSubmit', 'review_application': 'ReviewDecision'}
+                if action in inputs:
+                    operation['requestBody'] = {'required': True, 'content': {'application/json': {'schema': ref(inputs[action])}}}
+                if action in ('register', 'login', 'me', 'update_application', 'submit_application'):
+                    output = ref('PartnerSnapshotResponse')
+                elif action == 'list_applications':
+                    output = ref('PartnerReviewListResponse')
+                    operation['parameters'] = [
+                        {'name': 'status', 'in': 'query', 'schema': {'type': 'string', 'enum': status_values, 'default': 'UNDER_REVIEW'}},
+                        {'name': 'limit', 'in': 'query', 'schema': {'type': 'integer', 'minimum': 1, 'maximum': 100, 'default': 25}},
+                        {'name': 'offset', 'in': 'query', 'schema': {'type': 'integer', 'minimum': 0, 'maximum': 10000, 'default': 0}},
+                    ]
+                elif action == 'review_application':
+                    output = envelope(ref('PartnerApplication'))
+                else:
+                    fields = {'refresh': {'refreshed': {'type': 'boolean'}}, 'logout': {'signed_out': {'type': 'boolean'}},
+                              'resend_verification': {'message': {'type': 'string'}}}[action]
+                    output = envelope({'type': 'object', 'properties': fields})
+                operation['responses'] = {('201' if action == 'register' else '200'): response(output)}
+                for status in ('401', '403', '409', '422', '429', '503'):
+                    operation['responses'][status] = response(ref('PartnerError'))
+                if action == 'review_application':
+                    operation['responses']['404'] = response(ref('PartnerError'))
+                if action not in ('register', 'login'):
+                    security = 'cookieAuth' if route.startswith('/api/v1/admin/') else 'partnerRefreshCookieAuth' if action in ('refresh', 'logout') else 'partnerCookieAuth'
+                    operation['security'] = [{security: []}]
+                    if action == 'logout':
+                        operation['security'].append({})
+                if method != 'GET' and action not in ('register', 'login'):
+                    operation.setdefault('parameters', []).append({'name': 'X-CSRF-Token', 'in': 'header', 'schema': {'type': 'string'}, 'description': 'Required with cookie authentication.'})
             paths.setdefault(route, {})[method.lower()] = operation
     return {'openapi': '3.1.0', 'info': {'title': 'TripRaft API', 'version': '2.0.0',
-            'description': 'Route inventory with explicit operations schemas for the admin client. Unspecified payloads remain unknown.'},
+            'description': 'Route inventory with explicit admin and partner operations schemas. Unspecified payloads remain unknown.'},
             'paths': paths, 'components': {'schemas': schemas,
-            'securitySchemes': {'cookieAuth': {'type': 'apiKey', 'in': 'cookie', 'name': 'access_token'}}}}
+            'securitySchemes': {'cookieAuth': {'type': 'apiKey', 'in': 'cookie', 'name': 'access_token'},
+                                'partnerCookieAuth': {'type': 'apiKey', 'in': 'cookie', 'name': 'partner_access_token'},
+                                'partnerRefreshCookieAuth': {'type': 'apiKey', 'in': 'cookie', 'name': 'partner_refresh_token'}}}}
 
 
 if __name__ == '__main__':

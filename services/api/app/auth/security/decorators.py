@@ -80,6 +80,7 @@ def _ensure_user_exists(user_id: str, email: str, name: Optional[str] = None) ->
         try:
             user = session.get(User, uid)
             if user:
+                g.account_portal = user.portal_kind
                 return True
             logger.warning("User %s not found in DB -- rejecting request", user_id)
             return False
@@ -147,6 +148,8 @@ def require_auth(f):
             }), 500
 
         # Set standardised g attributes
+        if getattr(g, 'account_portal', 'traveler') != 'traveler':
+            return jsonify({'success': False, 'error': 'Partner accounts cannot access traveler services'}), 403
         g.current_user = user_info
         g.user_id = _uuid.UUID(user_info['id']) if isinstance(user_info['id'], str) else user_info['id']
         g.user_email = user_info.get('email', '')

@@ -30,6 +30,7 @@ class User(Base):
     default_currency = Column(String(3), default='USD')
     is_active = Column(Boolean, default=True)
     email_verified = Column(Boolean, default=False)
+    portal_kind = Column(String(16), nullable=False, default='traveler', server_default='traveler')
     # Retain the verification event time for audit and account-recovery flows.
     email_verified_at = Column(DateTime)
     created_at = Column(DateTime, default=func.now())

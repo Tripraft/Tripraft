@@ -1,6 +1,6 @@
 # Places Search live tour packages implementation plan
 
-Prepared 18 October 2026. Status: implementation plan only. This is the active plan for the tour-package feature and replaces the earlier unified-marketplace plan and its phase-zero scaffolding removed from the active project at the user's request. Existing application code and databases have not been changed by this planning revision.
+Prepared 18 October 2026. Status: implementation started; the first phase-one onboarding/access vertical and native launcher fixes are implemented locally. See the [implementation report](../../reports/partners-onboarding-foundation-2026-10-18.md) for delivered files, checks and remaining gates. This remains the active roadmap and replaces the earlier unified-marketplace plan and its retired phase-zero scaffolding.
 
 Source specification: `TripRaft_Places_Search_Live_Tour_Packages_Complete_UPDATED_2026 (1).docx`, version 3.0, all 20 sections and appendices A and B. The complete main-body/table text was read; this is a requirements review rather than a Word layout review. Appendix B takes precedence where earlier wording differs. The user's footer placement instruction takes precedence over the document's optional header/About alternatives.
 

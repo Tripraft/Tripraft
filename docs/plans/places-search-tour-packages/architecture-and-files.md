@@ -276,7 +276,7 @@ Use the current shared `Base`, UUIDv7 helpers, cookie authentication primitives 
 | `/bookings/:bookingId` | Later buyer status/documents | Authorized buyer, not an enumerable public reference |
 | Admin app `/partners`, `/packages`, `/tour-pricing`, `/tour-operations/*` | Internal review and operations | Relevant platform role |
 
-In `Footer.jsx`, add a third Company list item after About Us and Contact: `<Link to="/partners">Partner with TripRaft</Link>`. This is a proposed implementation snippet, not a live change in this plan. Introduce the footer link and landing route in the same release. The normal header retains its current navigation.
+The first implementation checkpoint adds a third Company list item in `Footer.jsx` after About Us and Contact: `<Link to="/partners">Partner with TripRaft</Link>`, together with the working landing and onboarding route. The normal header retains its current navigation. Other folders and route capabilities in this architecture remain proposed unless listed in the [implementation report](../../reports/partners-onboarding-foundation-2026-10-18.md).
 
 ## Supplier-only account boundary
 

@@ -19,6 +19,7 @@
     "@tanstack/react-query-persist-client": "^5.90.13",
     "@tanstack/react-virtual": "^3.13.23",
     "@tripraft/ui": "workspace:*",
+    "@tripraft/types": "workspace:*",
     "@vitejs/plugin-react": "^5.0.2",
     "jspdf": "^4.0.0",
     "jspdf-autotable": "^5.0.7",
@@ -37,6 +38,7 @@
   "devDependencies": {
     "@babel/preset-env": "^7.28.5",
     "@babel/preset-react": "^7.28.5",
+    "@babel/preset-typescript": "^7.28.5",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
     "@tripraft/config": "workspace:*",

@@ -2,6 +2,7 @@
 
 | Branch/bookmark | Checkpoint |
 | --- | --- |
+| `partners-onboarding-foundation` | Supplier-only sessions, footer partner entry, business onboarding/admin review, and native launcher live updates/repeated-start reuse; [implementation and checks](reports/partners-onboarding-foundation-2026-10-18.md) |
 | `places-search-tour-packages-plan` | Replace the superseded marketplace plan with the updated Places Search tour-package specification, footer partner entry, package review/automation and phased delivery; [active plan](plans/places-search-tour-packages/README.md) |
 | `personal-finance-backend` | Personal income, expense edits/deletion, balances and analytics; `43990e456750` |
 | `group-expenses-backend` | Descendant checkpoint for group lifecycle, invitations, permissions and group ledger/reporting |

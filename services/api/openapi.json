@@ -1,6 +1,104 @@
 {
   "components": {
     "schemas": {
+      "ApplicationSubmit": {
+        "additionalProperties": false,
+        "properties": {
+          "information_attestation": {
+            "const": true,
+            "title": "Information Attestation",
+            "type": "boolean"
+          },
+          "version": {
+            "minimum": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "information_attestation"
+        ],
+        "title": "ApplicationSubmit",
+        "type": "object"
+      },
+      "ApplicationUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "business_name": {
+            "maxLength": 120,
+            "title": "Business Name",
+            "type": "string"
+          },
+          "business_type": {
+            "enum": [
+              "tour_operator",
+              "travel_agency"
+            ],
+            "title": "Business Type",
+            "type": "string"
+          },
+          "contact_email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "const": "",
+                "type": "string"
+              }
+            ],
+            "title": "Contact Email"
+          },
+          "country_code": {
+            "pattern": "^(?:[A-Za-z]{2})?$",
+            "title": "Country Code",
+            "type": "string"
+          },
+          "operating_regions": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 20,
+            "title": "Operating Regions",
+            "type": "array"
+          },
+          "phone": {
+            "maxLength": 40,
+            "title": "Phone",
+            "type": "string"
+          },
+          "representative_name": {
+            "maxLength": 100,
+            "title": "Representative Name",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1,
+            "title": "Version",
+            "type": "integer"
+          },
+          "website": {
+            "default": "",
+            "maxLength": 500,
+            "title": "Website",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "business_name",
+          "representative_name",
+          "contact_email",
+          "phone",
+          "country_code",
+          "business_type",
+          "operating_regions"
+        ],
+        "title": "ApplicationUpdate",
+        "type": "object"
+      },
       "AuditData": {
         "properties": {
           "logs": {
@@ -130,6 +228,341 @@
         ],
         "type": "object"
       },
+      "PartnerApplication": {
+        "properties": {
+          "business_name": {
+            "type": "string"
+          },
+          "business_type": {
+            "enum": [
+              "tour_operator",
+              "travel_agency"
+            ],
+            "type": "string"
+          },
+          "contact_email": {
+            "type": "string"
+          },
+          "country_code": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "operating_regions": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "representative_name": {
+            "type": "string"
+          },
+          "review_reason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "enum": [
+              "DRAFT_APPLICATION",
+              "UNDER_REVIEW",
+              "CHANGES_REQUESTED",
+              "APPROVED",
+              "SUSPENDED",
+              "REJECTED"
+            ],
+            "type": "string"
+          },
+          "submitted_at": {
+            "format": "date-time",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "updated_at": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "website": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "business_name",
+          "representative_name",
+          "contact_email",
+          "phone",
+          "country_code",
+          "website",
+          "id",
+          "version",
+          "status",
+          "business_type",
+          "operating_regions",
+          "review_reason",
+          "submitted_at",
+          "updated_at"
+        ],
+        "type": "object"
+      },
+      "PartnerError": {
+        "properties": {
+          "data": {
+            "type": "null"
+          },
+          "error": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "details": {
+                    "additionalProperties": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "type": "object"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success",
+          "error"
+        ],
+        "type": "object"
+      },
+      "PartnerLogin": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "PartnerLogin",
+        "type": "object"
+      },
+      "PartnerRegister": {
+        "additionalProperties": false,
+        "properties": {
+          "display_name": {
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Display Name",
+            "type": "string"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "display_name"
+        ],
+        "title": "PartnerRegister",
+        "type": "object"
+      },
+      "PartnerReviewListResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "applications": {
+                "items": {
+                  "$ref": "#/components/schemas/PartnerApplication"
+                },
+                "type": "array"
+              },
+              "total": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "applications",
+              "total"
+            ],
+            "type": "object"
+          },
+          "message": {
+            "type": "string"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ],
+        "type": "object"
+      },
+      "PartnerSnapshot": {
+        "properties": {
+          "application": {
+            "$ref": "#/components/schemas/PartnerApplication"
+          },
+          "capabilities": {
+            "properties": {
+              "can_edit_application": {
+                "type": "boolean"
+              },
+              "can_manage_packages": {
+                "type": "boolean"
+              },
+              "can_submit_application": {
+                "type": "boolean"
+              },
+              "can_view_dashboard": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "can_edit_application",
+              "can_submit_application",
+              "can_view_dashboard",
+              "can_manage_packages"
+            ],
+            "type": "object"
+          },
+          "user": {
+            "properties": {
+              "display_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "email": {
+                "type": "string"
+              },
+              "email_verified": {
+                "type": "boolean"
+              },
+              "id": {
+                "format": "uuid",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "email",
+              "display_name",
+              "email_verified"
+            ],
+            "type": "object"
+          },
+          "verification_email_sent": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "user",
+          "application",
+          "capabilities"
+        ],
+        "type": "object"
+      },
+      "PartnerSnapshotResponse": {
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/PartnerSnapshot"
+          },
+          "message": {
+            "type": "string"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ],
+        "type": "object"
+      },
+      "ReviewDecision": {
+        "additionalProperties": false,
+        "properties": {
+          "decision": {
+            "enum": [
+              "APPROVED",
+              "CHANGES_REQUESTED",
+              "REJECTED",
+              "SUSPENDED"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 2000,
+            "minLength": 5,
+            "title": "Reason",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "decision",
+          "reason"
+        ],
+        "title": "ReviewDecision",
+        "type": "object"
+      },
       "User": {
         "properties": {
           "display_name": {
@@ -162,11 +595,21 @@
         "in": "cookie",
         "name": "access_token",
         "type": "apiKey"
+      },
+      "partnerCookieAuth": {
+        "in": "cookie",
+        "name": "partner_access_token",
+        "type": "apiKey"
+      },
+      "partnerRefreshCookieAuth": {
+        "in": "cookie",
+        "name": "partner_refresh_token",
+        "type": "apiKey"
       }
     }
   },
   "info": {
-    "description": "Route inventory with explicit operations schemas for the admin client. Unspecified payloads remain unknown.",
+    "description": "Route inventory with explicit admin and partner operations schemas. Unspecified payloads remain unknown.",
     "title": "TripRaft API",
     "version": "2.0.0"
   },
@@ -339,6 +782,263 @@
             "description": "Response"
           }
         }
+      }
+    },
+    "/api/v1/admin/partners": {
+      "get": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_list_applications_get_api_v1_admin_partners",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "default": "UNDER_REVIEW",
+              "enum": [
+                "DRAFT_APPLICATION",
+                "UNDER_REVIEW",
+                "CHANGES_REQUESTED",
+                "APPROVED",
+                "SUSPENDED",
+                "REJECTED"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "default": 0,
+              "maximum": 10000,
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerReviewListResponse"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/partners/{agent_id}/decision": {
+      "post": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_review_application_post_api_v1_admin_partners_agent_id_decision",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Required with cookie authentication.",
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PartnerApplication"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/v1/admin/photos": {
@@ -726,6 +1426,38 @@
       "get": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
         "operationId": "auth_verify_email_get_api_v1_auth_verify_email",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/currencies": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "currencies_currencies_get_api_v1_currencies",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/exchange-rates": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "currencies_rates_get_api_v1_exchange_rates",
         "responses": {
           "default": {
             "content": {
@@ -1636,6 +2368,58 @@
         }
       }
     },
+    "/api/v1/expenses/invitations/{invitation_id}/details": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "invitations_sql_get_invitation_details_get_api_v1_expenses_invitations_invitation_id_details",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invitation_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/expenses/invitations/{invitation_id}/resend": {
+      "post": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "invitations_sql_resend_invitation_post_api_v1_expenses_invitations_invitation_id_resend",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "invitation_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
     "/api/v1/expenses/me": {
       "get": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
@@ -2016,6 +2800,32 @@
         }
       }
     },
+    "/api/v1/expenses/{expense_id}/restore": {
+      "post": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "expenses_sql_restore_expense_post_api_v1_expenses_expense_id_restore",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "expense_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
     "/api/v1/group-planner/activities/{group_id}": {
       "get": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
@@ -2046,6 +2856,54 @@
       "post": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
         "operationId": "group_planner_v2_verify_auth_post_api_v1_group_planner_auth_verify",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/group-planner/catalog/destinations": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "group_planner_v2_catalog_destinations_get_api_v1_group_planner_catalog_destinations",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/group-planner/catalog/places": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "group_planner_v2_catalog_place_cards_get_api_v1_group_planner_catalog_places",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/group-planner/catalog/viewport": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "group_planner_v2_catalog_destination_viewport_get_api_v1_group_planner_catalog_viewport",
         "responses": {
           "default": {
             "content": {
@@ -3118,6 +3976,40 @@
         }
       }
     },
+    "/api/v1/group-planner/groups/{group_id}/members/{member_id}/crew-role": {
+      "patch": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "gp_groups_update_member_crew_role_patch_api_v1_group_planner_groups_group_id_members_member_id_crew_role",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "member_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
     "/api/v1/group-planner/groups/{group_id}/members/{member_id}/role": {
       "patch": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
@@ -3882,6 +4774,30 @@
             "description": "Response"
           }
         }
+      },
+      "patch": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "gp_chat_edit_message_patch_api_v1_group_planner_messages_message_id",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
       }
     },
     "/api/v1/group-planner/metrics": {
@@ -4308,6 +5224,811 @@
             "description": "Response"
           }
         }
+      }
+    },
+    "/api/v1/partners/login": {
+      "post": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_login_post_api_v1_partners_login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartnerLogin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerSnapshotResponse"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/partners/logout": {
+      "post": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_logout_post_api_v1_partners_logout",
+        "parameters": [
+          {
+            "description": "Required with cookie authentication.",
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "signed_out": {
+                          "type": "boolean"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "partnerRefreshCookieAuth": []
+          },
+          {}
+        ]
+      }
+    },
+    "/api/v1/partners/me": {
+      "get": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_me_get_api_v1_partners_me",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerSnapshotResponse"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "partnerCookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/partners/me/application": {
+      "patch": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_update_application_patch_api_v1_partners_me_application",
+        "parameters": [
+          {
+            "description": "Required with cookie authentication.",
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerSnapshotResponse"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "partnerCookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/partners/me/application/submit": {
+      "post": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_submit_application_post_api_v1_partners_me_application_submit",
+        "parameters": [
+          {
+            "description": "Required with cookie authentication.",
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationSubmit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerSnapshotResponse"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "partnerCookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/partners/refresh": {
+      "post": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_refresh_post_api_v1_partners_refresh",
+        "parameters": [
+          {
+            "description": "Required with cookie authentication.",
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "refreshed": {
+                          "type": "boolean"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "partnerRefreshCookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/partners/register": {
+      "post": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_register_post_api_v1_partners_register",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PartnerRegister"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerSnapshotResponse"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/partners/resend-verification": {
+      "post": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_resend_verification_post_api_v1_partners_resend_verification",
+        "parameters": [
+          {
+            "description": "Required with cookie authentication.",
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "properties": {
+                        "message": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "partnerCookieAuth": []
+          }
+        ]
       }
     },
     "/api/v1/place-search": {

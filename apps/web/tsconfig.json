@@ -1,1 +1,1 @@
-{ "extends": "@tripraft/config/tsconfig", "include": ["src/main.tsx", "src/env.d.ts"] }
+{ "extends": "@tripraft/config/tsconfig", "include": ["src/main.tsx", "src/env.d.ts", "src/features/partners/**/*.ts", "src/features/partners/**/*.tsx"], "exclude": ["src/features/partners/**/__tests__"] }
