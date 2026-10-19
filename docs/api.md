@@ -76,3 +76,11 @@ Applications submit before agreement signing. `GET /api/v1/partners/agreement` a
 Snapshot/review agreement status includes `agent_signed`, `signature_required`, signature ID/time/name/title and `execution_status` (`NOT_EXECUTED` or `AGENT_SIGNED_DRAFT`). `commercial_activation_allowed` remains false for this unfinished draft. Every package list/create/read/save/copy operation rejects an approved but unsigned agent. A new source version/hash requires a new explicit signature. Suspension and verification revocation still deny access.
 
 The historical `/me/agreement/acknowledge` endpoint is retained after approval for compatibility and cannot unlock package access. Existing acknowledgment records are not signatures, and no migration fabricates acceptance. See [agreement operations](partner-agreement.md).
+
+## Private package images and content review
+
+`POST /api/v1/partners/packages/{id}/media` accepts one multipart image with version, caption, rights source and `rights_attestation=true`. It requires the signed approved owner and an editable draft, validates bytes and bounds, strips metadata and returns the updated package/version. Supplier/staff image GETs are authenticated and never cached; no private storage path is exposed.
+
+`POST /api/v1/partners/packages/{id}/submit` takes the current version and strict `information_attestation: true`. Complete content plus owned uploaded images becomes an immutable submitted revision. Repeated/stale or incomplete submissions fail. Editing is locked during review.
+
+Staff use `GET /api/v1/admin/partner-packages` with bounded status/limit/offset and `POST /api/v1/admin/partner-packages/{id}/decision` with expected package version, submitted revision, reason and APPROVED/CHANGES_REQUESTED/REJECTED. Staff cannot self-review their supplier package. Corrections create a new draft revision; approval sets the approved revision pointer. These endpoints do not publish public cards or configure retail prices.

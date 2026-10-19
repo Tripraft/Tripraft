@@ -34,7 +34,8 @@ def build(application):
     from app.partners.schemas import ApplicationSubmit, ApplicationUpdate, PartnerLogin, PartnerRegister, ReviewDecision
     from app.partners.schemas import AgentAgreementSign, AgentSignatureReceipt, AgreementAcknowledgment, PartnerAgreementDocument, PartnerAgreementStatus
     from app.partners.package_schemas import (CreateTourDraft, SaveTourDraft, DuplicateTourDraft, TourDraftContent,
-                                             PackageSummary, PackageDraft, PackageList)
+                                             PackageSummary, PackageDraft, PackageList, SubmitTourPackage,
+                                             PackageReviewDecision, UploadPackageImage, PackageReviewList)
     schemas = {
         'User': {'type': 'object', 'required': ['id', 'email', 'is_admin'], 'properties': {
             'id': {'type': 'string', 'format': 'uuid'}, 'email': {'type': 'string'},
@@ -60,7 +61,8 @@ def build(application):
     for model in (PartnerRegister, PartnerLogin, ApplicationUpdate, ApplicationSubmit, ReviewDecision,
                   AgreementAcknowledgment, PartnerAgreementDocument, PartnerAgreementStatus,
                   AgentAgreementSign, AgentSignatureReceipt,
-                  CreateTourDraft, SaveTourDraft, DuplicateTourDraft, TourDraftContent, PackageSummary, PackageDraft, PackageList):
+                  CreateTourDraft, SaveTourDraft, DuplicateTourDraft, TourDraftContent, PackageSummary, PackageDraft, PackageList,
+                  SubmitTourPackage, PackageReviewDecision, UploadPackageImage, PackageReviewList):
         schema = model.model_json_schema(ref_template='#/components/schemas/{model}')
         schemas.update(schema.pop('$defs', {}))
         schemas[model.__name__] = schema
@@ -137,11 +139,21 @@ def build(application):
                           'submit_application': 'ApplicationSubmit', 'review_application': 'ReviewDecision',
                           'acknowledge_agreement': 'AgreementAcknowledgment',
                           'sign_agreement': 'AgentAgreementSign',
+                          'submit_package_review': 'SubmitTourPackage', 'decide_package_review': 'PackageReviewDecision',
                           'staff_login': 'PartnerLogin', 'create_package_draft': 'CreateTourDraft', 'duplicate_package_draft': 'DuplicateTourDraft'}
                 if action == 'package_draft' and method == 'PATCH':
                     inputs[action] = 'SaveTourDraft'
                 if action in inputs:
                     operation['requestBody'] = {'required': True, 'content': {'application/json': {'schema': ref(inputs[action])}}}
+                if action == 'upload_package_image':
+                    operation['requestBody'] = {'required': True, 'content': {'multipart/form-data': {'schema': {
+                        'type': 'object', 'required': ['version', 'file', 'caption', 'rights_source', 'rights_attestation'],
+                        'additionalProperties': False, 'properties': {
+                            'file': {'type': 'string', 'format': 'binary'}, 'version': {'type': 'integer', 'minimum': 1},
+                            'caption': {'type': 'string', 'minLength': 2, 'maxLength': 300},
+                            'rights_source': {'type': 'string', 'minLength': 5, 'maxLength': 500},
+                            'rights_attestation': {'type': 'string', 'enum': ['true']},
+                        }}}}}
                 if action in ('register', 'login', 'me', 'update_application', 'submit_application', 'acknowledge_agreement', 'sign_agreement'):
                     output = ref('PartnerSnapshotResponse')
                 elif action in ('own_signature', 'staff_signature'):
@@ -161,8 +173,16 @@ def build(application):
                     ]
                 elif action == 'review_application':
                     output = envelope(ref('PartnerApplication'))
-                elif action in ('create_package_draft', 'duplicate_package_draft', 'package_draft'):
+                elif action in ('create_package_draft', 'duplicate_package_draft', 'package_draft', 'submit_package_review', 'upload_package_image'):
                     output = envelope(ref('PackageDraft'))
+                elif action == 'list_package_reviews':
+                    output = envelope(ref('PackageReviewList'))
+                elif action == 'decide_package_review':
+                    output = envelope({'type': 'object', 'required': ['status', 'version', 'approved_revision'], 'properties': {
+                        'status': {'type': 'string'}, 'version': {'type': 'integer'}, 'approved_revision': {'type': ['integer', 'null']},
+                    }})
+                elif action in ('partner_package_image', 'staff_package_image'):
+                    output = {'type': 'string', 'format': 'binary'}
                 elif action == 'list_package_drafts':
                     output = envelope(ref('PackageList'))
                     operation['parameters'] = [
@@ -179,7 +199,10 @@ def build(application):
                 if action in ('partner_agreement_download', 'staff_agreement_download'):
                     operation['responses']['200'] = {'description': 'Authenticated original draft Word attachment; never cached.', 'content': {
                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document': {'schema': output},
+                        'text/plain': {'schema': {'type': 'string'}, 'description': 'Complete policy text when original Office sources are excluded.'},
                     }}
+                if action in ('partner_package_image', 'staff_package_image'):
+                    operation['responses']['200'] = {'description': 'Authenticated sanitized JPEG; never cached.', 'content': {'image/jpeg': {'schema': output}}}
                 for status in ('401', '403', '409', '422', '429', '503'):
                     operation['responses'][status] = response(ref('PartnerError'))
                 if action in ('review_application', 'package_draft', 'duplicate_package_draft'):

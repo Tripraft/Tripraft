@@ -106,6 +106,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/partner-packages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        get: operations["partners_list_package_reviews_get_api_v1_admin_partner_packages"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/partner-packages/{package_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        post: operations["partners_decide_package_review_post_api_v1_admin_partner_packages_package_id_decision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/partner-packages/{package_id}/media/{media_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        get: operations["partners_staff_package_image_get_api_v1_admin_partner_packages_package_id_media_media_id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/partners": {
         parameters: {
             query?: never;
@@ -2967,6 +3018,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/partners/packages/{package_id}/media": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        post: operations["partners_upload_package_image_post_api_v1_partners_packages_package_id_media"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/packages/{package_id}/media/{media_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        get: operations["partners_partner_package_image_get_api_v1_partners_packages_package_id_media_media_id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/packages/{package_id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        post: operations["partners_submit_package_review_post_api_v1_partners_packages_package_id_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/partners/refresh": {
         parameters: {
             query?: never;
@@ -3498,11 +3600,12 @@ export interface components {
         };
         /** PackageDraft */
         PackageDraft: {
-            /**
-             * Can Submit
-             * @constant
-             */
-            can_submit: false;
+            /** Approved Revision */
+            approved_revision: number | null;
+            /** Can Edit */
+            can_edit: boolean;
+            /** Can Submit */
+            can_submit: boolean;
             content: components["schemas"]["TourDraftContent"];
             /** Days */
             days: number;
@@ -3511,21 +3614,31 @@ export interface components {
              * Format: uuid
              */
             id: string;
+            /** Media */
+            media: {
+                [key: string]: unknown;
+            }[];
             /** Nights */
             nights: number;
             /** Preparation Notes */
             preparation_notes: string[];
+            /** Review Reason */
+            review_reason: string | null;
             /** Revision */
             revision: number;
+            /** Revision Status */
+            revision_status: string;
             /** Route */
             route: string[];
             /**
              * Status
-             * @constant
+             * @enum {string}
              */
-            status: "DRAFT";
+            status: "DRAFT" | "UNDER_REVIEW" | "CHANGES_REQUESTED" | "APPROVED" | "REJECTED";
             /** Submission Blocker */
             submission_blocker: string;
+            /** Submitted At */
+            submitted_at: string | null;
             /** Title */
             title: string;
             /**
@@ -3540,6 +3653,42 @@ export interface components {
         PackageList: {
             /** Packages */
             packages: components["schemas"]["PackageSummary"][];
+            /** Total */
+            total: number;
+        };
+        /** PackageReviewDecision */
+        PackageReviewDecision: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "APPROVED" | "CHANGES_REQUESTED" | "REJECTED";
+            /** Reason */
+            reason: string;
+            /** Revision */
+            revision: number;
+            /** Version */
+            version: number;
+        };
+        /** PackageReviewItem */
+        PackageReviewItem: {
+            /**
+             * Agent Id
+             * Format: uuid
+             */
+            agent_id: string;
+            /** Business Name */
+            business_name: string;
+            /** Is Demo */
+            is_demo: boolean;
+            /** Is Own Application */
+            is_own_application: boolean;
+            package: components["schemas"]["PackageDraft"];
+        };
+        /** PackageReviewList */
+        PackageReviewList: {
+            /** Packages */
+            packages: components["schemas"]["PackageReviewItem"][];
             /** Total */
             total: number;
         };
@@ -3560,9 +3709,9 @@ export interface components {
             route: string[];
             /**
              * Status
-             * @constant
+             * @enum {string}
              */
-            status: "DRAFT";
+            status: "DRAFT" | "UNDER_REVIEW" | "CHANGES_REQUESTED" | "APPROVED" | "REJECTED";
             /** Title */
             title: string;
             /**
@@ -3585,6 +3734,11 @@ export interface components {
             document_furniture: components["schemas"]["AgreementFurniture"][];
             /** Esign Consent Text */
             esign_consent_text: string;
+            /**
+             * Original Download Available
+             * @default false
+             */
+            original_download_available: boolean;
             /** Signing Confirmations */
             signing_confirmations: {
                 [key: string]: string;
@@ -3753,6 +3907,16 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** SubmitTourPackage */
+        SubmitTourPackage: {
+            /**
+             * Information Attestation
+             * @constant
+             */
+            information_attestation: true;
+            /** Version */
+            version: number;
+        };
         /** TourDay */
         TourDay: {
             /**
@@ -3808,6 +3972,8 @@ export interface components {
              * @default
              */
             language: string;
+            /** Media Ids */
+            media_ids?: string[];
             /**
              * Nights
              * @default 0
@@ -3845,6 +4011,15 @@ export interface components {
              * @default
              */
             transport_details: string;
+        };
+        /** UploadPackageImage */
+        UploadPackageImage: {
+            /** Caption */
+            caption: string;
+            /** Rights Source */
+            rights_source: string;
+            /** Version */
+            version: number;
         };
         User: {
             display_name?: string | null;
@@ -4030,6 +4205,252 @@ export interface operations {
             };
         };
     };
+    partners_list_package_reviews_get_api_v1_admin_partner_packages: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PackageReviewList"];
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_decide_package_review_post_api_v1_admin_partner_packages_package_id_decision: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required with cookie authentication. */
+                "X-CSRF-Token"?: string;
+            };
+            path: {
+                package_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PackageReviewDecision"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            approved_revision: number | null;
+                            status: string;
+                            version: number;
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_staff_package_image_get_api_v1_admin_partner_packages_package_id_media_media_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                media_id: string;
+                package_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authenticated sanitized JPEG; never cached. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
     partners_list_applications_get_api_v1_admin_partners: {
         parameters: {
             query?: {
@@ -4202,6 +4623,8 @@ export interface operations {
                 };
                 content: {
                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": string;
+                    /** @description Complete policy text when original Office sources are excluded. */
+                    "text/plain": string;
                 };
             };
             /** @description Response */
@@ -8536,6 +8959,8 @@ export interface operations {
                 };
                 content: {
                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": string;
+                    /** @description Complete policy text when original Office sources are excluded. */
+                    "text/plain": string;
                 };
             };
             /** @description Response */
@@ -9707,6 +10132,265 @@ export interface operations {
             };
             /** @description Response */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_upload_package_image_post_api_v1_partners_packages_package_id_media: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required with cookie authentication. */
+                "X-CSRF-Token"?: string;
+            };
+            path: {
+                package_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    caption: string;
+                    /** Format: binary */
+                    file: string;
+                    /** @enum {string} */
+                    rights_attestation: "true";
+                    rights_source: string;
+                    version: number;
+                };
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PackageDraft"];
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_partner_package_image_get_api_v1_partners_packages_package_id_media_media_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                media_id: string;
+                package_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authenticated sanitized JPEG; never cached. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_submit_package_review_post_api_v1_partners_packages_package_id_submit: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required with cookie authentication. */
+                "X-CSRF-Token"?: string;
+            };
+            path: {
+                package_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitTourPackage"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PackageDraft"];
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

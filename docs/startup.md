@@ -35,7 +35,7 @@ require rebuilding/restarting the container; the local React servers still updat
 ## Data and integrations
 
 Both startup modes initialize the empty canonical travel database from
-`sql_database/tripraft-global-schema-v2.1.sql`. Native mode uses
+`services/api/schema/tripraft-global-schema-v2.1.sql`. Native mode uses
 `data/catalog/tripraft-canonical.db`; Docker uses its persistent catalog volume.
 No seed files are imported. Existing canonical data is preserved and validated.
 See [database setup](../data/catalog/README.md) for manual creation and checks.

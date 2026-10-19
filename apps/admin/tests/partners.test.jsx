@@ -41,7 +41,7 @@ test('staff sees unsigned acknowledgment evidence and can read the protected dra
   expect(await screen.findByText('Demo operator — private dashboard testing only.')).toBeInTheDocument();
   expect(screen.getByText(/agent signed by Alex/)).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'View signature receipt' })).toHaveAttribute('href', '/api/v1/admin/partners/agent-a/agreement/signature');
-  expect(screen.getByRole('link', { name: 'Download original Word draft' })).toHaveAttribute('href', '/api/v1/admin/partners/agreement/download');
+  expect(screen.getByRole('link', { name: 'Download agreement' })).toHaveAttribute('href', '/api/v1/admin/partners/agreement/download');
   fetch.mockResolvedValueOnce(response({ title: 'Tour Operator Partner Agreement', version: '3.0', status: 'DRAFT', source_sha256: 'a'.repeat(64), blocks: [{ kind: 'heading', text: 'SCHEDULE A' }, { kind: 'table', rows: [['Required', 'Value'], ['Entity', '[REQUIRED]']] }], document_furniture: [] }));
   fireEvent.click(screen.getByRole('button', { name: 'Read agreement' }));
   expect(await screen.findByRole('heading', { name: 'SCHEDULE A' })).toBeInTheDocument();

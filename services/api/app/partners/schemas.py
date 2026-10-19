@@ -115,6 +115,7 @@ class PartnerAgreementDocument(BaseModel):
     blocks: list[AgreementTextBlock | AgreementTableBlock]
     document_furniture: list[AgreementFurniture]
     acknowledgment_text: str
+    original_download_available: bool = False
     signing_declaration: str
     esign_consent_text: str
     signing_confirmations: list[dict[str, str]]

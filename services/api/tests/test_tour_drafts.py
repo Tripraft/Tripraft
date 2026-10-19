@@ -80,7 +80,7 @@ def test_partial_draft_roundtrip_is_private_and_can_never_publish(approved):
     public = client.get('/api/v1/tours/' + draft['id'])
     assert public.status_code in (404, 405)
     assert content['title'].encode() not in public.data
-    assert post(client, '/packages/' + draft['id'] + '/submit', {'version': updated['version']}).status_code in (404, 405)
+    assert post(client, '/packages/' + draft['id'] + '/submit', {'version': updated['version']}).status_code == 422
 
 
 def test_stale_save_and_duplicate_never_overwrite_or_copy_a_newer_draft(approved):

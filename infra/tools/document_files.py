@@ -26,7 +26,7 @@ SPECIAL = {
     'prettier.config.cjs': 'Loads the shared formatting preset for repository configuration and new source files.',
     'data/catalog/travel_data_complete.db': 'Preserved legacy travel catalog; the active source is the ignored tripraft-canonical.db.',
     'data/catalog/README.md': 'Documents the canonical travel schema, empty initialization, configuration and legacy catalog.',
-    'services/api/schema/tripraft-canonical-schema.sql': 'Preserved older schema reference; initialization uses sql_database/tripraft-global-schema-v2.1.sql.',
+    'services/api/schema/tripraft-canonical-schema.sql': 'Preserved older schema reference; initialization uses services/api/schema/tripraft-global-schema-v2.1.sql.',
     'infra/docker/docker-compose.yml': 'Runs local PostgreSQL, Redis, API, and optional worker with persistent database/catalog/upload volumes.',
     'infra/github/workflows/ci.yml': 'Canonical CI: install locked dependencies, check source, run tests/builds, and verify generated API declarations.',
     'infra/github/workflows/deploy.yml': 'Canonical release workflow: verify source, then call the configured staging or production deployment hook.',

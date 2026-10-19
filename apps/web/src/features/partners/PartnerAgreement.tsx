@@ -36,7 +36,7 @@ export default function PartnerAgreement({ snapshot, accept, reload }: { snapsho
     {document && <>
       <p>Version {document.version} · {document.document_date} · {document.status}</p>
       <p className="partner-small partner-document-hash">Original Word SHA-256: {document.source_sha256}</p>
-      <p><a className="partner-secondary" href={partnerApi.agreementDownloadUrl} download>Download original Word agreement</a></p>
+      <p><a className="partner-secondary" href={partnerApi.agreementDownloadUrl} download>{document.original_download_available === false ? 'Download complete agreement text' : 'Download original Word agreement'}</a></p>
       <details className="partner-agreement-contents"><summary>Jump to a section</summary><nav aria-label="Agreement sections">{document.blocks.map((block, index) => block.kind === 'heading' ? <a key={index} href={`#agreement-section-${index}`}>{block.text}</a> : null)}</nav></details>
       <article className="partner-agreement-body" aria-label="Complete supplied agreement">
         {document.blocks.map((block, index) => block.kind === 'table'

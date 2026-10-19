@@ -3,8 +3,6 @@
 !services/
 !services/api/
 !services/api/**
-!sql_database/
-!sql_database/tripraft-global-schema-v2.1.sql
 **/__pycache__
 **/*.pyc
 **/.pytest_cache
@@ -17,4 +15,9 @@
 **/tests
 **/*.db
 **/*.db-*
-services/api/schema
+# services/api/schema is maintained runtime code and must remain in the image.
+**/*.docx
+**/*.doc
+**/*.pdf
+**/*.xlsx
+**/*.pptx

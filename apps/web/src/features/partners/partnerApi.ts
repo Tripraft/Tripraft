@@ -54,4 +54,14 @@ export const partnerApi = {
   package: (id: string) => request<TourPackageDraft>(`/packages/${encodeURIComponent(id)}`),
   savePackage: (id: string, version: number, content: TourDraftContent) => request<TourPackageDraft>(`/packages/${encodeURIComponent(id)}`, 'PATCH', { version, content }),
   duplicatePackage: (id: string, version: number) => request<TourPackageDraft>(`/packages/${encodeURIComponent(id)}/duplicate`, 'POST', { version }),
+  submitPackage: (id: string, version: number) => request<TourPackageDraft>(`/packages/${encodeURIComponent(id)}/submit`, 'POST', { version, information_attestation: true }),
+  mediaUrl: (path: string) => `${GlobalConfig.API_BASE_URL.replace(/\/api\/?$/, '')}${path}`,
+  async uploadPackageImage(id: string, version: number, file: File, caption: string, rights_source: string): Promise<TourPackageDraft> {
+    const data = new FormData(); data.set('version', String(version)); data.set('file', file);
+    data.set('caption', caption); data.set('rights_source', rights_source); data.set('rights_attestation', 'true');
+    const response = await fetch(`${GlobalConfig.API_BASE_URL}/v1/partners/packages/${encodeURIComponent(id)}/media`, { method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': csrf() }, body: data });
+    const body = await response.json();
+    if (!response.ok || !body.success) throw new PartnerApiError(body.error?.message || 'Unable to upload the image.', response.status);
+    return body.data;
+  },
 };

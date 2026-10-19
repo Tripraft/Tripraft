@@ -5,10 +5,10 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import PackageWorkspace from '../PackageWorkspace';
 import { partnerApi } from '../partnerApi';
 
-jest.mock('../partnerApi', () => ({ partnerApi: { packages: jest.fn(), createPackage: jest.fn(), package: jest.fn(), savePackage: jest.fn(), duplicatePackage: jest.fn() } }));
+jest.mock('../partnerApi', () => ({ partnerApi: { packages: jest.fn(), createPackage: jest.fn(), package: jest.fn(), savePackage: jest.fn(), duplicatePackage: jest.fn(), submitPackage: jest.fn(), uploadPackageImage: jest.fn(), mediaUrl: (path: string) => path } }));
 const api = partnerApi as jest.Mocked<typeof partnerApi>;
-const content = () => ({ title: '', summary: '', language: '', supplier_sku: '', days: 2, nights: 1, overnight_explanation: '', route: [], itinerary: [], inclusions: [], exclusions: [], transport_details: '', accessibility_notes: '', cancellation_policy: '', safety_notes: '', departures: [] });
-const record = () => ({ id: 'tour-a', version: 1, revision: 1, status: 'DRAFT', title: '', days: 2, nights: 1, route: [], updated_at: '2026-10-19', content: content(), preparation_notes: ['Complete every tour day.'], can_submit: false, submission_blocker: 'Package submission opens after media checks and review.' });
+const content = () => ({ title: '', summary: '', language: '', supplier_sku: '', days: 2, nights: 1, overnight_explanation: '', route: [], itinerary: [], inclusions: [], exclusions: [], transport_details: '', accessibility_notes: '', cancellation_policy: '', safety_notes: '', departures: [], media_ids: [] });
+const record = () => ({ id: 'tour-a', version: 1, revision: 1, status: 'DRAFT', can_edit: true, revision_status: 'DRAFT', review_reason: null, approved_revision: null, submitted_at: null, media: [], title: '', days: 2, nights: 1, route: [], updated_at: '2026-10-19', content: content(), preparation_notes: ['Complete every tour day.'], can_submit: false, submission_blocker: 'Package submission opens after media checks and review.' });
 function open(path = '/partners/packages/tour-a') { render(<MemoryRouter initialEntries={[path]}><Routes><Route path="/partners/dashboard" element={<PackageWorkspace />} /><Route path="/partners/packages/:packageId" element={<PackageWorkspace />} /></Routes></MemoryRouter>); }
 beforeEach(() => {
   jest.resetAllMocks();

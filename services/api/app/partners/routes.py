@@ -178,8 +178,24 @@ def agreement_response():
 
 def agreement_download_response():
     from app.partners.agreement_service import ASSETS, current_document
-    return send_file(ASSETS / current_document()['source_filename'], as_attachment=True,
-                     download_name='TripRaft-Partner-Agreement-v3-DRAFT.docx', conditional=False, etag=False)
+    document = current_document()
+    source = ASSETS / document['source_filename']
+    if source.is_file():
+        return send_file(source, as_attachment=True, download_name='TripRaft-Partner-Agreement-v3-DRAFT.docx', conditional=False, etag=False)
+    # Fresh code checkouts exclude original Office files. Keep the complete policy usable.
+    lines = [document['title'], f"Version {document['version']} / {document['status']}", '']
+    for block in document['blocks']:
+        if block['kind'] == 'table':
+            lines.extend('\t'.join(row) for row in block['rows'])
+        else:
+            lines.append(block['text'])
+        lines.append('')
+    for part in document['document_furniture']:
+        lines.extend(part['paragraphs'])
+    response = make_response('\n'.join(lines))
+    response.headers['Content-Type'] = 'text/plain; charset=utf-8'
+    response.headers['Content-Disposition'] = 'attachment; filename="TripRaft-Partner-Agreement-v3-DRAFT.txt"'
+    return response
 
 
 @partners_bp.route('/partners/agreement', methods=['GET'])

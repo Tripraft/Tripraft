@@ -1,12 +1,12 @@
 # Agent agreement, signature and demo access
 
-Current flow: **application ? TripRaft staff approval ? agent agreement/signature ? private package dashboard**. Agents can submit their application before signing. Every approved agent, including the demo, must personally sign the current document before using package APIs. **There is no TripRaft signing step.**
+Current flow: **application -> TripRaft staff approval -> agent agreement/signature -> private package dashboard**. Agents can submit their application before signing. Every approved agent, including the demo, must personally sign the current document before using package APIs. **There is no TripRaft signing step.**
 
 ## Agent and staff pages
 
 Agents sign in at `/partners/login`. Approved unsigned accounts are directed to `/partners/agreement`; opening `/partners/dashboard` directly leads to the same signature step. Unapproved agents see their application status. Staff review business applications in the separate console and can read the agreement and inspect agent signature evidence; they cannot sign for an agent.
 
-The reader preserves every supplied main-body paragraph/table, Master Terms ??1?24, Schedules A?F, both non-contractual appendices and original header/footer wording. Download returns the unchanged DOCX. The template includes signature fields for both parties, but the implemented onboarding flow collects **only the agent signature**, as the user requested.
+The reader preserves every supplied main-body paragraph/table, Master Terms sections 1-24, Schedules A-F, both non-contractual appendices and original header/footer wording. Download returns the unchanged DOCX. The template includes signature fields for both parties, but the implemented onboarding flow collects **only the agent signature**, as the user requested.
 
 The source is v3.0 dated 18 October 2026 and explicitly marked **DRAFT**. Entity, jurisdiction and commercial elections remain incomplete. The signature records agent-side acceptance of this exact supplied draft and opens private preparation. It does not finalize missing terms or enable public listings, checkout, payments or payouts. Its status is `AGENT_SIGNED_DRAFT`, not a completed commercial contract.
 
@@ -36,6 +36,8 @@ Original source and ordered JSON projection: `services/api/app/partners/agreemen
 `ddaf7462465856ac7973d39791e8bbfd622cc98f87fe3f65699ba9bffb1e7108`
 
 The importer reproduces this version without filling blanks. Preserve previous source files and acceptance evidence when introducing a reviewed replacement. The current agent-only workflow does not silently rewrite the original template.
+
+Original Word/PDF/Office documents are local and excluded from GitHub. The reviewed JSON policy text ships with the app; a code-only checkout still has the complete reader and authenticated text download. A locally installed original Word file remains available through the original download behavior.
 
 Before commercial launch, finalize entity/country, legal seller, reviewed commercial/tax/payment terms, bank/compliance verification and package/rate-plan scope. Implement the approved final contract/document retention and activation checks at publication/booking boundaries. Do not infer a commission, GST rule, payout deadline or signing certificate from illustrative source examples.
 

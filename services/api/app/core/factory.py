@@ -224,6 +224,7 @@ def _register_blueprints(app):
     """Register all API route blueprints."""
     from app.partners.routes import partners_bp
     from app.partners import package_routes  # noqa: F401 - register draft routes before the blueprint
+    from app.partners import package_review_routes  # noqa: F401 - private media and immutable package review
     from app.partners import staff_routes  # noqa: F401 - staff-only sign-in
     app.register_blueprint(partners_bp)
     from app.expenses.routes.currencies import currencies_bp

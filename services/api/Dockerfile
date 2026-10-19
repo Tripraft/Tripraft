@@ -37,7 +37,6 @@ COPY --from=deps /usr/local/bin /usr/local/bin
 
 # Copy application code
 COPY services/api/ .
-COPY sql_database/tripraft-global-schema-v2.1.sql ./sql_database/
 
 # Create non-root user
 RUN groupadd -r tripraft && useradd -r -g tripraft tripraft && \

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { createApiClient, type components } from '@tripraft/api-client';
 import type { AuthUser } from '@tripraft/types';
 import { PartnerReviewPanel } from './PartnerReviewPanel';
+import { PackageReviewPanel } from './PackageReviewPanel';
 import { StaffLogin } from './StaffLogin';
 const api = createApiClient(import.meta.env.VITE_API_BASE_URL || '');
 type Audit = components['schemas']['AuditData'];
@@ -117,7 +118,7 @@ export function App() {
         <section><p role="alert">This account does not have administrator access. Application reviews are available only to authorized TripRaft administrators and employees.</p><StaffLogin signedIn={() => { setAccount(null); setInitializing(true); setIdentityRevision(value => value + 1); }} /></section>
       ) : (
         <>
-          <nav aria-label="Operations navigation"><a href="#partner-review-title">Partner applications</a></nav>
+          <nav aria-label="Operations navigation"><a href="#partner-review-title">Partner applications</a> <a href="#package-review-title">Tour package reviews</a></nav>
           <div className="toolbar">
             <p>Signed in as {account.email}</p>
             <button disabled={signingOut} onClick={() => void signOut()}>{signingOut ? 'Signing out…' : 'Sign out of staff console'}</button>
@@ -186,6 +187,7 @@ export function App() {
             )}
           </section>
           <PartnerReviewPanel />
+          <PackageReviewPanel />
         </>
       )}
     </main>

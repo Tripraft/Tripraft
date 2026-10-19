@@ -6,6 +6,8 @@ Prepared 18 October 2026. Status: implementation started; the first phase-one on
 
 19 October agreement update: the [agent-only signature flow](../../reports/agent-signature-and-live-reload-2026-10-19.md) now follows staff business approval. Only the agent signs; no TripRaft signing step is required. Approved agents must sign the exact current document before private package access. This supersedes the earlier reading-acknowledgment-only checkpoint. The confidential source remains a draft with incomplete legal/commercial schedules; entity/country decisions remain open and commercial activation is unavailable.
 
+19 October package review update: private validated images, complete revision submission, staff package decisions and correction drafts are implemented in the [code publication checkpoint](../../reports/github-code-only-publication-2026-10-19.md). Every new package is reviewed. Approved content remains private until the separate public Places Search projection is built. Original Office/PDF documents and the old script/SQL workspaces remain local; Markdown plans are published.
+
 Source specification: `TripRaft_Places_Search_Live_Tour_Packages_Complete_UPDATED_2026 (1).docx`, version 3.0, all 20 sections and appendices A and B. The complete main-body/table text was read; this is a requirements review rather than a Word layout review. Appendix B takes precedence where earlier wording differs. The user's footer placement instruction takes precedence over the document's optional header/About alternatives.
 
 ## The feature we are building

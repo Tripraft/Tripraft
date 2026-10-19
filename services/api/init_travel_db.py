@@ -10,7 +10,7 @@ from pathlib import Path
 
 API_DIR = Path(__file__).resolve().parent
 ROOT = Path(os.getenv('TRIPRAFT_ROOT', str(API_DIR.parents[1] if API_DIR.name == 'api' else API_DIR)))
-SCHEMA = ROOT / 'sql_database/tripraft-global-schema-v2.1.sql'
+SCHEMA = API_DIR / 'schema/tripraft-global-schema-v2.1.sql'
 DATABASE_NAME = 'tripraft-canonical.db'
 
 

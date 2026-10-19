@@ -20,6 +20,7 @@ logs/
 data/runtime/
 data/catalog/tripraft-canonical.db*
 data/catalog/.catalog-*.db
+data/catalog/places_by_country/
 services/api/uploads/
 extra/
 *.rar
@@ -28,5 +29,24 @@ extra/
 .DS_Store
 Thumbs.db
 *.swp
+# Local source documents and data-processing workspaces are never published.
+/script/
+/sql_database/
+*.[dD][oO][cC]
+*.[dD][oO][cC][xX]
+*.[dD][oO][cC][mM]
+*.[pP][dD][fF]
+*.[xX][lL][sS]
+*.[xX][lL][sS][xX]
+*.[pP][pP][tT]
+*.[pP][pP][tT][xX]
+*.[oO][dD][tT]
+*.[oO][dD][sS]
+*.[oO][dD][pP]
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
 .llm
 **/.llm

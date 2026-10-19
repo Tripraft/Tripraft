@@ -2,7 +2,7 @@
 
 `tripraft-canonical.db` is the project's travel-data source of truth. Its schema
 is created empty from the supplied
-[`tripraft-global-schema-v2.1.sql`](../../sql_database/tripraft-global-schema-v2.1.sql).
+[`tripraft-global-schema-v2.1.sql`](../../services/api/schema/tripraft-global-schema-v2.1.sql).
 This is the authoritative schema for both native startup and Docker builds.
 It includes all 31 logical tables, indexes, five triggers, the search-demand view,
 and the FTS5 search index. No country seed files or sample records are imported.

@@ -56,6 +56,7 @@ export interface PartnerAgreementDocument {
   blocks: AgreementBlock[];
   document_furniture: { part: string; paragraphs: string[] }[];
   acknowledgment_text: string;
+  original_download_available?: boolean;
   signing_declaration: string;
   esign_consent_text: string;
   signing_confirmations: { id: string; text: string }[];

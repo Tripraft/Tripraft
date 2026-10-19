@@ -28,7 +28,7 @@ ESIGN_CONSENT_TEXT = (
 def current_document():
     document = json.loads(DOCUMENT.read_text(encoding='utf-8'))
     source = ASSETS / document['source_filename']
-    if hashlib.sha256(source.read_bytes()).hexdigest() != document['source_sha256']:
+    if source.is_file() and hashlib.sha256(source.read_bytes()).hexdigest() != document['source_sha256']:
         raise RuntimeError('Partner agreement source hash does not match the reviewed document.')
     return document
 
@@ -67,6 +67,7 @@ def signing_confirmations():
 def readable_document():
     return {**current_document(), 'acknowledgment_text': ACKNOWLEDGMENT_TEXT,
             'signing_declaration': SIGNING_DECLARATION, 'esign_consent_text': ESIGN_CONSENT_TEXT,
+            'original_download_available': (ASSETS / current_document()['source_filename']).is_file(),
             'signing_confirmations': signing_confirmations()}
 
 

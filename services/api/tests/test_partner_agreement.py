@@ -28,9 +28,11 @@ def test_imported_policy_preserves_every_source_block_and_original_bytes():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     source = ASSETS / document['source_filename']
-    assert module.extract(source) == document
+    if source.is_file():
+        assert module.extract(source) == document
     assert document['source_sha256'] == 'ddaf7462465856ac7973d39791e8bbfd622cc98f87fe3f65699ba9bffb1e7108'
-    assert hashlib.sha256(source.read_bytes()).hexdigest() == document['source_sha256']
+    if source.is_file():
+        assert hashlib.sha256(source.read_bytes()).hexdigest() == document['source_sha256']
     text = str(document['blocks'])
     assert all(f'{number}. ' in text for number in range(1, 25))
     assert all(f'SCHEDULE {letter}' in text for letter in 'ABCDEF')
@@ -54,7 +56,11 @@ def test_confidential_policy_requires_partner_or_staff_and_download_is_exact(par
         response = client.get(BASE + path)
         assert response.status_code == 200 and response.headers['Cache-Control'] == 'no-store'
     response = client.get(BASE + '/agreement/download')
-    assert response.data == (ASSETS / current_document()['source_filename']).read_bytes()
+    source = ASSETS / current_document()['source_filename']
+    if source.is_file():
+        assert response.data == source.read_bytes()
+    else:
+        assert response.mimetype == 'text/plain' and b'SCHEDULE F' in response.data
     assert 'attachment;' in response.headers['Content-Disposition']
     assert traveler.get('/api/v1/admin/partners/agreement').status_code == 403
     monkeypatch.setattr(Config, 'ADMIN_EMAILS', [email])
@@ -63,6 +69,22 @@ def test_confidential_policy_requires_partner_or_staff_and_download_is_exact(par
         session.commit()
     assert payload(traveler.get('/api/v1/admin/partners/agreement'))['source_sha256'] == current_document()['source_sha256']
     assert traveler.get('/api/v1/admin/partners/agreement/download').data == response.data
+
+
+def test_code_checkout_without_office_source_keeps_complete_agreement_available(partner, monkeypatch, tmp_path):
+    from app.partners import agreement_service
+    client, snapshot, _ = partner
+    with get_db_session() as session:
+        session.get(User, UUID(snapshot['user']['id'])).email_verified = True
+        session.get(Agent, UUID(snapshot['application']['id'])).status = 'APPROVED'
+        session.commit()
+    monkeypatch.setattr(agreement_service, 'ASSETS', tmp_path)
+    document = payload(client.get(BASE + '/agreement'))
+    assert document['original_download_available'] is False
+    assert len(document['blocks']) == len(current_document()['blocks'])
+    download = client.get(BASE + '/agreement/download')
+    assert download.status_code == 200 and download.mimetype == 'text/plain'
+    assert b'SCHEDULE A' in download.data and b'APPENDIX 2' in download.data
 
 
 def test_legacy_reading_acknowledgment_is_explicit_but_never_a_signature(partner):

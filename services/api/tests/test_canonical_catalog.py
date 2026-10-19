@@ -36,7 +36,7 @@ def test_creates_complete_empty_catalog(tmp_path):
 
 
 def test_uses_supplied_global_schema():
-    assert SCHEMA == Path(__file__).resolve().parents[3] / 'sql_database/tripraft-global-schema-v2.1.sql'
+    assert SCHEMA == Path(__file__).resolve().parents[1] / 'schema/tripraft-global-schema-v2.1.sql'
 
 
 def test_full_text_search_tracks_place_changes(tmp_path):

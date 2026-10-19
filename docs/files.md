@@ -17,6 +17,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `apps/admin/jest.config.cjs` | Provides jest.config logic and exports for apps\admin. |
 | `apps/admin/package.json` | Declares dependencies, exports and development commands for the apps\admin workspace package. |
 | `apps/admin/src/App.tsx` | Renders the admin console with initialized server-account authorization, readiness and ingestion audit results. |
+| `apps/admin/src/PackageReviewPanel.tsx` | Reviews immutable supplier package submissions with private images/rates, version checks and correction feedback. |
 | `apps/admin/src/PartnerAgreementPanel.tsx` | Gives authenticated staff a complete draft reader and protected original-document download. |
 | `apps/admin/src/PartnerReviewPanel.tsx` | Reviews supplier business applications with version checks and agent-visible decision reasons. |
 | `apps/admin/src/StaffLogin.tsx` | Provides an isolated staff-console sign-in form without sending employee credentials through the traveler UI. |
@@ -229,8 +230,9 @@ Every published source/configuration file is listed below. Legal source formats 
 | `apps/web/tsconfig.json` | Selects TypeScript compiler options and checked source for apps\web. |
 | `apps/web/vite.config.js` | Configures the React build and local API proxy for apps\web. |
 | `data/catalog/README.md` | Documents the canonical travel schema, empty initialization, configuration and legacy catalog. |
-| `data/catalog/travel_data_complete.db` | Preserved legacy travel catalog; the active source is the ignored tripraft-canonical.db. |
 | `data/seeds/README.md` | Documents README for data\seeds. |
+| `data/seeds/partner-demo-cover.png` | Original landscape illustration for private tour-package workflow tests; no real inventory or destination-photo claim. |
+| `data/seeds/partner-demo-tour.json` | Complete fictional five-day Kerala supplier proposal for demo and package-review verification. |
 | `docs/api.md` | Explains API envelopes, cookie authentication, generated client use and remaining schema coverage. |
 | `docs/architecture.md` | Explains app/service/package boundaries, data ownership, auth and deployment architecture. |
 | `docs/backend-checkpoints.md` | Lists local implementation checkpoints and explains shared Git/Sapling Interactive Smartlog use. |
@@ -242,6 +244,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `docs/plans/places-search-tour-packages/data-api-and-publishing.md` | Defines tour records, API projections, price visibility, selective publishing automation and transaction rules. |
 | `docs/plans/places-search-tour-packages/phases-and-acceptance.md` | Orders the implementation phases, first sprint, backlog, regression tests and release gates. |
 | `docs/reports/agent-signature-and-live-reload-2026-10-19.md` | Records agent-only signing, local reload recovery, validation and package-review delivery boundaries. |
+| `docs/reports/github-code-only-publication-2026-10-19.md` | Documents publication exclusions, portable startup and the package-review code boundary. |
 | `docs/reports/partner-agreement-demo-approval-2026-10-19.md` | Records delivered policy integration, local demo approval, checks and remaining commercial release work. |
 | `docs/reports/partners-onboarding-foundation-2026-10-18.md` | Records delivered partner onboarding, launcher fixes, verification and remaining rollout work. |
 | `docs/reports/staff-console-package-drafts-2026-10-19.md` | Records staff access, private package drafts, validation and remaining release work. |
@@ -289,6 +292,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/.dockerignore` | Configures dockerignore for services\api. |
 | `services/api/.env.example` | Documents public configuration keys and placeholder values; copy locally and keep real credentials out of Git. |
 | `services/api/Dockerfile` | Builds the non-root Python API image and its production entry point. |
+| `services/api/Dockerfile.dockerignore` | Limits the root build context to API code and the authoritative SQL schema. |
 | `services/api/alembic.ini` | Configures alembic for services\api. |
 | `services/api/app/__init__.py` | TripRaft Backend Application Enterprise-grade Flask backend. |
 | `services/api/app/auth/__init__.py` | Users Domain Package Contains User and UserSession models and repositories. |
@@ -395,10 +399,11 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/app/notifications/services/notification_service.py` | Notification Service for Group Planner Handles creating, querying, and managing in-app notifications. |
 | `services/api/app/partners/__init__.py` | Declares the supplier-only partner onboarding domain. |
 | `services/api/app/partners/agreement_service.py` | Serves the confidential draft and records authenticated agent-only signatures after staff approval. |
-| `services/api/app/partners/agreements/partner-agreement-v3-2026-10-18.docx` | Preserves the original confidential v3 draft agreement bytes for authenticated downloads and evidence hashing. |
 | `services/api/app/partners/agreements/partner-agreement-v3-2026-10-18.json` | Contains the faithful ordered text/table projection, version and source hash of the preserved agreement. |
+| `services/api/app/partners/media_service.py` | Validates image bytes, strips metadata and stores supplier package media outside public static directories. |
 | `services/api/app/partners/models.py` | Stores supplier applications, scoped staff membership and immutable review decisions. |
 | `services/api/app/partners/package_models.py` | Stores supplier-owned package roots and versioned private content drafts independently of place records. |
+| `services/api/app/partners/package_review_routes.py` | Connects private image uploads, immutable supplier submission and authorized staff package decisions. |
 | `services/api/app/partners/package_routes.py` | Adds approved-owner package draft APIs using the partner realm and private response policy. |
 | `services/api/app/partners/package_schemas.py` | Bounds private tour draft input, exact proposed rates and ownership/version allowlists. |
 | `services/api/app/partners/package_services.py` | Enforces approved supplier ownership and optimistic versions for private package drafts and copies. |
@@ -476,6 +481,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/migrations/versions/d41e5f607182_agent_signatures.py` | Adds agent-only post-approval signature evidence without converting prior acknowledgments into signatures. |
 | `services/api/migrations/versions/d4a1c3e8f9b0_add_settlement_and_verification_audit_columns.py` | Persist settlement deletion and email-verification audit timestamps. Revision ID: d4a1c3e8f9b0. |
 | `services/api/migrations/versions/e336ee48cb0f_add_date_partitioning_postgresql.py` | add_date_partitioning_postgresql PostgreSQL-only migration: converts expenses, expense_history, and. |
+| `services/api/migrations/versions/e52f60718293_package_review_media.py` | Adds private validated package images, immutable submission pointers and staff content review history. |
 | `services/api/migrations/versions/e80825488cb5_add_audit_log_table.py` | add_audit_log_table Revision ID: e80825488cb5. |
 | `services/api/migrations/versions/f2a3b4c5d6e7_add_chat_message_archival.py` | Add reversible archival support for group chat messages. Revision ID: f2a3b4c5d6e7. |
 | `services/api/openapi.json` | Generated API route/response contracts; regenerate through the documented OpenAPI tools rather than editing by hand. |
@@ -486,6 +492,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/ruff.toml` | Configures ruff for services\api. |
 | `services/api/run.py` | TripRaft Backend -- Main Entry Point Run this file to start the Flask server. |
 | `services/api/schema/tripraft-canonical-schema.sql` | Preserved older schema reference; initialization uses sql_database/tripraft-global-schema-v2.1.sql. |
+| `services/api/schema/tripraft-global-schema-v2.1.sql` | Defines the maintained empty canonical discovery schema for native and container startup. |
 | `services/api/tests/conftest.py` | Test fixture/configuration helper for conftest. |
 | `services/api/tests/test_agent_signatures.py` | Verifies approval-before-signing, agent-only evidence, mandatory server package gates and immutable receipt ownership. |
 | `services/api/tests/test_ai_consent.py` | Regression tests for ai consent, including success and failure behavior. |
@@ -503,6 +510,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/tests/test_money_concurrency.py` | Regression tests for money concurrency, including success and failure behavior. |
 | `services/api/tests/test_money_integrity.py` | Regression tests for money integrity, including success and failure behavior. |
 | `services/api/tests/test_p3_contracts.py` | Regression tests for p3 contracts, including success and failure behavior. |
+| `services/api/tests/test_package_review.py` | Verifies private validated images, immutable package submissions, staff corrections/approval and complete supplier isolation. |
 | `services/api/tests/test_partner_agreement.py` | Verifies source fidelity, private draft access and explicit versioned acknowledgment without signature or retroactive assent. |
 | `services/api/tests/test_partners.py` | Exercises supplier isolation, versioned onboarding, review history and revocable cookie sessions. |
 | `services/api/tests/test_phase1_contracts.py` | Regression tests for phase1 contracts, including success and failure behavior. |

@@ -64,6 +64,14 @@ class TourDraftContent(DraftModel):
     cancellation_policy: str = Field(default='', max_length=4000)
     safety_notes: str = Field(default='', max_length=2000)
     departures: list[DepartureProposal] = Field(default_factory=list, max_length=100)
+    media_ids: list[UUID] = Field(default_factory=list, max_length=10)
+
+    @field_validator('media_ids')
+    @classmethod
+    def unique_media(cls, values):
+        if len(set(values)) != len(values):
+            raise ValueError('Each image may be selected only once')
+        return values
 
     @field_validator('route', 'inclusions', 'exclusions')
     @classmethod
@@ -93,11 +101,36 @@ class DuplicateTourDraft(DraftModel):
     version: int = Field(ge=1, strict=True)
 
 
+class SubmitTourPackage(DraftModel):
+    version: int = Field(ge=1, strict=True)
+    information_attestation: Literal[True]
+
+    @field_validator('information_attestation', mode='before')
+    @classmethod
+    def explicit_attestation(cls, value):
+        if value is not True:
+            raise ValueError('Explicit package confirmation is required')
+        return value
+
+
+class PackageReviewDecision(DraftModel):
+    version: int = Field(ge=1, strict=True)
+    revision: int = Field(ge=1, strict=True)
+    decision: Literal['APPROVED', 'CHANGES_REQUESTED', 'REJECTED']
+    reason: str = Field(min_length=5, max_length=2000)
+
+
+class UploadPackageImage(DraftModel):
+    version: int = Field(ge=1, strict=True)
+    caption: str = Field(min_length=2, max_length=300)
+    rights_source: str = Field(min_length=5, max_length=500)
+
+
 class PackageSummary(BaseModel):
     id: UUID
     version: int
     revision: int
-    status: Literal['DRAFT']
+    status: Literal['DRAFT', 'UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'REJECTED']
     title: str
     days: int
     nights: int
@@ -108,10 +141,29 @@ class PackageSummary(BaseModel):
 class PackageDraft(PackageSummary):
     content: TourDraftContent
     preparation_notes: list[str]
-    can_submit: Literal[False]
+    can_submit: bool
     submission_blocker: str
+    can_edit: bool
+    revision_status: str
+    review_reason: str | None
+    approved_revision: int | None
+    submitted_at: str | None
+    media: list[dict]
 
 
 class PackageList(BaseModel):
     packages: list[PackageSummary]
+    total: int
+
+
+class PackageReviewItem(BaseModel):
+    package: PackageDraft
+    business_name: str
+    agent_id: UUID
+    is_demo: bool
+    is_own_application: bool
+
+
+class PackageReviewList(BaseModel):
+    packages: list[PackageReviewItem]
     total: int
