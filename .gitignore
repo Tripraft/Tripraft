@@ -11,16 +11,12 @@ __pycache__/
 htmlcov/
 .venv/
 .tripraft/
-wikidata/data/
+wikidata/
 .env
 .env.*
 !.env.example
 *.log
 logs/
-data/runtime/
-data/catalog/tripraft-canonical.db*
-data/catalog/.catalog-*.db
-data/catalog/places_by_country/
 services/api/uploads/
 extra/
 *.rar
@@ -32,21 +28,8 @@ Thumbs.db
 # Local source documents and data-processing workspaces are never published.
 /script/
 /sql_database/
-*.[dD][oO][cC]
-*.[dD][oO][cC][xX]
-*.[dD][oO][cC][mM]
-*.[pP][dD][fF]
-*.[xX][lL][sS]
-*.[xX][lL][sS][xX]
-*.[pP][pP][tT]
-*.[pP][pP][tT][xX]
-*.[oO][dD][tT]
-*.[oO][dD][sS]
-*.[oO][dD][pP]
-*.db
-*.db-wal
-*.db-shm
-*.sqlite
-*.sqlite3
-.llm
-**/.llm
+\TripRaft_Enterprise_Platform_Master_Blueprint.pdf
+\TripRaft_Places_Search_Live_Tour_Packages_Complete_UPDATED_2026 (1).docx
+\TripRaft_Professional_Tour_Operator_Partner_Agreement_2026 (1).docx
+\TripRaft_Unified_Marketplace_Reseller_Complete_Implementation_2026.docx
+\tripraft.db
