@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import object_session
 
 from app.auth.models import User, UserSession
 from app.auth.security.jwt import create_partner_token, hash_refresh_token
@@ -20,13 +21,16 @@ class PartnerError(Exception):
 
 
 def snapshot(user, agent):
+    from app.partners.agreement_service import summary
+    agreement = summary(object_session(agent), agent)
     return {
         'user': {'id': str(user.id), 'email': user.email, 'display_name': user.display_name,
                  'email_verified': bool(user.email_verified)},
         'application': agent.to_dict(),
+        'agreement': agreement,
         'capabilities': {
             'can_edit_application': agent.status in EDITABLE,
-            'can_submit_application': agent.status in EDITABLE and bool(user.email_verified),
+            'can_submit_application': agent.status in EDITABLE and bool(user.email_verified) and agreement['acknowledged'],
             'can_view_dashboard': agent.status == 'APPROVED',
             'can_manage_packages': agent.status == 'APPROVED' and bool(user.email_verified),
         },
@@ -121,6 +125,9 @@ def submit_application(session, user, agent, data):
             or len(agent.phone.strip()) < 5 or len(agent.country_code) != 2
             or not agent.operating_regions or not agent.contact_email):
         raise PartnerError('Complete the business profile before submitting.', 422)
+    from app.partners.agreement_service import latest_acknowledgment
+    if not latest_acknowledgment(session, agent):
+        raise PartnerError('Read and acknowledge the current draft partner agreement before submitting.', 409, 'AGREEMENT_ACKNOWLEDGMENT_REQUIRED')
     agent.status = 'UNDER_REVIEW'
     agent.submitted_at = agent.attested_at = datetime.now(timezone.utc)
     session.commit()

@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from flask import Blueprint, g, jsonify, make_response, request
+from flask import Blueprint, g, jsonify, make_response, request, send_file
 from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import StaleDataError
@@ -19,7 +19,7 @@ from app.core.db.connection import get_db_session
 from app.core.rate_limiter import limit_auth, limit_write
 from app.partners import services
 from app.partners.models import Agent
-from app.partners.schemas import ApplicationSubmit, ApplicationUpdate, PartnerLogin, PartnerRegister, ReviewDecision
+from app.partners.schemas import AgreementAcknowledgment, ApplicationSubmit, ApplicationUpdate, PartnerLogin, PartnerRegister, ReviewDecision
 from app.partners.security import as_utc, clear_partner_cookies, partner_token, require_partner, set_partner_cookies
 
 logger = logging.getLogger(__name__)
@@ -170,6 +170,55 @@ def submit_application():
         return success_response(services.submit_application(session, user, agent, data))
 
 
+def agreement_response():
+    from app.partners.agreement_service import ACKNOWLEDGMENT_TEXT, current_document
+    return success_response({**current_document(), 'acknowledgment_text': ACKNOWLEDGMENT_TEXT})
+
+
+def agreement_download_response():
+    from app.partners.agreement_service import ASSETS, current_document
+    return send_file(ASSETS / current_document()['source_filename'], as_attachment=True,
+                     download_name='TripRaft-Partner-Agreement-v3-DRAFT.docx', conditional=False, etag=False)
+
+
+@partners_bp.route('/partners/agreement', methods=['GET'])
+@require_partner
+def partner_agreement():
+    return agreement_response()
+
+
+@partners_bp.route('/partners/agreement/download', methods=['GET'])
+@require_partner
+def partner_agreement_download():
+    return agreement_download_response()
+
+
+@partners_bp.route('/partners/me/agreement/acknowledge', methods=['POST'])
+@require_partner
+@limit_write()
+def acknowledge_agreement():
+    from app.partners.agreement_service import acknowledge
+    data = body(AgreementAcknowledgment)
+    with get_db_session() as session:
+        user, agent = own_records(session)
+        agent = session.query(Agent).filter_by(id=agent.id).with_for_update().one()
+        return success_response(acknowledge(session, user, agent, data))
+
+
+@partners_bp.route('/admin/partners/agreement', methods=['GET'])
+@require_auth
+@require_admin
+def staff_agreement():
+    return agreement_response()
+
+
+@partners_bp.route('/admin/partners/agreement/download', methods=['GET'])
+@require_auth
+@require_admin
+def staff_agreement_download():
+    return agreement_download_response()
+
+
 @partners_bp.route('/admin/partners', methods=['GET'])
 @require_auth
 @require_admin
@@ -183,7 +232,8 @@ def list_applications():
         query = session.query(Agent).filter_by(status=status)
         total = query.count()
         agents = query.order_by(Agent.updated_at.asc(), Agent.id.asc()).offset(offset).limit(limit).all()
-        return success_response({'applications': [{**agent.to_dict(), 'is_own_application': agent.owner_user_id == g.user_id} for agent in agents], 'total': total})
+        from app.partners.agreement_service import summary
+        return success_response({'applications': [{**agent.to_dict(), 'agreement': summary(session, agent), 'is_own_application': agent.owner_user_id == g.user_id} for agent in agents], 'total': total})
 
 
 @partners_bp.route('/admin/partners/<uuid:agent_id>/decision', methods=['POST'])

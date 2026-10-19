@@ -29,3 +29,13 @@ test('concurrent session probes share one rotating refresh request', async () =>
   await Promise.all([partnerApi.snapshot(), partnerApi.snapshot()]);
   expect((fetch as jest.Mock).mock.calls.filter(([url]) => url.endsWith('/refresh'))).toHaveLength(1);
 });
+
+test('draft acknowledgment sends the reviewed version and hash with partner CSRF', async () => {
+  document.cookie = 'partner_csrf_token=partner-only; path=/';
+  (fetch as jest.Mock).mockResolvedValue(reply(200));
+  await partnerApi.acknowledgeAgreement(4, '3.0', 'a'.repeat(64));
+  expect(fetch).toHaveBeenCalledWith('/api/v1/partners/me/agreement/acknowledge', expect.objectContaining({
+    method: 'POST', credentials: 'include', headers: expect.objectContaining({ 'X-CSRF-Token': 'partner-only' }),
+    body: JSON.stringify({ version: 4, document_version: '3.0', source_sha256: 'a'.repeat(64), acknowledged: true }),
+  }));
+});

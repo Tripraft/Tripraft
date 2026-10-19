@@ -73,3 +73,56 @@ class ReviewDecision(BaseModel):
     version: int = Field(ge=1, strict=True)
     decision: Literal['APPROVED', 'CHANGES_REQUESTED', 'REJECTED', 'SUSPENDED']
     reason: str = Field(min_length=5, max_length=2000)
+
+
+class AgreementAcknowledgment(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    version: int = Field(ge=1, strict=True)
+    document_version: str = Field(max_length=32)
+    source_sha256: str = Field(pattern=r'^[a-f0-9]{64}$')
+    acknowledged: Literal[True]
+
+    @field_validator('acknowledged', mode='before')
+    @classmethod
+    def explicit_acknowledgment(cls, value):
+        if value is not True:
+            raise ValueError('Explicit draft acknowledgment is required')
+        return value
+
+
+class AgreementTextBlock(BaseModel):
+    kind: Literal['heading', 'paragraph', 'bullet']
+    text: str
+
+
+class AgreementTableBlock(BaseModel):
+    kind: Literal['table']
+    rows: list[list[str]]
+
+
+class AgreementFurniture(BaseModel):
+    part: str
+    paragraphs: list[str]
+
+
+class PartnerAgreementDocument(BaseModel):
+    version: str
+    document_date: str
+    status: Literal['DRAFT']
+    title: str
+    source_filename: str
+    source_sha256: str
+    blocks: list[AgreementTextBlock | AgreementTableBlock]
+    document_furniture: list[AgreementFurniture]
+    acknowledgment_text: str
+
+
+class PartnerAgreementStatus(BaseModel):
+    document_version: str
+    source_sha256: str
+    status: Literal['DRAFT']
+    acknowledged: bool
+    acknowledged_at: str | None
+    acknowledged_by: str | None
+    execution_status: Literal['NOT_EXECUTED']
+    commercial_activation_allowed: Literal[False]

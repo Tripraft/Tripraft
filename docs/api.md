@@ -64,3 +64,11 @@ rejects customer and supplier credentials before issuing an employee session.
 Approved verified suppliers can create/read/save/copy private drafts through
 `/api/v1/partners/packages`. These endpoints do not publish tours or configure
 customer prices. See the [staff and draft contracts](reports/staff-console-package-drafts-2026-10-19.md).
+
+## Partner agreement draft
+
+`GET /api/v1/partners/agreement` returns the complete versioned draft with ordered paragraph/heading/bullet/table blocks, original header/footer text, source SHA-256 and the exact reading-acknowledgment wording. `GET /api/v1/partners/agreement/download` returns the original DOCX attachment. Both require a live supplier session. Staff equivalents are `GET /api/v1/admin/partners/agreement` and `/agreement/download`, requiring a verified, allowlisted employee account. All responses use `Cache-Control: no-store`.
+
+`POST /api/v1/partners/me/agreement/acknowledge` accepts `{version, document_version, source_sha256, acknowledged: true}` with partner CSRF. It requires the verified owner, current application version and current document identity. It appends one reading acknowledgment per owner/source and returns the partner snapshot. False, numeric/string consent, privilege fields, stale versions/hashes and closed/suspended applications are rejected. It does not collect signatures. New application submissions require current acknowledgment; existing applications are not automatically acknowledged.
+
+Partner snapshots and staff review rows include the agreement version/hash, acknowledgment actor/time, `execution_status: NOT_EXECUTED` and `commercial_activation_allowed: false`. Application responses include `is_demo`; only the explicitly configured local sample is marked demo. Final contract execution, publication, checkout and payments have no new endpoints in this change. See [agreement operations](partner-agreement.md).

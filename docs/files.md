@@ -17,6 +17,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `apps/admin/jest.config.cjs` | Provides jest.config logic and exports for apps\admin. |
 | `apps/admin/package.json` | Declares dependencies, exports and development commands for the apps\admin workspace package. |
 | `apps/admin/src/App.tsx` | Renders the admin console with initialized server-account authorization, readiness and ingestion audit results. |
+| `apps/admin/src/PartnerAgreementPanel.tsx` | Gives authenticated staff a complete draft reader and protected original-document download. |
 | `apps/admin/src/PartnerReviewPanel.tsx` | Reviews supplier business applications with version checks and agent-visible decision reasons. |
 | `apps/admin/src/StaffLogin.tsx` | Provides an isolated staff-console sign-in form without sending employee credentials through the traveler UI. |
 | `apps/admin/src/env.d.ts` | Renders the admin console with initialized server-account authorization, readiness and ingestion audit results. |
@@ -140,6 +141,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `apps/web/src/features/itinerary/jsx/TripPlanCard.jsx` | Renders the Trip Plan Card interface within apps\web\src\features\itinerary\jsx. |
 | `apps/web/src/features/itinerary/jsx/TripTips.jsx` | Renders the Trip Tips interface within apps\web\src\features\itinerary\jsx. |
 | `apps/web/src/features/partners/PackageWorkspace.tsx` | Lets approved suppliers create, copy, save and privately preview seven-step tour content drafts. |
+| `apps/web/src/features/partners/PartnerAgreement.tsx` | Displays every supplied draft clause and table and captures reading acknowledgment separately from signatures. |
 | `apps/web/src/features/partners/PartnerPortal.tsx` | Provides the partner landing, supplier-only sign-in and business application/status flow. |
 | `apps/web/src/features/partners/__tests__/PackageWorkspace.test.tsx` | Exercises private draft creation, multi-step saves, exact rate input and conflict recovery. |
 | `apps/web/src/features/partners/__tests__/PartnerPortal.test.tsx` | Verifies the applicant journey, protected status routes and honest package capability boundary. |
@@ -233,11 +235,13 @@ Every published source/configuration file is listed below. Legal source formats 
 | `docs/architecture.md` | Explains app/service/package boundaries, data ownership, auth and deployment architecture. |
 | `docs/backend-checkpoints.md` | Lists local implementation checkpoints and explains shared Git/Sapling Interactive Smartlog use. |
 | `docs/files.md` | Explains every published file, including strict JSON, generated artifacts and binary assets that cannot contain comments. |
+| `docs/partner-agreement.md` | Explains private agreement reading, draft acknowledgment, separate demo access and final signing gates. |
 | `docs/plans/enterprise-platform-implementation-plan.md` | Maps the enterprise platform blueprint to proposed workspace, organization and agency implementation. |
 | `docs/plans/places-search-tour-packages/README.md` | Defines the updated agent tour-package scope, existing Places Search integration and footer partner entry. |
 | `docs/plans/places-search-tour-packages/architecture-and-files.md` | Maps portal/search/admin routes, proposed files, authentication boundaries and existing integration points. |
 | `docs/plans/places-search-tour-packages/data-api-and-publishing.md` | Defines tour records, API projections, price visibility, selective publishing automation and transaction rules. |
 | `docs/plans/places-search-tour-packages/phases-and-acceptance.md` | Orders the implementation phases, first sprint, backlog, regression tests and release gates. |
+| `docs/reports/partner-agreement-demo-approval-2026-10-19.md` | Records delivered policy integration, local demo approval, checks and remaining commercial release work. |
 | `docs/reports/partners-onboarding-foundation-2026-10-18.md` | Records delivered partner onboarding, launcher fixes, verification and remaining rollout work. |
 | `docs/reports/staff-console-package-drafts-2026-10-19.md` | Records staff access, private package drafts, validation and remaining release work. |
 | `docs/runbook.md` | Documents operation, verification, backups, and deployment prerequisites. |
@@ -254,6 +258,8 @@ Every published source/configuration file is listed below. Legal source formats 
 | `infra/tools/dev-env.ps1` | Creates the optional isolated development environment without replacing archived local environments. |
 | `infra/tools/document_files.py` | Adds valid file-purpose headers and regenerates this complete source/configuration file guide. |
 | `infra/tools/export_openapi.py` | Exports registered Flask routes and explicit admin/partner schemas against a migrated disposable database. |
+| `infra/tools/import_partner_agreement.py` | Imports the supplied draft agreement as faithful, ordered text/table blocks and preserves its original bytes. |
+| `infra/tools/setup_demo_partner.py` | Transfers an explicitly selected local demo application to a separate supplier identity and audits private-workspace approval. |
 | `infra/tools/sync-workflows.mjs` | Copies canonical workflows into the .github/workflows paths GitHub discovers. |
 | `infra/tools/validate_infra.py` | Checks Compose paths, volumes and dependencies plus workflow YAML without claiming live deployment. |
 | `package.json` | Defines workspace commands, pinned package-manager version, and shared development dependencies. |
@@ -386,6 +392,9 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/app/notifications/services/email_service.py` | Email Service Professional email handling for expense engine. |
 | `services/api/app/notifications/services/notification_service.py` | Notification Service for Group Planner Handles creating, querying, and managing in-app notifications. |
 | `services/api/app/partners/__init__.py` | Declares the supplier-only partner onboarding domain. |
+| `services/api/app/partners/agreement_service.py` | Serves the confidential supplied draft and records explicit reading acknowledgment without executing terms. |
+| `services/api/app/partners/agreements/partner-agreement-v3-2026-10-18.docx` | Preserves the original confidential v3 draft agreement bytes for authenticated downloads and evidence hashing. |
+| `services/api/app/partners/agreements/partner-agreement-v3-2026-10-18.json` | Contains the faithful ordered text/table projection, version and source hash of the preserved agreement. |
 | `services/api/app/partners/models.py` | Stores supplier applications, scoped staff membership and immutable review decisions. |
 | `services/api/app/partners/package_models.py` | Stores supplier-owned package roots and versioned private content drafts independently of place records. |
 | `services/api/app/partners/package_routes.py` | Adds approved-owner package draft APIs using the partner realm and private response policy. |
@@ -460,6 +469,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/migrations/versions/a5b6c7d8e9f0_add_checklist_metadata_and_chat_fks.py` | Persist checklist metadata and protect chat message references. Revision ID: a5b6c7d8e9f0. |
 | `services/api/migrations/versions/b29c3d4e5f60_tour_drafts.py` | Adds supplier-owned private package drafts and their content revisions without modifying place catalogs. |
 | `services/api/migrations/versions/b7c8d9e0f1a2_complete_vault_and_place_time_schema.py` | Complete vault/time coverage and validate UUID-native existing databases. Revision ID: b7c8d9e0f1a2. |
+| `services/api/migrations/versions/c30d4e5f6071_partner_agreement.py` | Preserves existing applications while adding explicit draft acknowledgment evidence and a demo marker. |
 | `services/api/migrations/versions/c4d5e6f7a8b9_add_chat_tables.py` | add_chat_tables Revision ID: c4d5e6f7a8b9. |
 | `services/api/migrations/versions/d4a1c3e8f9b0_add_settlement_and_verification_audit_columns.py` | Persist settlement deletion and email-verification audit timestamps. Revision ID: d4a1c3e8f9b0. |
 | `services/api/migrations/versions/e336ee48cb0f_add_date_partitioning_postgresql.py` | add_date_partitioning_postgresql PostgreSQL-only migration: converts expenses, expense_history, and. |
@@ -479,6 +489,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/tests/test_canonical_catalog.py` | Verifies empty creation, existing-data preservation, rejection of incompatible schemas and shared connection settings. |
 | `services/api/tests/test_crew_expense_deletion.py` | Regression tests for crew expense deletion, including success and failure behavior. |
 | `services/api/tests/test_csrf.py` | Regression tests for csrf, including success and failure behavior. |
+| `services/api/tests/test_demo_partner_setup.py` | Ensures explicit local demo approval preserves staff separation, audit history and unsigned agreement state. |
 | `services/api/tests/test_endpoint_inventory.py` | Regression tests for endpoint inventory, including success and failure behavior. |
 | `services/api/tests/test_group_access_controls.py` | Regression tests for group access controls, including success and failure behavior. |
 | `services/api/tests/test_group_planner_smoke.py` | Regression tests for group planner smoke, including success and failure behavior. |
@@ -487,6 +498,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/tests/test_money_concurrency.py` | Regression tests for money concurrency, including success and failure behavior. |
 | `services/api/tests/test_money_integrity.py` | Regression tests for money integrity, including success and failure behavior. |
 | `services/api/tests/test_p3_contracts.py` | Regression tests for p3 contracts, including success and failure behavior. |
+| `services/api/tests/test_partner_agreement.py` | Verifies source fidelity, private draft access and explicit versioned acknowledgment without signature or retroactive assent. |
 | `services/api/tests/test_partners.py` | Exercises supplier isolation, versioned onboarding, review history and revocable cookie sessions. |
 | `services/api/tests/test_phase1_contracts.py` | Regression tests for phase1 contracts, including success and failure behavior. |
 | `services/api/tests/test_phase2_continued.py` | Regression tests for phase2 continued, including success and failure behavior. |

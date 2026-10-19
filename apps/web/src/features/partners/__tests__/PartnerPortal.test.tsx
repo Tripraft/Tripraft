@@ -5,12 +5,13 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import PartnerPortal from '../PartnerPortal';
 import { partnerApi } from '../partnerApi';
 
-jest.mock('../partnerApi', () => ({ partnerApi: { snapshot: jest.fn(), register: jest.fn(), login: jest.fn(), save: jest.fn(), submit: jest.fn(), resend: jest.fn(), logout: jest.fn(), packages: jest.fn() } }));
+jest.mock('../partnerApi', () => ({ partnerApi: { snapshot: jest.fn(), register: jest.fn(), login: jest.fn(), save: jest.fn(), submit: jest.fn(), resend: jest.fn(), logout: jest.fn(), packages: jest.fn(), agreement: jest.fn(), acknowledgeAgreement: jest.fn(), agreementDownloadUrl: '/api/v1/partners/agreement/download' } }));
 const api = partnerApi as jest.Mocked<typeof partnerApi>;
 const snapshot = (status = 'DRAFT_APPLICATION', version = 1) => ({
   user: { id: 'user-a', email: 'agent@example.test', display_name: 'Alex', email_verified: true },
   application: { id: 'agent-a', status, version, business_name: 'Real Tours', representative_name: 'Alex', contact_email: 'agent@example.test', phone: '12345678', country_code: 'IN', business_type: 'tour_operator', operating_regions: ['Kerala'], website: '', review_reason: null, submitted_at: null, updated_at: '2026-10-18' },
   capabilities: { can_edit_application: ['DRAFT_APPLICATION', 'CHANGES_REQUESTED'].includes(status), can_submit_application: true, can_view_dashboard: status === 'APPROVED', can_manage_packages: status === 'APPROVED' },
+  agreement: { document_version: '3.0', source_sha256: 'a'.repeat(64), status: 'DRAFT', acknowledged: true, acknowledged_at: '2026-10-19T10:00:00Z', acknowledged_by: 'user-a', execution_status: 'NOT_EXECUTED', commercial_activation_allowed: false },
 });
 function open(path = '/partners') { return render(<MemoryRouter initialEntries={[path]}><Routes><Route path="/partners/*" element={<PartnerPortal />} /></Routes></MemoryRouter>); }
 beforeEach(() => { jest.resetAllMocks(); api.snapshot.mockResolvedValue(null); api.packages.mockResolvedValue({ packages: [], total: 0 }); });
@@ -88,4 +89,43 @@ test('an applicant cannot open the package workspace before approval', async () 
   open('/partners/dashboard');
   expect(await screen.findByRole('heading', { name: 'Under review' })).toBeInTheDocument();
   expect(api.packages).not.toHaveBeenCalled();
+});
+
+test('application links the draft and requires separate reading acknowledgment before submission', async () => {
+  const value = snapshot(); value.agreement.acknowledged = false;
+  api.snapshot.mockResolvedValue(value as any);
+  open('/partners/status');
+  expect(await screen.findByRole('link', { name: 'Read partner agreement' })).toHaveAttribute('href', '/partners/agreement');
+  fireEvent.click(screen.getByRole('checkbox'));
+  expect(screen.getByRole('button', { name: 'Submit for review' })).toBeDisabled();
+  expect(api.submit).not.toHaveBeenCalled();
+});
+
+test('reads the full supplied draft and requires an unchecked explicit acknowledgment', async () => {
+  const value = snapshot(); value.agreement.acknowledged = false;
+  api.snapshot.mockResolvedValue(value as any);
+  api.agreement.mockResolvedValue({ version: '3.0', document_date: '2026-10-18', status: 'DRAFT', title: 'Tour Operator Partner Agreement', source_filename: 'source.docx', source_sha256: 'a'.repeat(64), blocks: [
+    { kind: 'heading', text: 'SCHEDULE F | Signatures' }, { kind: 'paragraph', text: 'Unfilled legal entity [REQUIRED].' }, { kind: 'table', rows: [['Mode', 'Target'], ['Manual', 'Request to book']] },
+  ], document_furniture: [], acknowledgment_text: 'I have read this draft; this is not a signature.' });
+  api.acknowledgeAgreement.mockResolvedValue(snapshot() as any);
+  open('/partners/agreement');
+  expect(await screen.findByRole('heading', { name: 'SCHEDULE F | Signatures' })).toBeInTheDocument();
+  expect(screen.getByRole('cell', { name: 'Request to book' })).toBeInTheDocument();
+  expect(screen.getByText('Unfilled legal entity [REQUIRED].')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Download original Word agreement' })).toHaveAttribute('href', '/api/v1/partners/agreement/download');
+  const checkbox = screen.getByRole('checkbox');
+  expect(checkbox).not.toBeChecked();
+  expect(screen.getByRole('button', { name: 'Acknowledge draft reading' })).toBeDisabled();
+  fireEvent.click(checkbox); fireEvent.click(screen.getByRole('button', { name: 'Acknowledge draft reading' }));
+  expect(await screen.findByRole('status')).toHaveTextContent('Contract remains unsigned');
+  expect(api.acknowledgeAgreement).toHaveBeenCalledWith(1, '3.0', 'a'.repeat(64));
+});
+
+test('failed agreement loading cannot expose an acknowledgment control', async () => {
+  api.snapshot.mockResolvedValue(snapshot() as any);
+  api.agreement.mockRejectedValue(new Error('Agreement unavailable'));
+  open('/partners/agreement');
+  expect(await screen.findByRole('alert')).toHaveTextContent('Agreement unavailable');
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+  expect(api.acknowledgeAgreement).not.toHaveBeenCalled();
 });

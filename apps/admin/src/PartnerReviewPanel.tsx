@@ -1,6 +1,7 @@
 // Purpose: Reviews supplier business applications with version checks and agent-visible decision reasons.
 import React, { useCallback, useEffect, useState } from 'react';
 import type { PartnerReviewApplication, PartnerDecision, PartnerReviewList, PartnerStatus } from '@tripraft/types';
+import { PartnerAgreementPanel } from './PartnerAgreementPanel';
 
 const statuses: PartnerStatus[] = ['UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'SUSPENDED', 'REJECTED'];
 const title = (value: string) => value.toLowerCase().replaceAll('_', ' ');
@@ -29,6 +30,9 @@ function ReviewCard({ application: a, changed }: { application: PartnerReviewApp
   return <article className="partner-admin-card"><h3>{a.business_name || 'Unnamed business'}</h3><p>{a.representative_name} · {a.country_code} · {title(a.status)}</p>
     <dl><dt>Business contact</dt><dd>{a.contact_email} · {a.phone}</dd><dt>Operating regions</dt><dd>{a.operating_regions.join(', ')}</dd><dt>Business type</dt><dd>{title(a.business_type)}</dd><dt>Website</dt><dd>{a.website || 'Not provided'}</dd><dt>Submitted</dt><dd>{a.submitted_at ? new Date(a.submitted_at).toLocaleString() : 'Not submitted'}</dd></dl>
     {a.review_reason && <p>Previous feedback: {a.review_reason}</p>}
+    {a.is_demo && <p><strong>Demo operator — private dashboard testing only.</strong></p>}
+    <p>Draft agreement v{a.agreement.document_version}: {a.agreement.acknowledged ? `reading acknowledged ${a.agreement.acknowledged_at ? new Date(a.agreement.acknowledged_at).toLocaleString() : ''}` : 'reading not acknowledged'}. Contract not executed. Commercial activation blocked.</p>
+    {a.agreement.acknowledged && <details><summary>Acknowledgment evidence</summary><p>Account: {a.agreement.acknowledged_by}</p><p style={{ overflowWrap: 'anywhere' }}>Original document SHA-256: {a.agreement.source_sha256}</p></details>}
     {a.is_own_application && <p>You cannot review your own business application. Ask another authorized staff member to review it.</p>}
     {decisions.length > 0 && <><label>Decision reason, visible to the applicant<textarea value={reason} minLength={5} maxLength={2000} onChange={event => setReason(event.target.value)} /></label><div className="partner-admin-actions">{decisions.map(decision => <button key={decision} disabled={busy || reason.trim().length < 5} onClick={() => void decide(decision)}>{decision === 'APPROVED' ? 'Approve business' : title(decision)}</button>)}</div></>}
     {error && <p role="alert">{error}</p>}
@@ -45,6 +49,7 @@ export function PartnerReviewPanel() {
     return () => { active = false; };
   }, [status, offset, revision]);
   return <section aria-labelledby="partner-review-title"><h2 id="partner-review-title">Partner applications</h2><p>Review business information before granting supplier access. Approval here does not enable package publication or payments.</p><div className="toolbar"><label>Application status <select value={status} onChange={event => { setStatus(event.target.value as PartnerStatus); setOffset(0); }}>{statuses.map(item => <option key={item} value={item}>{title(item)}</option>)}</select></label><button onClick={changed} disabled={loading}>Refresh applications</button></div>
+    <PartnerAgreementPanel />
     {loading && <p role="status">Loading partner applications…</p>}{error && <p role="alert">{error}</p>}
     {list && <><p>{list.total} applications in this status.</p>{list.applications.map(application => <ReviewCard key={`${application.id}-${application.version}`} application={application} changed={changed} />)}{!list.applications.length && <p>No applications in this status.</p>}<div className="toolbar"><button disabled={offset === 0 || loading} onClick={() => setOffset(Math.max(0, offset - 25))}>Previous applications</button><button disabled={offset + 25 >= list.total || loading} onClick={() => setOffset(offset + 25)}>Next applications</button></div></>}
   </section>;

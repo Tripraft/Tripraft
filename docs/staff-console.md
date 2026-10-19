@@ -26,9 +26,9 @@ assignment: preserve its application, retire supplier membership, revoke old
 sessions and require fresh staff sign-in. The local demo conversion performed in
 this checkpoint followed that procedure and retained the existing password.
 
-Employees cannot review their own business application. The record remains
-visible with a notice, and another authorized employee must review it. This
-restriction applies to the preserved demo application as well.
+Employees cannot review their own business application. Such records remain
+visible with a notice, and another authorized employee must review them. The local
+demo now has a separate supplier owner, as described below; self-review remains blocked.
 
 Agents use `/partners/status` for their own application and feedback. Approved,
 verified agents use `/partners/dashboard` for private package drafts. Staff review
@@ -36,3 +36,9 @@ does not itself publish tours or enable customer pricing, inventory or payments.
 
 See the [implementation report](reports/staff-console-package-drafts-2026-10-19.md)
 for delivered code, validation and the next package-media/review work.
+
+## Partner agreement and demo
+
+Partner applications now include a complete draft-agreement reader, protected Word download and each applicant's reading acknowledgment evidence. Draft acknowledgment does not sign the agreement. Business approval currently unlocks private package preparation only; the contract remains unexecuted and commercial activation is unavailable.
+
+The previously staff-owned demo application was transferred to `demo.operator@example.com` and approved locally at the user's request. `tripraft@gmail.com` retains staff access; its supplier membership stays inactive. Local demo login details are in ignored `.tripraft/demo-partner-access.json`. The normal staff HTTP API still rejects self-review. See [agreement and demo access](partner-agreement.md).

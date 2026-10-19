@@ -32,6 +32,7 @@ def envelope(data):
 
 def build(application):
     from app.partners.schemas import ApplicationSubmit, ApplicationUpdate, PartnerLogin, PartnerRegister, ReviewDecision
+    from app.partners.schemas import AgreementAcknowledgment, PartnerAgreementDocument, PartnerAgreementStatus
     from app.partners.package_schemas import (CreateTourDraft, SaveTourDraft, DuplicateTourDraft, TourDraftContent,
                                              PackageSummary, PackageDraft, PackageList)
     schemas = {
@@ -57,6 +58,7 @@ def build(application):
         'AuditResponse': envelope(ref('AuditData')),
     }
     for model in (PartnerRegister, PartnerLogin, ApplicationUpdate, ApplicationSubmit, ReviewDecision,
+                  AgreementAcknowledgment, PartnerAgreementDocument, PartnerAgreementStatus,
                   CreateTourDraft, SaveTourDraft, DuplicateTourDraft, TourDraftContent, PackageSummary, PackageDraft, PackageList):
         schema = model.model_json_schema(ref_template='#/components/schemas/{model}')
         schemas.update(schema.pop('$defs', {}))
@@ -68,6 +70,7 @@ def build(application):
     application_fields.update({
         'id': {'type': 'string', 'format': 'uuid'}, 'version': {'type': 'integer', 'minimum': 1},
         'status': {'type': 'string', 'enum': status_values},
+        'is_demo': {'type': 'boolean'},
         'business_type': {'type': 'string', 'enum': ['tour_operator', 'travel_agency']},
         'operating_regions': {'type': 'array', 'items': {'type': 'string'}},
         'review_reason': {'type': ['string', 'null']},
@@ -75,18 +78,19 @@ def build(application):
         'updated_at': {'type': 'string', 'format': 'date-time'},
     })
     schemas['PartnerApplication'] = {'type': 'object', 'required': list(application_fields), 'properties': application_fields}
-    schemas['PartnerSnapshot'] = {'type': 'object', 'required': ['user', 'application', 'capabilities'], 'properties': {
+    schemas['PartnerSnapshot'] = {'type': 'object', 'required': ['user', 'application', 'agreement', 'capabilities'], 'properties': {
         'user': {'type': 'object', 'required': ['id', 'email', 'display_name', 'email_verified'], 'properties': {
             'id': {'type': 'string', 'format': 'uuid'}, 'email': {'type': 'string'},
             'display_name': {'type': ['string', 'null']}, 'email_verified': {'type': 'boolean'},
         }},
         'application': ref('PartnerApplication'), 'verification_email_sent': {'type': 'boolean'},
+        'agreement': ref('PartnerAgreementStatus'),
         'capabilities': {'type': 'object', 'required': ['can_edit_application', 'can_submit_application', 'can_view_dashboard', 'can_manage_packages'], 'properties': {
             name: {'type': 'boolean'} for name in ('can_edit_application', 'can_submit_application', 'can_view_dashboard', 'can_manage_packages')
         }},
     }}
     schemas['PartnerSnapshotResponse'] = envelope(ref('PartnerSnapshot'))
-    schemas['PartnerReviewApplication'] = {'allOf': [ref('PartnerApplication'), {'type': 'object', 'required': ['is_own_application'], 'properties': {'is_own_application': {'type': 'boolean'}}}]}
+    schemas['PartnerReviewApplication'] = {'allOf': [ref('PartnerApplication'), {'type': 'object', 'required': ['is_own_application', 'agreement'], 'properties': {'is_own_application': {'type': 'boolean'}, 'agreement': ref('PartnerAgreementStatus')}}]}
     schemas['PartnerReviewListResponse'] = envelope({'type': 'object', 'required': ['applications', 'total'], 'properties': {
         'applications': {'type': 'array', 'items': ref('PartnerReviewApplication')}, 'total': {'type': 'integer'},
     }})
@@ -130,13 +134,18 @@ def build(application):
                 action = rule.endpoint.split('.')[-1]
                 inputs = {'register': 'PartnerRegister', 'login': 'PartnerLogin', 'update_application': 'ApplicationUpdate',
                           'submit_application': 'ApplicationSubmit', 'review_application': 'ReviewDecision',
+                          'acknowledge_agreement': 'AgreementAcknowledgment',
                           'staff_login': 'PartnerLogin', 'create_package_draft': 'CreateTourDraft', 'duplicate_package_draft': 'DuplicateTourDraft'}
                 if action == 'package_draft' and method == 'PATCH':
                     inputs[action] = 'SaveTourDraft'
                 if action in inputs:
                     operation['requestBody'] = {'required': True, 'content': {'application/json': {'schema': ref(inputs[action])}}}
-                if action in ('register', 'login', 'me', 'update_application', 'submit_application'):
+                if action in ('register', 'login', 'me', 'update_application', 'submit_application', 'acknowledge_agreement'):
                     output = ref('PartnerSnapshotResponse')
+                elif action in ('partner_agreement', 'staff_agreement'):
+                    output = envelope(ref('PartnerAgreementDocument'))
+                elif action in ('partner_agreement_download', 'staff_agreement_download'):
+                    output = {'type': 'string', 'format': 'binary'}
                 elif action == 'list_applications':
                     output = ref('PartnerReviewListResponse')
                     operation['parameters'] = [
@@ -161,6 +170,10 @@ def build(application):
                               'resend_verification': {'message': {'type': 'string'}}}[action]
                     output = envelope({'type': 'object', 'properties': fields})
                 operation['responses'] = {('201' if action in ('register', 'create_package_draft', 'duplicate_package_draft') else '200'): response(output)}
+                if action in ('partner_agreement_download', 'staff_agreement_download'):
+                    operation['responses']['200'] = {'description': 'Authenticated original draft Word attachment; never cached.', 'content': {
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': {'schema': output},
+                    }}
                 for status in ('401', '403', '409', '422', '429', '503'):
                     operation['responses'][status] = response(ref('PartnerError'))
                 if action in ('review_application', 'package_draft', 'duplicate_package_draft'):

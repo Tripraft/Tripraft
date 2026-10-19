@@ -1,0 +1,1363 @@
+{
+  "version": "3.0",
+  "document_date": "2026-10-18",
+  "status": "DRAFT",
+  "title": "Tour Operator Partner Agreement",
+  "source_filename": "partner-agreement-v3-2026-10-18.docx",
+  "source_sha256": "ddaf7462465856ac7973d39791e8bbfd622cc98f87fe3f65699ba9bffb1e7108",
+  "blocks": [
+    {
+      "kind": "paragraph",
+      "text": "TRIPRAFT  |  SUPPLIER CONTRACTS"
+    },
+    {
+      "kind": "paragraph",
+      "text": "TOUR OPERATOR\nPARTNER AGREEMENT"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Master Terms + Commercial Schedule + Operating Standards + Signatures"
+    },
+    {
+      "kind": "table",
+      "rows": [
+        [
+          "DOCUMENT CONTROL",
+          "DETAIL"
+        ],
+        [
+          "Document version",
+          "v3.0 — 18 October 2026"
+        ],
+        [
+          "Document status",
+          "DRAFT — Requires legal, tax and payment-provider review"
+        ],
+        [
+          "Company",
+          "TripRaft legal entity: [INSERT REGISTERED ENTITY NAME]"
+        ],
+        [
+          "Governing law",
+          "[INSERT JURISDICTION BEFORE EXECUTION]"
+        ],
+        [
+          "Execution rule",
+          "Do not activate an agent or publish sellable inventory until mandatory schedules are completed and signed."
+        ]
+      ]
+    },
+    {
+      "kind": "paragraph",
+      "text": "IMPORTANT: This is an original TripRaft contractual template modeled on standard travel-distribution practices. It is not an Expedia Group agreement, is not affiliated with Expedia, and must not be offered as final legal advice. The parties must complete all marked fields and obtain jurisdiction-specific legal/tax review before execution."
+    },
+    {
+      "kind": "heading",
+      "text": "Agreement contents"
+    },
+    {
+      "kind": "table",
+      "rows": [
+        [
+          "PART",
+          "PURPOSE"
+        ],
+        [
+          "Master Terms §§1–24",
+          "Parties; supplier obligations; inventory; prices; bookings; payments; cancellations; liability; law"
+        ],
+        [
+          "Schedule A — Commercial Terms",
+          "Signed commission/net-rate choice, public-rate authority, payment allocation and timing"
+        ],
+        [
+          "Schedule B — Inventory Standards",
+          "Manual vs synced vs exclusive inventory; reporting and freshness rules"
+        ],
+        [
+          "Schedule C — Customer Remedies",
+          "Cancellation, failure-to-fulfill, replacement and incident-resolution workflow"
+        ],
+        [
+          "Schedule D — Content & Publishing",
+          "Agent dashboard, approval matrix and product accuracy commitments"
+        ],
+        [
+          "Schedule E — Data & Security",
+          "Traveler-data access and incident controls"
+        ],
+        [
+          "Schedule F — Acceptance & Signatures",
+          "Acknowledgments, signatories and electronic-signing evidence"
+        ],
+        [
+          "Appendix 1 — Illustrative Settlement Math",
+          "Non-contractual sample calculations for both models"
+        ],
+        [
+          "Appendix 2 — Deployment Checklist",
+          "Non-contractual implementation and counsel-review tasks"
+        ]
+      ]
+    },
+    {
+      "kind": "heading",
+      "text": "Rules for use"
+    },
+    {
+      "kind": "bullet",
+      "text": "Sign Master Terms and a completed Schedule A before activating the agent account for commercial bookings. Each rate plan or package family must link to an approved commercial schedule."
+    },
+    {
+      "kind": "bullet",
+      "text": "Schedules B–E form part of the agreement when attached and expressly incorporated at execution; replace proposed response targets with operationally supportable thresholds."
+    },
+    {
+      "kind": "bullet",
+      "text": "Confirm legal seller/merchant-of-record, service location, tax treatment, payout provider and mandatory traveler disclosures. A label such as “marketplace” does not by itself decide legal treatment."
+    },
+    {
+      "kind": "bullet",
+      "text": "Appendices 1–2 are internal guidance only, not part of binding supplier obligations."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Defined blanks: [REQUIRED] indicates a field that must be completed before signing. Selecting both conflicting alternatives is invalid."
+    },
+    {
+      "kind": "heading",
+      "text": "Master Tour Operator Partner Agreement"
+    },
+    {
+      "kind": "paragraph",
+      "text": "This Tour Operator Partner Agreement (the “Agreement”) is entered into as of [EFFECTIVE DATE] between [TRIPRAFT REGISTERED ENTITY, ADDRESS, REGISTRATION NUMBER] (“TripRaft”) and [AGENT REGISTERED LEGAL NAME, ADDRESS, REGISTRATION NUMBER] (“Operator”). Each is a “Party”; together they are the “Parties”."
+    },
+    {
+      "kind": "heading",
+      "text": "1. Definitions and interpretation"
+    },
+    {
+      "kind": "paragraph",
+      "text": "1.1  “Booking” means an accepted and recorded reservation for a specified Package, departure, traveler quantity and terms. “Confirmed Booking” means one designated confirmed under Section 6, supported by inventory authorization and required payment status."
+    },
+    {
+      "kind": "paragraph",
+      "text": "1.2  “Package” means a travel product listed by Operator, including its itinerary, accommodation, transport, meals, services and published conditions. “Inventory” means authorized sellable units for a specific departure or room type and applicable stay date, net of sold units and active holds."
+    },
+    {
+      "kind": "paragraph",
+      "text": "1.3  “Partner Portal” means TripRaft’s authenticated operator dashboard or authorized supplier connection. “Platform” means TripRaft’s public website, partner tools and reservation services. “Commercial Schedule” means the executed Schedule A and any signed rate-plan annex."
+    },
+    {
+      "kind": "paragraph",
+      "text": "1.4  “Marketplace/Commission” means the Operator remains the seller of the specified travel service and pays TripRaft its agreed distribution commission. “Reseller/Net Rate” means the Operator supplies travel services to TripRaft at a contracted net price, with TripRaft selling those services as principal only where the transaction and law support that characterization."
+    },
+    {
+      "kind": "paragraph",
+      "text": "1.5  “Applicable Law” includes all binding consumer, travel, contract, tax, payment, privacy, accessibility and safety laws in the relevant jurisdictions. “Business Day” and the time zone applicable to notices and cancellations are specified in Schedule A."
+    },
+    {
+      "kind": "heading",
+      "text": "2. Appointment and permitted scope"
+    },
+    {
+      "kind": "paragraph",
+      "text": "2.1  Operator appoints TripRaft on a non-exclusive basis, unless Schedule A expressly states otherwise, to display approved Packages, accept or refer Bookings, market inventory and perform related agreed services. This is not a general authority to bind the other Party beyond the configured booking and payment workflows."
+    },
+    {
+      "kind": "paragraph",
+      "text": "2.2  No minimum booking volume, ranking, placement, price guarantee or exclusivity applies unless separately documented. TripRaft may determine discovery layout and featured placement subject to truthful advertising and any signed campaign agreement."
+    },
+    {
+      "kind": "paragraph",
+      "text": "2.3  Each Package or rate plan must designate its business model, responsible legal seller, party issuing traveler invoices, collection mode, permitted retail-price rules and refund allocation in Schedule A. Inconsistent or unsigned configurations are not eligible for instant booking."
+    },
+    {
+      "kind": "heading",
+      "text": "3. Onboarding, representations and verification"
+    },
+    {
+      "kind": "paragraph",
+      "text": "3.1  Operator represents that it has authority to enter this Agreement, provide the advertised travel services, and engage its hotels, carriers, guides and subcontractors; holds required registrations, permits and insurance; and can honor its published Package commitments."
+    },
+    {
+      "kind": "paragraph",
+      "text": "3.2  Operator shall submit true and current business identity, tax, beneficial ownership, contact, licensing and bank details reasonably required for partner and payment-provider due diligence. TripRaft may verify these with authorized providers and suspend payouts pending lawful checks."
+    },
+    {
+      "kind": "paragraph",
+      "text": "3.3  Operator shall maintain a designated booking-contact and emergency escalation contact. Operator must notify TripRaft of ownership, legal-entity, payout-account or licensing changes before they take effect where reasonably possible."
+    },
+    {
+      "kind": "heading",
+      "text": "4. Listings and accuracy"
+    },
+    {
+      "kind": "paragraph",
+      "text": "4.1  Operator is responsible for the accuracy and lawful use of every submitted title, description, route, day-by-day itinerary, hotel category, occupancy, photos, videos, transportation, meals, exclusions, duration, accessibility disclosure, optional charges and cancellation policy."
+    },
+    {
+      "kind": "paragraph",
+      "text": "4.2  Operator must not advertise confirmed hotel rooms, seat allotments, included activities, amenities or upgrades that are not under documented control or reasonably verifiable. Material substitutions require notification and approval or customer consent under Schedule C."
+    },
+    {
+      "kind": "paragraph",
+      "text": "4.3  Operator grants TripRaft a non-exclusive, worldwide, royalty-free license during the Agreement to host, format, translate for accessibility, display and promote submitted materials for the Packages. Operator warrants rights to materials and retains its underlying IP. TripRaft may remove infringing or misleading content."
+    },
+    {
+      "kind": "heading",
+      "text": "5. Inventory and rate management"
+    },
+    {
+      "kind": "paragraph",
+      "text": "5.1  Operator shall accurately maintain inventory and departure restrictions through Partner Portal or approved API. For hotels, room inventory is tracked by room type and each stay night; for tours, by departure and limiting component, including confirmed transportation or room capacity where relevant."
+    },
+    {
+      "kind": "paragraph",
+      "text": "5.2  The inventory mode for each Package must be EXCLUSIVE_ALLOCATION, VERIFIED_SYNCED, SHARED_MANUAL or REQUEST_TO_BOOK as specified in Schedule B. TripRaft may disable instant confirmation where data is stale, disputed, unsynchronized or otherwise unreliable."
+    },
+    {
+      "kind": "paragraph",
+      "text": "5.3  Operator shall promptly record direct, telephone, walk-in, WhatsApp and third-party sales affecting shared inventory. The response and reconfirmation thresholds are in Schedule B. An auto-published availability update is Operator’s affirmative representation that the units remain sellable."
+    },
+    {
+      "kind": "paragraph",
+      "text": "5.4  Operator shall honor valid Confirmed Bookings even after a rate or availability error, subject to mandatory law and the remedies in Schedule C. Operator may not unilaterally substitute a less suitable service or charge a traveler extra to correct Operator’s mistake."
+    },
+    {
+      "kind": "heading",
+      "text": "6. Booking acceptance and changes"
+    },
+    {
+      "kind": "paragraph",
+      "text": "6.1  TripRaft may provide instant confirmation only when an authoritative sellable allotment or reliable connected inventory exists and required payment controls succeed. For manual shared inventory, TripRaft may collect an inquiry or request but must not state the Booking is confirmed until Operator has accepted and TripRaft issues confirmation."
+    },
+    {
+      "kind": "paragraph",
+      "text": "6.2  The Booking record shall preserve package version, departure, traveler count, accepted customer price, seller identity, cancellation terms, taxes and applicable restrictions. Future price changes shall not retroactively alter a Confirmed Booking."
+    },
+    {
+      "kind": "paragraph",
+      "text": "6.3  Operator shall accept, reject or propose a lawful change to requests in the time frame set in Schedule B and provide confirmed hotel vouchers, tickets, pickup details and critical traveler instructions by the relevant due dates."
+    },
+    {
+      "kind": "paragraph",
+      "text": "6.4  Neither Party may modify, cancel or mark a Confirmed Booking fulfilled without an auditable event and legally required traveler notice. Changes to essential services require the traveler’s approval where law or contract requires it."
+    },
+    {
+      "kind": "heading",
+      "text": "7. Rates, commissions and price authorization"
+    },
+    {
+      "kind": "paragraph",
+      "text": "7.1  Under Marketplace/Commission, Operator authorizes the customer selling rate, commission basis and any dynamic pricing range in Schedule A. Operator remains responsible for the proper traveler invoice for its own supply. TripRaft invoices its commission or other platform services as applicable."
+    },
+    {
+      "kind": "paragraph",
+      "text": "7.2  Under Reseller/Net Rate, Operator invoices TripRaft under the agreed tax-inclusive or tax-exclusive net rate, and TripRaft may set customer-facing retail prices solely within contractual and legal limits. The legal tax and consumer treatment follows the actual transaction, not its internal label."
+    },
+    {
+      "kind": "paragraph",
+      "text": "7.3  No commission percentage, net payout, promotional discount or price parity is presumed. Schedule A must define whether calculation uses tax-inclusive or tax-exclusive value, coupon funding, cancellations, additional travelers, currency conversion and fees."
+    },
+    {
+      "kind": "paragraph",
+      "text": "7.4  Dynamic pricing may use legitimate inventory, booking velocity, departure proximity, seasonal demand and authorized factors. It shall respect signed public-price floors and ceilings, truthful advertised prices and consumer protections; repeated individual searches alone do not authorize a personalized price increase."
+    },
+    {
+      "kind": "paragraph",
+      "text": "7.5  TripRaft’s unrelated supplier contracts, internal margins, algorithms and private resale calculations are confidential. Nothing permits concealing legally required seller identity, tax, mandatory charges, restrictions or material customer booking conditions."
+    },
+    {
+      "kind": "heading",
+      "text": "8. Payment collection models"
+    },
+    {
+      "kind": "paragraph",
+      "text": "8.1  Schedule A must elect TRIPRAFT_COLLECT or OPERATOR_COLLECT for each rate plan. Customer payments shall use an approved payment service provider or lawful agreed method. Neither Party may seek customer card security codes or store prohibited payment credentials."
+    },
+    {
+      "kind": "paragraph",
+      "text": "8.2  For TRIPRAFT_COLLECT, TripRaft or its appointed processor collects the customer payment under the agreed merchant-of-record structure, verifies successful capture and order reconciliation, and manages the supplier transfer according to Schedule A and provider restrictions."
+    },
+    {
+      "kind": "paragraph",
+      "text": "8.3  For OPERATOR_COLLECT, Operator lawfully collects from the traveler, issues applicable receipts, reports collected amounts and refunds, and pays TripRaft commissions due on the agreed statement cycle. Operator must not take a TripRaft-sourced Booking off-platform to evade an earned fee."
+    },
+    {
+      "kind": "paragraph",
+      "text": "8.4  A checkout success page, pending payment event, authorization or a transfer-requested status does not prove captured funds or final bank credit. Parties shall rely on authenticated provider records and reconciliation."
+    },
+    {
+      "kind": "heading",
+      "text": "9. Supplier payouts and statements"
+    },
+    {
+      "kind": "paragraph",
+      "text": "9.1  Schedule A shall state whether approved advances, predeparture balances or post-completion payouts apply, with triggers, reserve terms, payment method, fees and expected settlement timing. No schedule may require funds to be held longer than law or a provider permits."
+    },
+    {
+      "kind": "paragraph",
+      "text": "9.2  Payout requires valid supplier onboarding, the applicable verified Booking status, payment clearance as relevant, and satisfaction of the contractual release conditions. TripRaft may adjust or recover amounts only on an identified contractual, legal or provider-compliance basis."
+    },
+    {
+      "kind": "paragraph",
+      "text": "9.3  A settlement statement shall identify Booking ID, departure, charged amount, relevant tax basis, commission or net rate, refund adjustments, authorized provider expenses, withholding, advance paid, remaining balance and transaction reference."
+    },
+    {
+      "kind": "paragraph",
+      "text": "9.4  Operator shall notify TripRaft of an apparent settlement error within the Schedule A notice period. Undisputed amounts remain due when payable unless validly withheld; both Parties shall cooperate to resolve reconciled shortfalls, failed transfers and reversals."
+    },
+    {
+      "kind": "heading",
+      "text": "10. Taxes, invoices and statutory deductions"
+    },
+    {
+      "kind": "paragraph",
+      "text": "10.1  Each Party is responsible for its own tax registrations, legally correct invoices and credit notes, taxes on its supplies and required reporting. The Parties shall not treat a supplier net price as the automatic taxable value of a separate customer sale."
+    },
+    {
+      "kind": "paragraph",
+      "text": "10.2  Indian GST on qualifying tours, GST on commissions or genuine separate service fees, e-commerce operator obligations, TCS/TDS, input credit and place of supply shall be determined by qualified advisers for the actual legal seller and transaction. Schedule A records tax treatment after review."
+    },
+    {
+      "kind": "paragraph",
+      "text": "10.3  Any valid withholding, GST TCS or tax deduction that represents a credit or statutory remittance is reflected transparently as a settlement adjustment, not mischaracterized as a general fee or TripRaft profit."
+    },
+    {
+      "kind": "heading",
+      "text": "11. Customer cancellation and refunds"
+    },
+    {
+      "kind": "paragraph",
+      "text": "11.1  Before a Booking is paid or confirmed, Operator supplies and approves a package-specific cancellation and no-show policy, measured in an identified time zone. TripRaft shall present required material restrictions and preserve the version accepted by the customer."
+    },
+    {
+      "kind": "paragraph",
+      "text": "11.2  Traveler-requested cancellation is handled using the accepted lawful terms and any overriding statutory rights. Where deduction for proven third-party costs is allowed and agreed, Operator shall provide documentation promptly. Blanket “non-refundable” wording does not override mandatory rights."
+    },
+    {
+      "kind": "paragraph",
+      "text": "11.3  For TRIPRAFT_COLLECT, customer refunds are coordinated through the original payment rails where feasible, and supplier advances are reversed or recovered under Schedule C. For OPERATOR_COLLECT, Operator executes required customer refunds and provides evidence within the agreed reporting window."
+    },
+    {
+      "kind": "paragraph",
+      "text": "11.4  Commission reversal or retention on cancellations, taxes and credit notes, no-shows, partial use and travel credits follows Schedule A. TripRaft may not retain amounts inconsistent with mandatory law or the signed commercial allocation."
+    },
+    {
+      "kind": "heading",
+      "text": "12. Supplier shortfall, overbooking and relocation"
+    },
+    {
+      "kind": "paragraph",
+      "text": "12.1  Operator shall immediately report any inability to honor a Confirmed Booking, including closed rooms, double-sold tour seats, failed hotel allotments, downgraded accommodation, transport shortages or itinerary components that cannot be delivered."
+    },
+    {
+      "kind": "paragraph",
+      "text": "12.2  TripRaft may suspend affected inventory and stop instant checkout while confirming facts. Operator shall promptly propose verified substantially equivalent or better alternatives at no additional charge to the traveler when the shortfall is Operator-attributable, including reasonable location, room type, occupancy and accessibility needs."
+    },
+    {
+      "kind": "paragraph",
+      "text": "12.3  No material substitution is final without the customer’s informed acceptance where required. If a suitable remedy is unavailable or law gives the customer an election, the responsible Party shall provide the lawful refund and cooperate with return transport or other required assistance."
+    },
+    {
+      "kind": "paragraph",
+      "text": "12.4  Incremental verified replacement costs, refunds, reasonable assistance and recovery from suppliers are allocated by documented cause and Schedule C, subject to the agreed liability terms. Repeated failures may trigger mandatory request-to-book, lower inventory limits, suspension or termination."
+    },
+    {
+      "kind": "heading",
+      "text": "13. Guest service, safety and subcontractors"
+    },
+    {
+      "kind": "paragraph",
+      "text": "13.1  Operator remains responsible for performance of its tours and subcontracted hotels, transport and experiences to the extent of its obligations, including health and safety standards, current licenses, emergency contacts and accurate safety disclosures."
+    },
+    {
+      "kind": "paragraph",
+      "text": "13.2  Operator shall provide reasonable after-hours support while travelers are in transit or on the Package and shall escalate a traveler safety issue immediately. Neither Party shall obstruct emergency services or required regulatory reporting."
+    },
+    {
+      "kind": "paragraph",
+      "text": "13.3  TripRaft is not responsible for delivering Operator’s tourism services merely because it operates the listing portal, except where it is the actual reseller/principal or law otherwise assigns responsibility."
+    },
+    {
+      "kind": "heading",
+      "text": "14. Traveler information and privacy"
+    },
+    {
+      "kind": "paragraph",
+      "text": "14.1  Each Party shall comply with Applicable Law when processing traveler data. Operator may access only the traveler details necessary to fulfill confirmed services, honor legal duties or provide authorized support; no unrelated marketing, resale, scraping or publication is permitted."
+    },
+    {
+      "kind": "paragraph",
+      "text": "14.2  The Parties must document whether they act as independent controllers/data fiduciaries or in another legal relationship for each processing activity. Schedule E specifies minimum protective duties, incident notification and deletion/retention obligations; an additional data-processing addendum may be required."
+    },
+    {
+      "kind": "paragraph",
+      "text": "14.3  Operator shall protect its accounts using strong authentication, staff access controls and secure systems, and shall report suspected unauthorized traveler-data access without undue delay using the emergency contacts in Schedule E."
+    },
+    {
+      "kind": "heading",
+      "text": "15. Customer communications and prohibited conduct"
+    },
+    {
+      "kind": "paragraph",
+      "text": "15.1  Operator shall communicate respectfully and not mislead about availability, mandatory charges, room class, included services or urgency. Operator shall not redirect a TripRaft-originated booking for payment to avoid commissions, except lawful authorized changes disclosed and recorded under agreed procedures."
+    },
+    {
+      "kind": "paragraph",
+      "text": "15.2  Operator shall not request traveler CVV, improperly retain complete card details, charge undisclosed compulsory fees, offer prohibited or unsafe activities, submit counterfeit reviews or manipulate inventory counts to generate false scarcity."
+    },
+    {
+      "kind": "heading",
+      "text": "16. Promotions, reviews and ranking"
+    },
+    {
+      "kind": "paragraph",
+      "text": "16.1  Promotions or TripRaft-funded discounts require the allocation and authorization in Schedule A. Agent-funded discounts may reduce Operator payout only under signed terms. All promoted “from” prices must correspond to genuine bookable eligible departures and include mandatory price disclosures."
+    },
+    {
+      "kind": "paragraph",
+      "text": "16.2  TripRaft may host authentic traveler reviews and apply moderation for fraud, abuse or legal violations. No package is guaranteed a particular search ranking; sponsored placements must be disclosed where required."
+    },
+    {
+      "kind": "heading",
+      "text": "17. Records, inspections and audit"
+    },
+    {
+      "kind": "paragraph",
+      "text": "17.1  Each Party shall maintain booking confirmations, rate-plan versions, inventory sync logs, cancellations, invoices, settlement references, proof of travel fulfillment, customer complaints and incident evidence for the legally required period."
+    },
+    {
+      "kind": "paragraph",
+      "text": "17.2  On reasonable notice and subject to privacy safeguards, Operator shall supply relevant booking or inventory evidence needed to investigate overbooking, claims, tax errors, fraud or payment disputes. Any audit right shall be proportional and not require irrelevant trade secrets."
+    },
+    {
+      "kind": "heading",
+      "text": "18. Intellectual property and brand"
+    },
+    {
+      "kind": "paragraph",
+      "text": "18.1  Each Party retains its trademarks, software, business records and pre-existing proprietary materials. No license to use the other Party’s marks for unrelated advertising is granted without written permission."
+    },
+    {
+      "kind": "paragraph",
+      "text": "18.2  Operator authorizes accurate identification of its business and Packages in TripRaft listings during the term. Upon termination, TripRaft may retain reasonable archived material required for reservations, legal duties and dispute evidence."
+    },
+    {
+      "kind": "heading",
+      "text": "19. Confidentiality"
+    },
+    {
+      "kind": "paragraph",
+      "text": "19.1  Each Party shall protect the other’s non-public rates, payout statements, traveler data, operational and security information using reasonable care, disclosing only to personnel and advisers who need it and are bound by appropriate obligations."
+    },
+    {
+      "kind": "paragraph",
+      "text": "19.2  Confidentiality does not restrict information lawfully public, independently developed, previously known or required by law to be disclosed. Mandatory traveler, tax, consumer and regulatory disclosures take precedence."
+    },
+    {
+      "kind": "heading",
+      "text": "20. Insurance, warranties and indemnification"
+    },
+    {
+      "kind": "paragraph",
+      "text": "20.1  Operator shall maintain insurance appropriate for the jurisdictions, transport arrangements and traveler risks described in Schedule A, and provide certificates on reasonable request. Policy limits and any additional insured requirements must be completed before execution if required."
+    },
+    {
+      "kind": "paragraph",
+      "text": "20.2  Each Party warrants its authority and compliance with Applicable Law in performing its duties. Specific indemnities for bodily injury, third-party IP claims, material contract breach, payment fraud and data protection violations must be finalized under the selected governing law."
+    },
+    {
+      "kind": "paragraph",
+      "text": "20.3  No indemnity or exclusion in this draft overrides any non-excludable consumer, statutory or public-law responsibility. Exact defense control, notice and settlement procedures require counsel approval."
+    },
+    {
+      "kind": "heading",
+      "text": "21. Limitation of liability — requires completed elections"
+    },
+    {
+      "kind": "paragraph",
+      "text": "21.1  Subject to Applicable Law and the agreed exceptions, the aggregate liability cap for ordinary commercial claims is: [INSERT FORMULA / AMOUNT / LOOKBACK PERIOD]. Until filled and legally reviewed, this clause is incomplete and the agreement is NOT ready for signature."
+    },
+    {
+      "kind": "paragraph",
+      "text": "21.2  Exceptions to and non-excludable liability under the cap shall be specified by counsel, including as relevant fraud, willful misconduct, bodily injury, non-excludable statutory obligations, confidentiality/data breaches, outstanding payout debts and unpaid tax amounts."
+    },
+    {
+      "kind": "heading",
+      "text": "22. Suspension, term and termination"
+    },
+    {
+      "kind": "paragraph",
+      "text": "22.1  The initial term is [TERM], automatically [RENEWAL OR NON-RENEWAL]. Either Party may terminate on [NOTICE PERIOD] written notice, subject to outstanding reservations and any expressly agreed exclusivity or committed-inventory obligations."
+    },
+    {
+      "kind": "paragraph",
+      "text": "22.2  TripRaft may immediately restrict affected listings, access or settlement where needed to address suspected fraud, safety, unlawful conduct, critical overbooking risk or payment-provider requirements; Operator will receive reasons and a practical review opportunity where lawful."
+    },
+    {
+      "kind": "paragraph",
+      "text": "22.3  For other material breaches, written notice and a [CURE PERIOD] opportunity to remedy apply unless cure is impossible or urgent action is lawfully necessary. Termination does not erase accepted Bookings, outstanding customer remedies, tax records, payout reconciliation, surviving confidentiality or payment duties."
+    },
+    {
+      "kind": "heading",
+      "text": "23. Disputes, governing law and notices"
+    },
+    {
+      "kind": "paragraph",
+      "text": "23.1  The Parties shall attempt documented operational resolution through nominated contacts within [PERIOD], followed by management escalation. The formal dispute process is [COURTS / ARBITRATION PROCEDURE], seat [LOCATION], language [LANGUAGE] and governing law [JURISDICTION]. These fields are mandatory."
+    },
+    {
+      "kind": "paragraph",
+      "text": "23.2  Formal notices shall be sent to each legal notice contact in Schedule A by [PERMITTED CHANNELS], with deemed receipt rules approved by counsel. Urgent traveler incidents may also use the 24-hour operational channels."
+    },
+    {
+      "kind": "heading",
+      "text": "24. General and order of precedence"
+    },
+    {
+      "kind": "paragraph",
+      "text": "24.1  The Agreement plus executed Schedules constitutes the complete agreement for the covered Package arrangements. Changes to commissions, resale permissions, settlement timing, customer cancellation obligations or liability require affirmative agreement by authorized signatories, not a silent dashboard toggle."
+    },
+    {
+      "kind": "paragraph",
+      "text": "24.2  Where conflicts exist, a signed Package-specific commercial addendum controls its commercial particulars; the Master Terms otherwise control; operational updates under Schedules B–E cannot remove already-accepted customer rights. Any legal requirement prevails over conflicting contract terms."
+    },
+    {
+      "kind": "paragraph",
+      "text": "24.3  The Parties are independent businesses unless a signed arrangement and Applicable Law create a different relationship. Neither Party may assign material obligations without required written consent, except permitted corporate succession under counsel-approved terms."
+    },
+    {
+      "kind": "paragraph",
+      "text": "24.4  Electronic counterparts and appropriately authenticated electronic signatures may be used subject to Applicable Law. Electronic acceptance records should identify the signatory, exact signed document, timestamp and version hash."
+    },
+    {
+      "kind": "heading",
+      "text": "SCHEDULE A | Commercial Terms and Payout Election"
+    },
+    {
+      "kind": "paragraph",
+      "text": "MANDATORY SIGNED SCHEDULE. Complete once per legal operator and additionally for each material package family/rate plan. All commercial fields below must be internally consistent."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Operator legal name / partner ID:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Covered package IDs or package family:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Effective date and rate-plan expiration/renewal:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Destination(s), country and currency:  ______________________________________________________________"
+    },
+    {
+      "kind": "heading",
+      "text": "A1. Contracting and rate model — choose one"
+    },
+    {
+      "kind": "paragraph",
+      "text": "☐  MARKETPLACE / COMMISSION: Operator is legal seller of tour; Operator authorizes retail price/rules; TripRaft provides distribution and invoices commission."
+    },
+    {
+      "kind": "paragraph",
+      "text": "☐  RESELLER / NET RATE: Operator supplies tour to TripRaft; TripRaft is legal customer-facing reseller where legally accurate."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Legal seller disclosed to traveler:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Customer invoice issuer and tax registration:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Merchant of record / payment provider approval:  ______________________________________________________________"
+    },
+    {
+      "kind": "heading",
+      "text": "A2. Price and commission election — complete applicable section"
+    },
+    {
+      "kind": "table",
+      "rows": [
+        [
+          "MARKETPLACE / COMMISSION",
+          "AGREED VALUE"
+        ],
+        [
+          "Customer base selling price / list price",
+          "[AMOUNT; TAX INCLUSIVE OR EXCLUSIVE]"
+        ],
+        [
+          "Commission rate or fixed fee",
+          "[__%] of [DEFINED BASE] OR [CURRENCY AMOUNT]"
+        ],
+        [
+          "Commission GST/tax",
+          "[RATE; INCLUDED IN COMMISSION OR ADDED]"
+        ],
+        [
+          "Discount funding",
+          "[TRIPRAFT / OPERATOR / SHARED & FORMULA]"
+        ],
+        [
+          "Dynamic public pricing allowed?",
+          "[YES/NO]; [FLOOR]; [CEILING]; [APPROVAL MODE]"
+        ],
+        [
+          "Cancellation/no-show commission treatment",
+          "[REVERSAL / PRORATION / PENALTY RULE]"
+        ]
+      ]
+    },
+    {
+      "kind": "table",
+      "rows": [
+        [
+          "RESELLER / NET RATE",
+          "AGREED VALUE"
+        ],
+        [
+          "Supplier net rate",
+          "[AMOUNT + CURRENCY; TAX INCLUSIVE OR EXCLUSIVE]"
+        ],
+        [
+          "Supplier tax invoice rate and place of supply",
+          "[REVIEWED TAX CLASSIFICATION]"
+        ],
+        [
+          "Retail pricing authority",
+          "[TRIPRAFT ALLOWED; FLOOR/CEILING IF ANY]"
+        ],
+        [
+          "Guaranteed volume/allotment?",
+          "[NONE / QUANTITY / DATE / RISK ALLOCATION]"
+        ],
+        [
+          "Cancellation/refund net-rate treatment",
+          "[REFUND / NONREFUNDABLE DOCUMENTED COST RULE]"
+        ]
+      ]
+    },
+    {
+      "kind": "heading",
+      "text": "A3. Payment collection and payout — select and fill"
+    },
+    {
+      "kind": "paragraph",
+      "text": "☐  TRIPRAFT_COLLECT — customer pays authorized gateway/platform; Operator paid through approved settlement rails."
+    },
+    {
+      "kind": "paragraph",
+      "text": "☐  OPERATOR_COLLECT — Operator collects directly; Operator pays invoiced TripRaft commission on schedule."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Payout / invoice settlement currency:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Verified beneficiary business and payment method:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Payout trigger 1 and portion (e.g., confirmed booking, __%):  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Payout trigger 2 and portion (e.g., before departure, __%):  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Final payout trigger, amount and release condition:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Bank/payment-provider processing schedule and allowed holds:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Reserve/security hold (if lawful and agreed), amount and release:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Payment fees / chargeback fees paid by each party:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Tax withholdings, settlements and statutory forms:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Statement cadence and discrepancy notice window:  ______________________________________________________________"
+    },
+    {
+      "kind": "heading",
+      "text": "A4. Commercial and legal administration"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Written rate-change authorization contacts:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Booking support contacts + emergency number:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Legal notices email and postal address for each Party:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Governing law / dispute forum / arbitration election:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Ordinary liability cap + excluded claim categories:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Insurance classes and minimum coverage, if required:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Term, termination notice, cure period and Business Day TZ:  ______________________________________________________________"
+    },
+    {
+      "kind": "paragraph",
+      "text": "Both Parties shall initial any later changes to this Schedule, including commission calculation base, dynamic price authorization and settlement dates. No public booking activation until required fields are complete."
+    },
+    {
+      "kind": "heading",
+      "text": "SCHEDULE B | Availability, Inventory and Booking Standards"
+    },
+    {
+      "kind": "paragraph",
+      "text": "The Parties elect the operational mode per Package. Every listed quantity must represent inventory the Operator is authorized to sell and able to honor."
+    },
+    {
+      "kind": "table",
+      "rows": [
+        [
+          "MODE",
+          "PERMITTED CUSTOMER ACTION",
+          "REQUIRED EVIDENCE"
+        ],
+        [
+          "EXCLUSIVE_ALLOCATION",
+          "Instant book within reserved quota",
+          "Written quota reserved exclusively for TripRaft; no competing direct allocation"
+        ],
+        [
+          "VERIFIED_SYNCED",
+          "Instant book if sync/confirmation healthy",
+          "PMS, channel manager or supplier API plus reservation acknowledgment"
+        ],
+        [
+          "SHARED_MANUAL",
+          "Request-to-book unless fresh verified confirmation",
+          "Prompt direct-sale updates and supplier re-confirmation"
+        ],
+        [
+          "REQUEST_TO_BOOK / UNVERIFIED",
+          "Inquiry only; never promise numeric seats",
+          "Live supplier acceptance before confirmation"
+        ]
+      ]
+    },
+    {
+      "kind": "heading",
+      "text": "B1. Supplier duties"
+    },
+    {
+      "kind": "paragraph",
+      "text": "B1.1  Operator shall enter or transmit every outside-channel sale, closure, reinstatement and cancellation affecting inventory promptly; proposed default is within 15 minutes after becoming aware. This is a negotiated service target, not a guarantee of automated synchronization."
+    },
+    {
+      "kind": "paragraph",
+      "text": "B1.2  For manual inventory, Operator shall reconfirm on the cadence configured by TripRaft and accepted by Operator; suggested starting target: daily for departures within 14 days and immediately on a material change. Inventory older than the configured freshness window must revert to request-to-book."
+    },
+    {
+      "kind": "paragraph",
+      "text": "B1.3  Operator shall maintain room-night and room-category accuracy for hotels and departure-specific seats for tours. Tour capacity cannot exceed the minimum availability of mandatory limiting components without a confirmed alternative."
+    },
+    {
+      "kind": "paragraph",
+      "text": "B1.4  No Operator may edit confirmed TripRaft booking counts directly. The booking service updates those counts upon hold, confirmation, cancellation and expiry; Operator records outside-channel units separately, with traceable change history."
+    },
+    {
+      "kind": "paragraph",
+      "text": "B1.5  If the supplier cannot reliably commit inventory, it must select REQUEST_TO_BOOK and respond to availability requests. A missing availability entry means “not verified,” not “unlimited.”"
+    },
+    {
+      "kind": "heading",
+      "text": "B2. Response targets — finalize before signing"
+    },
+    {
+      "kind": "table",
+      "rows": [
+        [
+          "EVENT",
+          "PROPOSED SERVICE TARGET",
+          "FALLBACK"
+        ],
+        [
+          "Known external sale or room closure",
+          "Update within 15 minutes after awareness",
+          "TripRaft may close unsynced inventory"
+        ],
+        [
+          "Manual inventory reconfirmation",
+          "Daily when departure within 14 days",
+          "Switch to check availability after expiry"
+        ],
+        [
+          "Request-to-book response",
+          "Within [X] business hours",
+          "Expire request / no confirmation"
+        ],
+        [
+          "Confirmed booking mismatch",
+          "Immediately report by emergency channel",
+          "Freeze affected departures; start Schedule C"
+        ],
+        [
+          "Critical guest already arriving",
+          "Immediate live response",
+          "Escalate to TripRaft duty contact"
+        ]
+      ]
+    },
+    {
+      "kind": "heading",
+      "text": "SCHEDULE C | Cancellations, Relocation and Customer Remedies"
+    },
+    {
+      "kind": "heading",
+      "text": "C1. Customer-facing cancellation matrix — to be completed per Package"
+    },
+    {
+      "kind": "table",
+      "rows": [
+        [
+          "CANCELLATION WINDOW",
+          "CUSTOMER REFUND",
+          "OPERATOR LIABILITY / COMMISSION"
+        ],
+        [
+          "Before [DATE/TIME ZONE]",
+          "[FULL / PARTIAL; COMPONENT BREAKDOWN]",
+          "[AGREED ALLOCATION]"
+        ],
+        [
+          "Between [WINDOWS]",
+          "[FORMULA OR FIXED PENALTY]",
+          "[AGREED ALLOCATION]"
+        ],
+        [
+          "After deadline / no-show",
+          "[TERMS SUBJECT TO LAW]",
+          "[AGREED ALLOCATION]"
+        ],
+        [
+          "Operator cancellation / cannot fulfill",
+          "Lawful refund + verified alternative where appropriate",
+          "Default review under C2; do not impose illegal exclusions"
+        ]
+      ]
+    },
+    {
+      "kind": "heading",
+      "text": "C2. Failure to fulfill or forgotten room/seat updates"
+    },
+    {
+      "kind": "paragraph",
+      "text": "C2.1  On learning a room or seat cannot be provided, Operator must immediately notify TripRaft, identify affected bookings/dates, cease sale of affected inventory and supply documentary evidence of the constraint."
+    },
+    {
+      "kind": "paragraph",
+      "text": "C2.2  Operator shall seek equivalent or better verified replacement arrangements at no added cost to the traveler when Operator is responsible. Consider hotel category, room type, occupancy, accessibility, pickup and distance, essential transport, meals, travel dates and safety."
+    },
+    {
+      "kind": "paragraph",
+      "text": "C2.3  TripRaft contacts the traveler with truthful choices and records informed consent before a material alternative is accepted where required. A traveler’s mandatory rights to refuse or receive a refund must be honored."
+    },
+    {
+      "kind": "paragraph",
+      "text": "C2.4  If verified replacement is not timely available or lawful/accepted, TripRaft and Operator coordinate the required refund and appropriate assistance. Refunds must be processed through the payment party, with evidence of initiation and reconciliation."
+    },
+    {
+      "kind": "paragraph",
+      "text": "C2.5  Fault allocation: Operator-caused overselling, misinformation or nonperformance ordinarily makes Operator responsible for agreed reasonable documented customer-remedy costs, subject to Applicable Law and counsel-approved liability provisions; TripRaft-caused double booking is evaluated separately. Force majeure does not automatically eliminate consumer remedies."
+    },
+    {
+      "kind": "heading",
+      "text": "C3. Incident escalation and reconciliation"
+    },
+    {
+      "kind": "table",
+      "rows": [
+        [
+          "STEP",
+          "RESPONSIBLE",
+          "RECORD / TARGET"
+        ],
+        [
+          "Open critical incident and freeze affected dates",
+          "TripRaft / Operator",
+          "Immediately upon notice; incident ID"
+        ],
+        [
+          "Acknowledge and identify all affected travelers",
+          "Operator",
+          "Proposed 30 minutes during agreed coverage"
+        ],
+        [
+          "Present verified alternatives",
+          "Operator",
+          "Proposed 2 hours or before arrival if earlier"
+        ],
+        [
+          "Traveler accepts alternative or elects lawful refund",
+          "TripRaft + Operator",
+          "Record consent/communications"
+        ],
+        [
+          "Refund or additional replacement cost settlement",
+          "Collecting party + responsible party",
+          "Schedule A/C and provider timelines"
+        ],
+        [
+          "Root-cause review and compliance remediation",
+          "TripRaft + Operator",
+          "Within [X] business days"
+        ]
+      ]
+    },
+    {
+      "kind": "heading",
+      "text": "C4. Chargebacks, partial trips and disputes"
+    },
+    {
+      "kind": "paragraph",
+      "text": "C4.1  For a chargeback or traveler dispute, both Parties provide booking terms, payment references, fulfillment evidence and correspondence within the notified window; no party may falsify check-in, travel completion or refund records."
+    },
+    {
+      "kind": "paragraph",
+      "text": "C4.2  Partial fulfillment, supplier-caused trip shortening, no-shows and date changes are accounted for using documented component value and package terms rather than arbitrary or hidden deductions. Credit notes and commissions are adjusted as legally required."
+    },
+    {
+      "kind": "paragraph",
+      "text": "C4.3  Existing legally confirmed bookings survive a partnership suspension unless traveler terms, safety or Applicable Law require a different remedy."
+    },
+    {
+      "kind": "heading",
+      "text": "SCHEDULE D | Package Publishing and Partner Portal Rules"
+    },
+    {
+      "kind": "heading",
+      "text": "D1. Operator-created content"
+    },
+    {
+      "kind": "paragraph",
+      "text": "The Partner Portal is the authoritative source for Operator-supplied itinerary data, route, package media, available departures, included services, exclusions and supplier inventory. TripRaft maintains separate non-public commercial values and publishes approved customer-facing retail prices."
+    },
+    {
+      "kind": "table",
+      "rows": [
+        [
+          "OPERATOR ACTION",
+          "DEFAULT PUBLICATION RULE"
+        ],
+        [
+          "Business onboarding and KYC",
+          "Approval required before listings"
+        ],
+        [
+          "First package or entirely new package",
+          "TripRaft content review required"
+        ],
+        [
+          "Verified seats, blackout, date closure",
+          "Automatic validation and publish; logged"
+        ],
+        [
+          "Routine departure additions",
+          "Automatic if within approved terms and validated"
+        ],
+        [
+          "Spelling/format corrections",
+          "Automatic with automated moderation"
+        ],
+        [
+          "Material itinerary, room-category or inclusion change",
+          "Review or documented traveler consent if booked"
+        ],
+        [
+          "Cancellation/refund policy change",
+          "Approval; prospective only for new Bookings"
+        ],
+        [
+          "Supplier price or bank/commission change",
+          "Private commercial verification; signed change if applicable"
+        ],
+        [
+          "TripRaft public retail price",
+          "Admin / approved pricing engine within signed authority"
+        ]
+      ]
+    },
+    {
+      "kind": "heading",
+      "text": "D2. Preservation and suspension"
+    },
+    {
+      "kind": "paragraph",
+      "text": "D2.1  Approval attaches to a reviewed version. Pending material updates do not silently overwrite the currently approved public version; already-accepted bookings retain original terms."
+    },
+    {
+      "kind": "paragraph",
+      "text": "D2.2  TripRaft may unpublish deceptive, unsafe, infringing or unverified inventory, notify Operator and provide a practical appeal/review process consistent with Applicable Law."
+    },
+    {
+      "kind": "paragraph",
+      "text": "D2.3  Every publication, inventory and price change shall have timestamp, actor, source, previous value and resulting effective version for audit."
+    },
+    {
+      "kind": "heading",
+      "text": "SCHEDULE E | Traveler Data, Account Security and Incident Terms"
+    },
+    {
+      "kind": "paragraph",
+      "text": "E1  Permitted processing: Operator receives traveler identity, contact, room occupancy and necessary special requirements only where appropriate and legally authorized for fulfillment, customer support or records obligations. Marketing outside the booking purpose requires a separate valid basis."
+    },
+    {
+      "kind": "paragraph",
+      "text": "E2  Security baseline: unique logins, multi-factor authentication when supported, least-privilege staff access, secure access devices, encrypted transit, vendor due diligence, access revocation, documented retention/deletion and limited exports. No storage of CVV after authorization or unapproved card credentials."
+    },
+    {
+      "kind": "paragraph",
+      "text": "E3  Security incidents: on suspected breach affecting TripRaft travelers or the Platform, Operator shall notify TripRaft without undue delay and within [AGREED MAX HOURS] after awareness, provide known facts and cooperate on containment, preservation of evidence and legally required notifications. This contractual clock does not override statutory incident reporting deadlines."
+    },
+    {
+      "kind": "paragraph",
+      "text": "E4  International and Indian data rules: parties shall determine the applicable Digital Personal Data Protection Act/Rules timeline, controller/fiduciary roles, consent/notice basis, cross-border transfer restrictions where applicable, and retention standards with privacy counsel."
+    },
+    {
+      "kind": "paragraph",
+      "text": "E5  Records and deletion: after the business purpose ends or the Agreement terminates, each Party shall retain only what is justified by law or dispute obligations and remove or securely return the rest as agreed. Operator must not transfer traveler lists to unrelated third parties."
+    },
+    {
+      "kind": "paragraph",
+      "text": "E6  Traveler communications: both Parties will ensure accurate identities in booking confirmations and provide clear customer support channels. Contractual agent confidentiality cannot prevent legal disclosures to travelers or public authorities."
+    },
+    {
+      "kind": "heading",
+      "text": "SCHEDULE F | Mandatory Partner Acceptance and Signatures"
+    },
+    {
+      "kind": "paragraph",
+      "text": "By executing this Agreement and the completed Schedule A, each authorized representative confirms that the listed attachments were provided in readable form and the signatory had the opportunity to review them."
+    },
+    {
+      "kind": "paragraph",
+      "text": "☐  I have read the Master Terms and Schedules A–E, including pricing and refund rules."
+    },
+    {
+      "kind": "paragraph",
+      "text": "☐  I understand that my approved tour prices, commissions or supplier net rates are stated in a signed Commercial Schedule, not assumed from a public listing."
+    },
+    {
+      "kind": "paragraph",
+      "text": "☐  I will report offline/direct sales and closures affecting rooms or tour seats and will not claim stale or unverified availability as live."
+    },
+    {
+      "kind": "paragraph",
+      "text": "☐  I will honor Confirmed Bookings or promptly cooperate in lawful equivalent replacement, traveler choices and refund remedies if a fulfillment failure occurs."
+    },
+    {
+      "kind": "paragraph",
+      "text": "☐  I understand my payment collection mode, banking verification, permitted deductions, settlement schedule and reconciliation process."
+    },
+    {
+      "kind": "paragraph",
+      "text": "☐  I authorize only the public-price and dynamic-price rules expressly agreed in Schedule A."
+    },
+    {
+      "kind": "paragraph",
+      "text": "☐  I will not request off-platform payments to avoid TripRaft fees or use traveler data outside authorized purposes."
+    },
+    {
+      "kind": "paragraph",
+      "text": "☐  I understand that material inventory or itinerary changes, commission changes and policy revisions may require review or newly signed terms."
+    },
+    {
+      "kind": "heading",
+      "text": "Authorized signatures"
+    },
+    {
+      "kind": "table",
+      "rows": [
+        [
+          "FOR THE TOUR OPERATOR",
+          "FOR TRIPRAFT"
+        ],
+        [
+          "Legal entity: __________________________",
+          "Legal entity: __________________________"
+        ],
+        [
+          "Representative: _______________________",
+          "Representative: _______________________"
+        ],
+        [
+          "Title: ______________________________",
+          "Title: ______________________________"
+        ],
+        [
+          "Email: ______________________________",
+          "Email: ______________________________"
+        ],
+        [
+          "Signature: ___________________________",
+          "Signature: ___________________________"
+        ],
+        [
+          "Date: _______________________________",
+          "Date: _______________________________"
+        ]
+      ]
+    },
+    {
+      "kind": "paragraph",
+      "text": "Electronic signing record: retain authenticated signer identity, exact final signed PDF/version hash, consent to e-sign, signature timestamp and verification certificate in the secure contract record."
+    },
+    {
+      "kind": "paragraph",
+      "text": "Execution gate: Sign Master Terms and completed Schedule A; verify Operator business, bank profile and compliance status before enabling public bookable inventory."
+    },
+    {
+      "kind": "heading",
+      "text": "APPENDIX 1 | Sample calculations (non-contractual)"
+    },
+    {
+      "kind": "paragraph",
+      "text": "ILLUSTRATIONS ONLY. The figures below are simplified and MUST NOT be used as the definitive GST computation, seller-of-record analysis or payment-provider statement. Taxes and fees depend on signed terms and applicable tax rules."
+    },
+    {
+      "kind": "heading",
+      "text": "Example 1: Marketplace / commission"
+    },
+    {
+      "kind": "table",
+      "rows": [
+        [
+          "ITEM",
+          "ILLUSTRATIVE AMOUNT"
+        ],
+        [
+          "Customer package total (assumed tax-inclusive)",
+          "₹15,000.00"
+        ],
+        [
+          "Commission base (example: customer total)",
+          "₹15,000.00"
+        ],
+        [
+          "Agreed commission @ 10% (before commission GST)",
+          "₹1,500.00"
+        ],
+        [
+          "Illustrative GST @ 18% on commission",
+          "₹270.00"
+        ],
+        [
+          "Commission invoice total",
+          "₹1,770.00"
+        ],
+        [
+          "Illustrative remittance to Operator",
+          "₹13,230.00"
+        ]
+      ]
+    },
+    {
+      "kind": "paragraph",
+      "text": "This example assumes commission is 10% of the tax-inclusive booking amount and stated as PLUS applicable commission GST; the Operator remains responsible for its tour GST within its sale. Other fees, statutory deductions and refunds are excluded."
+    },
+    {
+      "kind": "heading",
+      "text": "Example 2: Net-rate resale"
+    },
+    {
+      "kind": "table",
+      "rows": [
+        [
+          "ITEM",
+          "ILLUSTRATIVE AMOUNT"
+        ],
+        [
+          "Contracted supplier invoice (tax-inclusive assumption)",
+          "₹13,500.00"
+        ],
+        [
+          "TripRaft customer tour price (tax-inclusive assumption)",
+          "₹15,000.00"
+        ],
+        [
+          "Simple gross cash spread",
+          "₹1,500.00"
+        ],
+        [
+          "Reseller tax liabilities, input credits and payment fees",
+          "NOT INCLUDED"
+        ],
+        [
+          "TripRaft actual contribution/net profit",
+          "REQUIRES TAX/FEES CALCULATION"
+        ]
+      ]
+    },
+    {
+      "kind": "paragraph",
+      "text": "Never characterize gross spread or gross commission as net profit. Schedule A must state whether a percentage commission is inclusive of its GST or plus GST, as these produce materially different supplier payouts."
+    },
+    {
+      "kind": "heading",
+      "text": "APPENDIX 2 | TripRaft website implementation checklist (non-contractual)"
+    },
+    {
+      "kind": "heading",
+      "text": "Required onboarding gates"
+    },
+    {
+      "kind": "bullet",
+      "text": "Partner with TripRaft landing page and business onboarding form"
+    },
+    {
+      "kind": "bullet",
+      "text": "Identity/business verification; supplier bank details through approved processor"
+    },
+    {
+      "kind": "bullet",
+      "text": "PDF agreement display, explicit acceptance and signature capture"
+    },
+    {
+      "kind": "bullet",
+      "text": "Executed Master Terms and current Schedule A attached to partner profile"
+    },
+    {
+      "kind": "bullet",
+      "text": "Operational contact validation; first package review; listing publish status"
+    },
+    {
+      "kind": "heading",
+      "text": "Partner Dashboard and public Places Search"
+    },
+    {
+      "kind": "bullet",
+      "text": "Operator controls package copy, itinerary, gallery, departures, rooms/seat allocations, cancellations and supplier price proposals"
+    },
+    {
+      "kind": "bullet",
+      "text": "Private TripRaft controls agreement model, supplier net rate/commission, pricing floor/ceiling, GST config and final published retail price"
+    },
+    {
+      "kind": "bullet",
+      "text": "Published public Places Search cards show package, route, duration, allowed public price and properly verified remaining inventory"
+    },
+    {
+      "kind": "bullet",
+      "text": "Public price or instant-book button must not appear for unpublished or unverified listings as though bookable"
+    },
+    {
+      "kind": "bullet",
+      "text": "All approvals and changes have revision history; existing bookings preserve original snapshot"
+    },
+    {
+      "kind": "heading",
+      "text": "Backend controls"
+    },
+    {
+      "kind": "bullet",
+      "text": "booking states: inquiry → pending_supplier → held → payment_pending → confirmed → in_travel → completed; and cancelled/refunded/disputed"
+    },
+    {
+      "kind": "bullet",
+      "text": "supplier inventory modes; versioned availability attestations; stale-data expiry; transactional hold/decrement; deduplication"
+    },
+    {
+      "kind": "bullet",
+      "text": "signed gateway webhooks; server-side payment lookup; settlement and refund reference IDs; daily reconciliation"
+    },
+    {
+      "kind": "bullet",
+      "text": "signed supplier schedule retrieval by product/rate-plan; customer tax invoices and supplier commission/credit notes as applicable"
+    },
+    {
+      "kind": "bullet",
+      "text": "dashboard alert on overbooking with mandatory replacement/refund case workflow"
+    },
+    {
+      "kind": "bullet",
+      "text": "operator payout preview per signed agreement; no disclosure of TripRaft confidential margin"
+    },
+    {
+      "kind": "bullet",
+      "text": "agent access restricted to its own data; audit log; encrypted transmission and minimum traveler-detail access"
+    },
+    {
+      "kind": "heading",
+      "text": "Before live legal sign-off"
+    },
+    {
+      "kind": "bullet",
+      "text": "Identify legal entity, country of incorporation, governing law and contractual notice addresses"
+    },
+    {
+      "kind": "bullet",
+      "text": "Review consumer regulations for countries where travel is sold and performed"
+    },
+    {
+      "kind": "bullet",
+      "text": "Confirm marketplace vs reseller treatment for GST and invoicing, including commission GST and withholding"
+    },
+    {
+      "kind": "bullet",
+      "text": "Obtain marketplace processor approval, settlement timing, dispute obligations and any reserve restrictions"
+    },
+    {
+      "kind": "bullet",
+      "text": "Approve liability, indemnity, insurance, data protection, signatures and response SLA with counsel"
+    },
+    {
+      "kind": "bullet",
+      "text": "Validate cancellation fees, guest remediation costs, record retention and negative-balance recovery"
+    },
+    {
+      "kind": "bullet",
+      "text": "Pilot with limited trusted agents; run overbooking, stale inventory, payment failure and refund tests"
+    }
+  ],
+  "document_furniture": [
+    {
+      "part": "word/footer1.xml",
+      "paragraphs": [
+        "DRAFT FOR COUNSEL REVIEW   •   CONFIDENTIAL   |   Page "
+      ]
+    },
+    {
+      "part": "word/header1.xml",
+      "paragraphs": [
+        "TRIPRAFT  /  PARTNER LEGAL"
+      ]
+    }
+  ]
+}

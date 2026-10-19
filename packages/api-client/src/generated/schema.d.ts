@@ -123,6 +123,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/partners/agreement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        get: operations["partners_staff_agreement_get_api_v1_admin_partners_agreement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/partners/agreement/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        get: operations["partners_staff_agreement_download_get_api_v1_admin_partners_agreement_download"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/partners/{agent_id}/decision": {
         parameters: {
             query?: never;
@@ -2676,6 +2710,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/partners/agreement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        get: operations["partners_partner_agreement_get_api_v1_partners_agreement"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/agreement/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        get: operations["partners_partner_agreement_download_get_api_v1_partners_agreement_download"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/partners/login": {
         parameters: {
             query?: never;
@@ -2721,6 +2789,23 @@ export interface paths {
         get: operations["partners_me_get_api_v1_partners_me"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/me/agreement/acknowledge": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        post: operations["partners_acknowledge_agreement_post_api_v1_partners_me_agreement_acknowledge"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3142,6 +3227,47 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AgreementAcknowledgment */
+        AgreementAcknowledgment: {
+            /**
+             * Acknowledged
+             * @constant
+             */
+            acknowledged: true;
+            /** Document Version */
+            document_version: string;
+            /** Source Sha256 */
+            source_sha256: string;
+            /** Version */
+            version: number;
+        };
+        /** AgreementFurniture */
+        AgreementFurniture: {
+            /** Paragraphs */
+            paragraphs: string[];
+            /** Part */
+            part: string;
+        };
+        /** AgreementTableBlock */
+        AgreementTableBlock: {
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "table";
+            /** Rows */
+            rows: string[][];
+        };
+        /** AgreementTextBlock */
+        AgreementTextBlock: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "heading" | "paragraph" | "bullet";
+            /** Text */
+            text: string;
+        };
         /** ApplicationSubmit */
         ApplicationSubmit: {
             /**
@@ -3338,6 +3464,58 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** PartnerAgreementDocument */
+        PartnerAgreementDocument: {
+            /** Acknowledgment Text */
+            acknowledgment_text: string;
+            /** Blocks */
+            blocks: (components["schemas"]["AgreementTextBlock"] | components["schemas"]["AgreementTableBlock"])[];
+            /** Document Date */
+            document_date: string;
+            /** Document Furniture */
+            document_furniture: components["schemas"]["AgreementFurniture"][];
+            /** Source Filename */
+            source_filename: string;
+            /** Source Sha256 */
+            source_sha256: string;
+            /**
+             * Status
+             * @constant
+             */
+            status: "DRAFT";
+            /** Title */
+            title: string;
+            /** Version */
+            version: string;
+        };
+        /** PartnerAgreementStatus */
+        PartnerAgreementStatus: {
+            /** Acknowledged */
+            acknowledged: boolean;
+            /** Acknowledged At */
+            acknowledged_at: string | null;
+            /** Acknowledged By */
+            acknowledged_by: string | null;
+            /**
+             * Commercial Activation Allowed
+             * @constant
+             */
+            commercial_activation_allowed: false;
+            /** Document Version */
+            document_version: string;
+            /**
+             * Execution Status
+             * @constant
+             */
+            execution_status: "NOT_EXECUTED";
+            /** Source Sha256 */
+            source_sha256: string;
+            /**
+             * Status
+             * @constant
+             */
+            status: "DRAFT";
+        };
         PartnerApplication: {
             business_name: string;
             /** @enum {string} */
@@ -3346,6 +3524,7 @@ export interface components {
             country_code: string;
             /** Format: uuid */
             id: string;
+            is_demo: boolean;
             operating_regions: string[];
             phone: string;
             representative_name: string;
@@ -3393,6 +3572,7 @@ export interface components {
             password: string;
         };
         PartnerReviewApplication: components["schemas"]["PartnerApplication"] & {
+            agreement: components["schemas"]["PartnerAgreementStatus"];
             is_own_application: boolean;
         };
         PartnerReviewListResponse: {
@@ -3404,6 +3584,7 @@ export interface components {
             success: boolean;
         };
         PartnerSnapshot: {
+            agreement: components["schemas"]["PartnerAgreementStatus"];
             application: components["schemas"]["PartnerApplication"];
             capabilities: {
                 can_edit_application: boolean;
@@ -3740,6 +3921,158 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PartnerReviewListResponse"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_staff_agreement_get_api_v1_admin_partners_agreement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PartnerAgreementDocument"];
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_staff_agreement_download_get_api_v1_admin_partners_agreement_download: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authenticated original draft Word attachment; never cached. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": string;
                 };
             };
             /** @description Response */
@@ -7900,6 +8233,158 @@ export interface operations {
             };
         };
     };
+    partners_partner_agreement_get_api_v1_partners_agreement: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PartnerAgreementDocument"];
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_partner_agreement_download_get_api_v1_partners_agreement_download: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Authenticated original draft Word attachment; never cached. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": string;
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
     partners_login_post_api_v1_partners_login: {
         parameters: {
             query?: never;
@@ -8069,6 +8554,87 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerSnapshotResponse"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_acknowledge_agreement_post_api_v1_partners_me_agreement_acknowledge: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required with cookie authentication. */
+                "X-CSRF-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgreementAcknowledgment"];
+            };
+        };
         responses: {
             /** @description Response */
             200: {

@@ -57,6 +57,14 @@ def complete(client, snapshot):
 
 
 def submit(client, snapshot):
+    current = payload(client.get(BASE + '/me'))
+    if current['user']['email_verified']:
+        document = payload(client.get(BASE + '/agreement'))
+        response = post(client, '/me/agreement/acknowledge', {
+            'version': current['application']['version'], 'document_version': document['version'],
+            'source_sha256': document['source_sha256'], 'acknowledged': True,
+        })
+        assert response.status_code == 200, response.get_json()
     return post(client, '/me/application/submit', {'version': snapshot['application']['version'],
                                                 'information_attestation': True})
 

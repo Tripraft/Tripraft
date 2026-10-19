@@ -3,7 +3,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
 import { PartnerReviewPanel } from '../src/PartnerReviewPanel';
 
-const application = { id: 'agent-a', status: 'UNDER_REVIEW', version: 3, business_name: 'Real Tours', representative_name: 'Alex', country_code: 'IN', contact_email: 'agent@example.test', phone: '12345', operating_regions: ['Kerala'], business_type: 'tour_operator', website: '', submitted_at: '2026-10-18T10:00:00Z' };
+const application = { id: 'agent-a', status: 'UNDER_REVIEW', version: 3, business_name: 'Real Tours', representative_name: 'Alex', country_code: 'IN', contact_email: 'agent@example.test', phone: '12345', operating_regions: ['Kerala'], business_type: 'tour_operator', website: '', submitted_at: '2026-10-18T10:00:00Z', agreement: { document_version: '3.0', acknowledged: false, acknowledged_at: null, acknowledged_by: null, source_sha256: 'a'.repeat(64), status: 'DRAFT', execution_status: 'NOT_EXECUTED', commercial_activation_allowed: false } };
 const response = (data, ok = true) => ({ ok, json: async () => ok ? { success: true, data } : { success: false, error: { message: 'This application changed. Reload it before saving.' } } });
 beforeEach(() => { global.fetch = jest.fn().mockResolvedValue(response({ applications: [application], total: 1 })); document.cookie = 'csrf_token=admin-csrf; path=/'; });
 afterEach(() => { cleanup(); document.cookie = 'csrf_token=; Max-Age=0; path=/'; });
@@ -33,4 +33,18 @@ test('staff cannot self-review a business application', async () => {
   render(<PartnerReviewPanel />);
   expect(await screen.findByText(/You cannot review your own/)).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Approve business' })).not.toBeInTheDocument();
+});
+
+test('staff sees unsigned acknowledgment evidence and can read the protected draft', async () => {
+  fetch.mockResolvedValueOnce(response({ applications: [{ ...application, is_demo: true, agreement: { ...application.agreement, acknowledged: true, acknowledged_at: '2026-10-19T10:00:00Z', acknowledged_by: 'supplier-a' } }], total: 1 }));
+  render(<PartnerReviewPanel />);
+  expect(await screen.findByText('Demo operator — private dashboard testing only.')).toBeInTheDocument();
+  expect(screen.getByText(/Contract not executed/)).toBeInTheDocument();
+  expect(screen.getByText('Account: supplier-a')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Download original Word draft' })).toHaveAttribute('href', '/api/v1/admin/partners/agreement/download');
+  fetch.mockResolvedValueOnce(response({ title: 'Tour Operator Partner Agreement', version: '3.0', status: 'DRAFT', source_sha256: 'a'.repeat(64), blocks: [{ kind: 'heading', text: 'SCHEDULE A' }, { kind: 'table', rows: [['Required', 'Value'], ['Entity', '[REQUIRED]']] }], document_furniture: [] }));
+  fireEvent.click(screen.getByRole('button', { name: 'Read agreement' }));
+  expect(await screen.findByRole('heading', { name: 'SCHEDULE A' })).toBeInTheDocument();
+  expect(screen.getByRole('cell', { name: '[REQUIRED]' })).toBeInTheDocument();
+  expect(fetch).toHaveBeenLastCalledWith('/api/v1/admin/partners/agreement', expect.objectContaining({ credentials: 'include', cache: 'no-store' }));
 });

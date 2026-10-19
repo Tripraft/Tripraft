@@ -1,6 +1,108 @@
 {
   "components": {
     "schemas": {
+      "AgreementAcknowledgment": {
+        "additionalProperties": false,
+        "properties": {
+          "acknowledged": {
+            "const": true,
+            "title": "Acknowledged",
+            "type": "boolean"
+          },
+          "document_version": {
+            "maxLength": 32,
+            "title": "Document Version",
+            "type": "string"
+          },
+          "source_sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Sha256",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "document_version",
+          "source_sha256",
+          "acknowledged"
+        ],
+        "title": "AgreementAcknowledgment",
+        "type": "object"
+      },
+      "AgreementFurniture": {
+        "properties": {
+          "paragraphs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Paragraphs",
+            "type": "array"
+          },
+          "part": {
+            "title": "Part",
+            "type": "string"
+          }
+        },
+        "required": [
+          "part",
+          "paragraphs"
+        ],
+        "title": "AgreementFurniture",
+        "type": "object"
+      },
+      "AgreementTableBlock": {
+        "properties": {
+          "kind": {
+            "const": "table",
+            "title": "Kind",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "kind",
+          "rows"
+        ],
+        "title": "AgreementTableBlock",
+        "type": "object"
+      },
+      "AgreementTextBlock": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "heading",
+              "paragraph",
+              "bullet"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "text"
+        ],
+        "title": "AgreementTextBlock",
+        "type": "object"
+      },
       "ApplicationSubmit": {
         "additionalProperties": false,
         "properties": {
@@ -471,6 +573,138 @@
         "title": "PackageSummary",
         "type": "object"
       },
+      "PartnerAgreementDocument": {
+        "properties": {
+          "acknowledgment_text": {
+            "title": "Acknowledgment Text",
+            "type": "string"
+          },
+          "blocks": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/AgreementTextBlock"
+                },
+                {
+                  "$ref": "#/components/schemas/AgreementTableBlock"
+                }
+              ]
+            },
+            "title": "Blocks",
+            "type": "array"
+          },
+          "document_date": {
+            "title": "Document Date",
+            "type": "string"
+          },
+          "document_furniture": {
+            "items": {
+              "$ref": "#/components/schemas/AgreementFurniture"
+            },
+            "title": "Document Furniture",
+            "type": "array"
+          },
+          "source_filename": {
+            "title": "Source Filename",
+            "type": "string"
+          },
+          "source_sha256": {
+            "title": "Source Sha256",
+            "type": "string"
+          },
+          "status": {
+            "const": "DRAFT",
+            "title": "Status",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "document_date",
+          "status",
+          "title",
+          "source_filename",
+          "source_sha256",
+          "blocks",
+          "document_furniture",
+          "acknowledgment_text"
+        ],
+        "title": "PartnerAgreementDocument",
+        "type": "object"
+      },
+      "PartnerAgreementStatus": {
+        "properties": {
+          "acknowledged": {
+            "title": "Acknowledged",
+            "type": "boolean"
+          },
+          "acknowledged_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acknowledged At"
+          },
+          "acknowledged_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acknowledged By"
+          },
+          "commercial_activation_allowed": {
+            "const": false,
+            "title": "Commercial Activation Allowed",
+            "type": "boolean"
+          },
+          "document_version": {
+            "title": "Document Version",
+            "type": "string"
+          },
+          "execution_status": {
+            "const": "NOT_EXECUTED",
+            "title": "Execution Status",
+            "type": "string"
+          },
+          "source_sha256": {
+            "title": "Source Sha256",
+            "type": "string"
+          },
+          "status": {
+            "const": "DRAFT",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "document_version",
+          "source_sha256",
+          "status",
+          "acknowledged",
+          "acknowledged_at",
+          "acknowledged_by",
+          "execution_status",
+          "commercial_activation_allowed"
+        ],
+        "title": "PartnerAgreementStatus",
+        "type": "object"
+      },
       "PartnerApplication": {
         "properties": {
           "business_name": {
@@ -492,6 +726,9 @@
           "id": {
             "format": "uuid",
             "type": "string"
+          },
+          "is_demo": {
+            "type": "boolean"
           },
           "operating_regions": {
             "items": {
@@ -551,6 +788,7 @@
           "id",
           "version",
           "status",
+          "is_demo",
           "business_type",
           "operating_regions",
           "review_reason",
@@ -663,12 +901,16 @@
           },
           {
             "properties": {
+              "agreement": {
+                "$ref": "#/components/schemas/PartnerAgreementStatus"
+              },
               "is_own_application": {
                 "type": "boolean"
               }
             },
             "required": [
-              "is_own_application"
+              "is_own_application",
+              "agreement"
             ],
             "type": "object"
           }
@@ -709,6 +951,9 @@
       },
       "PartnerSnapshot": {
         "properties": {
+          "agreement": {
+            "$ref": "#/components/schemas/PartnerAgreementStatus"
+          },
           "application": {
             "$ref": "#/components/schemas/PartnerApplication"
           },
@@ -769,6 +1014,7 @@
         "required": [
           "user",
           "application",
+          "agreement",
           "capabilities"
         ],
         "type": "object"
@@ -1271,6 +1517,188 @@
               }
             },
             "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/partners/agreement": {
+      "get": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_staff_agreement_get_api_v1_admin_partners_agreement",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PartnerAgreementDocument"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/partners/agreement/download": {
+      "get": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_staff_agreement_download_get_api_v1_admin_partners_agreement_download",
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Authenticated original draft Word attachment; never cached."
           },
           "401": {
             "content": {
@@ -5772,6 +6200,188 @@
         }
       }
     },
+    "/api/v1/partners/agreement": {
+      "get": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_partner_agreement_get_api_v1_partners_agreement",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/PartnerAgreementDocument"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "partnerCookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/partners/agreement/download": {
+      "get": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_partner_agreement_download_get_api_v1_partners_agreement_download",
+        "responses": {
+          "200": {
+            "content": {
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Authenticated original draft Word attachment; never cached."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "partnerCookieAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/partners/login": {
       "post": {
         "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
@@ -5978,6 +6588,109 @@
       "get": {
         "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
         "operationId": "partners_me_get_api_v1_partners_me",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerSnapshotResponse"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "partnerCookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/partners/me/agreement/acknowledge": {
+      "post": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_acknowledge_agreement_post_api_v1_partners_me_agreement_acknowledge",
+        "parameters": [
+          {
+            "description": "Required with cookie authentication.",
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgreementAcknowledgment"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {

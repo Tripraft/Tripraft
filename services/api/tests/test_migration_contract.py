@@ -2,6 +2,7 @@
 """Schema parity, data-preserving upgrades, and unsupported legacy storage."""
 from io import StringIO
 from pathlib import Path
+from uuid import uuid4
 
 import pytest
 
@@ -85,22 +86,29 @@ def test_package_upgrade_preserves_existing_supplier_application(tmp_path, monke
             owner = User(email='supplier-migration@example.com', password_hash='unused', portal_kind='partner')
             session.add(owner)
             session.flush()
-            agent = Agent(owner_user_id=owner.id, status='UNDER_REVIEW', business_name='Preserve this business', operating_regions=['Kerala'])
-            session.add(agent)
-            session.flush()
-            session.add(AgentUser(agent_id=agent.id, user_id=owner.id, role='owner', is_active=True))
+            agent_id = uuid4()
+            session.execute(text("""INSERT INTO agents
+                (id, owner_user_id, status, version, business_name, representative_name, contact_email,
+                 phone, country_code, business_type, operating_regions, website, created_at, updated_at)
+                VALUES (:id, :owner, 'UNDER_REVIEW', 1, 'Preserve this business', '', '', '', '',
+                        'tour_operator', '["Kerala"]', '', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"""),
+                {'id': agent_id.hex, 'owner': owner.id.hex})
+            session.add(AgentUser(agent_id=agent_id, user_id=owner.id, role='owner', is_active=True))
             session.commit()
-            agent_id, owner_id = agent.id, owner.id
+            owner_id = owner.id
         command.upgrade(config, 'head')
         _assert_current_schema(engine, config)
         with Session(engine) as session:
             assert session.get(User, owner_id).portal_kind == 'partner'
             preserved = session.get(Agent, agent_id)
             assert (preserved.business_name, preserved.status, preserved.operating_regions) == ('Preserve this business', 'UNDER_REVIEW', ['Kerala'])
+            assert preserved.is_demo is False
+            from app.partners.models import AgentAgreementAcknowledgment
+            assert session.query(AgentAgreementAcknowledgment).count() == 0
             assert session.query(AgentUser).filter_by(agent_id=agent_id, user_id=owner_id, is_active=True).count() == 1
         command.downgrade(config, 'a18b2c3d4e5f')
         with Session(engine) as session:
-            assert session.get(Agent, agent_id).business_name == 'Preserve this business'
+            assert session.execute(text('SELECT business_name FROM agents WHERE id=:id'), {'id': agent_id.hex}).scalar_one() == 'Preserve this business'
     finally:
         engine.dispose()
 
@@ -259,7 +267,8 @@ def test_fresh_install_sql_can_be_generated_without_a_database(url, monkeypatch)
     config = _config(url, monkeypatch, output)
     command.upgrade(config, 'head', sql=True)
     sql = output.getvalue()
-    assert sql.count('CREATE TABLE ') == 37  # 36 application tables plus Alembic version.
+    assert sql.count('CREATE TABLE ') == 38  # 37 application tables plus Alembic version.
+    assert 'CREATE TABLE agent_agreement_acknowledgments' in sql
     assert 'CREATE TABLE tour_packages' in sql
     assert 'CREATE TABLE tour_package_revisions' in sql
     assert 'CREATE TABLE agents' in sql

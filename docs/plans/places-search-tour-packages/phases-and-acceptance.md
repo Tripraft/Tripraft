@@ -42,6 +42,8 @@ Tasks:
 
 ## Phase 1 Footer partner entry onboarding and access
 
+Agreement progress (19 October): complete v3 draft reader/download and explicit reading acknowledgment are delivered for agents and staff. New application submission checks current acknowledgment; prior applications are not signed or acknowledged automatically. The local demo is separately owned and approved for private testing. Final Master Terms, completed Schedule A, business/bank verification and authenticated signatures remain commercial activation gates; see [agreement guide](../../partner-agreement.md).
+
 Source: sections 2, 5, 16 and B2–B3.
 
 Tasks:

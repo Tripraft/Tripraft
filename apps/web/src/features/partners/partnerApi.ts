@@ -1,6 +1,6 @@
 // Purpose: Uses isolated httpOnly partner sessions and CSRF without traveler-token refresh or mutation replay.
 import GlobalConfig from '../../config/globalConfig';
-import type { PartnerApplicationInput, PartnerSnapshot, TourDraftContent, TourPackageDraft, TourPackageList } from '@tripraft/types';
+import type { PartnerAgreementDocument, PartnerApplicationInput, PartnerSnapshot, TourDraftContent, TourPackageDraft, TourPackageList } from '@tripraft/types';
 
 export class PartnerApiError extends Error {
   constructor(message: string, public status: number) { super(message); }
@@ -42,6 +42,9 @@ export const partnerApi = {
   login: (data: { email: string; password: string }) => request<PartnerSnapshot>('/login', 'POST', data),
   save: (data: PartnerApplicationInput) => request<PartnerSnapshot>('/me/application', 'PATCH', data),
   submit: (version: number) => request<PartnerSnapshot>('/me/application/submit', 'POST', { version, information_attestation: true }),
+  agreement: () => request<PartnerAgreementDocument>('/agreement'),
+  agreementDownloadUrl: `${GlobalConfig.API_BASE_URL}/v1/partners/agreement/download`,
+  acknowledgeAgreement: (version: number, document_version: string, source_sha256: string) => request<PartnerSnapshot>('/me/agreement/acknowledge', 'POST', { version, document_version, source_sha256, acknowledged: true }),
   resend: () => request('/resend-verification', 'POST'),
   logout: () => request('/logout', 'POST'),
   packages: (offset = 0) => request<TourPackageList>(`/packages?limit=25&offset=${offset}`),
