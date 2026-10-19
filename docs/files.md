@@ -18,6 +18,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `apps/admin/package.json` | Declares dependencies, exports and development commands for the apps\admin workspace package. |
 | `apps/admin/src/App.tsx` | Renders the admin console with initialized server-account authorization, readiness and ingestion audit results. |
 | `apps/admin/src/PartnerReviewPanel.tsx` | Reviews supplier business applications with version checks and agent-visible decision reasons. |
+| `apps/admin/src/StaffLogin.tsx` | Provides an isolated staff-console sign-in form without sending employee credentials through the traveler UI. |
 | `apps/admin/src/env.d.ts` | Renders the admin console with initialized server-account authorization, readiness and ingestion audit results. |
 | `apps/admin/src/main.tsx` | Renders the admin console with initialized server-account authorization, readiness and ingestion audit results. |
 | `apps/admin/src/styles.css` | Styles the styles interface, including its layout and interaction states. |
@@ -138,11 +139,15 @@ Every published source/configuration file is listed below. Legal source formats 
 | `apps/web/src/features/itinerary/jsx/TripMap.jsx` | Renders itinerary map markers and safe DOM-based popups. |
 | `apps/web/src/features/itinerary/jsx/TripPlanCard.jsx` | Renders the Trip Plan Card interface within apps\web\src\features\itinerary\jsx. |
 | `apps/web/src/features/itinerary/jsx/TripTips.jsx` | Renders the Trip Tips interface within apps\web\src\features\itinerary\jsx. |
+| `apps/web/src/features/partners/PackageWorkspace.tsx` | Lets approved suppliers create, copy, save and privately preview seven-step tour content drafts. |
 | `apps/web/src/features/partners/PartnerPortal.tsx` | Provides the partner landing, supplier-only sign-in and business application/status flow. |
+| `apps/web/src/features/partners/__tests__/PackageWorkspace.test.tsx` | Exercises private draft creation, multi-step saves, exact rate input and conflict recovery. |
 | `apps/web/src/features/partners/__tests__/PartnerPortal.test.tsx` | Verifies the applicant journey, protected status routes and honest package capability boundary. |
 | `apps/web/src/features/partners/__tests__/partnerApi.test.ts` | Checks isolated partner CSRF cookies, refresh reads and non-replayed mutations. |
+| `apps/web/src/features/partners/__tests__/rateAmounts.test.ts` | Guards decimal conversion for private proposals against floating-point rounding and precision loss. |
 | `apps/web/src/features/partners/partnerApi.ts` | Uses isolated httpOnly partner sessions and CSRF without traveler-token refresh or mutation replay. |
 | `apps/web/src/features/partners/partners.css` | Styles the responsive partner landing, onboarding forms and review-status pages. |
+| `apps/web/src/features/partners/rateAmounts.ts` | Converts human-readable supplier proposals into exact decimal-string minor amounts without float rounding. |
 | `apps/web/src/features/polls/PollFeed.jsx` | Renders poll choices, vote counts and voter panels using state and handlers supplied by chat. |
 | `apps/web/src/features/scout/CrewCards.jsx` | Renders Crew question, confirmation, place and success cards. |
 | `apps/web/src/features/scout/ScoutConsentCard.jsx` | Displays Scout consent choices and retries the original request after consent. |
@@ -234,7 +239,9 @@ Every published source/configuration file is listed below. Legal source formats 
 | `docs/plans/places-search-tour-packages/data-api-and-publishing.md` | Defines tour records, API projections, price visibility, selective publishing automation and transaction rules. |
 | `docs/plans/places-search-tour-packages/phases-and-acceptance.md` | Orders the implementation phases, first sprint, backlog, regression tests and release gates. |
 | `docs/reports/partners-onboarding-foundation-2026-10-18.md` | Records delivered partner onboarding, launcher fixes, verification and remaining rollout work. |
+| `docs/reports/staff-console-package-drafts-2026-10-19.md` | Records staff access, private package drafts, validation and remaining release work. |
 | `docs/runbook.md` | Documents operation, verification, backups, and deployment prerequisites. |
+| `docs/staff-console.md` | Explains employee-only sign-in and business application review. |
 | `docs/startup.md` | Documents the single-file launcher, one-time setup, runtime modes, ports, data and troubleshooting. |
 | `infra/docker/.env.example` | Documents public configuration keys and placeholder values; copy locally and keep real credentials out of Git. |
 | `infra/docker/docker-compose.yml` | Runs local PostgreSQL, Redis, API, and optional worker with persistent database/catalog/upload volumes. |
@@ -263,6 +270,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `packages/types/package.json` | Declares dependencies, exports and development commands for the packages\types workspace package. |
 | `packages/types/src/index.ts` | Exports shared UUID, money, account, API envelope and service-health TypeScript contracts. |
 | `packages/types/src/partners.ts` | Defines the private partner onboarding and internal review API contracts. |
+| `packages/types/src/tourDrafts.ts` | Defines private supplier package drafts, bounded itinerary inputs and exact rate proposals. |
 | `packages/types/tsconfig.json` | Selects TypeScript compiler options and checked source for packages\types. |
 | `packages/ui/eslint.config.js` | Applies the shared syntax/error lint rules to packages\ui. |
 | `packages/ui/package.json` | Declares dependencies, exports and development commands for the packages\ui workspace package. |
@@ -379,10 +387,15 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/app/notifications/services/notification_service.py` | Notification Service for Group Planner Handles creating, querying, and managing in-app notifications. |
 | `services/api/app/partners/__init__.py` | Declares the supplier-only partner onboarding domain. |
 | `services/api/app/partners/models.py` | Stores supplier applications, scoped staff membership and immutable review decisions. |
+| `services/api/app/partners/package_models.py` | Stores supplier-owned package roots and versioned private content drafts independently of place records. |
+| `services/api/app/partners/package_routes.py` | Adds approved-owner package draft APIs using the partner realm and private response policy. |
+| `services/api/app/partners/package_schemas.py` | Bounds private tour draft input, exact proposed rates and ownership/version allowlists. |
+| `services/api/app/partners/package_services.py` | Enforces approved supplier ownership and optimistic versions for private package drafts and copies. |
 | `services/api/app/partners/routes.py` | Exposes supplier-only onboarding/session APIs and authenticated internal review operations. |
 | `services/api/app/partners/schemas.py` | Validates partner input without accepting role, approval or ownership fields from clients. |
 | `services/api/app/partners/security.py` | Isolates partner cookies/token types and validates revocable supplier sessions. |
 | `services/api/app/partners/services.py` | Implements atomic supplier-only registration, revocable sessions and versioned application review. |
+| `services/api/app/partners/staff_routes.py` | Provides staff-console sign-in only for allowlisted active employee identities, excluding supplier accounts. |
 | `services/api/app/places/__init__.py` | Place and location domain models for geographic data. |
 | `services/api/app/places/location_models.py` | Data models for places API Provides query methods for places, cities, states, and countries. |
 | `services/api/app/places/location_repository.py` | Location Database Utilities Thin wrapper around the shared DatabaseConnection pool from repository.py. |
@@ -445,6 +458,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/migrations/versions/a0a12823fc65_materialized_views_postgresql.py` | materialized_views_postgresql PostgreSQL-only migration: creates two materialized views for. |
 | `services/api/migrations/versions/a18b2c3d4e5f_partner_onboarding.py` | Adds supplier-only identity classification, onboarding profiles, membership and review history. |
 | `services/api/migrations/versions/a5b6c7d8e9f0_add_checklist_metadata_and_chat_fks.py` | Persist checklist metadata and protect chat message references. Revision ID: a5b6c7d8e9f0. |
+| `services/api/migrations/versions/b29c3d4e5f60_tour_drafts.py` | Adds supplier-owned private package drafts and their content revisions without modifying place catalogs. |
 | `services/api/migrations/versions/b7c8d9e0f1a2_complete_vault_and_place_time_schema.py` | Complete vault/time coverage and validate UUID-native existing databases. Revision ID: b7c8d9e0f1a2. |
 | `services/api/migrations/versions/c4d5e6f7a8b9_add_chat_tables.py` | add_chat_tables Revision ID: c4d5e6f7a8b9. |
 | `services/api/migrations/versions/d4a1c3e8f9b0_add_settlement_and_verification_audit_columns.py` | Persist settlement deletion and email-verification audit timestamps. Revision ID: d4a1c3e8f9b0. |
@@ -478,6 +492,8 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/tests/test_phase2_continued.py` | Regression tests for phase2 continued, including success and failure behavior. |
 | `services/api/tests/test_phase2_contracts.py` | Regression tests for phase2 contracts, including success and failure behavior. |
 | `services/api/tests/test_security_hardening.py` | Regression tests for security hardening, including success and failure behavior. |
+| `services/api/tests/test_staff_console.py` | Tests dedicated employee sign-in, applicant exclusion and explicit demo identity transition behavior. |
+| `services/api/tests/test_tour_drafts.py` | Verifies supplier draft isolation, partial saves, exact rate proposals, stale edits and independent copies. |
 | `services/api/tests/test_uuid_ids.py` | Regression tests for uuid ids, including success and failure behavior. |
 | `services/api/tests/test_websocket_auth.py` | Regression tests for websocket auth, including success and failure behavior. |
 | `start.py` | Starts API/web/admin, backs up pending SQLite upgrades, reuses healthy sessions, opens the site and manages live development services. |

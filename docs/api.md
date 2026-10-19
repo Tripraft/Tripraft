@@ -58,3 +58,9 @@ Supplier onboarding uses separate `/api/v1/partners/*` endpoints, partner-only
 JWT types and `partner_*` cookies. Its mutations echo `partner_csrf_token` in
 `X-CSRF-Token`; general admin review uses the normal administrator cookie/CSRF
 contract. See the [partner API and implementation report](reports/partners-onboarding-foundation-2026-10-18.md).
+
+The separate staff console signs in through `POST /api/v1/admin/session`, which
+rejects customer and supplier credentials before issuing an employee session.
+Approved verified suppliers can create/read/save/copy private drafts through
+`/api/v1/partners/packages`. These endpoints do not publish tours or configure
+customer prices. See the [staff and draft contracts](reports/staff-console-package-drafts-2026-10-19.md).

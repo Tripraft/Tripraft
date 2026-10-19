@@ -38,6 +38,7 @@ from app.auth.models import (AuditLog, User,  # noqa: E402, F401
 # ---------------------------------------------------------------------------
 from app.core.db.base import Base  # noqa: E402
 from app.partners.models import Agent, AgentUser, AgentReview  # noqa: E402, F401
+from app.partners.package_models import TourPackage, TourPackageRevision  # noqa: E402, F401
 
 # Alembic Config object — provides access to alembic.ini values
 config = context.config

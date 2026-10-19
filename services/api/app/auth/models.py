@@ -66,10 +66,11 @@ class User(Base):
 
     @property
     def is_admin(self) -> bool:
-        """Whether this user's email is in the configured admin list."""
+        """Staff access requires a verified, active platform identity and explicit allowlisting."""
         from app.core.config import Config
 
-        return bool(self.email) and self.email in Config.ADMIN_EMAILS
+        return bool(self.is_active and self.email_verified and self.portal_kind == 'traveler'
+                    and self.email and self.email in Config.ADMIN_EMAILS)
 
     def to_dict(self, include_sensitive: bool = False) -> dict:
         """Convert to dictionary for API responses."""

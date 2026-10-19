@@ -24,4 +24,5 @@ export interface PartnerSnapshot {
   capabilities: { can_edit_application: boolean; can_submit_application: boolean; can_view_dashboard: boolean; can_manage_packages: boolean };
   verification_email_sent?: boolean;
 }
-export interface PartnerReviewList { applications: PartnerApplication[]; total: number }
+export interface PartnerReviewApplication extends PartnerApplication { is_own_application: boolean }
+export interface PartnerReviewList { applications: PartnerReviewApplication[]; total: number }

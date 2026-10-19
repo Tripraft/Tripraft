@@ -59,6 +59,10 @@ Redis-dependent workers and one-use financial AI confirmations require a real
 credentials. Set admin accounts through the server's `ADMIN_EMAILS` configuration.
 Configure integrations in the ignored API `.env`, then restart the launcher.
 
+Application review is in the separate staff console at `http://127.0.0.1:5174`.
+Use its staff sign-in with an active, verified employee account enabled through
+`ADMIN_EMAILS`; supplier accounts cannot enter it. See [staff review access](staff-console.md).
+
 For PostgreSQL, Redis, and a worker, install/start Docker and use the same file:
 
 ```sh

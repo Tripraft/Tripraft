@@ -183,7 +183,7 @@ def list_applications():
         query = session.query(Agent).filter_by(status=status)
         total = query.count()
         agents = query.order_by(Agent.updated_at.asc(), Agent.id.asc()).offset(offset).limit(limit).all()
-        return success_response({'applications': [agent.to_dict() for agent in agents], 'total': total})
+        return success_response({'applications': [{**agent.to_dict(), 'is_own_application': agent.owner_user_id == g.user_id} for agent in agents], 'total': total})
 
 
 @partners_bp.route('/admin/partners/<uuid:agent_id>/decision', methods=['POST'])

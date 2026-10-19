@@ -3,6 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import type { PartnerApplicationInput, PartnerSnapshot, PartnerStatus } from '@tripraft/types';
 import { partnerApi } from './partnerApi';
+import PackageWorkspace from './PackageWorkspace';
 import './partners.css';
 
 const labels: Record<PartnerStatus, string> = {
@@ -92,7 +93,7 @@ function ApplicationPage({ snapshot, accept, reload }: { snapshot: PartnerSnapsh
   return <section className="partner-application"><div className="partner-section-heading"><div><p className="partner-eyebrow">YOUR BUSINESS</p><h1>{labels[snapshot.application.status]}</h1></div><button className="partner-secondary" onClick={reload} disabled={busy}>Refresh status</button></div>
     {snapshot.application.review_reason && <p className="partner-review-note"><strong>Review feedback:</strong> {snapshot.application.review_reason}</p>}
     {!snapshot.user.email_verified && <div className="partner-verification"><h2>Verify your account email</h2><p>Check the verification link sent to {snapshot.user.email}. You can save your details now and submit after verification.</p>{snapshot.verification_email_sent === false && <p>We could not send the initial verification email. You can retry below.</p>}<button className="partner-secondary" disabled={busy} onClick={resend}>Resend verification email</button> <button className="partner-secondary" disabled={busy} onClick={reload}>Check verification</button></div>}
-    {snapshot.application.status === 'APPROVED' && <div className="partner-review-note"><h2>Tour packages</h2><p>Your business is approved. Package submissions are not open yet.</p></div>}
+    {snapshot.capabilities.can_manage_packages && <div className="partner-review-note"><h2>Tour packages</h2><p>Your business is approved. You can prepare private package drafts.</p><Link className="partner-primary" to="/partners/dashboard">My packages</Link></div>}
     {snapshot.application.status === 'UNDER_REVIEW' && <p>Your application is with the review team. The submitted details stay locked during review.</p>}
     {snapshot.application.status === 'SUSPENDED' && <p>Your business access is suspended. Contact partner support to discuss the review feedback.</p>}
     <p className="partner-small">Provide business contact information only. Do not enter bank accounts, identity document numbers or traveler details.</p>
@@ -127,14 +128,15 @@ export default function PartnerPortal() {
   useEffect(() => { void reload(); return () => { revision.current++; }; }, [reload]);
   const [signingOut, setSigningOut] = useState(false);
   async function logout() { setSigningOut(true); try { await partnerApi.logout(); revision.current++; setSnapshot(null); window.location.assign('/partners'); } catch (cause) { setError(message(cause)); } finally { setSigningOut(false); } }
-  function protectedPage() {
+  function protectedPage(packages = false) {
     if (checking) return <p role="status">Checking your partner session…</p>;
     if (error) return <div role="alert"><p>{error}</p><button className="partner-secondary" onClick={() => void reload()}>Retry</button></div>;
     if (!snapshot) return <Navigate to="/partners/login" replace />;
+    if (packages) return snapshot.capabilities.can_manage_packages ? <PackageWorkspace /> : <Navigate to="/partners/status" replace />;
     return <ApplicationPage snapshot={snapshot} accept={accept} reload={() => void reload()} />;
   }
   return <div className="partner-portal"><header className="partner-header"><Link className="partner-brand" to="/partners">TripRaft <span>Partners</span></Link><nav aria-label="Partner navigation">{snapshot ? <><Link to="/partners/status">Application</Link><button onClick={logout} disabled={signingOut}>Sign out</button></> : <Link to="/partners/login">Partner sign in</Link>}</nav></header>
-    <main className="partner-main"><Routes><Route index element={<Landing />} /><Route path="register" element={snapshot ? <Navigate to="/partners/onboarding" replace /> : <AuthPage mode="register" accept={accept} />} /><Route path="login" element={snapshot ? <Navigate to="/partners/onboarding" replace /> : <AuthPage mode="login" accept={accept} />} /><Route path="onboarding" element={protectedPage()} /><Route path="status" element={protectedPage()} /><Route path="dashboard" element={protectedPage()} /><Route path="*" element={<Navigate to="/partners" replace />} /></Routes></main>
+    <main className="partner-main"><Routes><Route index element={<Landing />} /><Route path="register" element={snapshot ? <Navigate to="/partners/onboarding" replace /> : <AuthPage mode="register" accept={accept} />} /><Route path="login" element={snapshot ? <Navigate to="/partners/onboarding" replace /> : <AuthPage mode="login" accept={accept} />} /><Route path="onboarding" element={protectedPage()} /><Route path="status" element={protectedPage()} /><Route path="dashboard" element={protectedPage(true)} /><Route path="packages/:packageId" element={protectedPage(true)} /><Route path="*" element={<Navigate to="/partners" replace />} /></Routes></main>
     <footer className="partner-footer"><span>TripRaft partner portal</span><Link to="/contact">Partner support</Link><Link to="/about">About TripRaft</Link></footer>
   </div>;
 }

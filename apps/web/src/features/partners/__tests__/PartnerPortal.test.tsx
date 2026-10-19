@@ -5,21 +5,22 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import PartnerPortal from '../PartnerPortal';
 import { partnerApi } from '../partnerApi';
 
-jest.mock('../partnerApi', () => ({ partnerApi: { snapshot: jest.fn(), register: jest.fn(), login: jest.fn(), save: jest.fn(), submit: jest.fn(), resend: jest.fn(), logout: jest.fn() } }));
+jest.mock('../partnerApi', () => ({ partnerApi: { snapshot: jest.fn(), register: jest.fn(), login: jest.fn(), save: jest.fn(), submit: jest.fn(), resend: jest.fn(), logout: jest.fn(), packages: jest.fn() } }));
 const api = partnerApi as jest.Mocked<typeof partnerApi>;
 const snapshot = (status = 'DRAFT_APPLICATION', version = 1) => ({
   user: { id: 'user-a', email: 'agent@example.test', display_name: 'Alex', email_verified: true },
   application: { id: 'agent-a', status, version, business_name: 'Real Tours', representative_name: 'Alex', contact_email: 'agent@example.test', phone: '12345678', country_code: 'IN', business_type: 'tour_operator', operating_regions: ['Kerala'], website: '', review_reason: null, submitted_at: null, updated_at: '2026-10-18' },
-  capabilities: { can_edit_application: ['DRAFT_APPLICATION', 'CHANGES_REQUESTED'].includes(status), can_submit_application: true, can_view_dashboard: status === 'APPROVED', can_manage_packages: false },
+  capabilities: { can_edit_application: ['DRAFT_APPLICATION', 'CHANGES_REQUESTED'].includes(status), can_submit_application: true, can_view_dashboard: status === 'APPROVED', can_manage_packages: status === 'APPROVED' },
 });
 function open(path = '/partners') { return render(<MemoryRouter initialEntries={[path]}><Routes><Route path="/partners/*" element={<PartnerPortal />} /></Routes></MemoryRouter>); }
-beforeEach(() => { jest.resetAllMocks(); api.snapshot.mockResolvedValue(null); });
+beforeEach(() => { jest.resetAllMocks(); api.snapshot.mockResolvedValue(null); api.packages.mockResolvedValue({ packages: [], total: 0 }); });
 
 test('landing explains the workflow and offers working partner routes', async () => {
   open();
   expect(screen.getByRole('heading', { name: /Your tours/ })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Apply to become a partner' })).toHaveAttribute('href', '/partners/register');
   expect(screen.getByText('Applications are reviewed before you can list tours.')).toBeInTheDocument();
+  expect(screen.getAllByRole('link').some(link => /5174|\/admin/.test(link.getAttribute('href') || ''))).toBe(false);
   await waitFor(() => expect(api.snapshot).toHaveBeenCalled());
 });
 
@@ -66,11 +67,12 @@ test('unverified accounts can save but cannot submit', async () => {
   expect(screen.getByRole('button', { name: 'Save draft' })).toBeEnabled();
 });
 
-test('approval shows the dashboard shell without pretending package submission is live', async () => {
+test('approval opens the private package workspace', async () => {
   api.snapshot.mockResolvedValue(snapshot('APPROVED', 4) as any);
   open('/partners/dashboard');
-  expect(await screen.findByText('Your business is approved. Package submissions are not open yet.')).toBeInTheDocument();
-  expect(screen.getByLabelText('Legal business name')).toBeDisabled();
+  expect(await screen.findByRole('heading', { name: 'My packages' })).toBeInTheDocument();
+  expect(await screen.findByText('No packages yet. Start with a new draft.')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Create package draft' })).toBeEnabled();
 });
 
 test('status failure offers a retry instead of redirecting an unknown session', async () => {
@@ -80,4 +82,10 @@ test('status failure offers a retry instead of redirecting an unknown session', 
   api.snapshot.mockResolvedValueOnce(snapshot() as any);
   fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
   expect(await screen.findByRole('heading', { name: 'Draft application' })).toBeInTheDocument();
+});
+test('an applicant cannot open the package workspace before approval', async () => {
+  api.snapshot.mockResolvedValue(snapshot('UNDER_REVIEW', 3) as any);
+  open('/partners/dashboard');
+  expect(await screen.findByRole('heading', { name: 'Under review' })).toBeInTheDocument();
+  expect(api.packages).not.toHaveBeenCalled();
 });

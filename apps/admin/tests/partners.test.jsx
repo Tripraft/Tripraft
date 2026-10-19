@@ -28,3 +28,9 @@ test('shows a conflict without replaying the administrator decision', async () =
   expect(await screen.findByRole('alert')).toHaveTextContent('This application changed');
   await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
 });
+test('staff cannot self-review a business application', async () => {
+  fetch.mockResolvedValueOnce(response({ applications: [{ ...application, is_own_application: true }], total: 1 }));
+  render(<PartnerReviewPanel />);
+  expect(await screen.findByText(/You cannot review your own/)).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Approve business' })).not.toBeInTheDocument();
+});

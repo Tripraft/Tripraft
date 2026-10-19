@@ -1,6 +1,6 @@
 // Purpose: Reviews supplier business applications with version checks and agent-visible decision reasons.
 import React, { useCallback, useEffect, useState } from 'react';
-import type { PartnerApplication, PartnerDecision, PartnerReviewList, PartnerStatus } from '@tripraft/types';
+import type { PartnerReviewApplication, PartnerDecision, PartnerReviewList, PartnerStatus } from '@tripraft/types';
 
 const statuses: PartnerStatus[] = ['UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'SUSPENDED', 'REJECTED'];
 const title = (value: string) => value.toLowerCase().replaceAll('_', ' ');
@@ -16,9 +16,9 @@ async function api<T>(path: string, method = 'GET', data?: unknown): Promise<T> 
   return body.data as T;
 }
 
-function ReviewCard({ application: a, changed }: { application: PartnerApplication; changed: () => void }) {
+function ReviewCard({ application: a, changed }: { application: PartnerReviewApplication; changed: () => void }) {
   const [reason, setReason] = useState(''), [busy, setBusy] = useState(false), [error, setError] = useState('');
-  const decisions: PartnerDecision[] = a.status === 'UNDER_REVIEW' ? ['APPROVED', 'CHANGES_REQUESTED', 'REJECTED'] : a.status === 'APPROVED' ? ['SUSPENDED'] : a.status === 'SUSPENDED' ? ['APPROVED', 'CHANGES_REQUESTED'] : [];
+  const decisions: PartnerDecision[] = a.is_own_application ? [] : a.status === 'UNDER_REVIEW' ? ['APPROVED', 'CHANGES_REQUESTED', 'REJECTED'] : a.status === 'APPROVED' ? ['SUSPENDED'] : a.status === 'SUSPENDED' ? ['APPROVED', 'CHANGES_REQUESTED'] : [];
   async function decide(decision: PartnerDecision) {
     if (busy || reason.trim().length < 5) return;
     setBusy(true); setError('');
@@ -29,6 +29,7 @@ function ReviewCard({ application: a, changed }: { application: PartnerApplicati
   return <article className="partner-admin-card"><h3>{a.business_name || 'Unnamed business'}</h3><p>{a.representative_name} · {a.country_code} · {title(a.status)}</p>
     <dl><dt>Business contact</dt><dd>{a.contact_email} · {a.phone}</dd><dt>Operating regions</dt><dd>{a.operating_regions.join(', ')}</dd><dt>Business type</dt><dd>{title(a.business_type)}</dd><dt>Website</dt><dd>{a.website || 'Not provided'}</dd><dt>Submitted</dt><dd>{a.submitted_at ? new Date(a.submitted_at).toLocaleString() : 'Not submitted'}</dd></dl>
     {a.review_reason && <p>Previous feedback: {a.review_reason}</p>}
+    {a.is_own_application && <p>You cannot review your own business application. Ask another authorized staff member to review it.</p>}
     {decisions.length > 0 && <><label>Decision reason, visible to the applicant<textarea value={reason} minLength={5} maxLength={2000} onChange={event => setReason(event.target.value)} /></label><div className="partner-admin-actions">{decisions.map(decision => <button key={decision} disabled={busy || reason.trim().length < 5} onClick={() => void decide(decision)}>{decision === 'APPROVED' ? 'Approve business' : title(decision)}</button>)}</div></>}
     {error && <p role="alert">{error}</p>}
   </article>;

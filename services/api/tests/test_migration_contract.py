@@ -73,6 +73,38 @@ def test_fresh_schema_can_downgrade_and_reinstall(tmp_path, monkeypatch):
         engine.dispose()
 
 
+def test_package_upgrade_preserves_existing_supplier_application(tmp_path, monkeypatch):
+    from app.partners.models import Agent, AgentUser
+    database._import_all_models()
+    url = 'sqlite:///' + (tmp_path / 'supplier-before-drafts.db').as_posix()
+    config = _config(url, monkeypatch)
+    engine = create_engine(url)
+    try:
+        command.upgrade(config, 'a18b2c3d4e5f')
+        with Session(engine) as session:
+            owner = User(email='supplier-migration@example.com', password_hash='unused', portal_kind='partner')
+            session.add(owner)
+            session.flush()
+            agent = Agent(owner_user_id=owner.id, status='UNDER_REVIEW', business_name='Preserve this business', operating_regions=['Kerala'])
+            session.add(agent)
+            session.flush()
+            session.add(AgentUser(agent_id=agent.id, user_id=owner.id, role='owner', is_active=True))
+            session.commit()
+            agent_id, owner_id = agent.id, owner.id
+        command.upgrade(config, 'head')
+        _assert_current_schema(engine, config)
+        with Session(engine) as session:
+            assert session.get(User, owner_id).portal_kind == 'partner'
+            preserved = session.get(Agent, agent_id)
+            assert (preserved.business_name, preserved.status, preserved.operating_regions) == ('Preserve this business', 'UNDER_REVIEW', ['Kerala'])
+            assert session.query(AgentUser).filter_by(agent_id=agent_id, user_id=owner_id, is_active=True).count() == 1
+        command.downgrade(config, 'a18b2c3d4e5f')
+        with Session(engine) as session:
+            assert session.get(Agent, agent_id).business_name == 'Preserve this business'
+    finally:
+        engine.dispose()
+
+
 def test_existing_uuid_database_gains_missing_fields_without_losing_rows(tmp_path, monkeypatch):
     url = 'sqlite:///' + (tmp_path / 'existing.db').as_posix()
     config = _config(url, monkeypatch)
@@ -227,7 +259,9 @@ def test_fresh_install_sql_can_be_generated_without_a_database(url, monkeypatch)
     config = _config(url, monkeypatch, output)
     command.upgrade(config, 'head', sql=True)
     sql = output.getvalue()
-    assert sql.count('CREATE TABLE ') == 35  # 34 application tables plus Alembic version.
+    assert sql.count('CREATE TABLE ') == 37  # 36 application tables plus Alembic version.
+    assert 'CREATE TABLE tour_packages' in sql
+    assert 'CREATE TABLE tour_package_revisions' in sql
     assert 'CREATE TABLE agents' in sql
     assert 'CREATE TABLE agent_users' in sql
     assert 'CREATE TABLE agent_reviews' in sql

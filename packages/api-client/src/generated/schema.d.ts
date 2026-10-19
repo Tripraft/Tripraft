@@ -243,6 +243,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        post: operations["partners_staff_login_post_api_v1_admin_session"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/states": {
         parameters: {
             query?: never;
@@ -2744,6 +2761,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/partners/packages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        get: operations["partners_list_package_drafts_get_api_v1_partners_packages"];
+        put?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        post: operations["partners_create_package_draft_post_api_v1_partners_packages"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/packages/{package_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        get: operations["partners_package_draft_get_api_v1_partners_packages_package_id"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        patch: operations["partners_package_draft_patch_api_v1_partners_packages_package_id"];
+        trace?: never;
+    };
+    "/api/v1/partners/packages/{package_id}/duplicate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        post: operations["partners_duplicate_package_draft_post_api_v1_partners_packages_package_id_duplicate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/partners/refresh": {
         parameters: {
             query?: never;
@@ -3125,6 +3195,52 @@ export interface components {
             message?: string;
             success: boolean;
         };
+        /** CreateTourDraft */
+        CreateTourDraft: Record<string, never>;
+        /** DepartureProposal */
+        DepartureProposal: {
+            /**
+             * Currency
+             * @default
+             */
+            currency: string;
+            /**
+             * Currency Exponent
+             * @default 2
+             */
+            currency_exponent: number;
+            /**
+             * Notes
+             * @default
+             */
+            notes: string;
+            /**
+             * Rate Basis
+             * @default per_person
+             * @enum {string}
+             */
+            rate_basis: "per_person" | "per_group";
+            /**
+             * Start Date
+             * @default null
+             */
+            start_date: string | null;
+            /**
+             * Supplier Rate Minor
+             * @default
+             */
+            supplier_rate_minor: string;
+            /**
+             * Timezone
+             * @default
+             */
+            timezone: string;
+        };
+        /** DuplicateTourDraft */
+        DuplicateTourDraft: {
+            /** Version */
+            version: number;
+        };
         Health: {
             checks?: {
                 [key: string]: {
@@ -3144,6 +3260,83 @@ export interface components {
             };
             message?: string;
             success: boolean;
+        };
+        /** PackageDraft */
+        PackageDraft: {
+            /**
+             * Can Submit
+             * @constant
+             */
+            can_submit: false;
+            content: components["schemas"]["TourDraftContent"];
+            /** Days */
+            days: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Nights */
+            nights: number;
+            /** Preparation Notes */
+            preparation_notes: string[];
+            /** Revision */
+            revision: number;
+            /** Route */
+            route: string[];
+            /**
+             * Status
+             * @constant
+             */
+            status: "DRAFT";
+            /** Submission Blocker */
+            submission_blocker: string;
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+        };
+        /** PackageList */
+        PackageList: {
+            /** Packages */
+            packages: components["schemas"]["PackageSummary"][];
+            /** Total */
+            total: number;
+        };
+        /** PackageSummary */
+        PackageSummary: {
+            /** Days */
+            days: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Nights */
+            nights: number;
+            /** Revision */
+            revision: number;
+            /** Route */
+            route: string[];
+            /**
+             * Status
+             * @constant
+             */
+            status: "DRAFT";
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
         };
         PartnerApplication: {
             business_name: string;
@@ -3199,9 +3392,12 @@ export interface components {
             /** Password */
             password: string;
         };
+        PartnerReviewApplication: components["schemas"]["PartnerApplication"] & {
+            is_own_application: boolean;
+        };
         PartnerReviewListResponse: {
             data: {
-                applications: components["schemas"]["PartnerApplication"][];
+                applications: components["schemas"]["PartnerReviewApplication"][];
                 total: number;
             };
             message?: string;
@@ -3240,6 +3436,105 @@ export interface components {
             reason: string;
             /** Version */
             version: number;
+        };
+        /** SaveTourDraft */
+        SaveTourDraft: {
+            content: components["schemas"]["TourDraftContent"];
+            /** Version */
+            version: number;
+        };
+        /** TourDay */
+        TourDay: {
+            /**
+             * Accommodation
+             * @default
+             */
+            accommodation: string;
+            /** Day */
+            day: number;
+            /**
+             * Details
+             * @default
+             */
+            details: string;
+            /**
+             * Meals
+             * @default
+             */
+            meals: string;
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+        };
+        /** TourDraftContent */
+        TourDraftContent: {
+            /**
+             * Accessibility Notes
+             * @default
+             */
+            accessibility_notes: string;
+            /**
+             * Cancellation Policy
+             * @default
+             */
+            cancellation_policy: string;
+            /**
+             * Days
+             * @default 1
+             */
+            days: number;
+            /** Departures */
+            departures?: components["schemas"]["DepartureProposal"][];
+            /** Exclusions */
+            exclusions?: string[];
+            /** Inclusions */
+            inclusions?: string[];
+            /** Itinerary */
+            itinerary?: components["schemas"]["TourDay"][];
+            /**
+             * Language
+             * @default
+             */
+            language: string;
+            /**
+             * Nights
+             * @default 0
+             */
+            nights: number;
+            /**
+             * Overnight Explanation
+             * @default
+             */
+            overnight_explanation: string;
+            /** Route */
+            route?: string[];
+            /**
+             * Safety Notes
+             * @default
+             */
+            safety_notes: string;
+            /**
+             * Summary
+             * @default
+             */
+            summary: string;
+            /**
+             * Supplier Sku
+             * @default
+             */
+            supplier_sku: string;
+            /**
+             * Title
+             * @default
+             */
+            title: string;
+            /**
+             * Transport Details
+             * @default
+             */
+            transport_details: string;
         };
         User: {
             display_name?: string | null;
@@ -3739,6 +4034,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    partners_staff_login_post_api_v1_admin_session: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PartnerLogin"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            signed_in: boolean;
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
                 };
             };
         };
@@ -7873,6 +8252,453 @@ export interface operations {
             };
             /** @description Response */
             403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_list_package_drafts_get_api_v1_partners_packages: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PackageList"];
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_create_package_draft_post_api_v1_partners_packages: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required with cookie authentication. */
+                "X-CSRF-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateTourDraft"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PackageDraft"];
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_package_draft_get_api_v1_partners_packages_package_id: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                package_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PackageDraft"];
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_package_draft_patch_api_v1_partners_packages_package_id: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required with cookie authentication. */
+                "X-CSRF-Token"?: string;
+            };
+            path: {
+                package_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveTourDraft"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PackageDraft"];
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_duplicate_package_draft_post_api_v1_partners_packages_package_id_duplicate: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required with cookie authentication. */
+                "X-CSRF-Token"?: string;
+            };
+            path: {
+                package_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DuplicateTourDraft"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["PackageDraft"];
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

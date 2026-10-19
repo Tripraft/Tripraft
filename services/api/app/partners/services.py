@@ -28,8 +28,7 @@ def snapshot(user, agent):
             'can_edit_application': agent.status in EDITABLE,
             'can_submit_application': agent.status in EDITABLE and bool(user.email_verified),
             'can_view_dashboard': agent.status == 'APPROVED',
-            # Package publishing is a later release, never implied by business approval.
-            'can_manage_packages': False,
+            'can_manage_packages': agent.status == 'APPROVED' and bool(user.email_verified),
         },
     }
 

@@ -81,6 +81,7 @@ def _ensure_user_exists(user_id: str, email: str, name: Optional[str] = None) ->
             user = session.get(User, uid)
             if user:
                 g.account_portal = user.portal_kind
+                g.staff_authorized = user.is_admin
                 return True
             logger.warning("User %s not found in DB -- rejecting request", user_id)
             return False
@@ -243,13 +244,11 @@ def get_current_user_id():
 def require_admin(f):
     """
     Decorator that must be stacked AFTER require_auth.
-    Checks that the authenticated user's email is in ADMIN_EMAILS.
+    Checks the current verified/active database identity against ADMIN_EMAILS.
     """
     @wraps(f)
     def decorated(*args, **kwargs):
-        from app.core.config import Config
-        email = getattr(g, 'user_email', '')
-        if not email or email not in Config.ADMIN_EMAILS:
+        if not getattr(g, 'staff_authorized', False):
             return jsonify({'success': False, 'error': 'Admin access required'}), 403
         return f(*args, **kwargs)
     return decorated

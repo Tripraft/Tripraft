@@ -1,6 +1,6 @@
 # Tour package data API and publication contracts
 
-Proposed contracts for the updated tour-package vertical. Appendices B1–B11 of the supplied document refine the initial review flow, selective automation and price visibility. None of the tables or endpoints below is implemented by this planning checkpoint.
+Proposed contracts for the updated tour-package vertical. Appendices B1–B11 of the supplied document refine the initial review flow, selective automation and price visibility. Onboarding and private draft authoring are now implemented as documented in the 19 October staff-console/package-draft report; other tables and workflows below remain proposed.
 
 ## Package information collected from agents
 
@@ -18,7 +18,7 @@ Days must be at least one. Nights normally equal days minus one; exceptions need
 
 ## Logical database model
 
-Use the current operational ORM base and incremental Alembic history. PostgreSQL is the transactional authority for live commerce. Keep catalog SQLite records and IDs unchanged; no writes of supplier rates, seat counters or booking state into `places`.
+Use the current operational ORM base and incremental Alembic history. PostgreSQL is the transactional authority for live commerce. Keep catalog SQLite records and IDs unchanged; no writes of supplier rates, seat counters or booking state into `places`. The current checkpoint uses the existing identity classification, combined business/application profiles, supplier memberships/reviews, package roots and mutable private draft revisions. Published pointers, immutable submissions and the remaining logical tables below are future work.
 
 | Group | Proposed tables | Required guarantees |
 | --- | --- | --- |
@@ -136,15 +136,15 @@ Normalize all document examples to the actual `/api/v1` prefix and one naming sc
 | `POST /api/v1/partners/applications` | Partner applicant | Own business draft/submission |
 | `GET /api/v1/partners/me/status` | Applicant/member | Own verification status and allowed actions |
 | `PATCH /api/v1/partners/me/application` | Own applicant | Requested corrections, concurrency checked |
-| `GET /api/v1/partner/packages` | Approved staff | Own packages/draft/pending/public version summaries |
-| `POST /api/v1/partner/packages` | Approved content role | New private draft |
-| `PATCH /api/v1/partner/packages/{id}` | Owning content role | Draft update or new pending revision, not direct live mutation |
-| `POST /api/v1/partner/packages/{id}/media` | Owning content role | Staged upload intent; no unchecked public URL |
-| `POST /api/v1/partner/packages/{id}/submit` | Owning content role | Classification/review submission |
-| `POST /api/v1/partner/packages/{id}/pause` | Owning operations/owner | Stop public eligibility/new sales |
-| `POST /api/v1/partner/packages/{id}/departures` | Owning operations | Validated departure draft |
-| `PATCH /api/v1/partner/departures/{id}/inventory` | Owning operations | Source-appropriate audited inventory update |
-| `POST /api/v1/partner/departures/{id}/rate-proposals` | Own commercial role | Private supplier rate proposal |
+| `GET /api/v1/partners/packages` | Approved staff | Own packages/draft/pending/public version summaries |
+| `POST /api/v1/partners/packages` | Approved content role | New private draft |
+| `PATCH /api/v1/partners/packages/{id}` | Owning content role | Draft update or new pending revision, not direct live mutation |
+| `POST /api/v1/partners/packages/{id}/media` | Owning content role | Staged upload intent; no unchecked public URL |
+| `POST /api/v1/partners/packages/{id}/submit` | Owning content role | Classification/review submission |
+| `POST /api/v1/partners/packages/{id}/pause` | Owning operations/owner | Stop public eligibility/new sales |
+| `POST /api/v1/partners/packages/{id}/departures` | Owning operations | Validated departure draft |
+| `PATCH /api/v1/partners/departures/{id}/inventory` | Owning operations | Source-appropriate audited inventory update |
+| `POST /api/v1/partners/departures/{id}/rate-proposals` | Own commercial role | Private supplier rate proposal |
 | `POST /api/v1/admin/partners/{id}/decision` | Supplier reviewer | Approve/reject/request changes/suspend with reason |
 | `POST /api/v1/admin/tours/{id}/revisions/{revision}/decision` | Content reviewer | Approve/promote or reject a specific revision |
 | `PUT /api/v1/admin/tours/{id}/agreement` | Commercial admin | Private effective contract version |
@@ -159,10 +159,10 @@ Normalize all document examples to the actual `/api/v1` prefix and one naming sc
 | `POST /api/v1/checkout/orders` | Authorized payer | Provider order for stored quote total |
 | `POST /api/v1/payments/webhooks/{provider}` | Verified provider signature | Durable deduplicated receipt |
 | `GET /api/v1/bookings/{id}` | Authorized buyer/role-specific view | Own status; a public reference is not authorization |
-| `GET /api/v1/partner/bookings` | Own supplier operations | Own fulfillment queue |
-| `POST /api/v1/partner/bookings/{id}/confirm` | Own supplier confirmer | Supplier commitment, not fabricated paid state |
+| `GET /api/v1/partners/bookings` | Own supplier operations | Own fulfillment queue |
+| `POST /api/v1/partners/bookings/{id}/confirm` | Own supplier confirmer | Supplier commitment, not fabricated paid state |
 | `POST /api/v1/bookings/{id}/cancellations` | Buyer/authorized support | Versioned policy evaluation and refund request |
-| `GET /api/v1/partner/payouts` | Own finance role | Payable/transfer/bank status, no platform margins |
+| `GET /api/v1/partners/payouts` | Own finance role | Payable/transfer/bank status, no platform margins |
 | `GET /api/v1/admin/settlements/reconciliation` | Finance role | Exceptions and evidence-backed matching |
 
 A composed discovery endpoint is optional; the initial React page can request place/tour adapters independently. If later added, return typed collections for places/countries/tours, not a changed legacy place object. Tour detail requests use server-owned IDs/slugs; supplier-provided IDs are SKU input only.

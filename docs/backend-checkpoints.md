@@ -2,6 +2,7 @@
 
 | Branch/bookmark | Checkpoint |
 | --- | --- |
+| `staff-console-tour-drafts` | Separate employee sign-in, restricted application review/self-review checks, and private seven-step supplier package drafts; [implementation and release boundary](reports/staff-console-package-drafts-2026-10-19.md) |
 | `partners-onboarding-foundation` | Supplier-only sessions, footer partner entry, business onboarding/admin review, and native launcher live updates/repeated-start reuse; [implementation and checks](reports/partners-onboarding-foundation-2026-10-18.md) |
 | `places-search-tour-packages-plan` | Replace the superseded marketplace plan with the updated Places Search tour-package specification, footer partner entry, package review/automation and phased delivery; [active plan](plans/places-search-tour-packages/README.md) |
 | `personal-finance-backend` | Personal income, expense edits/deletion, balances and analytics; `43990e456750` |

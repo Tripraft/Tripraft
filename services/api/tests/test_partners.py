@@ -122,6 +122,9 @@ def test_admin_review_corrections_approval_suspension_and_history(partner, make_
     snapshot = payload(submit(client, snapshot))
     admin, admin_id, admin_email = make_user('partnerreviewer')
     monkeypatch.setattr(Config, 'ADMIN_EMAILS', [admin_email])
+    with get_db_session() as session:
+        session.get(User, UUID(admin_id)).email_verified = True
+        session.commit()
     ordinary, _, _ = make_user('ordinaryreviewer')
     assert ordinary.get('/api/v1/admin/partners').status_code == 403
     assert client.get('/api/v1/admin/partners').status_code == 401
@@ -147,7 +150,7 @@ def test_admin_review_corrections_approval_suspension_and_history(partner, make_
     assert approved.status_code == 200
     current = payload(client.get(BASE + '/me'))
     assert current['capabilities']['can_view_dashboard'] is True
-    assert current['capabilities']['can_manage_packages'] is False
+    assert current['capabilities']['can_manage_packages'] is True
     assert decision('REJECTED', current['application']['version']).status_code == 409
     suspended = decision('SUSPENDED', current['application']['version'], 'Review required after business change')
     assert suspended.status_code == 200

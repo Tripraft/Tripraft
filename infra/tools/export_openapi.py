@@ -32,6 +32,8 @@ def envelope(data):
 
 def build(application):
     from app.partners.schemas import ApplicationSubmit, ApplicationUpdate, PartnerLogin, PartnerRegister, ReviewDecision
+    from app.partners.package_schemas import (CreateTourDraft, SaveTourDraft, DuplicateTourDraft, TourDraftContent,
+                                             PackageSummary, PackageDraft, PackageList)
     schemas = {
         'User': {'type': 'object', 'required': ['id', 'email', 'is_admin'], 'properties': {
             'id': {'type': 'string', 'format': 'uuid'}, 'email': {'type': 'string'},
@@ -54,8 +56,11 @@ def build(application):
         'MeResponse': envelope({'type': 'object', 'required': ['user'], 'properties': {'user': ref('User')}}),
         'AuditResponse': envelope(ref('AuditData')),
     }
-    for model in (PartnerRegister, PartnerLogin, ApplicationUpdate, ApplicationSubmit, ReviewDecision):
-        schemas[model.__name__] = model.model_json_schema()
+    for model in (PartnerRegister, PartnerLogin, ApplicationUpdate, ApplicationSubmit, ReviewDecision,
+                  CreateTourDraft, SaveTourDraft, DuplicateTourDraft, TourDraftContent, PackageSummary, PackageDraft, PackageList):
+        schema = model.model_json_schema(ref_template='#/components/schemas/{model}')
+        schemas.update(schema.pop('$defs', {}))
+        schemas[model.__name__] = schema
     status_values = ['DRAFT_APPLICATION', 'UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'SUSPENDED', 'REJECTED']
     application_fields = {name: {'type': 'string'} for name in (
         'business_name', 'representative_name', 'contact_email', 'phone', 'country_code', 'website',
@@ -81,8 +86,9 @@ def build(application):
         }},
     }}
     schemas['PartnerSnapshotResponse'] = envelope(ref('PartnerSnapshot'))
+    schemas['PartnerReviewApplication'] = {'allOf': [ref('PartnerApplication'), {'type': 'object', 'required': ['is_own_application'], 'properties': {'is_own_application': {'type': 'boolean'}}}]}
     schemas['PartnerReviewListResponse'] = envelope({'type': 'object', 'required': ['applications', 'total'], 'properties': {
-        'applications': {'type': 'array', 'items': ref('PartnerApplication')}, 'total': {'type': 'integer'},
+        'applications': {'type': 'array', 'items': ref('PartnerReviewApplication')}, 'total': {'type': 'integer'},
     }})
     schemas['PartnerError'] = {'type': 'object', 'required': ['success', 'error'], 'properties': {
         'success': {'type': 'boolean'}, 'data': {'type': 'null'},
@@ -123,7 +129,10 @@ def build(application):
                 operation['description'] = 'Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.'
                 action = rule.endpoint.split('.')[-1]
                 inputs = {'register': 'PartnerRegister', 'login': 'PartnerLogin', 'update_application': 'ApplicationUpdate',
-                          'submit_application': 'ApplicationSubmit', 'review_application': 'ReviewDecision'}
+                          'submit_application': 'ApplicationSubmit', 'review_application': 'ReviewDecision',
+                          'staff_login': 'PartnerLogin', 'create_package_draft': 'CreateTourDraft', 'duplicate_package_draft': 'DuplicateTourDraft'}
+                if action == 'package_draft' and method == 'PATCH':
+                    inputs[action] = 'SaveTourDraft'
                 if action in inputs:
                     operation['requestBody'] = {'required': True, 'content': {'application/json': {'schema': ref(inputs[action])}}}
                 if action in ('register', 'login', 'me', 'update_application', 'submit_application'):
@@ -137,21 +146,31 @@ def build(application):
                     ]
                 elif action == 'review_application':
                     output = envelope(ref('PartnerApplication'))
+                elif action in ('create_package_draft', 'duplicate_package_draft', 'package_draft'):
+                    output = envelope(ref('PackageDraft'))
+                elif action == 'list_package_drafts':
+                    output = envelope(ref('PackageList'))
+                    operation['parameters'] = [
+                        {'name': 'limit', 'in': 'query', 'schema': {'type': 'integer', 'minimum': 1, 'maximum': 100, 'default': 25}},
+                        {'name': 'offset', 'in': 'query', 'schema': {'type': 'integer', 'minimum': 0, 'maximum': 10000, 'default': 0}},
+                    ]
+                elif action == 'staff_login':
+                    output = envelope({'type': 'object', 'required': ['signed_in'], 'properties': {'signed_in': {'type': 'boolean'}}})
                 else:
                     fields = {'refresh': {'refreshed': {'type': 'boolean'}}, 'logout': {'signed_out': {'type': 'boolean'}},
                               'resend_verification': {'message': {'type': 'string'}}}[action]
                     output = envelope({'type': 'object', 'properties': fields})
-                operation['responses'] = {('201' if action == 'register' else '200'): response(output)}
+                operation['responses'] = {('201' if action in ('register', 'create_package_draft', 'duplicate_package_draft') else '200'): response(output)}
                 for status in ('401', '403', '409', '422', '429', '503'):
                     operation['responses'][status] = response(ref('PartnerError'))
-                if action == 'review_application':
+                if action in ('review_application', 'package_draft', 'duplicate_package_draft'):
                     operation['responses']['404'] = response(ref('PartnerError'))
-                if action not in ('register', 'login'):
+                if action not in ('register', 'login', 'staff_login'):
                     security = 'cookieAuth' if route.startswith('/api/v1/admin/') else 'partnerRefreshCookieAuth' if action in ('refresh', 'logout') else 'partnerCookieAuth'
                     operation['security'] = [{security: []}]
                     if action == 'logout':
                         operation['security'].append({})
-                if method != 'GET' and action not in ('register', 'login'):
+                if method != 'GET' and action not in ('register', 'login', 'staff_login'):
                     operation.setdefault('parameters', []).append({'name': 'X-CSRF-Token', 'in': 'header', 'schema': {'type': 'string'}, 'description': 'Required with cookie authentication.'})
             paths.setdefault(route, {})[method.lower()] = operation
     return {'openapi': '3.1.0', 'info': {'title': 'TripRaft API', 'version': '2.0.0',

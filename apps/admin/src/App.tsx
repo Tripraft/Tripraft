@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { createApiClient, type components } from '@tripraft/api-client';
 import type { AuthUser } from '@tripraft/types';
 import { PartnerReviewPanel } from './PartnerReviewPanel';
+import { StaffLogin } from './StaffLogin';
 const api = createApiClient(import.meta.env.VITE_API_BASE_URL || '');
 type Audit = components['schemas']['AuditData'];
 type Health = components['schemas']['Health'];
@@ -34,6 +35,18 @@ export function App() {
   const [errors, setErrors] = useState<string[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [revision, setRevision] = useState(0);
+  const [identityRevision, setIdentityRevision] = useState(0);
+  const [signingOut, setSigningOut] = useState(false);
+  async function signOut() {
+    setSigningOut(true);
+    try {
+      const csrf = decodeURIComponent(document.cookie.split('; ').find(value => value.startsWith('csrf_token='))?.slice(11) || '');
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/auth/logout`, { method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': csrf } });
+      if (!response.ok) throw new Error('Sign-out failed. Please try again.');
+      setAccount(null); setAccountError(''); setHealth(null); setAudit(null); setErrors([]);
+    } catch (cause) { setErrors(values => [...values, cause instanceof Error ? cause.message : 'Unable to sign out.']); }
+    finally { setSigningOut(false); }
+  }
   useEffect(() => {
     const controller = new AbortController();
     api
@@ -43,7 +56,7 @@ export function App() {
         if (!response.ok || !data?.data?.user)
           setAccountError(
             response.status === 401
-              ? 'Sign in with your TripRaft account to continue.'
+              ? 'Sign in with an authorized TripRaft staff account.'
               : 'Unable to verify your account.',
           );
         else setAccount(data.data.user);
@@ -55,7 +68,7 @@ export function App() {
         if (!controller.signal.aborted) setInitializing(false);
       });
     return () => controller.abort();
-  }, []);
+  }, [identityRevision]);
   useEffect(() => {
     if (!account?.is_admin) return;
     const controller = new AbortController();
@@ -90,23 +103,23 @@ export function App() {
     <main>
       <header>
         <p className="eyebrow">TripRaft</p>
-        <h1>Operations</h1>
+        <h1>{account?.is_admin ? 'Operations' : 'TripRaft staff'}</h1>
       </header>
       {initializing ? (
         <p role="status">Checking account…</p>
       ) : !account ? (
         <section>
           <p role="alert">{accountError}</p>
-          <a href={`${import.meta.env.VITE_WEB_URL || 'http://localhost:5173'}/login`}>
-            Sign in to TripRaft
-          </a>
+          <StaffLogin signedIn={() => { setInitializing(true); setAccountError(''); setIdentityRevision(value => value + 1); }} />
         </section>
       ) : !account.is_admin ? (
-        <p role="alert">This account does not have administrator access.</p>
+        <section><p role="alert">This account does not have administrator access. Application reviews are available only to authorized TripRaft administrators and employees.</p><StaffLogin signedIn={() => { setAccount(null); setInitializing(true); setIdentityRevision(value => value + 1); }} /></section>
       ) : (
         <>
+          <nav aria-label="Operations navigation"><a href="#partner-review-title">Partner applications</a></nav>
           <div className="toolbar">
             <p>Signed in as {account.email}</p>
+            <button disabled={signingOut} onClick={() => void signOut()}>{signingOut ? 'Signing out…' : 'Sign out of staff console'}</button>
             <button disabled={refreshing} onClick={() => setRevision((value) => value + 1)}>
               {refreshing ? 'Refreshing…' : 'Refresh'}
             </button>

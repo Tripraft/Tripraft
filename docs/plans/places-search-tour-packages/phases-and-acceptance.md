@@ -2,7 +2,9 @@
 
 This plan implements the updated document's tour-package vertical and Appendix B's selective publication policy. It does not reopen the retired broad workspace/catalog implementation program. Each phase adds a reviewable end-to-end behavior. New commercial capability remains disabled until its own gate passes.
 
-Implementation has started with supplier-only accounts, footer/landing, owner onboarding and internal review. Phase zero still needs the deployed search comparison and launch decisions; phase one still needs recovery, staff administration and production readiness checks. See the [current implementation report](../../reports/partners-onboarding-foundation-2026-10-18.md). Phase two package authoring is the next feature delivery.
+Implementation includes supplier-only accounts, footer/landing, onboarding, a separate employee review console and private package draft authoring. Phase zero still needs the deployed search comparison and launch decisions; phase one still needs recovery, granular staff administration and production readiness checks. Phase two continues with media checks and immutable package submission/review. The earlier [onboarding report](../../reports/partners-onboarding-foundation-2026-10-18.md) records the foundation checkpoint.
+
+19 October: dedicated employee sign-in and phase-two private draft authoring are delivered; see the [latest checkpoint](../../reports/staff-console-package-drafts-2026-10-19.md). Package media and immutable submission/review are the next phase-two work. Public listing remains closed.
 
 ## Release order
 

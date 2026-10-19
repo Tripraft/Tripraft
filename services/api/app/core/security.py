@@ -33,6 +33,7 @@ _CSRF_EXEMPT_PATHS = frozenset((
     '/api/v1/auth/verify-email',
     '/api/v1/partners/register',
     '/api/v1/partners/login',
+    '/api/v1/admin/session',
 ))
 
 
