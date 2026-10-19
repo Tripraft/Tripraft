@@ -51,3 +51,8 @@ services:
         sync: false
       - key: GUNICORN_WORKERS
         value: "1"
+      # This single-service beta has no Celery worker. Deliver invitation email inline.
+      - key: CELERY_BROKER_URL
+        value: ""
+      - key: CELERY_RESULT_BACKEND
+        value: ""

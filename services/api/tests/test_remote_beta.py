@@ -114,10 +114,19 @@ def test_hosted_preflight_rejects_local_or_incomplete_settings():
                   FRONTEND_URL='https://beta.example.test', CORS_ORIGINS='https://beta.example.test',
                   ADMIN_EMAILS='staff@example.test', SECRET_KEY='a' * 40, JWT_SECRET_KEY='b' * 40,
                   RESEND_API_KEY='test-only-key', FROM_EMAIL='beta@example.test', EMAIL_PROVIDER='resend',
-                  EMAIL_ENABLED='true', FLASK_ENV='production', COOKIE_SECURE='true')
+                  EMAIL_ENABLED='true', FLASK_ENV='production', COOKIE_SECURE='true', CELERY_BROKER_URL='')
     assert module.validate_environment(values) == []
     values['CORS_ORIGINS'] = 'http://localhost:5173'
     assert module.validate_environment(values)
+
+
+def test_beta_disables_email_queue_without_a_worker():
+    import yaml
+    path = Path(__file__).resolve().parents[3] / 'infra/remote-beta/render.yaml'
+    service = yaml.safe_load(path.read_text())['services'][0]
+    values = {item['key']: item.get('value') for item in service['envVars']}
+    assert values['CELERY_BROKER_URL'] == ''
+    assert values['CELERY_RESULT_BACKEND'] == ''
 
 
 def test_gmail_oauth_and_mime_dispatch_through_both_mailers(monkeypatch):

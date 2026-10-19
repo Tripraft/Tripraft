@@ -2,7 +2,7 @@
 
 Reviewed `TripRaft_Remote_Beta_and_Sapling_Interactive_Smartlog_Setup.docx` and
 implemented a same-origin hosted beta configuration, optional Gmail/Resend HTTPS
-email delivery, a private configuration wizard, a local checklist and a Sapling
+email delivery, explicit inline invitation delivery without a worker, a private configuration wizard, a local checklist and a Sapling
 launcher. Added `develop` to both canonical and discovery CI workflow push triggers.
 
 The user has Gmail and does not yet have the proposed cloud service accounts.
@@ -11,9 +11,9 @@ email provider account and custom domain. Local SMTP remains available.
 
 Verification completed:
 
-- Full backend suite: 490 passed. This run began before the final two Gmail tests
+- Full backend suite: 490 passed. This run began before the final Gmail and queue-configuration tests
   were added; the final focused rerun below covers those changes.
-- Latest focused beta/invitation suite: 24 passed, including both Gmail mailer paths,
+- Latest focused beta/invitation suite: 25 passed, including both Gmail mailer paths,
   OAuth failure handling, MIME encoding, secret-log protection and hosted SPA routes.
 - Web production build passed using repository-pinned pnpm. Existing chunk-size
   advisory remains; it did not fail the build.

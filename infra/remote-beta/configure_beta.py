@@ -27,6 +27,7 @@ def create():
                   SECRET_KEY=secrets.token_hex(32), JWT_SECRET_KEY=secrets.token_hex(32),
                   COOKIE_SECURE='true', COOKIE_SAMESITE='Lax',
                   DB_POOL_SIZE='2', DB_MAX_OVERFLOW='1', GUNICORN_WORKERS='1',
+                  CELERY_BROKER_URL='', CELERY_RESULT_BACKEND='',
                   EMAIL_PROVIDER=provider, EMAIL_ENABLED='true',
                   FROM_EMAIL=input('Sender Gmail address or verified provider sender: ').strip())
     if provider == 'gmail':

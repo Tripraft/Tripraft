@@ -53,10 +53,15 @@ def validate_environment(env):
                 errors.append(f'{key} must be configured in Render Environment')
     if env.get('FLASK_ENV') != 'production' or env.get('COOKIE_SECURE') != 'true':
         errors.append('This beta requires production mode and secure cookies')
+    if env.get('CELERY_BROKER_URL') or 'CELERY_BROKER_URL' not in env:
+        errors.append('Set CELERY_BROKER_URL to an empty value: this beta has no queue worker')
     return errors
 
 
 def main():
+    for key in ('FRONTEND_URL', 'CORS_ORIGINS'):
+        if key in os.environ:
+            os.environ[key] = os.environ[key].strip().rstrip('/')
     errors = validate_environment(os.environ)
     if errors:
         print('Beta configuration needs attention:\n' + '\n'.join(errors), file=sys.stderr)

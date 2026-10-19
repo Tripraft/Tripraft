@@ -57,7 +57,9 @@ In Render choose New, Blueprint, connect the private repository and select
 Blueprint explicitly requests the Free plan and waits for passing CI on later
 deploys. Startup validates environment settings, validates the canonical catalog,
 runs `alembic upgrade head` against the specified beta database and starts one
-Gunicorn worker. Start with an empty dedicated staging database; do not attach a
+Gunicorn worker. Celery broker/backend values are explicitly empty so expense
+invitations send inline rather than waiting for a nonexistent worker. Start with
+an empty dedicated staging database; do not attach a
 production database without a backup and migration review.
 
 If the assigned public URL changes, update both origin variables and redeploy.
