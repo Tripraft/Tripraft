@@ -39,7 +39,10 @@ class EmailService:
         
         if not self.enabled:
             logger.info("Email service is disabled")
-        elif not self.smtp_user or not self.smtp_password:
+        elif Config.EMAIL_PROVIDER in ('resend', 'gmail'):
+            from app.notifications.email.http_delivery import http_email_configured
+            self.enabled = http_email_configured()
+        elif Config.EMAIL_PROVIDER != 'smtp' or not self.smtp_user or not self.smtp_password:
             logger.warning("Email credentials not configured - email service will be disabled")
             self.enabled = False
     
@@ -65,6 +68,10 @@ class EmailService:
         if not self.enabled:
             logger.debug(f"Email to {to_email} not sent (service disabled)")
             return False
+
+        if Config.EMAIL_PROVIDER in ('resend', 'gmail'):
+            from app.notifications.email.http_delivery import send_http_email
+            return send_http_email(to_email, subject, html_body, text_body)
         
         try:
             # Create message

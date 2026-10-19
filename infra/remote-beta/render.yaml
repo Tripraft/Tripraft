@@ -1,0 +1,53 @@
+# Purpose: An explicit Free beta service. Supply secrets in Render; never in this file.
+# Render > New > Blueprint > select your repo > path infra/remote-beta/render.yaml.
+services:
+  - type: web
+    name: tripraft-beta
+    runtime: docker
+    plan: free
+    branch: develop
+    dockerfilePath: ./infra/remote-beta/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health/live
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_DEBUG
+        value: "false"
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+      - key: SECRET_KEY
+        generateValue: true
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: DB_POOL_SIZE
+        value: "2"
+      - key: DB_MAX_OVERFLOW
+        value: "1"
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAMESITE
+        value: Lax
+      - key: EMAIL_PROVIDER
+        value: gmail
+      - key: EMAIL_ENABLED
+        value: "true"
+      - key: GMAIL_CLIENT_ID
+        sync: false
+      - key: GMAIL_CLIENT_SECRET
+        sync: false
+      - key: GMAIL_REFRESH_TOKEN
+        sync: false
+      - key: FROM_EMAIL
+        sync: false
+      - key: GUNICORN_WORKERS
+        value: "1"

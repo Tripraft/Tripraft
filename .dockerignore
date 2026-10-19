@@ -1,0 +1,22 @@
+# Purpose: Keep workstation secrets, operational databases and private documents out of build contexts.
+.git
+.venv
+.tripraft
+.pnpm-store
+**/node_modules
+**/dist
+**/__pycache__
+**/.pytest_cache
+**/.env
+**/.env.*
+**/*-wal
+**/*-shm
+data/runtime
+services/api/uploads
+extra
+script
+sql_database
+wikidata
+*.docx
+*.pdf
+tripraft.db

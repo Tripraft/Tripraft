@@ -93,6 +93,9 @@ def create_app():
     _register_blueprints(app)
 
     # Security middleware
+    # Register this response hook first so it runs after the common security hook.
+    from app.core.frontend import register_frontend
+    hosted_frontend = register_frontend(app)
     _register_middleware(app)
 
     # Idempotency protects money-mutating HTTP operations, so it is a
@@ -104,7 +107,7 @@ def create_app():
     _register_error_handlers(app)
 
     # Root endpoints
-    _register_root_endpoints(app)
+    _register_root_endpoints(app, hosted_frontend=hosted_frontend)
 
     # Real-time WebSockets
     _init_socketio(app)
@@ -600,7 +603,7 @@ def _register_error_handlers(app):
 # Root endpoints
 # ---------------------------------------------------------------------------
 
-def _register_root_endpoints(app):
+def _register_root_endpoints(app, hosted_frontend=False):
     """Register root and health check endpoints."""
 
     @app.route("/health", methods=["GET"])
@@ -610,6 +613,9 @@ def _register_root_endpoints(app):
             "service": "TripRaft Backend",
             "version": Config.APP_VERSION,
         }), 200
+
+    if hosted_frontend:
+        return
 
     @app.route("/", methods=["GET"])
     def root():

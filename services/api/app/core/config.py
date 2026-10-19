@@ -113,6 +113,8 @@ class Config:
 
     # Frontend URL (used in invitation emails, etc.)
     FRONTEND_URL: str = os.getenv('FRONTEND_URL', 'http://localhost:5173')
+    # Optional built SPA for the single-origin hosted beta. Empty in local development.
+    FRONTEND_DIST_DIR: str = os.getenv('FRONTEND_DIST_DIR', '')
 
     # API Settings
     API_PREFIX: str = '/api/v1'
@@ -368,6 +370,12 @@ class Config:
     SMTP_USER: str = os.getenv('SMTP_USER', '')
     SMTP_PASSWORD: str = os.getenv('SMTP_PASSWORD', '')
     FROM_EMAIL: str = os.getenv('FROM_EMAIL', os.getenv('SMTP_USER', ''))
+    # HTTPS delivery works on hosts that block outbound SMTP ports.
+    EMAIL_PROVIDER: str = os.getenv('EMAIL_PROVIDER', 'smtp').lower()
+    RESEND_API_KEY: str = os.getenv('RESEND_API_KEY', '')
+    GMAIL_CLIENT_ID: str = os.getenv('GMAIL_CLIENT_ID', '')
+    GMAIL_CLIENT_SECRET: str = os.getenv('GMAIL_CLIENT_SECRET', '')
+    GMAIL_REFRESH_TOKEN: str = os.getenv('GMAIL_REFRESH_TOKEN', '')
 
     # --- SocketIO ---
     SOCKETIO_ENABLED: bool = _get_bool('SOCKETIO_ENABLED', True)

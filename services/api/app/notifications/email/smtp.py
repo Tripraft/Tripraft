@@ -35,6 +35,11 @@ class EmailService:
     @property
     def enabled(self) -> bool:
         """Check if email service is properly configured."""
+        if Config.EMAIL_PROVIDER in ('resend', 'gmail'):
+            from app.notifications.email.http_delivery import http_email_configured
+            return http_email_configured()
+        if Config.EMAIL_PROVIDER != 'smtp':
+            return False
         return bool(self._smtp_user and self._smtp_password)
 
     def send_email(
@@ -59,6 +64,10 @@ class EmailService:
         if not self.enabled:
             logger.debug('Email to %s not sent (service disabled)', to_email)
             return False
+
+        if Config.EMAIL_PROVIDER in ('resend', 'gmail'):
+            from app.notifications.email.http_delivery import send_http_email
+            return send_http_email(to_email, subject, html_body, text_body)
 
         try:
             msg = MIMEMultipart('alternative')
