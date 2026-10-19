@@ -23,6 +23,8 @@ def approved(partner):
         user.email_verified = True
         agent.status, agent.attested_at = 'APPROVED', datetime.now(timezone.utc)
         session.commit()
+    from test_agent_signatures import sign_current
+    sign_current(client)
     return client, snapshot, email
 
 
@@ -110,6 +112,8 @@ def test_cross_supplier_reads_edits_and_copies_are_not_found(approved, app, monk
         session.get(User, UUID(snapshot['user']['id'])).email_verified = True
         session.get(Agent, UUID(snapshot['application']['id'])).status = 'APPROVED'
         session.commit()
+    from test_agent_signatures import sign_current
+    sign_current(other)
     assert other.get(BASE + '/' + draft['id']).status_code == 404
     assert save(other, draft).status_code == 404
     assert post(other, '/packages/' + draft['id'] + '/duplicate', {'version': draft['version']}).status_code == 404

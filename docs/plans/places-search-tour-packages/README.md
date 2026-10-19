@@ -4,7 +4,7 @@ Prepared 18 October 2026. Status: implementation started; the first phase-one on
 
 19 October update: the [staff console and private package draft workspace](../../reports/staff-console-package-drafts-2026-10-19.md) are implemented. Approved suppliers can author drafts; media, immutable package submission/review and public cards remain next. The separate employee console reviews business applications and is not linked from the public or agent websites.
 
-19 October agreement update: the [supplied partner agreement and local demo approval](../../reports/partner-agreement-demo-approval-2026-10-19.md) are integrated. Agents/staff can read the complete confidential v3 draft and download the original; explicit reading acknowledgment is recorded separately from signatures. A separate demo operator is approved for private dashboard testing. The source requires completed legal/commercial schedules and both signatures before commercial activation; entity/country decisions remain open.
+19 October agreement update: the [agent-only signature flow](../../reports/agent-signature-and-live-reload-2026-10-19.md) now follows staff business approval. Only the agent signs; no TripRaft signing step is required. Approved agents must sign the exact current document before private package access. This supersedes the earlier reading-acknowledgment-only checkpoint. The confidential source remains a draft with incomplete legal/commercial schedules; entity/country decisions remain open and commercial activation is unavailable.
 
 Source specification: `TripRaft_Places_Search_Live_Tour_Packages_Complete_UPDATED_2026 (1).docx`, version 3.0, all 20 sections and appendices A and B. The complete main-body/table text was read; this is a requirements review rather than a Word layout review. Appendix B takes precedence where earlier wording differs. The user's footer placement instruction takes precedence over the document's optional header/About alternatives.
 
@@ -19,7 +19,9 @@ Footer: Company → Partner with TripRaft
                   ↓
               /partners
                   ↓
-    Register/login → business onboarding → review
+    Register/login → business onboarding → staff approval
+                  ↓
+       Agent agreement + electronic signature
                   ↓
      Agent dashboard → package wizard → first review
                   ↓

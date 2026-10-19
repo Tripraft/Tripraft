@@ -36,8 +36,14 @@ export interface PartnerAgreementStatus {
   acknowledged: boolean;
   acknowledged_at: string | null;
   acknowledged_by: string | null;
-  execution_status: 'NOT_EXECUTED';
+  execution_status: 'NOT_EXECUTED' | 'AGENT_SIGNED_DRAFT';
   commercial_activation_allowed: false;
+  agent_signed: boolean;
+  signature_required: boolean;
+  signature_id: string | null;
+  signed_at: string | null;
+  signer_name: string | null;
+  signer_title: string | null;
 }
 export type AgreementBlock = { kind: 'heading' | 'paragraph' | 'bullet'; text: string } | { kind: 'table'; rows: string[][] };
 export interface PartnerAgreementDocument {
@@ -50,4 +56,18 @@ export interface PartnerAgreementDocument {
   blocks: AgreementBlock[];
   document_furniture: { part: string; paragraphs: string[] }[];
   acknowledgment_text: string;
+  signing_declaration: string;
+  esign_consent_text: string;
+  signing_confirmations: { id: string; text: string }[];
+}
+export interface AgentAgreementSignInput {
+  version: number;
+  document_version: string;
+  source_sha256: string;
+  signer_name: string;
+  signer_title: string;
+  authority_confirmed: true;
+  esign_consent: true;
+  draft_understood: true;
+  confirmations: string[];
 }

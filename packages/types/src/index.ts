@@ -4,6 +4,7 @@ export type UUID = string;
 export type { TourDay, DepartureProposal, TourDraftContent, TourPackageSummary, TourPackageDraft, TourPackageList } from './tourDrafts';
 export type { PartnerStatus, PartnerDecision, PartnerApplication, PartnerApplicationInput, PartnerSnapshot, PartnerReviewList, PartnerReviewApplication } from './partners';
 export type { PartnerAgreementStatus, PartnerAgreementDocument, AgreementBlock } from './partners';
+export type { AgentAgreementSignInput } from './partners';
 export type Money = number;
 export interface ApiEnvelope<T> {
   success: boolean;

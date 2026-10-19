@@ -2,6 +2,7 @@
 
 | Branch/bookmark | Checkpoint |
 | --- | --- |
+| `agent-signature-live-reload` | Approval before agent-only signing, immutable signature receipts, server-enforced package access and native reload/proxy recovery; [report](reports/agent-signature-and-live-reload-2026-10-19.md) |
 | `partner-agreement-demo-approval` | Confidential source agreement reader, explicit draft acknowledgment evidence and separately owned approved local demo; [implementation report](reports/partner-agreement-demo-approval-2026-10-19.md), [access guide](partner-agreement.md) |
 | `staff-console-tour-drafts` | Separate employee sign-in, restricted application review/self-review checks, and private seven-step supplier package drafts; [implementation and release boundary](reports/staff-console-package-drafts-2026-10-19.md) |
 | `partners-onboarding-foundation` | Supplier-only sessions, footer partner entry, business onboarding/admin review, and native launcher live updates/repeated-start reuse; [implementation and checks](reports/partners-onboarding-foundation-2026-10-18.md) |

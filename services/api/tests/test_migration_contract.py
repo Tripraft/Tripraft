@@ -267,8 +267,9 @@ def test_fresh_install_sql_can_be_generated_without_a_database(url, monkeypatch)
     config = _config(url, monkeypatch, output)
     command.upgrade(config, 'head', sql=True)
     sql = output.getvalue()
-    assert sql.count('CREATE TABLE ') == 38  # 37 application tables plus Alembic version.
+    assert sql.count('CREATE TABLE ') == 39  # 38 application tables plus Alembic version.
     assert 'CREATE TABLE agent_agreement_acknowledgments' in sql
+    assert 'CREATE TABLE agent_agreement_signatures' in sql
     assert 'CREATE TABLE tour_packages' in sql
     assert 'CREATE TABLE tour_package_revisions' in sql
     assert 'CREATE TABLE agents' in sql

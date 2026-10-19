@@ -37,7 +37,7 @@ from app.auth.models import (AuditLog, User,  # noqa: E402, F401
 # Import ALL models so Base.metadata contains every table
 # ---------------------------------------------------------------------------
 from app.core.db.base import Base  # noqa: E402
-from app.partners.models import Agent, AgentUser, AgentReview, AgentAgreementAcknowledgment  # noqa: E402, F401
+from app.partners.models import Agent, AgentUser, AgentReview, AgentAgreementAcknowledgment, AgentAgreementSignature  # noqa: E402, F401
 from app.partners.package_models import TourPackage, TourPackageRevision  # noqa: E402, F401
 
 # Alembic Config object — provides access to alembic.ini values

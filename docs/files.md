@@ -141,7 +141,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `apps/web/src/features/itinerary/jsx/TripPlanCard.jsx` | Renders the Trip Plan Card interface within apps\web\src\features\itinerary\jsx. |
 | `apps/web/src/features/itinerary/jsx/TripTips.jsx` | Renders the Trip Tips interface within apps\web\src\features\itinerary\jsx. |
 | `apps/web/src/features/partners/PackageWorkspace.tsx` | Lets approved suppliers create, copy, save and privately preview seven-step tour content drafts. |
-| `apps/web/src/features/partners/PartnerAgreement.tsx` | Displays every supplied draft clause and table and captures reading acknowledgment separately from signatures. |
+| `apps/web/src/features/partners/PartnerAgreement.tsx` | Collects the approved agent signature against the exact supplied draft before opening private package tools. |
 | `apps/web/src/features/partners/PartnerPortal.tsx` | Provides the partner landing, supplier-only sign-in and business application/status flow. |
 | `apps/web/src/features/partners/__tests__/PackageWorkspace.test.tsx` | Exercises private draft creation, multi-step saves, exact rate input and conflict recovery. |
 | `apps/web/src/features/partners/__tests__/PartnerPortal.test.tsx` | Verifies the applicant journey, protected status routes and honest package capability boundary. |
@@ -241,6 +241,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `docs/plans/places-search-tour-packages/architecture-and-files.md` | Maps portal/search/admin routes, proposed files, authentication boundaries and existing integration points. |
 | `docs/plans/places-search-tour-packages/data-api-and-publishing.md` | Defines tour records, API projections, price visibility, selective publishing automation and transaction rules. |
 | `docs/plans/places-search-tour-packages/phases-and-acceptance.md` | Orders the implementation phases, first sprint, backlog, regression tests and release gates. |
+| `docs/reports/agent-signature-and-live-reload-2026-10-19.md` | Records agent-only signing, local reload recovery, validation and package-review delivery boundaries. |
 | `docs/reports/partner-agreement-demo-approval-2026-10-19.md` | Records delivered policy integration, local demo approval, checks and remaining commercial release work. |
 | `docs/reports/partners-onboarding-foundation-2026-10-18.md` | Records delivered partner onboarding, launcher fixes, verification and remaining rollout work. |
 | `docs/reports/staff-console-package-drafts-2026-10-19.md` | Records staff access, private package drafts, validation and remaining release work. |
@@ -317,6 +318,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/app/core/db/migration_checks.py` | Read-only checks that reject unsupported legacy identifier storage. |
 | `services/api/app/core/db/travel_db.py` | Manages canonical travel database connections and audited writes. |
 | `services/api/app/core/db/uuid7.py` | UUIDv7 Generator (RFC 9562) Time-ordered, globally unique, cryptographically random identifiers. |
+| `services/api/app/core/dev_reload.py` | Applies pending backed-up local migrations before native development source reload initializes the API. |
 | `services/api/app/core/exceptions.py` | Custom Exception Hierarchy Framework-agnostic exception classes for the entire backend. |
 | `services/api/app/core/external/__init__.py` | Third-party API clients. |
 | `services/api/app/core/factory.py` | TripRaft Application Factory Creates and configures the Flask application with all routes and middleware. |
@@ -392,7 +394,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/app/notifications/services/email_service.py` | Email Service Professional email handling for expense engine. |
 | `services/api/app/notifications/services/notification_service.py` | Notification Service for Group Planner Handles creating, querying, and managing in-app notifications. |
 | `services/api/app/partners/__init__.py` | Declares the supplier-only partner onboarding domain. |
-| `services/api/app/partners/agreement_service.py` | Serves the confidential supplied draft and records explicit reading acknowledgment without executing terms. |
+| `services/api/app/partners/agreement_service.py` | Serves the confidential draft and records authenticated agent-only signatures after staff approval. |
 | `services/api/app/partners/agreements/partner-agreement-v3-2026-10-18.docx` | Preserves the original confidential v3 draft agreement bytes for authenticated downloads and evidence hashing. |
 | `services/api/app/partners/agreements/partner-agreement-v3-2026-10-18.json` | Contains the faithful ordered text/table projection, version and source hash of the preserved agreement. |
 | `services/api/app/partners/models.py` | Stores supplier applications, scoped staff membership and immutable review decisions. |
@@ -471,6 +473,7 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/migrations/versions/b7c8d9e0f1a2_complete_vault_and_place_time_schema.py` | Complete vault/time coverage and validate UUID-native existing databases. Revision ID: b7c8d9e0f1a2. |
 | `services/api/migrations/versions/c30d4e5f6071_partner_agreement.py` | Preserves existing applications while adding explicit draft acknowledgment evidence and a demo marker. |
 | `services/api/migrations/versions/c4d5e6f7a8b9_add_chat_tables.py` | add_chat_tables Revision ID: c4d5e6f7a8b9. |
+| `services/api/migrations/versions/d41e5f607182_agent_signatures.py` | Adds agent-only post-approval signature evidence without converting prior acknowledgments into signatures. |
 | `services/api/migrations/versions/d4a1c3e8f9b0_add_settlement_and_verification_audit_columns.py` | Persist settlement deletion and email-verification audit timestamps. Revision ID: d4a1c3e8f9b0. |
 | `services/api/migrations/versions/e336ee48cb0f_add_date_partitioning_postgresql.py` | add_date_partitioning_postgresql PostgreSQL-only migration: converts expenses, expense_history, and. |
 | `services/api/migrations/versions/e80825488cb5_add_audit_log_table.py` | add_audit_log_table Revision ID: e80825488cb5. |
@@ -484,12 +487,14 @@ Every published source/configuration file is listed below. Legal source formats 
 | `services/api/run.py` | TripRaft Backend -- Main Entry Point Run this file to start the Flask server. |
 | `services/api/schema/tripraft-canonical-schema.sql` | Preserved older schema reference; initialization uses sql_database/tripraft-global-schema-v2.1.sql. |
 | `services/api/tests/conftest.py` | Test fixture/configuration helper for conftest. |
+| `services/api/tests/test_agent_signatures.py` | Verifies approval-before-signing, agent-only evidence, mandatory server package gates and immutable receipt ownership. |
 | `services/api/tests/test_ai_consent.py` | Regression tests for ai consent, including success and failure behavior. |
 | `services/api/tests/test_auth_tokens.py` | Regression tests for auth tokens, including success and failure behavior. |
 | `services/api/tests/test_canonical_catalog.py` | Verifies empty creation, existing-data preservation, rejection of incompatible schemas and shared connection settings. |
 | `services/api/tests/test_crew_expense_deletion.py` | Regression tests for crew expense deletion, including success and failure behavior. |
 | `services/api/tests/test_csrf.py` | Regression tests for csrf, including success and failure behavior. |
 | `services/api/tests/test_demo_partner_setup.py` | Ensures explicit local demo approval preserves staff separation, audit history and unsigned agreement state. |
+| `services/api/tests/test_dev_reload.py` | Ensures only explicit native development reload runs the backed-up migration command before API initialization. |
 | `services/api/tests/test_endpoint_inventory.py` | Regression tests for endpoint inventory, including success and failure behavior. |
 | `services/api/tests/test_group_access_controls.py` | Regression tests for group access controls, including success and failure behavior. |
 | `services/api/tests/test_group_planner_smoke.py` | Regression tests for group planner smoke, including success and failure behavior. |

@@ -14,6 +14,9 @@ def approved_owner(session, agent_id, user_id):
     owner = session.get(User, user_id)
     if not agent or agent.status != 'APPROVED' or not owner or not owner.email_verified:
         raise PartnerError('Business approval is required to manage package drafts.', 403, 'PARTNER_NOT_APPROVED')
+    from app.partners.agreement_service import latest_signature
+    if not latest_signature(session, agent):
+        raise PartnerError('Review and sign the agent agreement before accessing package drafts.', 403, 'AGENT_SIGNATURE_REQUIRED')
     return agent
 
 

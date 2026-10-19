@@ -27,6 +27,17 @@ test('requires sign-in on rejected authentication and makes no audit request', a
   expect(screen.queryByRole('navigation', { name: 'Operations navigation' })).not.toBeInTheDocument();
   expect(mockGet).toHaveBeenCalledTimes(1);
 });
+
+test('staff can retry a temporary API failure without resubmitting credentials', async () => {
+  mockGet.mockResolvedValueOnce({ response: { ok: false, status: 503 } });
+  render(<App />);
+  await screen.findByRole('button', { name: 'Retry connection' });
+  mockGet.mockResolvedValueOnce(identity(false));
+  fireEvent.click(screen.getByRole('button', { name: 'Retry connection' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('does not have administrator access');
+  expect(mockGet).toHaveBeenCalledTimes(2);
+  expect(fetch).not.toHaveBeenCalled();
+});
 test('dedicated staff login rechecks identity before loading reviews', async () => {
   mockGet.mockResolvedValue({ response: { ok: false, status: 401 } });
   render(<App />);

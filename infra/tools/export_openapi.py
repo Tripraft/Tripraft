@@ -32,7 +32,7 @@ def envelope(data):
 
 def build(application):
     from app.partners.schemas import ApplicationSubmit, ApplicationUpdate, PartnerLogin, PartnerRegister, ReviewDecision
-    from app.partners.schemas import AgreementAcknowledgment, PartnerAgreementDocument, PartnerAgreementStatus
+    from app.partners.schemas import AgentAgreementSign, AgentSignatureReceipt, AgreementAcknowledgment, PartnerAgreementDocument, PartnerAgreementStatus
     from app.partners.package_schemas import (CreateTourDraft, SaveTourDraft, DuplicateTourDraft, TourDraftContent,
                                              PackageSummary, PackageDraft, PackageList)
     schemas = {
@@ -59,6 +59,7 @@ def build(application):
     }
     for model in (PartnerRegister, PartnerLogin, ApplicationUpdate, ApplicationSubmit, ReviewDecision,
                   AgreementAcknowledgment, PartnerAgreementDocument, PartnerAgreementStatus,
+                  AgentAgreementSign, AgentSignatureReceipt,
                   CreateTourDraft, SaveTourDraft, DuplicateTourDraft, TourDraftContent, PackageSummary, PackageDraft, PackageList):
         schema = model.model_json_schema(ref_template='#/components/schemas/{model}')
         schemas.update(schema.pop('$defs', {}))
@@ -135,13 +136,18 @@ def build(application):
                 inputs = {'register': 'PartnerRegister', 'login': 'PartnerLogin', 'update_application': 'ApplicationUpdate',
                           'submit_application': 'ApplicationSubmit', 'review_application': 'ReviewDecision',
                           'acknowledge_agreement': 'AgreementAcknowledgment',
+                          'sign_agreement': 'AgentAgreementSign',
                           'staff_login': 'PartnerLogin', 'create_package_draft': 'CreateTourDraft', 'duplicate_package_draft': 'DuplicateTourDraft'}
                 if action == 'package_draft' and method == 'PATCH':
                     inputs[action] = 'SaveTourDraft'
                 if action in inputs:
                     operation['requestBody'] = {'required': True, 'content': {'application/json': {'schema': ref(inputs[action])}}}
-                if action in ('register', 'login', 'me', 'update_application', 'submit_application', 'acknowledge_agreement'):
+                if action in ('register', 'login', 'me', 'update_application', 'submit_application', 'acknowledge_agreement', 'sign_agreement'):
                     output = ref('PartnerSnapshotResponse')
+                elif action in ('own_signature', 'staff_signature'):
+                    output = envelope(ref('AgentSignatureReceipt'))
+                elif action == 'own_signature_download':
+                    output = ref('AgentSignatureReceipt')
                 elif action in ('partner_agreement', 'staff_agreement'):
                     output = envelope(ref('PartnerAgreementDocument'))
                 elif action in ('partner_agreement_download', 'staff_agreement_download'):

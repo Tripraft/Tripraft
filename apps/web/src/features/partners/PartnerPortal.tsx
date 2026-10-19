@@ -45,7 +45,7 @@ function AuthPage({ mode, accept }: { mode: 'login' | 'register'; accept: Accept
         ? await partnerApi.register({ email, password, display_name: String(values.get('display_name') || '') })
         : await partnerApi.login({ email, password });
       accept(snapshot); setSent(true);
-      navigate(snapshot.capabilities.can_view_dashboard ? '/partners/dashboard' : '/partners/onboarding', { replace: true });
+      navigate(snapshot.capabilities.can_view_dashboard ? '/partners/dashboard' : snapshot.application.status === 'APPROVED' ? '/partners/agreement' : '/partners/onboarding', { replace: true });
     } catch (cause) { setError(message(cause)); } finally { setBusy(false); }
   }
   return <section className="partner-form-card"><p className="partner-eyebrow">PARTNER PORTAL</p><h1>{mode === 'register' ? 'Start your partner application' : 'Welcome back'}</h1><p>{mode === 'register' ? 'This account is for your supplier business. It does not provide access to personal TripRaft services.' : 'Sign in with your partner account to manage your business application.'}</p>
@@ -94,7 +94,7 @@ function ApplicationPage({ snapshot, accept, reload }: { snapshot: PartnerSnapsh
   async function resend() { setBusy(true); setError(''); try { await partnerApi.resend(); setNotice('Verification email sent.'); } catch (cause) { setError(message(cause)); } finally { setBusy(false); } }
   return <section className="partner-application"><div className="partner-section-heading"><div><p className="partner-eyebrow">YOUR BUSINESS</p><h1>{labels[snapshot.application.status]}</h1></div><button className="partner-secondary" onClick={reload} disabled={busy}>Refresh status</button></div>
     {snapshot.application.review_reason && <p className="partner-review-note"><strong>Review feedback:</strong> {snapshot.application.review_reason}</p>}
-    <div className="partner-review-note"><h2>Partner agreement</h2><p>The agreement is a draft pending completed terms and signatures. {snapshot.agreement.acknowledged ? 'Your reading acknowledgment is recorded; the contract remains unsigned.' : 'Read and acknowledge the draft before submitting a new application.'}</p><Link to="/partners/agreement">Read partner agreement</Link><p className="partner-small">Save any business edits before opening the agreement.</p></div>
+    <div className="partner-review-note"><h2>Partner agreement</h2>{snapshot.application.status === 'APPROVED' ? <><p>{snapshot.agreement.agent_signed ? 'Your agent signature is recorded. You can prepare private package drafts.' : 'Your application is approved. Review and sign the agent agreement to open your dashboard.'} Only the agent signs in this flow; no TripRaft signature is required here.</p><Link to="/partners/agreement">{snapshot.agreement.agent_signed ? 'View signed agent agreement' : 'Review and sign agent agreement'}</Link></> : <p>The agreement and agent signature step opens after staff approval. You can submit your application first.</p>}</div>
     {!snapshot.user.email_verified && <div className="partner-verification"><h2>Verify your account email</h2><p>Check the verification link sent to {snapshot.user.email}. You can save your details now and submit after verification.</p>{snapshot.verification_email_sent === false && <p>We could not send the initial verification email. You can retry below.</p>}<button className="partner-secondary" disabled={busy} onClick={resend}>Resend verification email</button> <button className="partner-secondary" disabled={busy} onClick={reload}>Check verification</button></div>}
     {snapshot.capabilities.can_manage_packages && <div className="partner-review-note"><h2>Tour packages</h2><p>Your business is approved. You can prepare private package drafts.</p><Link className="partner-primary" to="/partners/dashboard">My packages</Link></div>}
     {snapshot.application.status === 'UNDER_REVIEW' && <p>Your application is with the review team. The submitted details stay locked during review.</p>}
@@ -112,7 +112,7 @@ function ApplicationPage({ snapshot, accept, reload }: { snapshot: PartnerSnapsh
         <label className="partner-wide">Website, if you have one<input type="url" value={draft.website} maxLength={500} placeholder="https://" onChange={e => field('website', e.target.value)} /></label>
       </div>
       <label className="partner-check"><input type="checkbox" checked={attested} onChange={e => setAttested(e.target.checked)} />I am authorized to represent this business and confirm that these details are accurate.</label>
-      <div className="partner-actions"><button className="partner-secondary" type="submit">Save draft</button><button className="partner-primary" type="button" disabled={!attested || !snapshot.user.email_verified || !snapshot.agreement.acknowledged} onClick={submit}>Submit for review</button></div></fieldset>
+      <div className="partner-actions"><button className="partner-secondary" type="submit">Save draft</button><button className="partner-primary" type="button" disabled={!attested || !snapshot.user.email_verified} onClick={submit}>Submit for review</button></div></fieldset>
       {error && <p className="partner-error" role="alert">{error}</p>}{notice && <p role="status">{notice}</p>}
     </form>
   </section>;
@@ -135,8 +135,8 @@ export default function PartnerPortal() {
     if (checking) return <p role="status">Checking your partner session…</p>;
     if (error) return <div role="alert"><p>{error}</p><button className="partner-secondary" onClick={() => void reload()}>Retry</button></div>;
     if (!snapshot) return <Navigate to="/partners/login" replace />;
-    if (agreement) return <PartnerAgreement snapshot={snapshot} accept={accept} reload={() => void reload()} />;
-    if (packages) return snapshot.capabilities.can_manage_packages ? <PackageWorkspace /> : <Navigate to="/partners/status" replace />;
+    if (agreement) return snapshot.application.status === 'APPROVED' || snapshot.agreement.agent_signed ? <PartnerAgreement snapshot={snapshot} accept={accept} reload={() => void reload()} /> : <Navigate to="/partners/status" replace />;
+    if (packages) return snapshot.capabilities.can_manage_packages ? <PackageWorkspace /> : <Navigate to={snapshot.application.status === 'APPROVED' ? '/partners/agreement' : '/partners/status'} replace />;
     return <ApplicationPage snapshot={snapshot} accept={accept} reload={() => void reload()} />;
   }
   return <div className="partner-portal"><header className="partner-header"><Link className="partner-brand" to="/partners">TripRaft <span>Partners</span></Link><nav aria-label="Partner navigation">{snapshot ? <><Link to="/partners/status">Application</Link><button onClick={logout} disabled={signingOut}>Sign out</button></> : <Link to="/partners/login">Partner sign in</Link>}</nav></header>

@@ -1,6 +1,6 @@
 # Partner agreement integration and local demo approval
 
-Implemented 19 October 2026; local checkpoint `partner-agreement-demo-approval`.
+Implemented 19 October 2026; local checkpoint `partner-agreement-demo-approval`. Historical workflow: the later [agent-only signing checkpoint](agent-signature-and-live-reload-2026-10-19.md) supersedes pre-submission acknowledgment and adds post-approval signing/dashboard enforcement.
 
 ## Delivered behavior
 

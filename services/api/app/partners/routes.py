@@ -1,5 +1,6 @@
 # Purpose: Exposes supplier-only onboarding/session APIs and authenticated internal review operations.
 import logging
+import json
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
@@ -19,7 +20,7 @@ from app.core.db.connection import get_db_session
 from app.core.rate_limiter import limit_auth, limit_write
 from app.partners import services
 from app.partners.models import Agent
-from app.partners.schemas import AgreementAcknowledgment, ApplicationSubmit, ApplicationUpdate, PartnerLogin, PartnerRegister, ReviewDecision
+from app.partners.schemas import AgentAgreementSign, AgreementAcknowledgment, ApplicationSubmit, ApplicationUpdate, PartnerLogin, PartnerRegister, ReviewDecision
 from app.partners.security import as_utc, clear_partner_cookies, partner_token, require_partner, set_partner_cookies
 
 logger = logging.getLogger(__name__)
@@ -171,8 +172,8 @@ def submit_application():
 
 
 def agreement_response():
-    from app.partners.agreement_service import ACKNOWLEDGMENT_TEXT, current_document
-    return success_response({**current_document(), 'acknowledgment_text': ACKNOWLEDGMENT_TEXT})
+    from app.partners.agreement_service import readable_document
+    return success_response(readable_document())
 
 
 def agreement_download_response():
@@ -184,13 +185,68 @@ def agreement_download_response():
 @partners_bp.route('/partners/agreement', methods=['GET'])
 @require_partner
 def partner_agreement():
+    check_agreement_access()
     return agreement_response()
 
 
 @partners_bp.route('/partners/agreement/download', methods=['GET'])
 @require_partner
 def partner_agreement_download():
+    check_agreement_access()
     return agreement_download_response()
+
+
+def check_agreement_access():
+    from app.partners.agreement_service import require_agreement_access
+    with get_db_session() as session:
+        user, agent = own_records(session)
+        require_agreement_access(session, user, agent)
+
+
+@partners_bp.route('/partners/me/agreement/sign', methods=['POST'])
+@require_partner
+@limit_write()
+def sign_agreement():
+    from app.partners.agreement_service import sign
+    data = body(AgentAgreementSign)
+    with get_db_session() as session:
+        user, agent = own_records(session)
+        agent = session.query(Agent).filter_by(id=agent.id).with_for_update().one()
+        return success_response(sign(session, user, agent, data, request.remote_addr, request.user_agent.string))
+
+
+@partners_bp.route('/partners/me/agreement/signature', methods=['GET'])
+@require_partner
+def own_signature():
+    from app.partners.agreement_service import signature_receipt
+    with get_db_session() as session:
+        user, agent = own_records(session)
+        return success_response(signature_receipt(session, agent, user.id))
+
+
+@partners_bp.route('/partners/me/agreement/signature/download', methods=['GET'])
+@require_partner
+def own_signature_download():
+    from app.partners.agreement_service import signature_receipt
+    with get_db_session() as session:
+        user, agent = own_records(session)
+        receipt = signature_receipt(session, agent, user.id)
+    response = make_response(json.dumps(receipt, indent=2, ensure_ascii=False) + '\n')
+    response.headers['Content-Type'] = 'application/json; charset=utf-8'
+    response.headers['Content-Disposition'] = 'attachment; filename="TripRaft-agent-signature-receipt.json"'
+    return response
+
+
+@partners_bp.route('/admin/partners/<uuid:agent_id>/agreement/signature', methods=['GET'])
+@require_auth
+@require_admin
+def staff_signature(agent_id):
+    from app.partners.agreement_service import signature_receipt
+    with get_db_session() as session:
+        agent = session.get(Agent, agent_id)
+        if not agent:
+            return error_response('Application not found.', 404)
+        return success_response(signature_receipt(session, agent))
 
 
 @partners_bp.route('/partners/me/agreement/acknowledge', methods=['POST'])

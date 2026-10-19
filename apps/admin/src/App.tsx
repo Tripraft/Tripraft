@@ -110,6 +110,7 @@ export function App() {
       ) : !account ? (
         <section>
           <p role="alert">{accountError}</p>
+          <button onClick={() => { setInitializing(true); setAccountError(''); setIdentityRevision(value => value + 1); }}>Retry connection</button>
           <StaffLogin signedIn={() => { setInitializing(true); setAccountError(''); setIdentityRevision(value => value + 1); }} />
         </section>
       ) : !account.is_admin ? (

@@ -1,6 +1,99 @@
 {
   "components": {
     "schemas": {
+      "AgentAgreementSign": {
+        "additionalProperties": false,
+        "properties": {
+          "authority_confirmed": {
+            "const": true,
+            "title": "Authority Confirmed",
+            "type": "boolean"
+          },
+          "confirmations": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "minItems": 8,
+            "title": "Confirmations",
+            "type": "array"
+          },
+          "document_version": {
+            "maxLength": 32,
+            "title": "Document Version",
+            "type": "string"
+          },
+          "draft_understood": {
+            "const": true,
+            "title": "Draft Understood",
+            "type": "boolean"
+          },
+          "esign_consent": {
+            "const": true,
+            "title": "Esign Consent",
+            "type": "boolean"
+          },
+          "signer_name": {
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Signer Name",
+            "type": "string"
+          },
+          "signer_title": {
+            "maxLength": 100,
+            "minLength": 2,
+            "title": "Signer Title",
+            "type": "string"
+          },
+          "source_sha256": {
+            "pattern": "^[a-f0-9]{64}$",
+            "title": "Source Sha256",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "document_version",
+          "source_sha256",
+          "signer_name",
+          "signer_title",
+          "authority_confirmed",
+          "esign_consent",
+          "draft_understood",
+          "confirmations"
+        ],
+        "title": "AgentAgreementSign",
+        "type": "object"
+      },
+      "AgentSignatureReceipt": {
+        "properties": {
+          "evidence": {
+            "additionalProperties": true,
+            "title": "Evidence",
+            "type": "object"
+          },
+          "evidence_sha256": {
+            "title": "Evidence Sha256",
+            "type": "string"
+          },
+          "signature_id": {
+            "title": "Signature Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "signature_id",
+          "evidence_sha256",
+          "evidence"
+        ],
+        "title": "AgentSignatureReceipt",
+        "type": "object"
+      },
       "AgreementAcknowledgment": {
         "additionalProperties": false,
         "properties": {
@@ -604,6 +697,24 @@
             "title": "Document Furniture",
             "type": "array"
           },
+          "esign_consent_text": {
+            "title": "Esign Consent Text",
+            "type": "string"
+          },
+          "signing_confirmations": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "title": "Signing Confirmations",
+            "type": "array"
+          },
+          "signing_declaration": {
+            "title": "Signing Declaration",
+            "type": "string"
+          },
           "source_filename": {
             "title": "Source Filename",
             "type": "string"
@@ -635,7 +746,10 @@
           "source_sha256",
           "blocks",
           "document_furniture",
-          "acknowledgment_text"
+          "acknowledgment_text",
+          "signing_declaration",
+          "esign_consent_text",
+          "signing_confirmations"
         ],
         "title": "PartnerAgreementDocument",
         "type": "object"
@@ -668,6 +782,10 @@
             ],
             "title": "Acknowledged By"
           },
+          "agent_signed": {
+            "title": "Agent Signed",
+            "type": "boolean"
+          },
           "commercial_activation_allowed": {
             "const": false,
             "title": "Commercial Activation Allowed",
@@ -678,9 +796,60 @@
             "type": "string"
           },
           "execution_status": {
-            "const": "NOT_EXECUTED",
+            "enum": [
+              "NOT_EXECUTED",
+              "AGENT_SIGNED_DRAFT"
+            ],
             "title": "Execution Status",
             "type": "string"
+          },
+          "signature_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signature Id"
+          },
+          "signature_required": {
+            "title": "Signature Required",
+            "type": "boolean"
+          },
+          "signed_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signed At"
+          },
+          "signer_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signer Name"
+          },
+          "signer_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Signer Title"
           },
           "source_sha256": {
             "title": "Source Sha256",
@@ -700,7 +869,13 @@
           "acknowledged_at",
           "acknowledged_by",
           "execution_status",
-          "commercial_activation_allowed"
+          "commercial_activation_allowed",
+          "agent_signed",
+          "signature_required",
+          "signature_id",
+          "signed_at",
+          "signer_name",
+          "signer_title"
         ],
         "title": "PartnerAgreementStatus",
         "type": "object"
@@ -1699,6 +1874,114 @@
               }
             },
             "description": "Authenticated original draft Word attachment; never cached."
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/partners/{agent_id}/agreement/signature": {
+      "get": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_staff_signature_get_api_v1_admin_partners_agent_id_agreement_signature",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "agent_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AgentSignatureReceipt"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Response"
           },
           "401": {
             "content": {
@@ -6697,6 +6980,290 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PartnerSnapshotResponse"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "partnerCookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/partners/me/agreement/sign": {
+      "post": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_sign_agreement_post_api_v1_partners_me_agreement_sign",
+        "parameters": [
+          {
+            "description": "Required with cookie authentication.",
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentAgreementSign"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerSnapshotResponse"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "partnerCookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/partners/me/agreement/signature": {
+      "get": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_own_signature_get_api_v1_partners_me_agreement_signature",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/AgentSignatureReceipt"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerError"
+                }
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "partnerCookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/partners/me/agreement/signature/download": {
+      "get": {
+        "description": "Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached.",
+        "operationId": "partners_own_signature_download_get_api_v1_partners_me_agreement_signature_download",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentSignatureReceipt"
                 }
               }
             },

@@ -157,6 +157,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/partners/{agent_id}/agreement/signature": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        get: operations["partners_staff_signature_get_api_v1_admin_partners_agent_id_agreement_signature"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/admin/partners/{agent_id}/decision": {
         parameters: {
             query?: never;
@@ -2812,6 +2829,57 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/partners/me/agreement/sign": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        post: operations["partners_sign_agreement_post_api_v1_partners_me_agreement_sign"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/me/agreement/signature": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        get: operations["partners_own_signature_get_api_v1_partners_me_agreement_signature"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/partners/me/agreement/signature/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Supplier-only onboarding or internal administrator review. Mutations using cookies require X-CSRF-Token except register/login. Responses are never cached. */
+        get: operations["partners_own_signature_download_get_api_v1_partners_me_agreement_signature_download"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/partners/me/application": {
         parameters: {
             query?: never;
@@ -3227,6 +3295,47 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AgentAgreementSign */
+        AgentAgreementSign: {
+            /**
+             * Authority Confirmed
+             * @constant
+             */
+            authority_confirmed: true;
+            /** Confirmations */
+            confirmations: string[];
+            /** Document Version */
+            document_version: string;
+            /**
+             * Draft Understood
+             * @constant
+             */
+            draft_understood: true;
+            /**
+             * Esign Consent
+             * @constant
+             */
+            esign_consent: true;
+            /** Signer Name */
+            signer_name: string;
+            /** Signer Title */
+            signer_title: string;
+            /** Source Sha256 */
+            source_sha256: string;
+            /** Version */
+            version: number;
+        };
+        /** AgentSignatureReceipt */
+        AgentSignatureReceipt: {
+            /** Evidence */
+            evidence: {
+                [key: string]: unknown;
+            };
+            /** Evidence Sha256 */
+            evidence_sha256: string;
+            /** Signature Id */
+            signature_id: string;
+        };
         /** AgreementAcknowledgment */
         AgreementAcknowledgment: {
             /**
@@ -3474,6 +3583,14 @@ export interface components {
             document_date: string;
             /** Document Furniture */
             document_furniture: components["schemas"]["AgreementFurniture"][];
+            /** Esign Consent Text */
+            esign_consent_text: string;
+            /** Signing Confirmations */
+            signing_confirmations: {
+                [key: string]: string;
+            }[];
+            /** Signing Declaration */
+            signing_declaration: string;
             /** Source Filename */
             source_filename: string;
             /** Source Sha256 */
@@ -3496,6 +3613,8 @@ export interface components {
             acknowledged_at: string | null;
             /** Acknowledged By */
             acknowledged_by: string | null;
+            /** Agent Signed */
+            agent_signed: boolean;
             /**
              * Commercial Activation Allowed
              * @constant
@@ -3505,9 +3624,19 @@ export interface components {
             document_version: string;
             /**
              * Execution Status
-             * @constant
+             * @enum {string}
              */
-            execution_status: "NOT_EXECUTED";
+            execution_status: "NOT_EXECUTED" | "AGENT_SIGNED_DRAFT";
+            /** Signature Id */
+            signature_id: string | null;
+            /** Signature Required */
+            signature_required: boolean;
+            /** Signed At */
+            signed_at: string | null;
+            /** Signer Name */
+            signer_name: string | null;
+            /** Signer Title */
+            signer_title: string | null;
             /** Source Sha256 */
             source_sha256: string;
             /**
@@ -4073,6 +4202,86 @@ export interface operations {
                 };
                 content: {
                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": string;
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_staff_signature_get_api_v1_admin_partners_agent_id_agreement_signature: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                agent_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgentSignatureReceipt"];
+                        message?: string;
+                        success: boolean;
+                    };
                 };
             };
             /** @description Response */
@@ -8643,6 +8852,239 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PartnerSnapshotResponse"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_sign_agreement_post_api_v1_partners_me_agreement_sign: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required with cookie authentication. */
+                "X-CSRF-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AgentAgreementSign"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerSnapshotResponse"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_own_signature_get_api_v1_partners_me_agreement_signature: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgentSignatureReceipt"];
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    partners_own_signature_download_get_api_v1_partners_me_agreement_signature_download: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentSignatureReceipt"];
                 };
             };
             /** @description Response */

@@ -40,7 +40,11 @@ def test_imported_policy_preserves_every_source_block_and_original_bytes():
 
 
 def test_confidential_policy_requires_partner_or_staff_and_download_is_exact(partner, app, make_user, monkeypatch):
-    client, _, _ = partner
+    client, snapshot, _ = partner
+    with get_db_session() as session:
+        session.get(User, UUID(snapshot['user']['id'])).email_verified = True
+        session.get(Agent, UUID(snapshot['application']['id'])).status = 'APPROVED'
+        session.commit()
     anonymous = app.test_client()
     traveler, uid, email = make_user('policyreader')
     for path in ('/agreement', '/agreement/download'):
@@ -61,15 +65,15 @@ def test_confidential_policy_requires_partner_or_staff_and_download_is_exact(par
     assert traveler.get('/api/v1/admin/partners/agreement/download').data == response.data
 
 
-def test_submission_needs_current_explicit_ack_and_records_no_signature(partner):
+def test_legacy_reading_acknowledgment_is_explicit_but_never_a_signature(partner):
     client, snapshot, email = partner
     snapshot = complete(client, snapshot)
     assert post(client, '/me/agreement/acknowledge', acknowledgment(snapshot)).status_code == 403
     verify(client, snapshot, email)
-    submit = {'version': snapshot['application']['version'], 'information_attestation': True}
-    response = post(client, '/me/application/submit', submit)
-    assert response.status_code == 409
-    assert 'acknowledge' in str(response.get_json())
+    with get_db_session() as session:
+        session.get(Agent, UUID(snapshot['application']['id'])).status = 'APPROVED'
+        session.commit()
+    snapshot = payload(client.get(BASE + '/me'))
     for invalid in (False, 1, 'true'):
         assert post(client, '/me/agreement/acknowledge', acknowledgment(snapshot, acknowledged=invalid)).status_code == 422
     assert post(client, '/me/agreement/acknowledge', acknowledgment(snapshot, source_sha256='0' * 64)).status_code == 409
@@ -80,13 +84,12 @@ def test_submission_needs_current_explicit_ack_and_records_no_signature(partner)
     assert result.status_code == 200, result.get_json()
     assert payload(result)['agreement']['acknowledged'] is True
     assert payload(result)['agreement']['execution_status'] == 'NOT_EXECUTED'
-    assert payload(result)['agreement']['commercial_activation_allowed'] is False
+    assert payload(result)['capabilities']['can_manage_packages'] is False
     assert post(client, '/me/agreement/acknowledge', acknowledgment(snapshot)).status_code == 200
     with get_db_session() as session:
         rows = session.query(AgentAgreementAcknowledgment).filter_by(agent_id=UUID(snapshot['application']['id'])).all()
         assert len(rows) == 1 and rows[0].acknowledgment_text == ACKNOWLEDGMENT_TEXT
         assert str(rows[0].user_id) == snapshot['user']['id']
-    assert post(client, '/me/application/submit', submit).status_code == 200
 
 
 def test_existing_review_or_demo_approval_does_not_manufacture_acknowledgment(partner):
@@ -98,7 +101,8 @@ def test_existing_review_or_demo_approval_does_not_manufacture_acknowledgment(pa
         session.commit()
     current = payload(client.get(BASE + '/me'))
     assert current['application']['is_demo'] is True
-    assert current['capabilities']['can_manage_packages'] is True
+    assert current['capabilities']['can_manage_packages'] is False
+    assert current['agreement']['signature_required'] is True
     assert current['agreement']['acknowledged'] is False
     assert current['agreement']['commercial_activation_allowed'] is False
     assert post(client, '/me/agreement/acknowledge', acknowledgment(current)).status_code == 200
@@ -106,4 +110,4 @@ def test_existing_review_or_demo_approval_does_not_manufacture_acknowledgment(pa
         session.get(Agent, UUID(snapshot['application']['id'])).status = 'SUSPENDED'
         session.commit()
     current = payload(client.get(BASE + '/me'))
-    assert post(client, '/me/agreement/acknowledge', acknowledgment(current)).status_code == 409
+    assert post(client, '/me/agreement/acknowledge', acknowledgment(current)).status_code == 403

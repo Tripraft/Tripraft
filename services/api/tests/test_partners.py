@@ -57,14 +57,6 @@ def complete(client, snapshot):
 
 
 def submit(client, snapshot):
-    current = payload(client.get(BASE + '/me'))
-    if current['user']['email_verified']:
-        document = payload(client.get(BASE + '/agreement'))
-        response = post(client, '/me/agreement/acknowledge', {
-            'version': current['application']['version'], 'document_version': document['version'],
-            'source_sha256': document['source_sha256'], 'acknowledged': True,
-        })
-        assert response.status_code == 200, response.get_json()
     return post(client, '/me/application/submit', {'version': snapshot['application']['version'],
                                                 'information_attestation': True})
 
@@ -157,8 +149,9 @@ def test_admin_review_corrections_approval_suspension_and_history(partner, make_
     approved = decision('APPROVED', current['application']['version'])
     assert approved.status_code == 200
     current = payload(client.get(BASE + '/me'))
-    assert current['capabilities']['can_view_dashboard'] is True
-    assert current['capabilities']['can_manage_packages'] is True
+    assert current['capabilities']['can_view_dashboard'] is False
+    assert current['capabilities']['can_manage_packages'] is False
+    assert current['agreement']['signature_required'] is True
     assert decision('REJECTED', current['application']['version']).status_code == 409
     suspended = decision('SUSPENDED', current['application']['version'], 'Review required after business change')
     assert suspended.status_code == 200

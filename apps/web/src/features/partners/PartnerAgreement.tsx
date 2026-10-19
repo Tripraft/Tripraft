@@ -1,4 +1,4 @@
-// Purpose: Displays every supplied draft clause and table and captures reading acknowledgment separately from signatures.
+// Purpose: Collects the approved agent signature against the exact supplied draft before opening private package tools.
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { PartnerAgreementDocument, PartnerSnapshot } from '@tripraft/types';
@@ -6,27 +6,31 @@ import { partnerApi } from './partnerApi';
 
 export default function PartnerAgreement({ snapshot, accept, reload }: { snapshot: PartnerSnapshot; accept: (value: PartnerSnapshot) => void; reload: () => void }) {
   const [document, setDocument] = useState<PartnerAgreementDocument | null>(null);
-  const [checked, setChecked] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState('');
+  const [confirmed, setConfirmed] = useState<string[]>([]), [busy, setBusy] = useState(false), [error, setError] = useState('');
+  const [name, setName] = useState(''), [title, setTitle] = useState('');
+  const [authority, setAuthority] = useState(false), [consent, setConsent] = useState(false), [draftUnderstood, setDraftUnderstood] = useState(false);
   useEffect(() => {
-    let active = true; setError(''); setChecked(false); setDocument(null);
+    let active = true; setError(''); setDocument(null);
     partnerApi.agreement().then(value => { if (active) setDocument(value); })
       .catch(cause => { if (active) setError(cause instanceof Error ? cause.message : 'Unable to load the agreement.'); });
     return () => { active = false; };
   }, []);
-  const acknowledgment = snapshot.agreement;
-  const acknowledged = !!document && acknowledgment.acknowledged && acknowledgment.source_sha256 === document.source_sha256;
-  const eligible = snapshot.user.email_verified && !['REJECTED', 'SUSPENDED'].includes(snapshot.application.status);
-  async function acknowledge() {
-    if (!checked || busy || !document || !eligible) return;
+  const agreement = snapshot.agreement;
+  const signed = !!document && agreement.agent_signed && agreement.source_sha256 === document.source_sha256;
+  const eligible = snapshot.user.email_verified && snapshot.application.status === 'APPROVED';
+  const ready = !!document && document.signing_confirmations.length === 8 && confirmed.length === 8 && name.trim().length >= 2 && title.trim().length >= 2 && authority && consent && draftUnderstood;
+  async function sign(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!ready || busy || !document || !eligible) return;
     setBusy(true); setError('');
-    try { accept(await partnerApi.acknowledgeAgreement(snapshot.application.version, document.version, document.source_sha256)); setChecked(false); }
-    catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to record acknowledgment.'); }
+    try { accept(await partnerApi.signAgreement({ version: snapshot.application.version, document_version: document.version, source_sha256: document.source_sha256, signer_name: name.trim(), signer_title: title.trim(), authority_confirmed: true, esign_consent: true, draft_understood: true, confirmations: confirmed })); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to record the agent signature.'); }
     finally { setBusy(false); }
   }
   return <section className="partner-agreement" aria-labelledby="partner-agreement-title">
     <p className="partner-eyebrow">PARTNER POLICY · CONFIDENTIAL DRAFT</p><h1 id="partner-agreement-title">Tour Operator Partner Agreement</h1>
     <p><Link to="/partners/status">Return to application</Link></p>
-    <div className="partner-review-note"><h2>Draft for review</h2><p>The supplied agreement still requires completed legal and commercial terms and signatures from both parties. Reading acknowledgment does not sign the contract or enable public listings, bookings or payments.</p><p>Business approval currently permits private package preparation only. Appendices 1–2 are internal guidance and are not binding supplier obligations.</p></div>
+    <div className="partner-review-note"><h2>Draft for review</h2><p>Only the agent signs in this onboarding step. TripRaft does not have a signing step. The supplied document remains a draft with incomplete legal and commercial terms; your signature opens private package preparation and does not enable public listings, bookings or payments.</p><p>The original template includes signature fields for both parties. Only your agent signature below is collected in the current flow. Business approval comes first. Appendices 1–2 are internal guidance and are not binding supplier obligations.</p></div>
     {error && <div role="alert"><p>{error}</p><button className="partner-secondary" onClick={reload} disabled={busy}>Refresh account and agreement</button></div>}
     {!document && !error && <p role="status">Loading the agreement…</p>}
     {document && <>
@@ -41,12 +45,20 @@ export default function PartnerAgreement({ snapshot, accept, reload }: { snapsho
             : <p key={index} className={block.kind === 'bullet' ? 'partner-agreement-bullet' : undefined}>{block.kind === 'bullet' ? '• ' : ''}{block.text}</p>)}
         <aside aria-label="Original document header and footer">{document.document_furniture.map(part => <p key={part.part} className="partner-small">{part.paragraphs.join(' · ')}</p>)}</aside>
       </article>
-      <section className="partner-agreement-ack" aria-labelledby="agreement-ack-title"><h2 id="agreement-ack-title">Acknowledge reading this draft</h2>
-        {acknowledged ? <p role="status">Draft v{document.version} acknowledged on {acknowledgment.acknowledged_at ? new Date(acknowledgment.acknowledged_at).toLocaleString() : 'record'}. Contract remains unsigned.</p> : <><label className="partner-check"><input type="checkbox" checked={checked} disabled={busy || !eligible} onChange={event => setChecked(event.target.checked)} />{document.acknowledgment_text}</label>
-          {!snapshot.user.email_verified && <p>Verify your account email before recording acknowledgment.</p>}
-          {!eligible && snapshot.user.email_verified && <p>This application is closed or suspended. Contact partner support.</p>}
-          <button className="partner-primary" disabled={!checked || busy || !eligible} onClick={() => void acknowledge()}>{busy ? 'Saving acknowledgment…' : 'Acknowledge draft reading'}</button></>}
-        <p className="partner-small">No signature is collected here. Final signing will use the completed agreement, Commercial Schedule A and authenticated signature evidence.</p>
+      <section className="partner-agreement-ack" aria-labelledby="agreement-sign-title"><h2 id="agreement-sign-title">Agent signature</h2>
+        {signed ? <><p role="status">Signed by {agreement.signer_name}, {agreement.signer_title}, on {agreement.signed_at ? new Date(agreement.signed_at).toLocaleString() : 'record'}. Agent signature recorded for draft v{document.version}.</p><p>No TripRaft signature is required in this flow.</p><div className="partner-actions"><a className="partner-secondary" href={partnerApi.signatureReceiptUrl} download>Download signature receipt</a><Link className="partner-primary" to="/partners/dashboard">Open my dashboard</Link></div></> : <form onSubmit={sign}>
+          <fieldset disabled={busy || !eligible}><legend>Confirm the agent obligations</legend>
+            {document.signing_confirmations.map(item => <label className="partner-check" key={item.id}><input type="checkbox" checked={confirmed.includes(item.id)} onChange={event => setConfirmed(previous => event.target.checked ? [...previous, item.id] : previous.filter(id => id !== item.id))} />{item.text}</label>)}
+            <label>Full legal name<input value={name} maxLength={100} minLength={2} required autoComplete="name" onChange={event => setName(event.target.value)} /></label>
+            <label>Title or position<input value={title} maxLength={100} minLength={2} required autoComplete="organization-title" onChange={event => setTitle(event.target.value)} /></label>
+            <label className="partner-check"><input type="checkbox" checked={authority} onChange={event => setAuthority(event.target.checked)} />I am authorized to sign for {snapshot.application.business_name}.</label>
+            <label className="partner-check"><input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} />{document.esign_consent_text}</label>
+            <label className="partner-check"><input type="checkbox" checked={draftUnderstood} onChange={event => setDraftUnderstood(event.target.checked)} />{document.signing_declaration}</label>
+            <p className="partner-small">Your typed name is your electronic signature. The record includes your verified account, document version/hash, confirmations, time and connection evidence. Save the original Word file and your signature receipt.</p>
+            <button className="partner-primary" type="submit" disabled={!ready || busy || !eligible}>{busy ? 'Recording signature?' : 'Sign agent agreement'}</button>
+          </fieldset>
+          {!eligible && <p>Staff approval and email verification are required before signing.</p>}
+        </form>}
       </section>
     </>}
   </section>;

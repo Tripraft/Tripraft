@@ -80,3 +80,17 @@ class AgentAgreementAcknowledgment(Base):
     source_sha256 = Column(String(64), nullable=False)
     acknowledgment_text = Column(Text, nullable=False)
     acknowledged_at = Column(DateTime(timezone=True), nullable=False, default=utcnow)
+
+
+class AgentAgreementSignature(Base):
+    """Authenticated agent-side draft acceptance; preserves the exact evidence, never countersigns."""
+    __tablename__ = 'agent_agreement_signatures'
+    __table_args__ = (UniqueConstraint('agent_id', 'user_id', 'source_sha256', 'document_version', name='uq_agent_agreement_signature'),)
+    id = Column(Uuid, primary_key=True, default=uuid7)
+    agent_id = Column(Uuid, ForeignKey('agents.id'), nullable=False, index=True)
+    user_id = Column(Uuid, ForeignKey('users.id'), nullable=False)
+    document_version = Column(String(32), nullable=False)
+    source_sha256 = Column(String(64), nullable=False)
+    evidence = Column(JSON, nullable=False)
+    evidence_sha256 = Column(String(64), nullable=False)
+    signed_at = Column(DateTime(timezone=True), nullable=False, default=utcnow)

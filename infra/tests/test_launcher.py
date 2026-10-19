@@ -153,6 +153,17 @@ class LauncherTests(unittest.TestCase):
         stop.assert_not_called()
         browser.assert_not_called()
 
+    def test_verified_reload_gets_time_to_recover_before_cleanup(self):
+        state = {'processes': [{'pid': pid, 'created': 'same-creation'} for pid in (101, 102, 103)]}
+        response = mock.MagicMock()
+        response.__enter__.return_value.status = 200
+        with mock.patch.object(start, '_running_state', return_value=state), \
+                mock.patch.object(start, 'process_identity', return_value='same-creation'), \
+                mock.patch.object(start.urllib.request, 'urlopen', side_effect=[start.urllib.error.URLError('reloading'), response, response, response]) as fetch, \
+                mock.patch.object(start.time, 'sleep'):
+            self.assertTrue(start.native_services_ready())
+        self.assertEqual(fetch.call_count, 4)
+
 
 if __name__ == '__main__':
     unittest.main()

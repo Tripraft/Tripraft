@@ -553,10 +553,10 @@ def native_services_ready():
         return False
     for url in ('http://127.0.0.1:5000/api/health/live', 'http://127.0.0.1:5173', 'http://127.0.0.1:5174'):
         try:
-            with urllib.request.urlopen(url, timeout=2) as response:
-                if response.status != 200:
-                    return False
-        except (urllib.error.URLError, TimeoutError, OSError):
+            # A verified live reloader briefly releases its socket during source
+            # reload. Give it time to recover before considering any cleanup.
+            wait_ready(url, None, timeout=15)
+        except RuntimeError:
             return False
     return True
 

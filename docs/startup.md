@@ -95,3 +95,9 @@ Installation errors are displayed in the launcher terminal. Missing runtimes or
 occupied ports produce a direct error. Local `.env`, `.venv`, `.tripraft`, private
 runtime data, uploads, dependencies, build output and `extra/` are excluded from
 the published source.
+
+## Schema edits during live development
+
+The native development API runs the same backed-up migration command before initializing after a source reload. This requires the explicit launcher development-reload flag and is disabled for production. A second launcher waits briefly for a verified running service to recover from a reload before cleanup, rather than immediately treating its temporarily closed port as a failed session.
+
+Web/admin development proxies return a clear JSON 503 during API downtime. Their frontend servers can stay reachable while the API reinitializes. The staff console has a connection retry; write actions are not automatically replayed. Refresh the application/receipt after recovery. Browser extension context errors are independent of these server/proxy errors.

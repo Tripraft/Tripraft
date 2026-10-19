@@ -115,6 +115,9 @@ class PartnerAgreementDocument(BaseModel):
     blocks: list[AgreementTextBlock | AgreementTableBlock]
     document_furniture: list[AgreementFurniture]
     acknowledgment_text: str
+    signing_declaration: str
+    esign_consent_text: str
+    signing_confirmations: list[dict[str, str]]
 
 
 class PartnerAgreementStatus(BaseModel):
@@ -124,5 +127,37 @@ class PartnerAgreementStatus(BaseModel):
     acknowledged: bool
     acknowledged_at: str | None
     acknowledged_by: str | None
-    execution_status: Literal['NOT_EXECUTED']
+    execution_status: Literal['NOT_EXECUTED', 'AGENT_SIGNED_DRAFT']
     commercial_activation_allowed: Literal[False]
+    agent_signed: bool
+    signature_required: bool
+    signature_id: str | None
+    signed_at: str | None
+    signer_name: str | None
+    signer_title: str | None
+
+
+class AgentAgreementSign(BaseModel):
+    model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
+    version: int = Field(ge=1, strict=True)
+    document_version: str = Field(max_length=32)
+    source_sha256: str = Field(pattern=r'^[a-f0-9]{64}$')
+    signer_name: str = Field(min_length=2, max_length=100)
+    signer_title: str = Field(min_length=2, max_length=100)
+    authority_confirmed: Literal[True]
+    esign_consent: Literal[True]
+    draft_understood: Literal[True]
+    confirmations: list[str] = Field(min_length=8, max_length=8)
+
+    @field_validator('authority_confirmed', 'esign_consent', 'draft_understood', mode='before')
+    @classmethod
+    def explicit_consent(cls, value):
+        if value is not True:
+            raise ValueError('Explicit confirmation is required')
+        return value
+
+
+class AgentSignatureReceipt(BaseModel):
+    signature_id: str
+    evidence_sha256: str
+    evidence: dict

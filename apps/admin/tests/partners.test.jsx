@@ -36,11 +36,11 @@ test('staff cannot self-review a business application', async () => {
 });
 
 test('staff sees unsigned acknowledgment evidence and can read the protected draft', async () => {
-  fetch.mockResolvedValueOnce(response({ applications: [{ ...application, is_demo: true, agreement: { ...application.agreement, acknowledged: true, acknowledged_at: '2026-10-19T10:00:00Z', acknowledged_by: 'supplier-a' } }], total: 1 }));
+  fetch.mockResolvedValueOnce(response({ applications: [{ ...application, is_demo: true, agreement: { ...application.agreement, acknowledged: true, acknowledged_at: '2026-10-19T10:00:00Z', agent_signed: true, signer_name: 'Alex', signer_title: 'Owner', signed_at: '2026-10-19T10:00:00Z' } }], total: 1 }));
   render(<PartnerReviewPanel />);
   expect(await screen.findByText('Demo operator — private dashboard testing only.')).toBeInTheDocument();
-  expect(screen.getByText(/Contract not executed/)).toBeInTheDocument();
-  expect(screen.getByText('Account: supplier-a')).toBeInTheDocument();
+  expect(screen.getByText(/agent signed by Alex/)).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'View signature receipt' })).toHaveAttribute('href', '/api/v1/admin/partners/agent-a/agreement/signature');
   expect(screen.getByRole('link', { name: 'Download original Word draft' })).toHaveAttribute('href', '/api/v1/admin/partners/agreement/download');
   fetch.mockResolvedValueOnce(response({ title: 'Tour Operator Partner Agreement', version: '3.0', status: 'DRAFT', source_sha256: 'a'.repeat(64), blocks: [{ kind: 'heading', text: 'SCHEDULE A' }, { kind: 'table', rows: [['Required', 'Value'], ['Entity', '[REQUIRED]']] }], document_furniture: [] }));
   fireEvent.click(screen.getByRole('button', { name: 'Read agreement' }));
