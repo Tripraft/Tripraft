@@ -137,13 +137,14 @@ pnpm workflows:sync
 
 ## What Is Published to Git
 
-- **Published**: Source code, frontend apps, Flask services, canonical schema (`services/api/schema/`), migrations, unit and integration tests, Docker configurations, CI workflows, application assets, and Markdown documentation.
-- **Kept Local & Ignored**: Local runtime databases (`*.db`), `.env` secrets, virtual environments (`.venv`), temporary logs (`.tripraft/logs`), uploaded user media (`services/api/uploads/`), binary Office/Word source documents, and local scratch/data-processing workspaces (`script/`, `sql_database/`).
+- **Published**: Source code, frontend apps, Flask services, canonical schema (`services/api/schema/`), migrations, tests, Docker configurations, CI workflows, application assets, Markdown documentation, the two reference catalog databases in `data/catalog/`, and four previously versioned original specifications now under `docs/plans/source-documents/`.
+- **Kept Local & Ignored**: Application data under `data/runtime/`, archived databases under `data/archive/`, SQLite journal files, `.env` secrets, dependencies, temporary logs, uploaded media, the previously untracked beta source document, archived local roadmap, document extracts under `docs/extra/`, and local data-processing workspaces (`script/`, `sql_database/`, `wikidata/`).
 
 ---
 
 ## Documentation Links
 
+- [Folders and Databases](docs/project-structure.md) - Frontend/backend layout, active database settings, archives and shared beta data.
 - [Startup Guide](docs/startup.md) - Detailed prerequisites, environment variables, and Docker usage.
 - [Staff Console Guide](docs/staff-console.md) - Internal operations review process and security rules.
 - [Partner Agreement Flow](docs/partner-agreement.md) - Operator digital signing architecture.

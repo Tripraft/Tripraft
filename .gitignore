@@ -18,7 +18,7 @@ wikidata/
 *.log
 logs/
 services/api/uploads/
-extra/
+/extra/
 *.rar
 .vscode/
 .idea/
@@ -28,8 +28,16 @@ Thumbs.db
 # Local source documents and data-processing workspaces are never published.
 /script/
 /sql_database/
-\TripRaft_Enterprise_Platform_Master_Blueprint.pdf
-\TripRaft_Places_Search_Live_Tour_Packages_Complete_UPDATED_2026 (1).docx
-\TripRaft_Professional_Tour_Operator_Partner_Agreement_2026 (1).docx
-\TripRaft_Unified_Marketplace_Reseller_Complete_Implementation_2026.docx
 \tripraft.db
+# Runtime data and SQLite coordination files stay on the machine that runs them.
+/data/runtime/
+*.db-wal
+*.db-shm
+*.db-journal
+# Keep preserved data and previously untracked reference artifacts local.
+/data/archive/*
+!/data/archive/README.md
+/docs/plans/source-documents/TripRaft_Remote_Beta_and_Sapling_Interactive_Smartlog_Setup.docx
+/docs/plans/local-archive/
+/docs/extra/*
+!/docs/extra/README.md

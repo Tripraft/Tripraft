@@ -22,11 +22,14 @@ The unified User model lives under auth and is re-exported by expenses for compa
 models needs a separate migration design; moving source files changes no table,
 Alembic revision ID, or API URL.
 
-Application data defaults to ignored `data/runtime/tripraft.db`. Travel data uses
-`data/catalog/tripraft-canonical.db`, initialized empty from the supplied SQL in
-`sql_database/tripraft-global-schema-v2.1.sql`.
-All travel connections default to this source. The older populated
-`travel_data_complete.db` is preserved as a legacy reference. Docker uses
+The native launcher configures ignored `data/runtime/dev/tripraft.db` for
+application data. The API's unconfigured fallback is `data/runtime/tripraft.db`.
+General travel data uses `data/catalog/tripraft-canonical.db`, initialized from
+`services/api/schema/tripraft-global-schema-v2.1.sql`; the inspected catalog is empty.
+Group Planner has a separate populated read-only catalog at
+`data/catalog/tripraft_places.db`. The former root `tripraft.db` is archived under
+`data/archive/`. See [folders and databases](project-structure.md) for the complete
+configuration and preserved enrichment datasets. Docker uses
 PostgreSQL for application data and initializes the canonical schema in a writable
 catalog volume. No seeds are loaded. Uploaded files have a separate volume.
 

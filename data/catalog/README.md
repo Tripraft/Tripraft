@@ -29,21 +29,24 @@ database, including its data;
 it never overwrites or silently migrates an incompatible database. The initializer
 checks the complete schema, SQLite integrity, and foreign key consistency.
 
-The generated database and its journal files are ignored by Git. The SQL schema
-is versioned. Generic travel readers and ingestion use `TRAVEL_DATABASE_PATH`;
+The SQL schema and both active reference catalog `.db` files are currently
+versioned. SQLite journal/coordination files are ignored and are never deployment
+assets. Operational databases under `data/runtime/` remain local and ignored.
+Generic travel readers and ingestion use `TRAVEL_DATABASE_PATH`;
 the ORM travel URL defaults to the same path. `TRAVEL_DATABASE_DIR` can relocate
 the catalog. Any explicit `TRAVEL_DATA_URL` must identify the same source or its replica.
 
 The Group Planner has a separate read-only reader configured with
 `GROUP_PLANNER_CATALOG_PATH`, defaulting to `data/catalog/tripraft_places.db`.
-That populated local file is distinct from the initialized canonical database;
-do not assume a fresh clone contains it. Preserve both sources and their IDs
+That populated file is distinct from the initialized canonical database and is
+included in the current repository and beta image. Preserve both sources and their IDs
 during tour-package implementation. Existing discovery continues using its
 configured readers; new agent packages use separate operational records. See the
 [Places Search tour-package plan](../../docs/plans/places-search-tour-packages/README.md).
 
-`travel_data_complete.db` is preserved as a legacy reference and is no longer
-the default database. User accounts, trips, and expenses continue to use their
+Older reports mention `travel_data_complete.db`; that file is not present at its
+former catalog path in the inspected workspace and is not the default database.
+User accounts, trips, and expenses continue to use their
 separate application database and Alembic migrations.
 
 The `place_search_fts` index uses external content from `places`. Schema triggers

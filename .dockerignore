@@ -12,6 +12,10 @@
 **/*-wal
 **/*-shm
 data/runtime
+data/archive
+docs/extra
+docs/plans/source-documents
+docs/plans/local-archive
 services/api/uploads
 extra
 script
@@ -19,4 +23,6 @@ sql_database
 wikidata
 *.docx
 *.pdf
+# The deployed partner agreement is a runtime input, separate from planning sources.
+!services/api/app/partners/agreements/*.docx
 tripraft.db

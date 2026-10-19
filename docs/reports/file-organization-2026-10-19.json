@@ -1,0 +1,224 @@
+﻿{
+    "date":  "2026-10-19",
+    "operation":  "Reversible file relocation; contents unchanged",
+    "file_count":  31,
+    "moves":  [
+                  {
+                      "source":  "TripRaft_Enterprise_Platform_Master_Blueprint.pdf",
+                      "destination":  "docs/plans/source-documents/TripRaft_Enterprise_Platform_Master_Blueprint.pdf",
+                      "category":  "original planning reference",
+                      "bytes":  575575,
+                      "sha256":  "8e96e6337b605d9218aeb9b1556e647d9b8eb11ff47da524739553bf8cec7945"
+                  },
+                  {
+                      "source":  "TripRaft_Places_Search_Live_Tour_Packages_Complete_UPDATED_2026 (1).docx",
+                      "destination":  "docs/plans/source-documents/TripRaft_Places_Search_Live_Tour_Packages_Complete_UPDATED_2026 (1).docx",
+                      "category":  "original planning reference",
+                      "bytes":  72005,
+                      "sha256":  "79759219b1580b2e7dcf04b0d85bd71d4d7f7f41f3d329ebbe2b343eb49e1e4a"
+                  },
+                  {
+                      "source":  "TripRaft_Professional_Tour_Operator_Partner_Agreement_2026 (1).docx",
+                      "destination":  "docs/plans/source-documents/TripRaft_Professional_Tour_Operator_Partner_Agreement_2026 (1).docx",
+                      "category":  "original planning reference",
+                      "bytes":  57945,
+                      "sha256":  "ddaf7462465856ac7973d39791e8bbfd622cc98f87fe3f65699ba9bffb1e7108"
+                  },
+                  {
+                      "source":  "TripRaft_Remote_Beta_and_Sapling_Interactive_Smartlog_Setup.docx",
+                      "destination":  "docs/plans/source-documents/TripRaft_Remote_Beta_and_Sapling_Interactive_Smartlog_Setup.docx",
+                      "category":  "original planning reference",
+                      "bytes":  47958,
+                      "sha256":  "a2fa3f4e2eadcba634c1cbe80545603797f0ccfbfba866fdf7d8b42baa8962cb"
+                  },
+                  {
+                      "source":  "TripRaft_Unified_Marketplace_Reseller_Complete_Implementation_2026.docx",
+                      "destination":  "docs/plans/source-documents/TripRaft_Unified_Marketplace_Reseller_Complete_Implementation_2026.docx",
+                      "category":  "original planning reference",
+                      "bytes":  94617,
+                      "sha256":  "a6565b4f10552229432c788a8b21a0271a4e3ac1eef476f4493f5b79d78f860e"
+                  },
+                  {
+                      "source":  "extra/TRIPRAFT-10-OF-10-ROADMAP.md",
+                      "destination":  "docs/plans/local-archive/TRIPRAFT-10-OF-10-ROADMAP.md",
+                      "category":  "older roadmap",
+                      "bytes":  17918,
+                      "sha256":  "4d5ed0bdfaf331776fcf06bae79047eb2957afde92e011a086b149d0c0e88ef5"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/blueprint.txt",
+                      "destination":  "docs/extra/blueprint-review/blueprint.txt",
+                      "category":  "document extraction and page image",
+                      "bytes":  58312,
+                      "sha256":  "5a073b423ec763979c9d1c87438546a8fe4476d63fbd24b0f0963395a3e0b7c2"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-01.png",
+                      "destination":  "docs/extra/blueprint-review/page-01.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  61485,
+                      "sha256":  "08a32270c51baa3c4fd29475ae6f77c7c15bdb9c2b71170f631faeaf4589a7e1"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-02.png",
+                      "destination":  "docs/extra/blueprint-review/page-02.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  115147,
+                      "sha256":  "4e0cf4c83b8539b02ff47e89738c6077b80191d20b2d4d2f4eb6185296ee81fa"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-03.png",
+                      "destination":  "docs/extra/blueprint-review/page-03.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  96306,
+                      "sha256":  "c5076858c35627f5b1fa26bf8c41369c152aaa33743ea4d6320ca808523aa454"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-04.png",
+                      "destination":  "docs/extra/blueprint-review/page-04.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  104734,
+                      "sha256":  "8348bf1d55b0676992c8e74a2e103716a428958fb6cc16c8357bf432d9b0ef74"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-05.png",
+                      "destination":  "docs/extra/blueprint-review/page-05.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  117059,
+                      "sha256":  "2cdd22cdecf0a799e43db02250ad13ce4451ee95cdd7a282c5a68a69011c4de3"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-06.png",
+                      "destination":  "docs/extra/blueprint-review/page-06.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  98368,
+                      "sha256":  "d6a1832289b3ca69b797d8105a7bf86ed26ba2b74ac7d8199277384e0c88b7f9"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-07.png",
+                      "destination":  "docs/extra/blueprint-review/page-07.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  123150,
+                      "sha256":  "b91f7258f9059895107a7da332db287b2cdeb1b1554486075a8dfbfd37361b0e"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-08.png",
+                      "destination":  "docs/extra/blueprint-review/page-08.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  108744,
+                      "sha256":  "8c3a32b2ff16a8ec1a9f2248e3046b160fab948b2c2b23461dd91e6f340f46ee"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-09.png",
+                      "destination":  "docs/extra/blueprint-review/page-09.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  120422,
+                      "sha256":  "a2c6f38cc42ea133580727a98daba398b3f5621f83ad711c307be81232db1d9b"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-10.png",
+                      "destination":  "docs/extra/blueprint-review/page-10.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  103771,
+                      "sha256":  "9e559aefc5a6e5954abcec9ce01da98ac69caf2dfad21f70ab146395eaa28282"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-11.png",
+                      "destination":  "docs/extra/blueprint-review/page-11.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  107594,
+                      "sha256":  "c754506d3db7148e98358834f9491f3e674c3a5853dfaa1bc24f1d33ab65b6a1"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-12.png",
+                      "destination":  "docs/extra/blueprint-review/page-12.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  97715,
+                      "sha256":  "e19bd005628e424fc16e88f35db01de1ce4c247795ac86c03d3c10386b5240ee"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-13.png",
+                      "destination":  "docs/extra/blueprint-review/page-13.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  111342,
+                      "sha256":  "e78d45b4aa5cd6974a0e6b6e5de55c0f8d54a36a7747975b85fa0cd9dbd79139"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-14.png",
+                      "destination":  "docs/extra/blueprint-review/page-14.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  92788,
+                      "sha256":  "5bb63b0374a000aa7e087683e1b7bdf848f124da87b4a02afbc7619605485180"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-15.png",
+                      "destination":  "docs/extra/blueprint-review/page-15.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  100168,
+                      "sha256":  "4deed1719f97d67194caa1cf994671556ce2442689c66a1dd165a72e60a9fb60"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-16.png",
+                      "destination":  "docs/extra/blueprint-review/page-16.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  105816,
+                      "sha256":  "48b38a990ccaae70eabb5b13224702c782ce9cec8df05fe354c797b478c557b5"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-17.png",
+                      "destination":  "docs/extra/blueprint-review/page-17.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  110896,
+                      "sha256":  "23be7a2538b56a66799ea93e03f65e28cba8e0b448c6faa3084c648dfa8f5d64"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-18.png",
+                      "destination":  "docs/extra/blueprint-review/page-18.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  118746,
+                      "sha256":  "88559e4e6467364ddf5a29d00a5e51229aa01f3cc8438ec654079b4942035d36"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-19.png",
+                      "destination":  "docs/extra/blueprint-review/page-19.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  112543,
+                      "sha256":  "22a975de92d188d7f86568a8e0fedee4904d018ed57c83662d337e42e99a035e"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-20.png",
+                      "destination":  "docs/extra/blueprint-review/page-20.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  127604,
+                      "sha256":  "aff56392e49f14905a03384439f3ee0dc1e4c3792c3819d5303ca8fc20c0d81f"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-21.png",
+                      "destination":  "docs/extra/blueprint-review/page-21.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  108675,
+                      "sha256":  "d38ea37b279155d1a3ce181602623390b7067bd890de1fc7299442b34d5a7cc0"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-22.png",
+                      "destination":  "docs/extra/blueprint-review/page-22.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  113242,
+                      "sha256":  "33df1604dc314a3c0f8083977ae7dd9b71746af654ac83c00c44358f512cab9c"
+                  },
+                  {
+                      "source":  "extra/blueprint-review/page-23.png",
+                      "destination":  "docs/extra/blueprint-review/page-23.png",
+                      "category":  "document extraction and page image",
+                      "bytes":  86302,
+                      "sha256":  "56cc59b16cf0e2e5dcfa091311fd1d2dc8268bb883635bc0a21368d23f1bfa18"
+                  },
+                  {
+                      "source":  "tripraft.db",
+                      "destination":  "data/archive/root-tripraft-2026-10-19.db",
+                      "category":  "inactive root travel schema database",
+                      "bytes":  442368,
+                      "sha256":  "470984bfa18a38530b405a5134be4b74fe9230394082e4ad8b42b19ad801b550"
+                  }
+              ]
+}
