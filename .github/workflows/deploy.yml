@@ -11,7 +11,7 @@ concurrency:
   group: deploy-${{ github.ref }}
   cancel-in-progress: false
 jobs:
-  verify:
+  release-verify:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +25,7 @@ jobs:
       - run: pnpm verify
   deploy:
     if: ${{ vars.DEPLOY_HOOKS_ENABLED == 'true' }}
-    needs: verify
+    needs: release-verify
     runs-on: ubuntu-latest
     environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging' }}
     steps:
