@@ -1,4 +1,4 @@
-// Purpose: Renders the Icon interface within apps\web\src\features\itinerary\jsx.
+// Purpose: Maps named travel-planner icons to inline SVG artwork.
 import React from 'react';
 
 const Icon = ({ name, className = '' }) => {
