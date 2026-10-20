@@ -1,5 +1,7 @@
 # Group Planner tabs and demo preview - October 15, 2026
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 Local Interactive Smartlog checkpoint: `group-planner-tabs-refresh`.
 
 The supplied `group_travel_planner_ui (1).html` provides the visual and feature
@@ -83,5 +85,5 @@ content and are not valid travel documents.
 The original header and isolated demo foundation were saved first, followed by
 separate local checkpoints for the six tabs, role enforcement, demo refinements,
 and this report. Git and Sapling Interactive Smartlog read the same repository
-history using the [checkpoint workflow](../backend-checkpoints.md). No remote
+history using the [checkpoint workflow](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/backend-checkpoints.md). No remote
 push or deployment is included.
