@@ -1,4 +1,5 @@
-﻿import React, { useMemo, useState } from 'react';
+﻿// Purpose: Shows a filterable activity feed alongside group/poll/member context and links relevant activity to workspace tabs.
+import React, { useMemo, useState } from 'react';
 import {
   Activity,
   MapPin,
