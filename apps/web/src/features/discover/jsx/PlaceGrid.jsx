@@ -1,4 +1,4 @@
-// Purpose: Renders the Place Grid interface within apps\web\src\features\discover\jsx.
+// Purpose: Renders responsive place-card rows and virtualizes large result lists.
 /**
  * PlaceGrid Component
  * 
