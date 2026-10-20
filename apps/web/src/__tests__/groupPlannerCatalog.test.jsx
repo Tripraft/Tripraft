@@ -1,3 +1,4 @@
+// Purpose: Verifies required catalog selections, optional/deduplicated invites, destination-scoped filters and adding places without invented coordinates.
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
