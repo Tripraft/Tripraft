@@ -1,4 +1,4 @@
-// Purpose: Fetches autocomplete suggestions and ignores cancelled or stale responses.
+// Purpose: Debounces autocomplete requests, discards stale responses, supports cancellation and passes submitted queries or selected suggestions to the parent.
 /**
  * SearchBar Component
  * 
