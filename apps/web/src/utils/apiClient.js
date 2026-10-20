@@ -1,4 +1,4 @@
-// Purpose: Sends web API requests with cookie credentials, CSRF headers, response handling and cancellation.
+// Purpose: Sends cookie-authenticated requests with CSRF, timeout/cancellation and structured errors; retries GET failures, refreshes a rejected session once, and routes isolated demo requests.
 /** Cookie-authenticated HTTP requests with GET-only retries. */
 import GlobalConfig from '../config/globalConfig';
 import sqlAuthService from '../services/sqlAuthService';
