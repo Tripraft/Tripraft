@@ -1,4 +1,4 @@
-# Purpose: Canonical release workflow: verify source, then call the configured staging or production deployment hook.
+# Purpose: Defines canonical release verification and opt-in staging/production deploy-hook calls; release-verify gates deployment and tags select production.
 name: Deploy
 on:
   push:
