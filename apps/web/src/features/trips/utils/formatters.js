@@ -1,4 +1,4 @@
-// Purpose: Provides formatters logic and exports for apps\web\src\features\trips\utils.
+// Purpose: Formats planner dates, times, relative activity, initials, currency and file sizes with safe fallbacks for missing or invalid values.
 /**
  * Formatting helpers for the Group Planner UI.
  */
