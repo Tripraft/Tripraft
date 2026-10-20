@@ -1,3 +1,4 @@
+// Purpose: Provides an inline message action menu for permitted edit/delete operations, with outside-click and Escape dismissal.
 import React, { useEffect, useRef, useState } from 'react';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 
