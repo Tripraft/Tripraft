@@ -1,4 +1,4 @@
-// Purpose: Renders the Contact interface within apps\web\src\pages.
+// Purpose: Shows support email only when a valid VITE_SUPPORT_EMAIL is configured and renders static account, invitations and beta-access help.
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
