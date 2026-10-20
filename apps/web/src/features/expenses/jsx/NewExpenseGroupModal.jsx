@@ -1,4 +1,4 @@
-// Purpose: Creates expense groups from the group dashboard or selected group.
+// Purpose: Collects a new expense group's name and original currency, retaining the form when creation fails.
 import React, { useState } from 'react';
 import ExpenseDialog from './ExpenseDialog';
 import { Plus, Users, X } from 'lucide-react';
