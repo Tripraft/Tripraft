@@ -1,4 +1,4 @@
-/* Purpose: Styles the Skeleton interface, including its layout and interaction states. */
+/* Purpose: Defines shimmer animation and shared page, place-card and group-card skeleton geometry. */
 .skeleton-shimmer {
   background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
   background-size: 200% 100%;
