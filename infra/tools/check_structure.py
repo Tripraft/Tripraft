@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[2]
 required = ['apps/web/src/main.tsx', 'apps/admin/src/main.tsx', 'services/api/app/core/factory.py',
             'services/api/migrations', 'services/api/tests', 'packages/ui', 'packages/api-client',
             'packages/types', 'packages/config', 'infra/docker/docker-compose.yml',
-            'infra/terraform', 'docs/architecture.md', 'docs/api.md', 'docs/runbook.md',
+            'infra/terraform', 'docs/README.md', 'docs/architecture/overview.md', 'docs/api/README.md', 'docs/operations/runbook.md',
             'pnpm-workspace.yaml', 'turbo.json', 'README.md', 'start.py', 'docs/files.md']
 for name in required:
     assert (ROOT / name).exists(), f'Missing {name}'
