@@ -1,4 +1,4 @@
-// Purpose: Collects the approved agent signature against the exact supplied draft before opening private package tools.
+// Purpose: Loads the full agreement draft for approved agents and collects the explicit version/hash-bound signature before opening package tools.
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { PartnerAgreementDocument, PartnerSnapshot } from '@tripraft/types';
