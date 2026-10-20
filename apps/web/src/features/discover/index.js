@@ -1,4 +1,4 @@
-// Purpose: Provides index logic and exports for apps\web\src\features\discover.
+// Purpose: Re-exports discovery components and place-search service functions through one feature entry.
 /**
  * Place Search Components Index
  * 
