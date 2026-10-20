@@ -1,4 +1,5 @@
-﻿import React, { useMemo, useState } from 'react';
+﻿// Purpose: Previews a reordered itinerary using local route helpers and saves the selected day's updated stop schedule through the planner API.
+import React, { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { WandSparkles, X } from 'lucide-react';
 import groupPlannerApi from '../../../../services/groupPlannerApi';
