@@ -1,4 +1,4 @@
-// Purpose: Keeps pending payments, settlement history and expense changes below the group overview.
+// Purpose: Shows outstanding balance, settlement totals and personal-share figures using the selected display currency.
 import React from 'react';
 import { ArrowRight, Handshake, History, Receipt } from 'lucide-react';
 import useExchangeRate from '../../../hooks/useExchangeRate';
