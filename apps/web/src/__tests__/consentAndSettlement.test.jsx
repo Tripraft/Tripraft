@@ -1,4 +1,4 @@
-// Purpose: Regression tests for consent And Settlement, including success and failure behavior.
+// Purpose: Verifies Scout privacy overrides, visible settlement save failures and client-side over-settlement rejection.
 import React from 'react';import {render,screen,fireEvent,waitFor} from '@testing-library/react';
 jest.mock('../hooks/useAiConsentQuery',()=>({useAiConsent:jest.fn(),useSubmitAiConsent:jest.fn()}));import {useAiConsent,useSubmitAiConsent} from '../hooks/useAiConsentQuery';import Consent from '../features/scout/ScoutConsentCard';import Settlement from '../features/expenses/jsx/SettlementModal';
 it('honors a server privacy override instead of retrying the AI query',()=>{const onRetry=jest.fn();useAiConsent.mockReturnValue({data:{has_consent:false},isLoading:false});useSubmitAiConsent.mockReturnValue({isPending:false,mutate:(_input,callbacks)=>callbacks.onSuccess({data:{granted:false}})});render(<Consent groupId="group" originalQuery="@scout help" onRetry={onRetry}/>);fireEvent.click(screen.getByText('Allow access'));expect(screen.getByText(/Scout will not access any group data/)).toBeInTheDocument();expect(onRetry).not.toHaveBeenCalled();});
