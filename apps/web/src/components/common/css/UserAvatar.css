@@ -1,4 +1,4 @@
-/* Purpose: Styles the User Avatar interface, including its layout and interaction states. */
+/* Purpose: Defines avatar sizes, image/initials presentation, optional names and responsive/theme variants. */
 .user-avatar-container {
   display: flex;
   align-items: center;
