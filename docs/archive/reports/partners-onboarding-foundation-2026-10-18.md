@@ -1,6 +1,8 @@
 # Partner onboarding foundation and native startup
 
-Implemented 18 October 2026 from the active [Places Search tour-package plan](../plans/places-search-tour-packages/README.md). This is the first phase-one vertical slice. The full publishing, discovery and commercial roadmap remains open.
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
+Implemented 18 October 2026 from the active [Places Search tour-package plan](../../plans/places-search-tour-packages/README.md). This is the first phase-one vertical slice. The full publishing, discovery and commercial roadmap remains open.
 
 ## Available behavior
 
@@ -58,7 +60,7 @@ The launcher previously replaced development-port listeners on every start and r
 
 Repeated native starts now verify ownership and all three HTTP services, reuse a healthy session and open its site. A smoke check also preserves an already healthy session. Failed children report their service name, exit code and exact log path. New launches wait through a short stability check after HTTP readiness. Windows process creation checks and owned process-tree cleanup remain in place.
 
-Native startup selects the same database URL as Flask and creates a consistent SQLite backup before pending migrations. It supports the normal Windows Node installation even when `.py` association PATH is stale. Setup fingerprints include workspace manifests. Vite serves web/admin with HMR; native Python source changes use the API development reloader. Run `python start.py --stop` followed by `python start.py` after changing environment or migrations. See [startup instructions](../startup.md).
+Native startup selects the same database URL as Flask and creates a consistent SQLite backup before pending migrations. It supports the normal Windows Node installation even when `.py` association PATH is stale. Setup fingerprints include workspace manifests. Vite serves web/admin with HMR; native Python source changes use the API development reloader. Run `python start.py --stop` followed by `python start.py` after changing environment or migrations. See [startup instructions](../../setup/startup.md).
 
 An earlier, uncommitted draft migration had already been applied to the local development database. All three partner tables were verified empty, a backup was saved under ignored `.tripraft/backups/`, and only that empty onboarding schema was rebuilt. Existing traveler data and source catalogs were retained. Later applicant activity is not reset.
 
