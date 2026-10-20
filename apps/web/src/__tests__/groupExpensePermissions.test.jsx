@@ -1,3 +1,4 @@
+// Purpose: Verifies server edit/delete flags, settlement permissions, one-cent debts, role-based management, confirmed archive and revoked-access controls.
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import TransactionList from '../features/expenses/jsx/TransactionList';
