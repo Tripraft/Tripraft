@@ -1,4 +1,4 @@
-// Purpose: Provides index logic and exports for packages\types\src.
+// Purpose: Exports UUID/Money aliases, API envelopes, account/health contracts and partner/package types; these declarations provide compile-time contracts, not runtime validation.
 /** UUIDs remain strings at application and API boundaries. */
 export type UUID = string;
 export type { TourDay, DepartureProposal, TourDraftContent, TourPackageSummary, TourPackageDraft, TourPackageList } from './tourDrafts';
