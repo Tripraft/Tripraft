@@ -1,5 +1,7 @@
 # Expense group creation fix — 2026-10-12
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 Creating an expense group failed with HTTP 422 and the message `Validation failed`.
 The form sent `user_email` and `user_display_name`, obsolete fields absent from
 `CreateExpenseGroupSchema`. The schema rejected both as `Unknown field.` before
@@ -42,4 +44,4 @@ pnpm --filter @tripraft/web build
 ```
 
 Local checkpoint: `group-expenses-create-fix`. Inspect its diff and commit notes
-in Interactive Smartlog using [the checkpoint workflow](../backend-checkpoints.md).
+in Interactive Smartlog using [the checkpoint workflow](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/backend-checkpoints.md).
