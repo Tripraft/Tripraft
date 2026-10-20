@@ -1,4 +1,4 @@
-// Purpose: Renders the Page Skeleton interface within apps\web\src\components\common\jsx.
+// Purpose: Renders the page-level loading skeleton used while lazy routes load.
 import '../css/Skeleton.css';
 
 export default function PageSkeleton() {
