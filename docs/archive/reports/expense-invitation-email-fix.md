@@ -1,5 +1,7 @@
 # Expense invitation delivery findings — 2026-10-12
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 The local API log recorded `Email service is disabled` when the reported
 invitation was created. The invitation POST returned HTTP 201 because the
 invitation was saved, but no email transport was attempted.
@@ -27,7 +29,7 @@ were displayed or changed, and no real email was sent during verification.
 - Pass UTC timestamp strings to the existing timezone formatter so it can
   recognize the timezone before formatting invitation dates.
 
-See [Gmail setup](../email-setup.md) for the remaining sender configuration.
+See [Gmail setup](../../setup/email.md) for the remaining sender configuration.
 Actual Gmail delivery remains unverified until sender credentials are supplied.
 
 ## Verification
