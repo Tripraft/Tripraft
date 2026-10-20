@@ -1,4 +1,4 @@
-// Purpose: Shows a selectable overview of the user's expense groups and a first-group empty state.
+// Purpose: Shows searchable expense-group cards with member avatars, spending trends, personal share and outstanding position.
 import React, { useId, useState } from 'react';
 import { ArrowDownLeft, ArrowUpRight, Check, Plus, Search, Users } from 'lucide-react';
 import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
