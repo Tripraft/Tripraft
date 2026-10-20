@@ -1,4 +1,4 @@
-// Purpose: Regression tests for chat Panel State, including success and failure behavior.
+// Purpose: Verifies inline message actions, group-switch composer reset, loading state, Crew answer failures and card-specific expense deletion.
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
