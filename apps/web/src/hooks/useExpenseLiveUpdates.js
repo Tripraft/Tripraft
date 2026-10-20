@@ -1,3 +1,4 @@
+// Purpose: Uses private Socket.IO change notifications to invalidate expense queries, clears revoked data, and catches up through polling/reconnect/visibility changes.
 // Receive private change notifications; authenticated API reads remain the source of ledger data.
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
