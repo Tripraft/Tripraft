@@ -1,4 +1,5 @@
-﻿// Load the installed map renderer with the application, including its styles.
+﻿// Purpose: Initializes Leaflet and its MapLibre adapter/worker and styles, detects WebGL2 support, and provides a fallback capability flag.
+// Load the installed map renderer with the application, including its styles.
 import { useEffect, useState } from 'react';
 import L from 'leaflet';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
