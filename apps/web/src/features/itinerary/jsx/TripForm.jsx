@@ -1,4 +1,4 @@
-// Purpose: Renders the Trip Form interface within apps\web\src\features\itinerary\jsx.
+// Purpose: Collects city, trip length and pacing, supports city autocomplete, and submits the requested plan parameters.
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import DestinationAutocomplete from '../../../components/common/jsx/DestinationAutocomplete';
