@@ -1,5 +1,6 @@
 {
   "name": "@tripraft/config",
+  "description": "Shared ESLint, TypeScript and Prettier configuration for TripRaft workspace applications and packages.",
   "version": "0.1.0",
   "private": true,
   "type": "module",
