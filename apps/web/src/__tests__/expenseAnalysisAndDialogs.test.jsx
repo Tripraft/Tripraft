@@ -1,4 +1,4 @@
-// Purpose: Regression coverage for split-aware analysis and dialogs outside animated/clipped panels.
+// Purpose: Verifies stored-share analysis, calendar/deleted-row handling, history data, dialog focus/scroll behavior, creation retries and former-member attribution.
 import React from 'react';
 import { fireEvent, render, screen, within, waitFor } from '@testing-library/react';
 import ExpenseAnalysis from '../features/expenses/jsx/ExpenseAnalytics';
