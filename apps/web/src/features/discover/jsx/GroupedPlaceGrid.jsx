@@ -1,4 +1,4 @@
-// Purpose: Renders the Grouped Place Grid interface within apps\web\src\features\discover\jsx.
+// Purpose: Groups results by city or state and virtualizes larger collections of location groups.
 /**
  * GroupedPlaceGrid Component
  * 
