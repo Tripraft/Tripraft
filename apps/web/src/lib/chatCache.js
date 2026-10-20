@@ -1,4 +1,4 @@
-// Purpose: Deduplicates message IDs across cached pages and reconciles optimistic send results.
+// Purpose: Updates, removes and deduplicates messages across flat or enveloped cached pages, reconciling optimistic results and socket echoes.
 export const pageMessages = page => page?.data?.messages ?? page?.messages ?? [];
 const withMessages = (page, messages) => page?.data ? { ...page, data: { ...page.data, messages } } : { ...page, messages };
 export function updateMessage(cache, message) {
