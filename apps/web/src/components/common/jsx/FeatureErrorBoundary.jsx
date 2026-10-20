@@ -1,4 +1,4 @@
-// Purpose: Contains feature rendering failures and provides an actionable recovery screen.
+// Purpose: Contains a feature's rendering failure and offers retry with development-only diagnostic details.
 import { Component } from 'react';
 import { RefreshCw, AlertTriangle } from 'lucide-react';
 import '../css/FeatureErrorBoundary.css';
