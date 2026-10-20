@@ -1,4 +1,4 @@
-// Purpose: Provides map Config logic and exports for apps\web\src\features\trips\constants.
+// Purpose: Defines public OpenFreeMap day/night styles, attribution, fallback viewport values and marker/day colors and icons.
 /**
  * Map configuration constants for the Group Planner.
  * Marker icons, day colors, and OpenFreeMap styles.
