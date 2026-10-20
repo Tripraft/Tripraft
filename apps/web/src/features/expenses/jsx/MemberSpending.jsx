@@ -1,3 +1,4 @@
+// Purpose: Aggregates paid amounts per member, preserves former-member attribution, and renders spending breakdowns.
 import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 // Purpose: Renders the Member Spending interface within apps\web\src\features\expenses\jsx.
 /**
