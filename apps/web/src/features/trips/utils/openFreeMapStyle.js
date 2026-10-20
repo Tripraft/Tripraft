@@ -1,3 +1,4 @@
+// Purpose: Adjusts selected provider shield-label expressions to tolerate missing ref_length values while preserving the rest of the map style.
 const shields = new Set(['highway-shield-non-us', 'highway-shield-us-interstate', 'road_shield_us']);
 
 function safeReferenceLength(expression) {
