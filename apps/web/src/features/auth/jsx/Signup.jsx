@@ -1,4 +1,4 @@
-// Purpose: Renders the Signup interface within apps\web\src\features\auth\jsx.
+// Purpose: Validates traveler signup and password confirmation, submits account creation, and preserves invitations or requested return destinations.
 import React, { useState, useEffect, useRef } from 'react';
 import { Plane, UserPlus, AlertCircle, Home } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
