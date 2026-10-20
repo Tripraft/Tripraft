@@ -1,3 +1,4 @@
+// Purpose: Verifies group count and plain current title, with a return-to-cards group-selection action.
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import PlannerHeader from '../features/trips/jsx/shared/PlannerHeader';
