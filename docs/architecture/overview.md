@@ -29,7 +29,7 @@ initialized empty from `services/api/schema/tripraft-global-schema-v2.1.sql`.
 Group Planner uses its independently configured `GROUP_PLANNER_CATALOG_PATH`,
 whose default is `data/catalog/tripraft_places.db`. Populated catalogs are external
 inputs, and `data/` is no longer distributed in Git. See the
-[catalog setup guide](../services/README.md#local-catalog-setup).
+[catalog setup guide](../../services/README.md#local-catalog-setup).
 Docker uses PostgreSQL for application data and initializes the canonical schema
 in a writable catalog volume. No seeds are loaded. Uploaded files have a separate volume.
 
@@ -48,7 +48,7 @@ Native startup is managed by the root `start.py` launcher. It creates ignored
 local settings and a separate development database, preserving legacy local data.
 Only source and required development/operational files are published. Historical
 archives and local Smartlog checkpoints remain on the development machine outside
-the published tree. [The file guide](files.md) explains every published file.
+the published tree. [The file guide](../files.md) explains every published file.
 
 Tooling references: [pnpm workspaces](https://pnpm.io/workspaces),
 [Turbo tasks](https://turborepo.dev/docs/crafting-your-repository/configuring-tasks),
