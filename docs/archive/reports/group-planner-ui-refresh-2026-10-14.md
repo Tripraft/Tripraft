@@ -1,4 +1,6 @@
-﻿# Group Planner UI refresh — October 14, 2026
+# Group Planner UI refresh — October 14, 2026
+
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
 
 Local Interactive Smartlog checkpoint: `group-planner-ui-refresh`.
 
@@ -55,5 +57,5 @@ workspace exposes existing supported actions instead of those simulations.
 ## Save
 
 Changes are saved in the shared Git repository and verified through Sapling
-Interactive Smartlog using the [checkpoint workflow](../backend-checkpoints.md).
+Interactive Smartlog using the [checkpoint workflow](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/backend-checkpoints.md).
 The checkpoint is local, with no remote push or deployment.
