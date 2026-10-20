@@ -1,5 +1,7 @@
 # Family/friends Group Planner refresh — October 16, 2026
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 The planner now has separate Places, Restaurants, and Festivals Library sections,
 catalog details, and Add to plan with dated or unscheduled stops. Restaurant
 filtering happens before pagination, and festivals use the catalog's separate
