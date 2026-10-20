@@ -1,4 +1,4 @@
-// Purpose: Renders the Place Card Skeleton interface within apps\web\src\components\common\jsx.
+// Purpose: Renders placeholder image, title and rating blocks while a place card is loading.
 import '../css/Skeleton.css';
 
 export default function PlaceCardSkeleton() {
