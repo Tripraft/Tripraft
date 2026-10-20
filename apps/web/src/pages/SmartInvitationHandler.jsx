@@ -1,4 +1,4 @@
-// Purpose: Renders the Smart Invitation Handler interface within apps\web\src\pages.
+// Purpose: Resolves expense versus trip invitation routes from explicit path/query hints or API probes, then renders the matching acceptance flow.
 import React, { useEffect, useState } from 'react';
 import { useLocation, useParams, useSearchParams } from 'react-router-dom';
 import InvitationAccept from './InvitationAccept';
