@@ -1,4 +1,4 @@
-// Purpose: Coordinates real place search, statistics and loading/error/empty states.
+// Purpose: Coordinates catalog search, autocomplete selections, statistics, filtering, sorting and detail dialogs with explicit loading/error/empty states.
 /**
  * PlaceSearchPage - Main Search Page Component
  * 
