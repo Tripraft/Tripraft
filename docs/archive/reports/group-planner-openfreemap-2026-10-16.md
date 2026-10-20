@@ -1,5 +1,7 @@
 # Group Planner OpenFreeMap checkpoint — October 16, 2026
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 The Group Planner now uses OpenFreeMap through MapLibre GL and the Leaflet
 adapter documented in the [official quick start](https://openfreemap.org/quick_start/).
 Liberty supplies the day background and Dark supplies the night background.
