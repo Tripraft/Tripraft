@@ -1,4 +1,4 @@
-// Purpose: Provides chat Api logic and exports for apps\web\src\services.
+// Purpose: Wraps group message pagination, send/edit/delete, read-marker and unread-count endpoints.
 /**
  * Chat API Service
  * REST endpoints for group chat messaging.
