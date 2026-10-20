@@ -1,4 +1,4 @@
-// Purpose: Renders the Tabbed Group View interface within apps\web\src\features\expenses\jsx.
+// Purpose: Composes balances, settlements, member spending, transaction history and analysis into the group expense tabs.
 /**
  * TabbedGroupView Component
  * Displays Group Balances, Settle Up, Member Spending, Transaction History, and Analytics as tabs
