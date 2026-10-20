@@ -1,8 +1,6 @@
-# Purpose: Verifies private validated images, immutable package submissions, staff corrections/approval and complete supplier isolation.
+# Purpose: Verifies private images, immutable submissions, staff review and supplier isolation using synthetic in-memory package inputs.
 from copy import deepcopy
 from io import BytesIO
-import json
-from pathlib import Path
 from uuid import UUID
 
 import pytest
@@ -38,7 +36,25 @@ def upload(client, draft, raw=None, **changes):
 
 def ready_package(client):
     draft = create(client)
-    content = json.loads((Path(__file__).resolve().parents[3] / 'data/seeds/partner-demo-tour.json').read_text(encoding='utf-8'))
+    # Synthetic content keeps review coverage independent of local demo datasets.
+    content = {
+        'title': 'Synthetic two-day review itinerary',
+        'summary': 'A complete synthetic package for testing supplier submission, staff review and corrections.',
+        'language': 'English', 'days': 2, 'nights': 1,
+        'route': ['Test arrival point', 'Test departure point'],
+        'itinerary': [
+            {'day': 1, 'title': 'Arrival and orientation', 'details': 'Meet the test guide and check in.'},
+            {'day': 2, 'title': 'Return transfer', 'details': 'Check out and transfer to the departure point.'},
+        ],
+        'inclusions': ['One overnight stay and return transfers'],
+        'exclusions': ['Flights and personal purchases'],
+        'transport_details': 'Synthetic private vehicle with a local driver.',
+        'accessibility_notes': 'Confirm any requested accessible arrangements before booking.',
+        'cancellation_policy': 'Synthetic review terms; no actual reservation is created.',
+        'safety_notes': 'Follow guide instructions and confirm the meeting point.',
+        'departures': [{'start_date': '2027-01-18', 'timezone': 'Asia/Kolkata',
+                        'supplier_rate_minor': '1850000', 'currency': 'INR'}],
+    }
     draft = payload(save(client, draft, content))
     response = upload(client, draft)
     assert response.status_code == 200, response.get_json()
