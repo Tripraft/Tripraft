@@ -1,7 +1,7 @@
 # Invitation email setup
 
-The active local API settings are in `services/api/.env`. Gmail's SMTP hostname
-and port are already supplied, but the sender and credentials must be configured:
+Configure mail in the ignored `services/api/.env` for your environment. The
+following example uses Gmail; replace the sender and credential placeholders:
 
 ```dotenv
 EMAIL_ENABLED=true
