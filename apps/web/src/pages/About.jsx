@@ -1,4 +1,4 @@
-// Purpose: Renders the About interface within apps\web\src\pages.
+// Purpose: Renders static product, mission and team information with shared navigation and scroll-triggered animations.
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
