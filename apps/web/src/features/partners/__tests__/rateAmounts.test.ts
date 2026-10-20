@@ -1,4 +1,4 @@
-// Purpose: Guards decimal conversion for private proposals against floating-point rounding and precision loss.
+// Purpose: Verifies exact rate conversion for supported exponents, invalid-input rejection and leading fractional zeros.
 import { displayAmount, minorAmount } from '../rateAmounts';
 
 test.each([['15500.01', 2, '1550001'], ['0.01', 2, '1'], ['123', 0, '123'], ['12.345', 3, '12345'], ['', 2, '']])('converts %s with exponent %s', (amount, exponent, expected) => {
