@@ -1,3 +1,4 @@
+// Purpose: Builds illustrative trips, people, places, chat, polls, logistics and expense data with local photo paths for the planner demo.
 const photos = {
   'photo-1478436127897-769e1b3f0f36': 'kyoto-torii',
   'photo-1503899036084-c55cdd92da26': 'kyoto-market',
