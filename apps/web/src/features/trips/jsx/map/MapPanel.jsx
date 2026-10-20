@@ -1,4 +1,4 @@
-// Purpose: Renders the Map Panel interface within apps\web\src\features\trips\jsx\map.
+// Purpose: Renders planner stops and day routes on Leaflet/OpenFreeMap, focuses the destination viewport, filters days and handles theme/coordinate fallbacks.
 import { validCoordinates } from '../../../../utils/coordinates';
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Moon, Sun } from 'lucide-react';
