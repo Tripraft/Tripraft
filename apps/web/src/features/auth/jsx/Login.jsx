@@ -1,4 +1,4 @@
-// Purpose: Renders the Login interface within apps\web\src\features\auth\jsx.
+// Purpose: Submits traveler login, handles loading and server errors, and preserves invitations or return destinations through authentication.
 import React, { useState, useEffect, useRef } from 'react';
 import { Plane, Shield, AlertCircle, Home } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
