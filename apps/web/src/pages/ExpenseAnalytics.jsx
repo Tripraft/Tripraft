@@ -1,4 +1,4 @@
-// Purpose: Renders the Expense Analytics interface within apps\web\src\pages.
+// Purpose: Displays the protected legacy analytics route's access-denied or unavailable state; no expense analytics dashboard is implemented here.
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
