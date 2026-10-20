@@ -1,4 +1,4 @@
-# Purpose: Validates backend Python files against the Python 3.11 grammar used by CI and Docker.
+# Purpose: Parses services/api Python files using the Python 3.11 grammar to catch syntax incompatible with CI and Docker; it does not import or execute those modules.
 """Validate every active Python file against the Docker/CI Python 3.11 grammar."""
 import ast
 from pathlib import Path
