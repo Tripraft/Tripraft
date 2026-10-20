@@ -1,4 +1,4 @@
-/* Purpose: Styles the Expense Analytics interface, including its layout and interaction states. */
+/* Purpose: Retains the older exp-analytics dashboard styles; ExpenseAnalytics.jsx currently re-exports the newer ExpenseAnalysisView. */
 /**
  * Expense Analytics CSS
  * Unique namespace: exp-analytics-*
