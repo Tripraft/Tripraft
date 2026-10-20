@@ -1,4 +1,4 @@
-// Purpose: Renders the Search Suggestions interface within apps\web\src\features\discover\jsx.
+// Purpose: Renders location suggestions with selected-row highlighting and suggestion-selection callbacks.
 /**
  * SearchSuggestions Component
  * 
