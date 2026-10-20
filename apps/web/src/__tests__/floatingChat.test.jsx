@@ -1,3 +1,4 @@
+// Purpose: Verifies pointer dragging, viewport bounds, click suppression, keyboard movement, saved positions, resize/reset and composer isolation.
 import React, {useState} from 'react';
 import {act, fireEvent, render, screen} from '@testing-library/react';
 import useFloatingPosition from '../features/trips/hooks/useFloatingPosition';
