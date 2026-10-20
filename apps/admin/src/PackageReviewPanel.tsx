@@ -1,4 +1,4 @@
-// Purpose: Reviews immutable supplier package submissions with private images/rates, version checks and correction feedback.
+// Purpose: Lists package submissions by status and shows private content, media and proposed rates; sends versioned approval, correction or rejection decisions with required reasons.
 import React, { useEffect, useState } from 'react';
 import type { TourPackageReviewItem, TourPackageReviewList } from '@tripraft/types';
 
