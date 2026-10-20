@@ -1,10 +1,12 @@
 # Tour package delivery phases and acceptance
 
+> Status reviewed against published `main` on 2026-10-20: supplier onboarding, agreement signing, private drafts, validated media, immutable submissions and staff review are implemented. Public package discovery/projection, booking, payments and payouts remain proposed. Dated updates below retain their checkpoint context.
+
 This plan implements the updated document's tour-package vertical and Appendix B's selective publication policy. It does not reopen the retired broad workspace/catalog implementation program. Each phase adds a reviewable end-to-end behavior. New commercial capability remains disabled until its own gate passes.
 
-Implementation includes supplier-only accounts, footer/landing, onboarding, a separate employee review console and private package draft authoring. Phase zero still needs the deployed search comparison and launch decisions; phase one still needs recovery, granular staff administration and production readiness checks. Phase two continues with media checks and immutable package submission/review. The earlier [onboarding report](../../reports/partners-onboarding-foundation-2026-10-18.md) records the foundation checkpoint.
+Implementation includes supplier-only accounts, footer/landing, onboarding, a separate employee review console and private package draft authoring. Phase zero still needs the deployed search comparison and launch decisions; phase one still needs recovery, granular staff administration and production readiness checks. Phase two includes implemented media checks and immutable package submission/review; further gates below remain proposed. The earlier [onboarding report](../../archive/reports/partners-onboarding-foundation-2026-10-18.md) records the foundation checkpoint.
 
-19 October: dedicated employee sign-in and phase-two private draft authoring are delivered; see the [latest checkpoint](../../reports/staff-console-package-drafts-2026-10-19.md). Package media and immutable submission/review are the next phase-two work. Public listing remains closed.
+19 October: dedicated employee sign-in and phase-two private draft authoring are delivered; see the [latest checkpoint](../../archive/reports/staff-console-package-drafts-2026-10-19.md). Package media and immutable submission/review were delivered in the later package-review checkpoint. Public listing remains closed.
 
 ## Release order
 
@@ -42,7 +44,7 @@ Tasks:
 
 ## Phase 1 Footer partner entry onboarding and access
 
-Agreement progress (19 October): the v3 reader and original download open after staff approval. The agent alone then signs; no TripRaft signing step is required. Signature evidence is immutable and checked by every private package API. Applications submit first, and historical reading acknowledgments are never signatures. The source remains a draft; finalized legal/commercial terms and business/bank verification remain commercial gates. See [agreement guide](../../partner-agreement.md).
+Agreement progress (19 October): the v3 reader and original download open after staff approval. The agent alone then signs; no TripRaft signing step is required. Signature evidence is immutable and checked by every private package API. Applications submit first, and historical reading acknowledgments are never signatures. The source remains a draft; finalized legal/commercial terms and business/bank verification remain commercial gates. See [agreement guide](../../guides/partner-agreement.md).
 
 Source: sections 2, 5, 16 and B2–B3.
 
