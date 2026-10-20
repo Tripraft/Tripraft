@@ -1,5 +1,7 @@
 # SQL seed audit — 7 October 2026
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 **Read-only analysis:** all 197 source files were read as text. No seed SQL was executed and no project database was opened by the audit. SHA-256 hashes of project database files and journals matched before and after analysis.
 
 The files cover **190 country/territory labels** and declare **23,501 place rows**. There are **22,881 distinct (country/territory, place ID) pairs**. The remaining **620 rows** repeat IDs in Thailand's cumulative phases. These are source counts, not imported or independently verified physical-place counts.
@@ -479,16 +481,16 @@ These rows include both canonical and source-only columns. A `No` in the canonic
 
 ## Files supplied with this report
 
-- [country_summary.csv](country_summary.csv): all 190 destinations, related-row counts and key missing-field counts.
-- [file_inventory.csv](file_inventory.csv): all 197 files, hashes and row counts.
-- [field_completeness.csv](field_completeness.csv): every field, explicit NULL, omitted values, blanks, defaults and final completeness.
-- [place_missing_information.csv](place_missing_information.csv): each place declaration, complete values, lists of NULL/blank/omitted fields, and related-row coverage.
-- [cross_country_id_collisions.csv](cross_country_id_collisions.csv) and [repeated_ids_within_country.csv](repeated_ids_within_country.csv): every collision and repeated ID, including source variants.
-- [duplicate_place_names.csv](duplicate_place_names.csv): same city/name under different place IDs.
-- [missing_parent_references.csv](missing_parent_references.csv): missing countries, states, cities and places needed by foreign keys.
-- [tag_ids_requiring_reconciliation.csv](tag_ids_requiring_reconciliation.csv): hardcoded tag references not defined explicitly in the same file.
-- [schema_mismatches.csv](schema_mismatches.csv), [statement_issues.csv](statement_issues.csv) and [data_quality_issues.csv](data_quality_issues.csv): schema, syntax and QA findings.
+- [country_summary.csv](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/reports/sql-seed-audit/country_summary.csv): all 190 destinations, related-row counts and key missing-field counts.
+- [file_inventory.csv](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/reports/sql-seed-audit/file_inventory.csv): all 197 files, hashes and row counts.
+- [field_completeness.csv](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/reports/sql-seed-audit/field_completeness.csv): every field, explicit NULL, omitted values, blanks, defaults and final completeness.
+- [place_missing_information.csv](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/reports/sql-seed-audit/place_missing_information.csv): each place declaration, complete values, lists of NULL/blank/omitted fields, and related-row coverage.
+- [cross_country_id_collisions.csv](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/reports/sql-seed-audit/cross_country_id_collisions.csv) and [repeated_ids_within_country.csv](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/reports/sql-seed-audit/repeated_ids_within_country.csv): every collision and repeated ID, including source variants.
+- [duplicate_place_names.csv](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/reports/sql-seed-audit/duplicate_place_names.csv): same city/name under different place IDs.
+- [missing_parent_references.csv](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/reports/sql-seed-audit/missing_parent_references.csv): missing countries, states, cities and places needed by foreign keys.
+- [tag_ids_requiring_reconciliation.csv](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/reports/sql-seed-audit/tag_ids_requiring_reconciliation.csv): hardcoded tag references not defined explicitly in the same file.
+- [schema_mismatches.csv](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/reports/sql-seed-audit/schema_mismatches.csv), [statement_issues.csv](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/reports/sql-seed-audit/statement_issues.csv) and [data_quality_issues.csv](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/reports/sql-seed-audit/data_quality_issues.csv): schema, syntax and QA findings.
 - One CSV for each source table preserves its declared rows and values, including supplemental metadata. CSV blank cells can mean SQL NULL or an empty string; use the completeness and place-detail exports to distinguish them.
-- [summary.json](summary.json): structured totals and database hashes.
+- [summary.json](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/reports/sql-seed-audit/summary.json): structured totals and database hashes.
 
 **Database status:** all project database/journal hashes remain unchanged. The canonical database remains empty.
