@@ -1,4 +1,5 @@
-﻿import React, { useEffect, useMemo, useRef, useState } from 'react';
+﻿// Purpose: Manages vault uploads/downloads and shared pre-trip/packing checklists with assignments, permissions and optimistic toggle rollback.
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import QRCode from 'qrcode';
 import {
