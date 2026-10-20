@@ -1,5 +1,7 @@
 # Group Planner email invitation links - October 15, 2026
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 Interactive Smartlog checkpoint: `group-planner-invitation-link-fix`.
 
 Opening an emailed `/trips/invite/<invitation-id>` link rendered a blank page
