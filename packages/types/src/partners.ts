@@ -1,4 +1,4 @@
-// Purpose: Defines the private partner onboarding and internal review API contracts.
+// Purpose: Defines partner application/review states, capability snapshots, agreement document/signature evidence and version/hash-bound signing inputs for web and staff consumers.
 export type PartnerStatus = 'DRAFT_APPLICATION' | 'UNDER_REVIEW' | 'CHANGES_REQUESTED' | 'APPROVED' | 'SUSPENDED' | 'REJECTED';
 export type PartnerDecision = 'APPROVED' | 'CHANGES_REQUESTED' | 'REJECTED' | 'SUSPENDED';
 export interface PartnerApplication {
