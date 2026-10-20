@@ -1,4 +1,4 @@
-// Purpose: Checks review payloads, version conflicts and applicant-visible decision reasons.
+// Purpose: Verifies decision reasons and version payloads, conflict handling without replay, self-review restrictions, and protected agreement reading.
 import React from 'react';
 import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
 import { PartnerReviewPanel } from '../src/PartnerReviewPanel';
