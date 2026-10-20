@@ -1,4 +1,4 @@
-// Purpose: Provides jest.config logic and exports for apps\web.
+// Purpose: Configures jsdom, Babel, test discovery, shared Toast resolution, source aliases, and CSS/SVG mocks.
 module.exports = {
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.js'],
