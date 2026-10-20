@@ -6,7 +6,7 @@ Use Node 22, pnpm 10.34.6, and Python 3.11. `pnpm install --frozen-lockfile` ins
 the JavaScript workspace. Create an isolated Python environment and install
 `services/api/requirements.txt` and `services/api/requirements-dev.txt`.
 The root `start.py` automates one-time setup and starts the whole project; see
-[startup](startup.md). The optional backend-only PowerShell helper creates `.venv`.
+[startup](../setup/startup.md). The optional backend-only PowerShell helper creates `.venv`.
 
 From `services/api`, run `alembic upgrade head`, then `python run.py`.
 From the repository root, `pnpm dev` starts web (5173) and admin (5174); their
@@ -56,4 +56,4 @@ data and is not part of routine shutdown.
 
 Local archived files and earlier Smartlog checkpoints are preserved on the
 development machine. They are not included in the published source tree. The
-current file responsibilities are documented in [files.md](files.md).
+current file responsibilities are documented in [files.md](../files.md).
