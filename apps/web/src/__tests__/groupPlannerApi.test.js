@@ -1,4 +1,4 @@
-// Purpose: Covers complete workspace lists and catalog-to-planner place contracts.
+// Purpose: Verifies full planner collection pagination, later-page errors and supported catalog-place payloads including zero coordinates.
 jest.mock('../config/globalConfig', () => ({__esModule: true, default: {ENDPOINTS: {GROUP_PLANNER: '/v1/group-planner'}}}));
 jest.mock('../utils/apiClient', () => ({__esModule: true, default: {get: jest.fn(), post: jest.fn()}}));
 import api from '../utils/apiClient';
