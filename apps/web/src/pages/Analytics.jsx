@@ -1,4 +1,4 @@
-// Purpose: Renders the Analytics interface within apps\web\src\pages.
+// Purpose: Checks administrator identity and shows an access-denied or analytics-unavailable message; no analytics dashboard endpoint is called.
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
