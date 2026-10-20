@@ -1,2 +1,2 @@
-// Purpose: Applies the shared syntax/error lint rules to packages\ui.
+// Purpose: Re-exports shared critical JavaScript/JSX lint rules for reusable UI components.
 export { default } from '@tripraft/config/eslint';
