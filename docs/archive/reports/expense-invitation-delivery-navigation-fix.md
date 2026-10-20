@@ -1,5 +1,7 @@
 # Expense invitation delivery and group destination — 2026-10-12
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 The updated API environment contained SMTP credentials but omitted
 `EMAIL_ENABLED`, leaving expense invitation mail disabled. The earlier API logs
 reported “Email service is disabled”; no successful delivery was logged. The
