@@ -78,8 +78,9 @@ day selection, and map marker filtering.
 The canonical catalog currently passes schema, SQLite integrity and foreign-key
 checks: **31 logical tables, 0 travel records**. An empty catalog provides no
 destination discovery results until real travel data is imported. Initialization
-does not invent or import records. The geography import workflow is documented
-in [sql_database/README.md](../../sql_database/README.md).
+does not invent or import records. The original geography import workflow was
+documented in local `sql_database/README.md`, which is not published. For the
+current checkout requirements, see [local catalog setup](../../services/README.md#local-catalog-setup).
 
 The original local virtual-environment/runtime path configurations and a catalog snapshot are
 retained under `.tripraft/backups/group-planner-20261014/`. These local files and
