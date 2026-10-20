@@ -1,4 +1,4 @@
-// Purpose: Exercises private draft creation, multi-step saves, exact rate input and conflict recovery.
+// Purpose: Verifies private draft creation, save-and-continue edits, exact proposed rates, conflict preservation and text edits saved before blur.
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
