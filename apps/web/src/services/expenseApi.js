@@ -1,4 +1,4 @@
-// Purpose: Provides expense Api logic and exports for apps\web\src\services.
+// Purpose: Wraps expense profiles, groups, members, invitations, expenses, settlements, balances, analytics and bootstrap endpoints using the shared API client.
 /**
  * Expense Management API Service
  * Connects frontend to the expense backend with multi-currency support.
