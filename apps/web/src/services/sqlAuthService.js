@@ -1,4 +1,4 @@
-// Purpose: Handles cookie-based signup/login/refresh/profile/logout requests and session failure behavior.
+// Purpose: Restores traveler sessions from cookies, handles signup/login/verification/logout, shares refresh work and exposes auth-state listeners without storing tokens locally.
 /**
  * SQL Authentication Service
  * Handles authentication against the local SQL backend
