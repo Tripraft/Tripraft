@@ -1,4 +1,4 @@
-// Purpose: Provides timezone Utils logic and exports for apps\web\src\utils.
+// Purpose: Provides local date/time formatting, date-input conversion, relative dates, browser timezone/geolocation and coordinate-to-city lookup helpers.
 
 /**
  * Timezone & Location Utility Functions
