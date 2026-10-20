@@ -1,4 +1,4 @@
-// Purpose: Manages paginated chat queries and optimistic sends while preserving concurrent messages.
+// Purpose: Manages cursor-paginated messages, optimistic sends, edits/deletes, read markers and unread counts without losing concurrent messages.
 /**
  * Chat React Query Hooks
  * useInfiniteQuery for cursor-paginated messages, mutations for send/delete/read.
