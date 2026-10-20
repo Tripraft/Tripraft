@@ -1,4 +1,4 @@
-// Purpose: Renders the Auth Page interface within apps\web\src\features\auth\jsx.
+// Purpose: Switches between the traveler Login and Signup forms within the /auth page.
 import React, { useState } from 'react';
 import Login from './Login';
 import Signup from './Signup';
