@@ -1,4 +1,4 @@
-/* Purpose: Contains feature rendering failures and provides an actionable recovery screen. */
+/* Purpose: Styles feature failure messages, retry controls and development diagnostic details. */
 .feb-container {
   display: flex;
   justify-content: center;
