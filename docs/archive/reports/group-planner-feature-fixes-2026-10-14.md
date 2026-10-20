@@ -1,5 +1,7 @@
 # Group Planner feature review and bug fixes
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 Date: October 14, 2026 (America/Los_Angeles).
 Local Interactive Smartlog checkpoint: `group-planner-features-fix`.
 
@@ -80,7 +82,7 @@ checks: **31 logical tables, 0 travel records**. An empty catalog provides no
 destination discovery results until real travel data is imported. Initialization
 does not invent or import records. The original geography import workflow was
 documented in local `sql_database/README.md`, which is not published. For the
-current checkout requirements, see [local catalog setup](../../services/README.md#local-catalog-setup).
+current checkout requirements, see [local catalog setup](../../../services/README.md#local-catalog-setup).
 
 The original local virtual-environment/runtime path configurations and a catalog snapshot are
 retained under `.tripraft/backups/group-planner-20261014/`. These local files and
