@@ -1,4 +1,4 @@
-// Purpose: Renders the Group Planner Page interface within apps\web\src\features\trips\jsx.
+// Purpose: Wraps the planner in shared site navigation, measures header height for layout, and enables DemoPlannerProvider only for demo=1.
 /** Group planner content below the unchanged shared Tripraft navigation. */
 
 import React, { useLayoutEffect, useRef, useState } from 'react';
