@@ -1,3 +1,4 @@
+// Purpose: Manages trip members, access roles, independent crew responsibilities, group settings, invitations and Scout consent controls.
 import CurrencySelect from '../../../../components/common/jsx/CurrencySelect';
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
