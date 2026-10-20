@@ -1,5 +1,7 @@
 # Copied expense invitation links — 2026-10-12
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 The frontend requested `GET /api/v1/expenses/invitations/{id}/details`, but that
 route was missing. The live API log confirmed HTTP 405. The invitation page,
 login form and signup form also attempted private detail requests before the
