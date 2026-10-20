@@ -1,4 +1,4 @@
-/* Purpose: Consistent responsive geometry for every expense screen and action surface. */
+/* Purpose: Applies shared responsive sizing, wrapping and overflow rules across expense screens and dialogs. */
 .expense-page .expense-container { width: 100%; min-width: 0; padding: clamp(20px, 3vw, 44px) clamp(12px, 3vw, 32px); }
 .expense-manager, .expense-manager :is(section, article, aside, .card, .transactions-card, .summary-card) { min-width: 0; }
 .expense-manager .expense-header { flex-wrap: wrap; gap: 20px; }
