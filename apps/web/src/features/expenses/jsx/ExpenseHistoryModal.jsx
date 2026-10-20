@@ -1,4 +1,4 @@
-// Purpose: Renders the Expense History Modal interface within apps\web\src\features\expenses\jsx.
+// Purpose: Fetches an expense's edit history and shows a timeline of field, payer and split changes with member names and currency formatting.
 import React from 'react';
 import ExpenseDialog from './ExpenseDialog';
 import { X, History, Clock, User, ArrowRight } from 'lucide-react';
