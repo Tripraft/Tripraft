@@ -1,4 +1,4 @@
-// Purpose: Renders the Group Card Skeleton interface within apps\web\src\components\common\jsx.
+// Purpose: Renders placeholder group-card geometry while group data is loading.
 import '../css/Skeleton.css';
 
 export default function GroupCardSkeleton() {
