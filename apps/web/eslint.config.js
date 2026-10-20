@@ -1,2 +1,2 @@
-// Purpose: Applies the shared syntax/error lint rules to apps\web.
+// Purpose: Re-exports the shared @tripraft/config/eslint rules for web source and tests.
 export { default } from '@tripraft/config/eslint';
