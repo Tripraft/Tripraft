@@ -1,4 +1,4 @@
-// Purpose: Provides index logic and exports for apps\web\src\components\common.
+// Purpose: Re-exports shared common components and the workspace Toast from @tripraft/ui/Toast.
 // Common Components Index
 export { default as AnimatedBackground } from './jsx/AnimatedBackground';
 export { default as DestinationAutocomplete } from './jsx/DestinationAutocomplete';
