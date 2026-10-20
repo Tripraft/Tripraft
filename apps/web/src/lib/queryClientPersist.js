@@ -1,10 +1,8 @@
-// Purpose: Configures query caching while excluding financial/private queries and mutation state from persistence.
+// Purpose: Configures query freshness/retries and optional IndexedDB/localStorage persistence, excludes private queries and all mutations, and clears persisted state at logout.
 /**
- * Query Client with Persistent Cache
- * Phase 11: Browser Cache (30-60 min TTL)
- * 
- * Uses @tanstack/react-query-persist-client to persist cache to IndexedDB
- * This reduces API calls by 70%+ on repeat visits within TTL period
+ * Keeps successful, permitted queries between visits through IndexedDB or
+ * localStorage. CACHE_CONFIG defines separate freshness, memory and disk limits.
+ * Financial/private queries and mutation state are excluded below.
  */
 
 import { QueryClient } from '@tanstack/react-query';
