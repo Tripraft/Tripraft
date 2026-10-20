@@ -1,4 +1,4 @@
-// Purpose: Renders the Pricing interface within apps\web\src\pages.
+// Purpose: Explains the current free beta and future plans and links to signup or the planner; no payment checkout is offered.
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
