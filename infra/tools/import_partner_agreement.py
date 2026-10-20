@@ -1,4 +1,4 @@
-# Purpose: Imports the supplied draft agreement as faithful, ordered text/table blocks and preserves its original bytes.
+# Purpose: Extracts ordered paragraphs, tables and document furniture from a supplied DOCX, records its SHA-256 and preserves the original in the API agreement directory for review.
 """Run with the source DOCX path; review the generated JSON before committing.
 
 This importer does not complete blanks, execute an agreement or modify Word files.
