@@ -1,3 +1,4 @@
+// Purpose: Connects the trip to an expense group and displays budgets, converted summaries, balances, suggested settlements and recent expenses.
 import React, { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
