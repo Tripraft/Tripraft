@@ -1,4 +1,4 @@
-// Purpose: Renders itinerary map markers and safe DOM-based popups.
+// Purpose: Renders generated plans on Leaflet/OpenStreetMap with numbered stops, day routes and safe text popups; supports switching between returned plans.
 import React, { useEffect, useRef, useState } from 'react';
 
 const popupText = (lines) => {
