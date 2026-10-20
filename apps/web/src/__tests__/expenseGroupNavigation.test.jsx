@@ -1,3 +1,4 @@
+// Purpose: Verifies exact group URLs, browser back, selected-group restoration, dashboard/empty states and navigation after group creation or invitation acceptance.
 jest.mock('../services/currencyApi', () => ({getCurrencies: jest.fn().mockResolvedValue({currencies: [{code: 'USD', name: 'US Dollar'}, {code: 'INR', name: 'Indian Rupee'}]})}));
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
