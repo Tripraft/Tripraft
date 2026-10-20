@@ -1,4 +1,4 @@
-// Purpose: Regression tests for owner And Inactivity, including success and failure behavior.
+// Purpose: Verifies UUID owner controls and actual personal share, and tests the optional idle tracker's warning/activity reset in isolation.
 import React from 'react';import {render,screen,fireEvent,act} from '@testing-library/react';
 jest.mock('../context/AuthContext',()=>({useAuth:jest.fn()}));jest.mock('../services/expenseApi',()=>({__esModule:true,default:{}}));
 import {useAuth} from '../context/AuthContext';import Inactivity from '../features/auth/jsx/InactivityTracker';import GroupManager from '../features/expenses/jsx/GroupManager';import GroupDetailHeader from '../features/expenses/jsx/GroupDetailHeader';
