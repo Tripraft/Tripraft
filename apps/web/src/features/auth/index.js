@@ -1,4 +1,4 @@
-// Purpose: Provides index logic and exports for apps\web\src\features\auth.
+// Purpose: Re-exports traveler login, signup, auth switching, route protection and the optional inactivity tracker.
 // Auth Components Index
 export { default as AuthPage } from './jsx/AuthPage';
 export { default as InactivityTracker } from './jsx/InactivityTracker';
