@@ -1,4 +1,4 @@
-// Purpose: Renders the Place Detail Modal interface within apps\web\src\features\discover\jsx.
+// Purpose: Fetches full place details and renders photos, hours, costs, tips and sharing/map actions with modal dismissal behavior.
 /**
  * PlaceDetailModal Component
  * 
