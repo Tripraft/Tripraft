@@ -1,4 +1,4 @@
-// Purpose: Regression tests for money, including success and failure behavior.
+// Purpose: Verifies exact cent allocation, UUID participants, invalid amounts, preserved custom splits/payer edits, settlement caps and currency formatting.
 import { equalSplits, expensePayload, settlementCap, formatMoney } from '../utils/money';
 const payer = '01912345-aaaa-7000-8000-000000000001';
 const other = '01912345-aaaa-7000-8000-000000000002';
