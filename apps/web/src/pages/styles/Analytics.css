@@ -1,4 +1,4 @@
-/* Purpose: Styles the Analytics interface, including its layout and interaction states. */
+/* Purpose: Styles the analytics route, including its current loading/error/unavailable state and retained dashboard selectors. */
 /* Analytics Dashboard Styles */
 .analytics-page {
   min-height: 100vh;
