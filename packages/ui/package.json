@@ -1,8 +1,23 @@
 {
-  "name": "@tripraft/ui", "version": "0.1.0", "private": true, "type": "module",
-  "exports": { "./Toast": "./src/Toast.jsx" },
-  "sideEffects": ["**/*.css"],
-  "peerDependencies": { "react": "^18.2.0", "lucide-react": "^0.545.0" },
-  "devDependencies": { "@tripraft/config": "workspace:*" },
-  "scripts": { "lint": "eslint src" }
+  "name": "@tripraft/ui",
+  "description": "Shared React Toast notifications with status icons, timed dismissal and responsive styles.",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./Toast": "./src/Toast.jsx"
+  },
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "lucide-react": "^0.545.0"
+  },
+  "devDependencies": {
+    "@tripraft/config": "workspace:*"
+  },
+  "scripts": {
+    "lint": "eslint src"
+  }
 }
