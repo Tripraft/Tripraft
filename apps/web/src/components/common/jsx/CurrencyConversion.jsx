@@ -1,3 +1,4 @@
+// Purpose: Shows original and converted summaries plus an independent currency calculator, including rate freshness, refresh and unavailable-rate states.
 import React, {useEffect, useId, useState} from 'react';
 import {ArrowLeftRight, RefreshCw, ChevronDown} from 'lucide-react';
 import useExchangeRate from '../../../hooks/useExchangeRate';
