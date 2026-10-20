@@ -1,5 +1,7 @@
 # Agent-only signing after approval and local server recovery
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 Implemented 19 October 2026; checkpoint `agent-signature-live-reload`. Supersedes the earlier pre-submission reading-acknowledgment workflow in checkpoint `829fcfb8cc96`.
 
 ## Delivered
