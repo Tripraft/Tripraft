@@ -1,4 +1,4 @@
-// Purpose: Covers distinct expense-share/balance metrics and dashboard interaction states.
+// Purpose: Verifies paid/share/net distinctions, full-ledger summaries, custom splits, deleted expenses and searchable dashboard/error states.
 import React from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import GroupDashboard from '../features/expenses/jsx/GroupDashboard';
