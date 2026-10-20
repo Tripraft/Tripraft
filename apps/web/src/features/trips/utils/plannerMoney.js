@@ -1,3 +1,4 @@
+// Purpose: Builds itemized participant splits in whole cents and suggests payments that clear debtor/creditor balances.
 import { equalSplits } from '../../../utils/money';
 export function itemizedSplits(items) {
   const totals = new Map();
