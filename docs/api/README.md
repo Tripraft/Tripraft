@@ -57,13 +57,13 @@ API can still be selected with `VITE_API_BASE_URL`.
 Supplier onboarding uses separate `/api/v1/partners/*` endpoints, partner-only
 JWT types and `partner_*` cookies. Its mutations echo `partner_csrf_token` in
 `X-CSRF-Token`; general admin review uses the normal administrator cookie/CSRF
-contract. See the [partner API and implementation report](reports/partners-onboarding-foundation-2026-10-18.md).
+contract. See the [partner API and implementation report](../archive/reports/partners-onboarding-foundation-2026-10-18.md).
 
 The separate staff console signs in through `POST /api/v1/admin/session`, which
 rejects customer and supplier credentials before issuing an employee session.
 Approved verified suppliers can create/read/save/copy private drafts through
 `/api/v1/partners/packages`. These endpoints do not publish tours or configure
-customer prices. See the [staff and draft contracts](reports/staff-console-package-drafts-2026-10-19.md).
+customer prices. See the [staff and draft contracts](../archive/reports/staff-console-package-drafts-2026-10-19.md).
 
 ## Partner agreement and post-approval agent signature
 
@@ -75,7 +75,7 @@ Applications submit before agreement signing. `GET /api/v1/partners/agreement` a
 
 Snapshot/review agreement status includes `agent_signed`, `signature_required`, signature ID/time/name/title and `execution_status` (`NOT_EXECUTED` or `AGENT_SIGNED_DRAFT`). `commercial_activation_allowed` remains false for this unfinished draft. Every package list/create/read/save/copy operation rejects an approved but unsigned agent. A new source version/hash requires a new explicit signature. Suspension and verification revocation still deny access.
 
-The historical `/me/agreement/acknowledge` endpoint is retained after approval for compatibility and cannot unlock package access. Existing acknowledgment records are not signatures, and no migration fabricates acceptance. See [agreement operations](partner-agreement.md).
+The historical `/me/agreement/acknowledge` endpoint is retained after approval for compatibility and cannot unlock package access. Existing acknowledgment records are not signatures, and no migration fabricates acceptance. See [agreement operations](../guides/partner-agreement.md).
 
 ## Private package images and content review
 
