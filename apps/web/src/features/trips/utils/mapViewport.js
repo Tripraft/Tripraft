@@ -1,3 +1,4 @@
+// Purpose: Fits the map to a catalog destination or valid coordinates and wraps longitudes near the viewport for date-line destinations.
 import { validCoordinates } from '../../../utils/coordinates';
 import { DEFAULT_CENTER, DEFAULT_ZOOM } from '../constants/mapConfig';
 
