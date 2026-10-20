@@ -1,4 +1,4 @@
-// Purpose: Renders the Trip Tips interface within apps\web\src\features\itinerary\jsx.
+// Purpose: Displays static travel advice alongside generated single-trip itineraries.
 import React from 'react';
 
 const TripTips = () => {
