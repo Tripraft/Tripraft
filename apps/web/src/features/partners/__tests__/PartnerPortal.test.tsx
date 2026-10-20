@@ -1,4 +1,4 @@
-// Purpose: Verifies the applicant journey, protected status routes and honest package capability boundary.
+// Purpose: Verifies partner routing, signup, application versions and verification gates, approval/signature prerequisites and agreement-load failures.
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
