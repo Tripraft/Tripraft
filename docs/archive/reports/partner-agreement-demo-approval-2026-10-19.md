@@ -1,5 +1,7 @@
 # Partner agreement integration and local demo approval
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 Implemented 19 October 2026; local checkpoint `partner-agreement-demo-approval`. Historical workflow: the later [agent-only signing checkpoint](agent-signature-and-live-reload-2026-10-19.md) supersedes pre-submission acknowledgment and adds post-approval signing/dashboard enforcement.
 
 ## Delivered behavior
