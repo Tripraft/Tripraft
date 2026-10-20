@@ -1,4 +1,4 @@
-// Purpose: Renders the App interface within apps\web\src.
+// Purpose: Defines lazy-loaded public, invitation and protected routes, supplies AuthProvider and feature recovery boundaries, and allows the opt-in planner demo.
 import React, { lazy, Suspense } from 'react';
 import { Routes, Route, useSearchParams } from 'react-router-dom';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
