@@ -1,5 +1,7 @@
 # Email verification blank page — 2026-10-12
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 The signup email links to `/verify-email/{token}`. The API already supported
 public verification at `GET /api/v1/auth/verify-email?token=...`, but the web app
 had no matching route or page. React Router therefore rendered no page for the
