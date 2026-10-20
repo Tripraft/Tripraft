@@ -1,4 +1,4 @@
-// Purpose: Provides the partner landing, supplier-only sign-in and business application/status flow.
+// Purpose: Owns partner-only routes, registration/login, business application drafts and submission, verification status, agreement gating and private package access.
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import type { PartnerApplicationInput, PartnerSnapshot, PartnerStatus } from '@tripraft/types';
