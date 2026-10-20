@@ -1,24 +1,7 @@
-// Purpose: Coordinates personal/group expense screens, editing, history and financial query updates.
+// Purpose: Coordinates personal/group expense data, group selection, transaction editing, invitations, settlements, history, PDF export and live refresh.
 /**
- * ExpenseManager Component - Simplified Version
- * 
- * Clean, simple expense management using direct SQL API calls.
- * Features:
- * - Smart polling (auto-refresh every 30s when tab is focused)
- * - Refetch on window focus
- * - Direct state management (no complex caching layers)
- * - Single source of truth
- */
-
-/**
- * ExpenseManager Component - Simplified Version
- *
- * Clean, simple expense management using direct SQL API calls.
- * Features:
- * - Smart polling (auto-refresh every 30s when tab is focused)
- * - Refetch on window focus
- * - Direct state management (no complex caching layers)
- * - Single source of truth
+ * Uses the expense query hooks for ledger state and API mutations for user actions.
+ * Live notifications invalidate server data; local state owns selection and dialogs.
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -77,7 +60,7 @@ const ExpenseManager = () => {
   const { isAuthenticated, currentUser, loading: authLoading } = useAuth();
   useExpenseLiveUpdates(isAuthenticated ? currentUser?.uid || currentUser?.user_id || currentUser?.id : null, activeGroupId);
   
-  // Data hooks - simple, direct SQL API calls with smart polling + INSTANT UPDATES
+  // Query-backed account/group data; live invalidation is handled above.
   const {
     groups,
     loading: groupsLoading,
