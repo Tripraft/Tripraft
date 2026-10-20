@@ -15,7 +15,7 @@ night mode. The required attribution is included. The former
 The selected destination comes from the catalog configured by
 `GROUP_PLANNER_CATALOG_PATH` (default `data/catalog/tripraft_places.db`).
 Catalog files are supplied separately and excluded from Git; follow
-[local catalog setup](../services/README.md#local-catalog-setup) before using
+[local catalog setup](../../services/README.md#local-catalog-setup) before using
 catalog-backed destination search.
 The planner reads `/api/v1/group-planner/catalog/viewport` to obtain the extent
 of known city/place coordinates within that country, state, or city. The All
@@ -51,6 +51,6 @@ The map styles are configured in
 service or its style URLs may require an application update.
 
 For the provider setup checks, see the
-[OpenFreeMap report](reports/group-planner-openfreemap-2026-10-16.md), and for the
+[OpenFreeMap report](../archive/reports/group-planner-openfreemap-2026-10-16.md), and for the
 latest Library, message menu, and live-update changes, see the
-[workspace report](reports/group-planner-library-live-audit-2026-10-16.md).
+[workspace report](../archive/reports/group-planner-library-live-audit-2026-10-16.md).
