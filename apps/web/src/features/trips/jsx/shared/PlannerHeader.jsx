@@ -1,3 +1,4 @@
+// Purpose: Renders the current group's title, group-count return action and planner context/actions without a separate dropdown group picker.
 import React from 'react';
 import {
   Compass,
