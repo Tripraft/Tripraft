@@ -1,4 +1,4 @@
-// Purpose: Reviews supplier business applications with version checks and agent-visible decision reasons.
+// Purpose: Paginates supplier applications, displays business and signature evidence, and submits versioned review decisions while blocking self-review controls.
 import React, { useCallback, useEffect, useState } from 'react';
 import type { PartnerReviewApplication, PartnerDecision, PartnerReviewList, PartnerStatus } from '@tripraft/types';
 import { PartnerAgreementPanel } from './PartnerAgreementPanel';
