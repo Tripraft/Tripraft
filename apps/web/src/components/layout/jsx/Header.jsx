@@ -1,4 +1,4 @@
-// Purpose: Renders the Header interface within apps\web\src\components\layout\jsx.
+// Purpose: Renders site navigation and account actions with a mobile menu, outside-click/Escape dismissal and body-scroll handling.
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import GlobalConfig from '../../../config/globalConfig';
