@@ -1,4 +1,4 @@
-/* Purpose: Theme-aware expense group dashboard, detail hierarchy and creation dialog. */
+/* Purpose: Styles the searchable expense-group dashboard, group detail header and new-group dialog using theme variables. */
 .expense-manager {
   --expense-accent: var(--color-primary-600, #7c3aed);
   --expense-tint: var(--color-primary-50, #f5f3ff);
