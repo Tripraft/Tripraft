@@ -1,4 +1,4 @@
-/* Purpose: Styles the global interface, including its layout and interaction states. */
+/* Purpose: Defines shared theme variables, layout utilities, form/control defaults, animations and responsive global rules. */
 /**
  * Global Styles with CSS Variables
  * Prevents CSS conflicts and enables theming
