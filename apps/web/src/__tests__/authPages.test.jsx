@@ -1,4 +1,4 @@
-// Purpose: Tests auth forms, retries, autofill, validation and return navigation.
+// Purpose: Verifies click/Enter/autofill submissions, validation, duplicate prevention, session initialization and invitation/return-state preservation, including disabled storage.
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
