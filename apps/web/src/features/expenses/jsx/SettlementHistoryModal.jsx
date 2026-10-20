@@ -1,4 +1,4 @@
-// Purpose: Renders the Settlement History Modal interface within apps\web\src\features\expenses\jsx.
+// Purpose: Displays settlement records and payment status; confirms authorized deletions and keeps failures retryable.
 import ExpenseDialog from './ExpenseDialog';
 import React, { useState } from 'react';
 import { X, CheckCircle, Clock, AlertCircle, ArrowRight, Calendar, DollarSign } from 'lucide-react';
