@@ -1,3 +1,4 @@
+// Purpose: Presents suggested debt-clearing payments, settlement entry and settlement history using permission-aware controls.
 import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 // Purpose: Responsive settlement summary and suggested payments with permission-aware recording.
 import React, { useState } from 'react';
