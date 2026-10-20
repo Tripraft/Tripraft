@@ -1,4 +1,4 @@
-// Purpose: Derives group card and detail metrics from stored splits and ledger balances.
+// Purpose: Derives group spending, personal share, paid amounts, settlements and net position using server summaries or available ledger data.
 export function groupOverview(group, userId, expenses = group?.expenses || [], balances = group?.balances) {
   const active = expenses.filter(expense => !expense.is_deleted);
   const summary = group?.summary;
