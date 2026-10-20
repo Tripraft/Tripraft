@@ -1,4 +1,4 @@
-// Purpose: Renders the Pending Invitations interface within apps\web\src\features\expenses\jsx.
+// Purpose: Displays pending expense invitations and coordinates acceptance/decline with immediate parent-state refresh.
 import React, { useState, useEffect, useCallback } from 'react';
 import { Mail, Check, X, Clock } from 'lucide-react';
 import expenseApi from '../../../services/expenseApi';
