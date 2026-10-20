@@ -1,4 +1,4 @@
-// Purpose: Regression tests for access, including success and failure behavior.
+// Purpose: Verifies identity loading, non-admin rejection, retry after API failure, dedicated staff login, and degraded readiness or audit errors.
 import React from 'react';
 import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
 const mockGet = jest.fn();
