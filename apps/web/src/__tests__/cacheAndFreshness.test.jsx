@@ -1,4 +1,4 @@
-// Purpose: Regression tests for cache And Freshness, including success and failure behavior.
+// Purpose: Verifies private-query/mutation persistence exclusions, disabled mutation retries, old-snapshot invalidation, logout cleanup and fresh bootstrap balances.
 import React from 'react';import {renderHook,waitFor} from '@testing-library/react';import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
 jest.mock('../services/expenseApi',()=>({__esModule:true,default:{getMegaBootstrap:jest.fn()}}));jest.mock('../lib/indexedDBPersister',()=>({createIDBPersister:jest.fn()}));jest.mock('@tanstack/react-query-persist-client',()=>({persistQueryClient:jest.fn()}));
 import expense from '../services/expenseApi';import {useMegaBootstrap,queryKeys} from '../hooks/useExpenseQuery';import {createQueryClient,shouldPersistQuery,initializeQueryPersistence,clearPersistedCache} from '../lib/queryClientPersist';import {persistQueryClient} from '@tanstack/react-query-persist-client';import {createIDBPersister} from '../lib/indexedDBPersister';
