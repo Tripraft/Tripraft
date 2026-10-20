@@ -1,15 +1,15 @@
 # Published file guide
 
-Reviewed on 2026-10-20. This inventory describes all **697 files** in the resulting published tree, including this guide. Ignored catalogs, Wikidata inputs and the four removed root PDF/Word originals are excluded. See the [repository review](repository-review.md) for required versus optional material.
+Reviewed on 2026-10-20. This inventory describes all **665 published files**, including **45 documentation files**. [Start with the documentation index](README.md), or read [the repository review](repository-review.md) for publication decisions. Ignored datasets, raw audit exports, checkpoint notes and root planning originals are excluded.
 
-Descriptions explain file responsibilities. Strict JSON, lockfiles, generated declarations and binary assets are documented without adding invalid inline comments. Update this inventory when the published tree changes.
+Each description explains the file responsibility. Strict JSON, lockfiles, generated declarations and binary assets are described without adding invalid inline comments. Update this index when published files change.
 
 | Area | Files |
 |---|---:|
 | `(root)` | 9 |
 | `.github` | 4 |
 | `apps` | 301 |
-| `docs` | 77 |
+| `docs` | 45 |
 | `infra` | 22 |
 | `packages` | 20 |
 | `services` | 264 |
@@ -347,83 +347,51 @@ Descriptions explain file responsibilities. Strict JSON, lockfiles, generated de
 
 | File | What it does |
 |---|---|
-| [docs/api.md](../docs/api.md) | Documents API conventions, client contract generation and endpoint integration. |
-| [docs/architecture.md](../docs/architecture.md) | Explains frontend/backend boundaries, persistence, authentication, workflow ownership and launcher behavior. |
-| [docs/backend-checkpoints.md](../docs/backend-checkpoints.md) | Records backend implementation/checkpoint context for maintainers. |
-| [docs/email-setup.md](../docs/email-setup.md) | Explains SMTP configuration and local verification of account/invitation email delivery. |
+| [docs/README.md](../docs/README.md) | Routes developers to current setup, architecture, API, feature and operations guides, plans, archive and source references. |
+| [docs/api/README.md](../docs/api/README.md) | Documents API conventions, client contract generation and endpoint integration. |
+| [docs/api/group-finance.md](../docs/api/group-finance.md) | Documents collaborative expense/ledger endpoint behavior and permissions. |
+| [docs/api/personal-finance.md](../docs/api/personal-finance.md) | Documents personal finance API operations and monetary data conventions. |
+| [docs/architecture/overview.md](../docs/architecture/overview.md) | Explains frontend/backend boundaries, persistence, authentication, workflow ownership and launcher behavior. |
+| [docs/archive/README.md](../docs/archive/README.md) | Indexes retained dated Markdown reports and explains the removal of raw exports and machine-specific recovery notes. |
+| [docs/archive/reports/agent-signature-and-live-reload-2026-10-19.md](../docs/archive/reports/agent-signature-and-live-reload-2026-10-19.md) | Archived dated report: Agent-only signing after approval and local server recovery. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/email-verification-page-fix.md](../docs/archive/reports/email-verification-page-fix.md) | Archived dated report: Email verification blank page — 2026-10-12. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/expense-group-creation-fix.md](../docs/archive/reports/expense-group-creation-fix.md) | Archived dated report: Expense group creation fix — 2026-10-12. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/expense-invitation-delivery-navigation-fix.md](../docs/archive/reports/expense-invitation-delivery-navigation-fix.md) | Archived dated report: Expense invitation delivery and group destination — 2026-10-12. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/expense-invitation-email-fix.md](../docs/archive/reports/expense-invitation-email-fix.md) | Archived dated report: Expense invitation delivery findings — 2026-10-12. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/expense-invitation-link-fix.md](../docs/archive/reports/expense-invitation-link-fix.md) | Archived dated report: Copied expense invitation links — 2026-10-12. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/expenses-feature-audit-2026-10-13.md](../docs/archive/reports/expenses-feature-audit-2026-10-13.md) | Archived dated report: Personal and group expenses audit - October 13, 2026. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/full-data-import/report.md](../docs/archive/reports/full-data-import/report.md) | Archived dated report: Remaining-details import. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/github-code-only-publication-2026-10-19.md](../docs/archive/reports/github-code-only-publication-2026-10-19.md) | Archived dated report: Code-only GitHub publication and package review foundation. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/group-expense-permissions-audit.md](../docs/archive/reports/group-expense-permissions-audit.md) | Archived dated report: Group expense permissions and feature audit. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/group-planner-catalog-library-2026-10-15.md](../docs/archive/reports/group-planner-catalog-library-2026-10-15.md) | Archived dated report: Group Planner catalog destinations and Library - October 15, 2026. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/group-planner-compact-settings-sync-2026-10-17.md](../docs/archive/reports/group-planner-compact-settings-sync-2026-10-17.md) | Archived dated report: Compact currency display, settings sync and member controls. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/group-planner-crew-responsibilities-2026-10-15.md](../docs/archive/reports/group-planner-crew-responsibilities-2026-10-15.md) | Archived dated report: Group Planner crew responsibilities - October 15, 2026. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/group-planner-currency-errors-2026-10-16.md](../docs/archive/reports/group-planner-currency-errors-2026-10-16.md) | Archived dated report: Currency estimates and pasted browser errors. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/group-planner-feature-fixes-2026-10-14.md](../docs/archive/reports/group-planner-feature-fixes-2026-10-14.md) | Archived dated report: Group Planner feature review and bug fixes. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/group-planner-invitation-link-fix-2026-10-15.md](../docs/archive/reports/group-planner-invitation-link-fix-2026-10-15.md) | Archived dated report: Group Planner email invitation links - October 15, 2026. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/group-planner-library-live-audit-2026-10-16.md](../docs/archive/reports/group-planner-library-live-audit-2026-10-16.md) | Archived dated report: Family/friends Group Planner refresh — October 16, 2026. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/group-planner-movable-chat-2026-10-17.md](../docs/archive/reports/group-planner-movable-chat-2026-10-17.md) | Archived dated report: Movable Group Planner chat. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/group-planner-openfreemap-2026-10-16.md](../docs/archive/reports/group-planner-openfreemap-2026-10-16.md) | Archived dated report: Group Planner OpenFreeMap checkpoint — October 16, 2026. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/group-planner-tabs-refresh-2026-10-15.md](../docs/archive/reports/group-planner-tabs-refresh-2026-10-15.md) | Archived dated report: Group Planner tabs and demo preview - October 15, 2026. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/group-planner-ui-refresh-2026-10-14.md](../docs/archive/reports/group-planner-ui-refresh-2026-10-14.md) | Archived dated report: Group Planner UI refresh — October 14, 2026. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/partner-agreement-demo-approval-2026-10-19.md](../docs/archive/reports/partner-agreement-demo-approval-2026-10-19.md) | Archived dated report: Partner agreement integration and local demo approval. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/partners-onboarding-foundation-2026-10-18.md](../docs/archive/reports/partners-onboarding-foundation-2026-10-18.md) | Archived dated report: Partner onboarding foundation and native startup. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/sql-seed-audit/report.md](../docs/archive/reports/sql-seed-audit/report.md) | Archived dated report: SQL seed audit — 7 October 2026. Historical evidence; use current guides for setup and behavior. |
+| [docs/archive/reports/staff-console-package-drafts-2026-10-19.md](../docs/archive/reports/staff-console-package-drafts-2026-10-19.md) | Archived dated report: Staff review access and private package drafts. Historical evidence; use current guides for setup and behavior. |
 | [docs/files.md](../docs/files.md) | Indexes every file in the reviewed published tree with its role; local ignored inputs are excluded. |
-| [docs/group-finance-api.md](../docs/group-finance-api.md) | Documents collaborative expense/ledger endpoint behavior and permissions. |
-| [docs/group-planner-map-setup.md](../docs/group-planner-map-setup.md) | Explains planner map assets, external tiles/styles and destination catalog setup. |
-| [docs/partner-agreement.md](../docs/partner-agreement.md) | Explains agreement versions, protected text/original downloads and signature evidence. |
-| [docs/personal-finance-api.md](../docs/personal-finance-api.md) | Documents personal finance API operations and monetary data conventions. |
+| [docs/guides/partner-agreement.md](../docs/guides/partner-agreement.md) | Explains current agreement versions, agent signature evidence, protected runtime attachments and commercial boundaries. |
+| [docs/guides/staff-console.md](../docs/guides/staff-console.md) | Explains generic staff configuration, business/package review, self-review restrictions and connection recovery. |
+| [docs/operations/runbook.md](../docs/operations/runbook.md) | Provides maintenance, deployment/recovery and operational troubleshooting procedures. |
+| [docs/plans/README.md](../docs/plans/README.md) | Indexes the enterprise and tour-package proposals and separates delivered private supplier review from proposed public/commerce phases. |
 | [docs/plans/enterprise-platform-implementation-plan.md](../docs/plans/enterprise-platform-implementation-plan.md) | Proposes enterprise platform work in stages against the locally retained blueprint; not an implementation guarantee. |
 | [docs/plans/places-search-tour-packages/README.md](../docs/plans/places-search-tour-packages/README.md) | Introduces the proposed places-search and tour-package implementation plan and its source context. |
 | [docs/plans/places-search-tour-packages/architecture-and-files.md](../docs/plans/places-search-tour-packages/architecture-and-files.md) | Proposes module boundaries and source-file responsibilities for places search and tour packages. |
 | [docs/plans/places-search-tour-packages/data-api-and-publishing.md](../docs/plans/places-search-tour-packages/data-api-and-publishing.md) | Proposes data contracts, API operations and review/publishing rules for search and tour packages. |
 | [docs/plans/places-search-tour-packages/phases-and-acceptance.md](../docs/plans/places-search-tour-packages/phases-and-acceptance.md) | Defines proposed implementation phases, acceptance criteria and sequencing for search/package work. |
-| [docs/reports/agent-signature-and-live-reload-2026-10-19.md](../docs/reports/agent-signature-and-live-reload-2026-10-19.md) | Historical report: Agent-only signing after approval and local server recovery. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/email-verification-page-fix.md](../docs/reports/email-verification-page-fix.md) | Historical report: Email verification blank page — 2026-10-12. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/expense-group-creation-fix.md](../docs/reports/expense-group-creation-fix.md) | Historical report: Expense group creation fix — 2026-10-12. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/expense-invitation-delivery-navigation-fix.md](../docs/reports/expense-invitation-delivery-navigation-fix.md) | Historical report: Expense invitation delivery and group destination — 2026-10-12. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/expense-invitation-email-fix.md](../docs/reports/expense-invitation-email-fix.md) | Historical report: Expense invitation delivery findings — 2026-10-12. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/expense-invitation-link-fix.md](../docs/reports/expense-invitation-link-fix.md) | Historical report: Copied expense invitation links — 2026-10-12. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/expenses-feature-audit-2026-10-13.md](../docs/reports/expenses-feature-audit-2026-10-13.md) | Historical report: Personal and group expenses audit - October 13, 2026. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/full-data-import/report.json](../docs/reports/full-data-import/report.json) | Machine-readable historical full data import results; not live application state. |
-| [docs/reports/full-data-import/report.md](../docs/reports/full-data-import/report.md) | Historical report: Remaining-details import. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/github-code-only-publication-2026-10-19.md](../docs/reports/github-code-only-publication-2026-10-19.md) | Historical report: Code-only GitHub publication and package review foundation. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/group-expense-permissions-audit.md](../docs/reports/group-expense-permissions-audit.md) | Historical report: Group expense permissions and feature audit. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/group-planner-catalog-library-2026-10-15.md](../docs/reports/group-planner-catalog-library-2026-10-15.md) | Historical report: Group Planner catalog destinations and Library - October 15, 2026. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/group-planner-compact-settings-sync-2026-10-17.md](../docs/reports/group-planner-compact-settings-sync-2026-10-17.md) | Historical report: Compact currency display, settings sync and member controls. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/group-planner-crew-responsibilities-2026-10-15.md](../docs/reports/group-planner-crew-responsibilities-2026-10-15.md) | Historical report: Group Planner crew responsibilities - October 15, 2026. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/group-planner-currency-errors-2026-10-16.md](../docs/reports/group-planner-currency-errors-2026-10-16.md) | Historical report: Currency estimates and pasted browser errors. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/group-planner-feature-fixes-2026-10-14.md](../docs/reports/group-planner-feature-fixes-2026-10-14.md) | Historical report: Group Planner feature review and bug fixes. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/group-planner-invitation-link-fix-2026-10-15.md](../docs/reports/group-planner-invitation-link-fix-2026-10-15.md) | Historical report: Group Planner email invitation links - October 15, 2026. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/group-planner-library-live-audit-2026-10-16.md](../docs/reports/group-planner-library-live-audit-2026-10-16.md) | Historical report: Family/friends Group Planner refresh — October 16, 2026. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/group-planner-movable-chat-2026-10-17.md](../docs/reports/group-planner-movable-chat-2026-10-17.md) | Historical report: Movable Group Planner chat. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/group-planner-openfreemap-2026-10-16.md](../docs/reports/group-planner-openfreemap-2026-10-16.md) | Historical report: Group Planner OpenFreeMap checkpoint — October 16, 2026. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/group-planner-tabs-refresh-2026-10-15.md](../docs/reports/group-planner-tabs-refresh-2026-10-15.md) | Historical report: Group Planner tabs and demo preview - October 15, 2026. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/group-planner-ui-refresh-2026-10-14.md](../docs/reports/group-planner-ui-refresh-2026-10-14.md) | Historical report: Group Planner UI refresh — October 14, 2026. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/partner-agreement-demo-approval-2026-10-19.md](../docs/reports/partner-agreement-demo-approval-2026-10-19.md) | Historical report: Partner agreement integration and local demo approval. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/partners-onboarding-foundation-2026-10-18.md](../docs/reports/partners-onboarding-foundation-2026-10-18.md) | Historical report: Partner onboarding foundation and native startup. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/smartlog-recovery-2026-10-13.json](../docs/reports/smartlog-recovery-2026-10-13.json) | Machine-readable historical smartlog recovery 2026 10 13 results; not live application state. |
-| [docs/reports/smartlog-recovery-2026-10-13.md](../docs/reports/smartlog-recovery-2026-10-13.md) | Historical report: Smartlog discard recovery — October 13, 2026. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/sql-seed-audit.zip](../docs/reports/sql-seed-audit.zip) | Archived SQL-seed audit bundle; overlaps expanded CSV evidence, with a different photos.csv snapshot. |
-| [docs/reports/sql-seed-audit/cities.csv](../docs/reports/sql-seed-audit/cities.csv) | Historical exported city records used to audit geography relationships. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/countries.csv](../docs/reports/sql-seed-audit/countries.csv) | Historical exported country records used to audit geography identities. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/country_summary.csv](../docs/reports/sql-seed-audit/country_summary.csv) | Per-country record totals from the historical seed audit. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/cross_country_id_collisions.csv](../docs/reports/sql-seed-audit/cross_country_id_collisions.csv) | Historical IDs reused across country seed sources. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/data_quality_issues.csv](../docs/reports/sql-seed-audit/data_quality_issues.csv) | Historical audit findings about invalid or incomplete source values. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/duplicate_place_names.csv](../docs/reports/sql-seed-audit/duplicate_place_names.csv) | Historical repeated place names for manual reconciliation. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/festivals.csv](../docs/reports/sql-seed-audit/festivals.csv) | Historical exported festival records for seed inspection. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/field_completeness.csv](../docs/reports/sql-seed-audit/field_completeness.csv) | Historical field population statistics for seed data. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/file_inventory.csv](../docs/reports/sql-seed-audit/file_inventory.csv) | Historical seed input inventory and parse/accounting results. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/ingestion_log.csv](../docs/reports/sql-seed-audit/ingestion_log.csv) | Historical ingestion-log records exported for audit inspection. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/missing_parent_references.csv](../docs/reports/sql-seed-audit/missing_parent_references.csv) | Historical child records referencing missing geography parents. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/opening_hours.csv](../docs/reports/sql-seed-audit/opening_hours.csv) | Historical opening-hours records exported for seed inspection. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/photos.csv](../docs/reports/sql-seed-audit/photos.csv) | Historical photo metadata exported for audit; differs from the archived ZIP version. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/place_missing_information.csv](../docs/reports/sql-seed-audit/place_missing_information.csv) | Historical per-place missing-field findings; the largest audit export. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/place_tags.csv](../docs/reports/sql-seed-audit/place_tags.csv) | Historical place-to-tag relationships exported for audit. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/places.csv](../docs/reports/sql-seed-audit/places.csv) | Historical place records exported for geography and quality inspection. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/repeated_ids_within_country.csv](../docs/reports/sql-seed-audit/repeated_ids_within_country.csv) | Historical duplicate IDs within individual country seed sources. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/report.md](../docs/reports/sql-seed-audit/report.md) | Historical report: SQL seed audit — 7 October 2026. Records evidence at its stated date; not a current readiness check. |
-| [docs/reports/sql-seed-audit/restaurants.csv](../docs/reports/sql-seed-audit/restaurants.csv) | Historical restaurant records exported for quality inspection. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/schema_mismatches.csv](../docs/reports/sql-seed-audit/schema_mismatches.csv) | Historical seed statements that disagree with expected table definitions. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/statement_issues.csv](../docs/reports/sql-seed-audit/statement_issues.csv) | Historical parse/statement findings from SQL seed inspection. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/states.csv](../docs/reports/sql-seed-audit/states.csv) | Historical state/region records exported for geography reconciliation. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/summary.json](../docs/reports/sql-seed-audit/summary.json) | Machine-readable historical sql seed audit results; not live application state. |
-| [docs/reports/sql-seed-audit/tag_ids_requiring_reconciliation.csv](../docs/reports/sql-seed-audit/tag_ids_requiring_reconciliation.csv) | Historical tag identity conflicts requiring manual reconciliation. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/tags.csv](../docs/reports/sql-seed-audit/tags.csv) | Historical tag definitions exported for seed inspection. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/tripraft_city_meta.csv](../docs/reports/sql-seed-audit/tripraft_city_meta.csv) | Historical city metadata/enrichment records exported for audit. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/tripraft_place_external_ids.csv](../docs/reports/sql-seed-audit/tripraft_place_external_ids.csv) | Historical place-to-external-provider identifiers exported for audit. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/tripraft_place_meta.csv](../docs/reports/sql-seed-audit/tripraft_place_meta.csv) | Historical place enrichment metadata exported for audit. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/tripraft_restaurant_external_ids.csv](../docs/reports/sql-seed-audit/tripraft_restaurant_external_ids.csv) | Historical restaurant external-provider identifiers exported for audit. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/tripraft_restaurant_meta.csv](../docs/reports/sql-seed-audit/tripraft_restaurant_meta.csv) | Historical restaurant enrichment metadata exported for audit. Not a runtime catalog. |
-| [docs/reports/sql-seed-audit/tripraft_state_meta.csv](../docs/reports/sql-seed-audit/tripraft_state_meta.csv) | Historical state/region enrichment metadata exported for audit. Not a runtime catalog. |
-| [docs/reports/staff-console-package-drafts-2026-10-19.md](../docs/reports/staff-console-package-drafts-2026-10-19.md) | Historical report: Staff review access and private package drafts. Records evidence at its stated date; not a current readiness check. |
-| [docs/repository-review.md](../docs/repository-review.md) | Records required source areas, optional historical evidence, requested removals and the service structure decision. |
-| [docs/runbook.md](../docs/runbook.md) | Provides maintenance, deployment/recovery and operational troubleshooting procedures. |
-| [docs/staff-console.md](../docs/staff-console.md) | Explains staff authorization, review workflows and access to the separate admin application. |
-| [docs/startup.md](../docs/startup.md) | Documents native/Docker setup, local data and credentials, service lifecycle, checks and recovery. |
+| [docs/repository-review.md](../docs/repository-review.md) | Explains required repository areas, the docs reorganization and local preservation of removed raw audit/checkpoint files. |
+| [docs/setup/email.md](../docs/setup/email.md) | Explains SMTP configuration and local verification of account/invitation email delivery. |
+| [docs/setup/maps.md](../docs/setup/maps.md) | Explains planner map assets, external tiles/styles and destination catalog setup. |
+| [docs/setup/startup.md](../docs/setup/startup.md) | Documents native/Docker setup, local data and credentials, service lifecycle, checks and recovery. |
 
 ## infra
 
