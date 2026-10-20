@@ -1,4 +1,4 @@
-/* Purpose: Styles the Trip Planner interface, including its layout and interaction states. */
+/* Purpose: Styles the single-trip planning form, generated plan cards, timeline, map, suggested places, tips and packing checklist. */
 /* Trip Planner Main Container */
 .trip-planner {
   min-height: 100vh;
