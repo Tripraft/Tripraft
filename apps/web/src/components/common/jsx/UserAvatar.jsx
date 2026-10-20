@@ -1,4 +1,4 @@
-// Purpose: Renders the User Avatar interface within apps\web\src\components\common\jsx.
+// Purpose: Shows a user's image or derived initials, with size variants and optional display name and click behavior.
 import React from 'react';
 import '../css/UserAvatar.css';
 
