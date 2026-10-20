@@ -1,4 +1,4 @@
-/* Purpose: Styles the Settlement History Modal interface, including its layout and interaction states. */
+/* Purpose: Styles settlement-history headings, summary figures, payment rows, status indicators and responsive layout. */
 /* Modal Overlay */
 .settlement-modal-overlay {
   position: fixed;
