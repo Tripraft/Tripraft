@@ -1,4 +1,4 @@
-// Purpose: Renders the selected group's position, spending totals and primary actions.
+// Purpose: Renders the selected group's members, overview figures, navigation and permission-aware add/settle actions.
 import React from 'react';
 import { ArrowLeft, Plus, Handshake } from 'lucide-react';
 import useExchangeRate from '../../../hooks/useExchangeRate';
