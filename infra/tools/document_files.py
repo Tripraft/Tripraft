@@ -1,4 +1,4 @@
-# Purpose: Adds valid file-purpose headers and regenerates this complete source/configuration file guide.
+# Purpose: Inventories Git-visible project files, adds missing format-valid purpose headers and rewrites docs/files.md using description rules; strict JSON and binary files are described only in the guide.
 """Add legal file-purpose comments and generate the complete published-file guide.
 
 Strict JSON, generated schemas/lockfiles and binary assets are explained in the
