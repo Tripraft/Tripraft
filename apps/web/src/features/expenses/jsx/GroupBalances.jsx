@@ -1,3 +1,4 @@
+// Purpose: Displays member balances, suggests payments, and opens settlement entry with currency conversion for display.
 import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 // Purpose: Renders the Group Balances interface within apps\web\src\features\expenses\jsx.
 import React, { useState } from 'react';
