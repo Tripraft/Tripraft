@@ -1,4 +1,4 @@
-// Purpose: Copies canonical workflows into the .github/workflows paths GitHub discovers.
+// Purpose: Copies the canonical infra CI/deployment YAML files into .github/workflows so GitHub discovers the same definitions validated by the workspace checks.
 import { copyFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 const root = new URL('../../', import.meta.url);
