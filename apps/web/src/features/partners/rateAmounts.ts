@@ -1,4 +1,4 @@
-// Purpose: Converts human-readable supplier proposals into exact decimal-string minor amounts without float rounding.
+// Purpose: Converts supplier rate inputs to exact decimal-string minor units and back, validating exponent and range without floating-point conversion.
 export function displayAmount(minor: string, exponent: number): string {
   if (!minor) return '';
   if (!exponent) return minor;
