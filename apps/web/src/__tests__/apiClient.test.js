@@ -1,4 +1,4 @@
-// Purpose: Regression tests for api Client, including success and failure behavior.
+// Purpose: Verifies cookies/CSRF, empty and non-JSON responses, one session refresh, GET retries, no ambiguous mutation replay, blobs, cancellation and validation errors.
 jest.mock('../config/globalConfig',()=>({__esModule:true,default:{API_BASE_URL:'http://localhost/api',API_TIMEOUT:1000,API_MAX_RETRIES:2,RETRY_BACKOFF_BASE_MS:1}}));
 jest.mock('../services/sqlAuthService',()=>({__esModule:true,default:{getIdToken:jest.fn(),refreshAccessToken:jest.fn()}}));
 jest.mock('../utils/apiLogger',()=>({__esModule:true,default:{logError:jest.fn()}}));
