@@ -1,4 +1,4 @@
-// Purpose: Warns about inactivity and resets the logout timer when activity resumes.
+// Purpose: Implements an optional 15-minute idle logout with a one-minute warning; current app routes do not mount this component.
 /**
  * Inactivity Tracker Component
  * Monitors user activity and logs out after 15 minutes of inactivity
