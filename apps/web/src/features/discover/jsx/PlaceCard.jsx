@@ -1,4 +1,4 @@
-// Purpose: Renders the Place Card interface within apps\web\src\features\discover\jsx.
+// Purpose: Renders a place's photo, location, rating and tags with lazy image loading, a local fallback and map links.
 /**
  * PlaceCard Component
  * 
