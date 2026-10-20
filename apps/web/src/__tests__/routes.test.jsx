@@ -1,4 +1,4 @@
-// Purpose: Regression tests for routes, including success and failure behavior.
+// Purpose: Verifies invitation route dispatch and administrator access/unavailable analytics behavior without absent-endpoint calls.
 import React from 'react';import {render,screen,waitFor} from '@testing-library/react';import {MemoryRouter,Routes,Route} from 'react-router-dom';
 jest.mock('../context/AuthContext',()=>({useAuth:jest.fn()}));
 jest.mock('../pages/InvitationAccept',()=>({__esModule:true,default:()=> <div>Expense invitation</div>}));
