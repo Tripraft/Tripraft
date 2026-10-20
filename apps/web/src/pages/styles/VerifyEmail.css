@@ -1,3 +1,4 @@
+/* Purpose: Styles the centered email-verification card, outcome icons, recovery links and keyboard-focus states. */
 .verify-email-page {
   min-height: 100vh;
   display: grid;
