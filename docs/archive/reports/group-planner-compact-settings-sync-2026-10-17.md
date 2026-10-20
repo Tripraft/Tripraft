@@ -1,5 +1,7 @@
 # Compact currency display, settings sync and member controls
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 The currency converter now uses a compact strip with short From/To controls,
 swap and refresh icons, the reference rate and its date. The amount calculator
 is collapsed until opened. Original and converted totals remain visible, with
