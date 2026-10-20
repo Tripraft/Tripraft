@@ -1,4 +1,4 @@
-// Purpose: Renders the Expense Page interface within apps\web\src\pages.
+// Purpose: Wraps ExpenseManager in shared site navigation, authenticated account actions and the footer.
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/layout/jsx/Header';
