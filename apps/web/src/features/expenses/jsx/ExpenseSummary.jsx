@@ -1,4 +1,4 @@
-// Purpose: Renders the Expense Summary interface within apps\web\src\features\expenses\jsx.
+// Purpose: Calculates visible personal balance/income/spending or group expense totals while excluding deleted transactions.
 import React from 'react';
 import { Wallet, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import {formatMoney} from '../../../utils/money';
