@@ -1,4 +1,4 @@
-// Purpose: Provides an isolated staff-console sign-in form without sending employee credentials through the traveler UI.
+// Purpose: Submits employee credentials to /api/v1/admin/session and asks App to recheck identity before showing privileged operations.
 import { useState, type FormEvent } from 'react';
 
 export function StaffLogin({ signedIn }: { signedIn: () => void }) {
