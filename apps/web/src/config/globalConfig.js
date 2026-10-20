@@ -1,4 +1,4 @@
-// Purpose: Provides global Config logic and exports for apps\web\src\config.
+// Purpose: Centralizes public environment settings, API prefixes, storage keys, search defaults, synchronization intervals and PDF theme values.
 /**
  * Global Configuration for Frontend
  * 
