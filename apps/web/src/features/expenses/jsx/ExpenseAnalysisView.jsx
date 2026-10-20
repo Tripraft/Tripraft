@@ -1,4 +1,4 @@
-// Purpose: Reference-inspired insight cards, split-aware category analysis and daily spending charts.
+// Purpose: Renders spending insights, category and daily charts, date-range filters and group-total versus saved-share analysis.
 import React, { useId, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, ChartNoAxesCombined, Download, Flame, Receipt, Sparkles, TrendingUp, Users } from 'lucide-react';
 import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
