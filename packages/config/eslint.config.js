@@ -1,4 +1,4 @@
-// Purpose: Applies the shared syntax/error lint rules to packages\config.
+// Purpose: Shares the TypeScript-capable parser and four critical error rules across workspaces, ignoring dependency/build output and generated declarations.
 import tseslint from 'typescript-eslint';
 export default [
   { ignores: ['dist/**', 'node_modules/**', 'src/generated/**'] },
