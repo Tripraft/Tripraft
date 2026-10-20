@@ -1,4 +1,4 @@
-/* Purpose: Styles the responsive partner landing, onboarding forms and review-status pages. */
+/* Purpose: Styles the partner landing page, onboarding/status forms, agreement reader and private package authoring workspace. */
 .partner-portal{--partner-ink:#153434;--partner-muted:#506565;--partner-accent:#176e60;background:#f5f8f6;color:var(--partner-ink);min-height:100vh;font-family:Inter,system-ui,sans-serif}
 .partner-portal *{box-sizing:border-box}.partner-portal a{color:var(--partner-accent)}.partner-portal button,.partner-portal input,.partner-portal select{font:inherit}.partner-portal button,.partner-portal a{touch-action:manipulation}
 .partner-header{max-width:1160px;margin:auto;padding:26px 24px;display:flex;align-items:center;justify-content:space-between;gap:20px}.partner-brand{font-size:23px;font-weight:800;text-decoration:none;color:var(--partner-ink)!important}.partner-brand span{font-weight:400;font-size:16px;margin-left:8px;color:var(--partner-muted)}.partner-header nav{display:flex;align-items:center;gap:18px}.partner-header nav button{background:none;border:0;color:var(--partner-accent);cursor:pointer;text-decoration:underline}
