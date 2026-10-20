@@ -1,4 +1,4 @@
-// Purpose: Provides trip Planner Service logic and exports for apps\web\src\services.
+// Purpose: Calls itinerary generation, city search/list and pacing endpoints, unwraps API envelopes and adapts generated place/stop data.
 /**
  * Trip Planner API Service
  * Connects to the Flask backend for AI-powered trip itinerary generation
