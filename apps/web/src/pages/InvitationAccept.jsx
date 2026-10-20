@@ -1,4 +1,4 @@
-// Purpose: Renders the Invitation Accept interface within apps\web\src\pages.
+// Purpose: Handles expense invitation details, sign-in continuation, account mismatch and single acceptance, then navigates to the joined expense group.
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
