@@ -1,4 +1,4 @@
-// Purpose: Renders the Group Planner Manager interface within apps\web\src\features\trips\jsx.
+// Purpose: Orchestrates planner routing, group selection, tabs, shared query/socket state, map days, movable chat, invitations and group creation.
 /**
  * GroupPlannerManager - Thin orchestrator.
  *
