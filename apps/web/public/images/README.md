@@ -1,32 +1,19 @@
-# Images Folder
+# Public web images
 
-This folder contains all the images used throughout the Tripraft website.
+Vite serves files in this folder at `/images/` and copies them into the production build. These are public browser assets, so do not place private uploads or credentials here.
 
-## Structure
-```
-images/
-├── hero/           # Hero section images
-├── features/       # Feature section icons/images
-├── testimonials/   # User testimonials photos
-└── general/        # General purpose images
-```
+This directory contains nine PNG illustrations for the landing-page animation and the `planner-demo/` folder of sample destination photos and portraits.
 
-## Usage
-To use an image in your components:
+- [Animation asset mapping](ANIMATION_IMAGES.md) lists the PNG filenames, CSS slots and component responsible for rendering them.
+- [Demo photo sources](planner-demo/README.md) records the local demo photos and their source image IDs.
+- [Apps file guide](../../../README.md) explains every asset alongside the source files that use it.
+
+Use a public asset from a component with its browser URL:
 
 ```jsx
-// For images in public/images folder
-<img src="/images/hero/travel-bg.jpg" alt="Travel background" />
+<img src="/images/map.png" alt="Travel map" />
 ```
 
-## Image Optimization Tips
-- Use WebP format for better compression
-- Optimize images before uploading (use tools like TinyPNG)
-- Keep file sizes under 500KB for better performance
-- Use descriptive filenames (e.g., `mountain-sunset.jpg` instead of `img001.jpg`)
+If an image should be imported and processed by the bundler, put it under `src/assets/` instead, as with the place-photo fallback SVG. User-uploaded partner media is served by the API and belongs outside this static folder.
 
-## Recommended Image Sizes
-- Hero backgrounds: 1920x1080px
-- Feature icons: 512x512px
-- Testimonial photos: 200x200px
-- General images: 1200x800px
+When adding an image, use a descriptive filename, resize and compress it for its actual display size, supply suitable alternative text, record its source and usage permission, and update the relevant guide. Verify references when renaming files; public image URLs are literal strings rather than module imports.
