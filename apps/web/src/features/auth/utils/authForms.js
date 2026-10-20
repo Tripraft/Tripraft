@@ -1,4 +1,4 @@
-// Purpose: Shares signup validation and safe return destinations between auth forms.
+// Purpose: Provides auth validation, storage helpers that tolerate unavailable browser storage, and invitation/return-destination handling.
 export const isValidEmail = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
 export const readAuthStorage = key => {
