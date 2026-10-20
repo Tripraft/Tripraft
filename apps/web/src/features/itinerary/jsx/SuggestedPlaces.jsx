@@ -1,4 +1,4 @@
-// Purpose: Renders the Suggested Places interface within apps\web\src\features\itinerary\jsx.
+// Purpose: Shows additional recommendations, including early-morning and late-night choices, and invokes the supplied add-place callback.
 import React from 'react';
 import Icon from './Icon';
 import { placeRating } from '../../../utils/placeRating';
