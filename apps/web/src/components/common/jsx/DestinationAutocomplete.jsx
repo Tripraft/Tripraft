@@ -1,4 +1,4 @@
-// Purpose: Renders the Destination Autocomplete interface within apps\web\src\components\common\jsx.
+// Purpose: Debounces destination suggestions, supports keyboard selection and type filters, and returns selected destination metadata to the caller.
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Globe, Building, Landmark, Search } from 'lucide-react';
 import GlobalConfig from '../../../config/globalConfig';
