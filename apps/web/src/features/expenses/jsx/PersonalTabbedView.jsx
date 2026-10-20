@@ -1,4 +1,4 @@
-// Purpose: Renders the Personal Tabbed View interface within apps\web\src\features\expenses\jsx.
+// Purpose: Presents personal transaction history and analysis tabs with type filters and sorting.
 /**
  * PersonalTabbedView Component
  * Displays Transaction History and Analytics as tabs for personal expenses
