@@ -1,4 +1,4 @@
-// Purpose: Currency choices shared by expense group creation forms.
+// Purpose: Defines local currency metadata used as a fallback when the supported-currency API is unavailable.
 export const currencies = {
   USD: { code: 'USD', symbol: '$', name: 'US Dollar' },
   EUR: { code: 'EUR', symbol: '\u20ac', name: 'Euro' },
