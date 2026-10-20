@@ -1,3 +1,4 @@
+// Purpose: Verifies safe provider style expressions, key-free OpenFreeMap attribution, zero/missing coordinates and date-line marker wrapping.
 import { OPENFREEMAP_STYLES, MAP_ATTRIBUTION } from '../features/trips/constants/mapConfig';
 import { focusDestination, longitudeNearViewport } from '../features/trips/utils/mapViewport';
 import { openFreeMapStyle } from '../features/trips/utils/openFreeMapStyle';
