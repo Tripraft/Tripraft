@@ -1,5 +1,7 @@
 # Movable Group Planner chat
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 The open chat panel can be dragged by its title/grip handle instead of staying
 in its initial corner. The floating Chat & Polls button on other tabs is also
 draggable; dragging it does not accidentally open or close the chat.
