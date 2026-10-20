@@ -28,8 +28,15 @@ Thumbs.db
 # Local source documents and data-processing workspaces are never published.
 /script/
 /sql_database/
-\TripRaft_Enterprise_Platform_Master_Blueprint.pdf
-\TripRaft_Places_Search_Live_Tour_Packages_Complete_UPDATED_2026 (1).docx
-\TripRaft_Professional_Tour_Operator_Partner_Agreement_2026 (1).docx
-\TripRaft_Unified_Marketplace_Reseller_Complete_Implementation_2026.docx
-\tripraft.db
+/TripRaft_Enterprise_Platform_Master_Blueprint.pdf
+/TripRaft_Places_Search_Live_Tour_Packages_Complete_UPDATED_2026 (1).docx
+/TripRaft_Professional_Tour_Operator_Partner_Agreement_2026 (1).docx
+/TripRaft_Unified_Marketplace_Reseller_Complete_Implementation_2026.docx
+/tripraft.db
+# Catalog inputs, generated records and SQLite sidecars stay local.
+/data/
+/wikidata/
+*.db-wal
+*.db-shm
+*.db-journal
+.tripraft-pytest-cache/
