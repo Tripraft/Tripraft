@@ -1,4 +1,4 @@
-// Purpose: Connects cookie-authenticated live chat and reports socket authentication/connection failures.
+// Purpose: Maintains cookie-authenticated live chat, typing/presence/read events, session renewal and query recovery after reconnect or revoked access.
 /**
  * Chat WebSocket Hook
  * Manages Socket.IO connection for real-time chat: messages, typing, read receipts.
