@@ -1,4 +1,4 @@
-// Purpose: Configures the React build and local API proxy for apps\web.
+// Purpose: Serves web on port 5173, proxies API and Socket.IO traffic to Flask, handles API proxy outages, and strips console/debugger calls in production.
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
