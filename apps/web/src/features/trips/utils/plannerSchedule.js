@@ -1,4 +1,5 @@
-﻿import { validCoordinates } from '../../../utils/coordinates';
+﻿// Purpose: Enumerates trip calendar dates, calculates geographic route distances, reorders stops and preserves available schedule time slots.
+import { validCoordinates } from '../../../utils/coordinates';
 
 export function tripDates(group, scheduledDates = []) {
   const dates = new Set();
