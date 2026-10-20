@@ -1,3 +1,4 @@
+// Purpose: Verifies personal history and income classification, deleted-row restore permissions, currency/amount layout, live edit-draft retention and split receipts.
 import React from 'react';
 import { fireEvent, render, screen, within, waitFor } from '@testing-library/react';
 import History from '../features/expenses/jsx/ExpenseHistoryModal';
