@@ -1,4 +1,4 @@
-# Purpose: Runs local PostgreSQL, Redis, API, and optional worker with persistent database/catalog/upload volumes.
+# Purpose: Runs local PostgreSQL, Redis and the Flask API with loopback ports and persistent data volumes; an optional workers profile starts Celery after API readiness.
 name: tripraft
 services:
   postgres:
