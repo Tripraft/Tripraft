@@ -1,4 +1,5 @@
-﻿// Demo mode is opt-in and scoped to the Group Planner route.
+﻿// Purpose: Detects opt-in planner demo routes, preserves the demo query in planner links, and defines demo storage keys.
+// Demo mode is opt-in and scoped to the Group Planner route.
 export function isPlannerDemo() {
   return (
     typeof window !== 'undefined' &&
