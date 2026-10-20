@@ -1,4 +1,4 @@
-/* Purpose: Styles the Login interface, including its layout and interaction states. */
+/* Purpose: Styles the boarding-pass login form, decorative panel, validation feedback and responsive layout. */
 /* Login Page Styles */
 .login-container {
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
