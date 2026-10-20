@@ -1,4 +1,4 @@
-// Purpose: Test fixture/configuration helper for vite Env Transform.
+// Purpose: Rewrites import.meta.env expressions to process.env so Jest can execute Vite-oriented source.
 // Jest runs CommonJS; expose Vite's public env shape through process.env in tests.
 module.exports = ({ types: t }) => ({
   visitor: {
