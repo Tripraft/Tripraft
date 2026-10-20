@@ -1,4 +1,4 @@
-// Purpose: Stores and removes permitted query snapshots in IndexedDB.
+// Purpose: Implements optional React Query snapshot storage, restoration, deletion and statistics in IndexedDB, tolerating unavailable browser storage.
 /**
  * IndexedDB Persister for React Query
  * Phase 11: Browser Cache Implementation
