@@ -1,3 +1,4 @@
+// Purpose: Resolves group, expense and settlement UI permissions from user identity, ownership, roles and server-provided action flags.
 const sameId = (left, right) => left != null && right != null && String(left) === String(right);
 
 export function groupPermissions(group, userId) {
