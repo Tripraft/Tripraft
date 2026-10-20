@@ -1,4 +1,4 @@
-// Purpose: Provides group Planner Api logic and exports for apps\web\src\services.
+// Purpose: Wraps planner groups, paginated collections, invitations, places, polls, schedules, checklist/vault data, catalog reads and linked-expense operations.
 /**
  * Group Planner API Service
  * Connects frontend to the group planner backend (SQL version).
