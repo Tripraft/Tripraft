@@ -1,4 +1,4 @@
-// Purpose: Provides index logic and exports for packages\api-client\src.
+// Purpose: Creates a typed openapi-fetch client with cookie credentials and mutation CSRF headers, and re-exports generated/shared types without adding retries or session refresh.
 import createClient from 'openapi-fetch';
 import type { paths } from './generated/schema';
 export type { paths, components } from './generated/schema';
