@@ -1,4 +1,4 @@
-// Purpose: Regression tests for service Contracts, including success and failure behavior.
+// Purpose: Verifies service timeouts and response-envelope adaptation, preserved place metadata, real search results, rating normalization and coordinate validity.
 jest.mock('../config/globalConfig',()=>({__esModule:true,default:{ENDPOINTS:{TRIP_PLANNER:'/v1/trip-planner',PLACE_SEARCH:'/v1/places'},TRIP_DEFAULT_DAYS:3,TRIP_DEFAULT_PACING:'M',CITY_SEARCH_LIMIT:10,PLACE_SEARCH_DEFAULT_LIMIT:500,PLACE_SEARCH_DEFAULT_SORT_BY:'rank_score',PLACE_SEARCH_DEFAULT_SORT_ORDER:'desc',AUTOCOMPLETE_MIN_CHARS:2,AUTOCOMPLETE_DEFAULT_LIMIT:10}}));
 jest.mock('../utils/apiClient',()=>({__esModule:true,default:{get:jest.fn(),post:jest.fn()}}));
 jest.mock('../utils/apiLogger',()=>({__esModule:true,default:{logSuccess:jest.fn(),logWarning:jest.fn(),logError:jest.fn()}}));
