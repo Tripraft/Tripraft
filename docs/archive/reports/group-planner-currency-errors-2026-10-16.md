@@ -1,5 +1,7 @@
 # Currency estimates and pasted browser errors
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 This checkpoint completes the family Group Planner refresh documented in
 `group-planner-library-live-audit-2026-10-16.md`, adds Frankfurter currency data,
 and fixes the two actionable errors in the uploaded browser log. The existing
