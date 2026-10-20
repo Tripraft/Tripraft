@@ -1,4 +1,4 @@
-// Purpose: Regression tests for p3 Behavior, including success and failure behavior.
+// Purpose: Verifies safe date/file formatting, Crew question transitions, long-trip day lists and map viewport, theme and calendar-day behavior.
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
