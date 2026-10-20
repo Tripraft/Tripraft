@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+﻿// Purpose: Collects a planner expense and participant/itemized split details for the linked ledger, retaining validation and saving errors.
+import React, { useState } from 'react';
 import { Plus, X, Trash2, Receipt } from 'lucide-react';
 import { equalSplits, formatMoney } from '../../../../utils/money';
 import { itemizedSplits } from '../../utils/plannerMoney';
