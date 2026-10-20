@@ -12,7 +12,11 @@ night mode. The required attribution is included. The former
 
 ## Country, state, and city views
 
-The selected destination comes from `data/catalog/tripraft_places.db`.
+The selected destination comes from the catalog configured by
+`GROUP_PLANNER_CATALOG_PATH` (default `data/catalog/tripraft_places.db`).
+Catalog files are supplied separately and excluded from Git; follow
+[local catalog setup](../services/README.md#local-catalog-setup) before using
+catalog-backed destination search.
 The planner reads `/api/v1/group-planner/catalog/viewport` to obtain the extent
 of known city/place coordinates within that country, state, or city. The All
 view frames this extent, and All restores it after browsing.
@@ -22,8 +26,7 @@ These extents come from catalog points, not official border polygons. A sparse
 catalog can produce a partial view of a region. If no coordinates exist for a
 destination, the planner displays **Destination coordinates are unavailable in
 the catalog** and starts at the world view. Valid saved itinerary markers remain
-available. The current local catalog has no coordinates for United States or
-California, for example.
+available. Coverage depends on the separately supplied catalog.
 
 As requested, the application uses catalog coordinates only. It does not call
 an external geocoder, invent coordinates, or write anything back to the catalog.
