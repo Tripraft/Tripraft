@@ -1,4 +1,4 @@
-// Purpose: Provides pdf Export Service logic and exports for apps\web\src\services.
+// Purpose: Generates branded personal/group expense PDF reports with summary, transaction, balance and settlement tables using jsPDF and AutoTable.
 /**
  * PDF Export Service for Expense Manager
  * Generates professional PDF reports for personal and group expenses with Tripraft branding
