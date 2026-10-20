@@ -1,4 +1,4 @@
-// Purpose: Renders the Animated Background interface within apps\web\src\components\common\jsx.
+// Purpose: Composes the landing-page travel animation from local PNG illustrations and configured branding.
 import React from 'react';
 import GlobalConfig from '../../../config/globalConfig';
 import '../css/AnimatedBackground.css';
@@ -11,7 +11,7 @@ const AnimatedBackground = () => {
       <div className="animated-stars"></div>
       <div className="animated-horizon"></div>
 
-      {/* Animated Sprites - Replace with your actual image paths */}
+      {/* Static URLs resolve under public/images; CSS controls each animation slot. */}
       {/* 1. Map */}
       <img 
         className="animated-sprite animated-map" 
@@ -19,7 +19,7 @@ const AnimatedBackground = () => {
         alt="map" 
       />
       
-      {/* 2. Let's Go */}
+      {/* 2. Passport artwork in the animated-letsgo CSS slot. */}
       <img 
         className="animated-sprite animated-letsgo" 
         src="/images/passport.png" 
@@ -54,7 +54,7 @@ const AnimatedBackground = () => {
         alt="confusion" 
       />
       
-      {/* 7. Content */}
+      {/* 7. Search artwork in the animated-content CSS slot. */}
       <img 
         className="animated-sprite animated-content" 
         src="/images/search.png" 
@@ -64,14 +64,14 @@ const AnimatedBackground = () => {
       {/* Brand Text - Dynamic from config */}
       <div className="animated-brand">{appName}</div>
       
-      {/* 8. Happy/Celebration */}
+      {/* 8. Planning artwork in the animated-happy CSS slot. */}
       <img 
         className="animated-sprite animated-happy" 
         src="/images/trip_plan.png" 
         alt="happy user" 
       />
       
-      {/* 9. Student */}
+      {/* 9. Celebration artwork in the animated-student CSS slot. */}
       <img 
         className="animated-sprite animated-student" 
         src="/images/happy.png" 
