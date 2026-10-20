@@ -40,3 +40,9 @@ Thumbs.db
 *.db-shm
 *.db-journal
 .tripraft-pytest-cache/
+# Retired raw audit output and local checkpoint notes are preserved locally.
+/docs/reports/
+/docs/backend-checkpoints.md
+/docs/archive/**/*.csv
+/docs/archive/**/*.json
+/docs/archive/**/*.zip
