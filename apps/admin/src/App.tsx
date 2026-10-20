@@ -1,4 +1,4 @@
-// Purpose: Renders the admin console with initialized server-account authorization, readiness and ingestion audit results.
+// Purpose: Verifies the server account before loading privileged readiness and ingestion-audit data; renders staff login, review panels, refresh and logout controls.
 import { useEffect, useState } from 'react';
 import { createApiClient, type components } from '@tripraft/api-client';
 import type { AuthUser } from '@tripraft/types';
