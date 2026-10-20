@@ -1,4 +1,4 @@
-// Purpose: Defines private supplier package drafts, bounded itinerary inputs and exact rate proposals.
+// Purpose: Defines private package content, itinerary days, exact string minor-unit rate proposals, media, review states and paginated draft/review responses.
 export interface TourDay { day: number; title: string; details: string; meals: string; accommodation: string }
 export interface DepartureProposal { start_date: string | null; timezone: string; supplier_rate_minor: string; currency: string; currency_exponent: number; rate_basis: 'per_person' | 'per_group'; notes: string }
 export interface TourDraftContent {
