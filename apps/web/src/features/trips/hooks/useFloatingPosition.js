@@ -1,3 +1,4 @@
+// Purpose: Manages saved floating-chat positions with pointer/keyboard movement, viewport clamping, resize recovery and drag-click suppression.
 import {useEffect, useRef, useState} from 'react';
 
 const gap = 8;
