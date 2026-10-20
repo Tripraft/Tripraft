@@ -1,4 +1,4 @@
-// Purpose: Renders the Mode Toggle interface within apps\web\src\features\expenses\jsx.
+// Purpose: Renders the switch between personal and group expense modes.
 import React from 'react';
 
 const ModeToggle = ({ mode, onToggle }) => {
