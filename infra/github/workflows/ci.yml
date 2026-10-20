@@ -1,4 +1,4 @@
-# Purpose: Canonical CI: install locked dependencies, check source, run tests/builds, and verify generated API declarations.
+# Purpose: Defines canonical CI dependency installation, workspace checks, generated API-contract verification and frontend artifact upload; sync its discovery copy with sync-workflows.mjs.
 name: CI
 on:
   pull_request:
