@@ -1,3 +1,4 @@
+// Purpose: Verifies complete independent ledger pagination and failure of the full read when a later page denies access.
 import expenseApi from '../services/expenseApi';
 import apiClient from '../utils/apiClient';
 
