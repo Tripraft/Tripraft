@@ -1,4 +1,4 @@
-// Purpose: Covers poll voter counts, selections and creator deletion controls.
+// Purpose: Verifies unique voters, option-index vote payloads, creator-only deletion and member-name resolution from UUIDs.
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import PollFeed from '../features/polls/PollFeed';
