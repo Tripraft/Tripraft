@@ -1,54 +1,47 @@
 # Published repository review
 
-Reviewed on 2026-10-20 against GitHub `main`, starting from `e6e1f15c39f5bc3f85ea3eaa00dff051c4d52f68`. The [complete inventory](files.md) lists the resulting published files and their purposes. This review excludes unrelated pending work in the development checkout.
+Reviewed against GitHub `main` on 2026-10-20. The documentation cleanup starts from `aeb599bd399e7aa0f61cc376b56527c190e4b819`. [The documentation index](README.md) is the entry point; [the file inventory](files.md) lists the resulting published files. Unrelated pending application/database work is excluded.
 
-## What belongs in the repository
+## What stays published
 
-| Area | Needed for | Decision |
-|---|---|---|
-| `apps/web/`, `apps/admin/` | Running and testing the two frontend applications. | Retain source, configuration, regression tests and referenced public assets. |
-| `services/api/` | API startup, domain behavior, application migrations and backend tests. | Retain the existing project/package boundaries; no move is needed. |
-| `services/api/schema/` | Creating/understanding reference catalogs. | Retain maintained SQL and label older schema references in the service guide. |
-| `services/api/migrations/versions/` | Applying established database history. | Retain all 20 revision IDs, including no-op historical revisions. |
-| Partner agreement JSON and DOCX | Rendering versioned agreement text and serving the protected original attachment. | Retain both; this DOCX is distinct from the four removed root originals. |
-| `packages/` | Shared contracts/client/UI and workspace configuration. | Retain generated client declarations and their reproducible generation workflow. |
-| `infra/` and `.github/` | Local topology, validation, CI/deploy integration and ownership. | Retain both canonical workflow definitions and synchronized discovery copies. |
-| Root launcher/manifests/lockfile | Reproducible setup and coordinated workspace tasks. | Retain. |
-| Active `docs/` setup/API/architecture guides | Helping developers configure and maintain the code. | Retain and update catalog references for a checkout without bundled data. |
-| `docs/plans/` | Design proposals and implementation sequencing. | Optional reading; retain as proposals, not claims of implemented features. |
-| `docs/reports/` | Dated verification and historical audit evidence. | Optional for runtime; retain because removal was not requested. |
+| Area | Why it is needed |
+|---|---|
+| `apps/web/`, `apps/admin/` | Traveler and staff UI source, referenced assets, configuration and regressions. |
+| `services/api/` | API implementation, application migrations, maintained/reference catalog SQL and backend tests. |
+| Partner agreement JSON/DOCX | Versioned reader text and protected original attachment; distinct from removed root planning originals. |
+| `packages/` | Shared client, generated API declarations, domain contracts, UI and tooling configuration. |
+| `infra/`, `.github/` | Local topology, validation, maintenance tools and synchronized GitHub workflow discovery copies. |
+| Root launcher/manifests/lockfile | Reproducible setup and coordinated workspace tasks. |
+| `docs/setup/`, `architecture/`, `api/`, `guides/`, `operations/` | Current developer instructions organized by responsibility. |
+| `docs/plans/` | Useful design proposals and acceptance gates, clearly distinguished from implemented behavior. |
+| `docs/archive/` | Dated Markdown reports that explain changes and audit conclusions. |
 
-Empty Python package initializers are import boundaries. Generated OpenAPI/client files and the lockfile have specific consumers and should not receive invalid inline comments. File-purpose guides cover these formats instead.
+The existing `services/api/app/` nesting is intentional: service project, then Python package. All 20 migration revisions and generated contracts remain intact. Strict JSON, generated declarations and binary assets are described in guides rather than given invalid inline comments.
 
-## Requested removals
+## Documentation cleanup
 
-The following 216 tracked files are removed from the current published tree using index-only removal; their local worktree copies are preserved:
+The published docs previously mixed current guides with raw SQL extracts and machine-specific history. Current guides now have topic folders and an index; historical reports have a separate archive and dated-status notice. Links in the root README, infrastructure references and archived reports follow the new structure. The structure guard and documentation generator use the new guide paths.
 
-| Removed area | Files | Reason |
-|---|---:|---|
-| `data/` | 210 | Catalog databases, extracted geography listings, demo inputs and runtime journals are local inputs/artifacts. |
-| `wikidata/` | 2 | Local Wikidata processing helper and notes. |
-| Four root PDF/Word originals | 4 | Original planning/source documents are kept locally rather than distributed with source. |
+Removed from current Git tracking: **35 files**, approximately **68.4 MB** of original worktree bytes:
 
-The four originals are:
+- 29 historical SQL audit CSV exports and one overlapping ZIP bundle.
+- Three detailed JSON audit/import/recovery dumps whose readable report summaries or Git history preserve their context.
+- The local Smartlog checkpoint guide and its recovery report, which describe developer-specific branches, executables and machine recovery.
 
-- `TripRaft_Enterprise_Platform_Master_Blueprint.pdf`
-- `TripRaft_Places_Search_Live_Tour_Packages_Complete_UPDATED_2026 (1).docx`
-- `TripRaft_Professional_Tour_Operator_Partner_Agreement_2026 (1).docx`
-- `TripRaft_Unified_Marketplace_Reseller_Complete_Implementation_2026.docx`
+These are not application inputs or prerequisites for setup, builds or tests. Original copies are preserved locally; historical evidence remains accessible in earlier commits. The 30-of-31 exact file overlap between the old ZIP and expanded audit did not make the entire archive identical; all versions were preserved before untracking. The retained SQL audit report explains the findings without requiring raw exports in the current tree.
 
-Ignore rules prevent accidentally re-adding these inputs and SQLite journals. Earlier commits still contain the removed files; this is a normal cleanup commit, not a history rewrite. The API package-review test now builds synthetic content in memory, and the repository structure check no longer requires `data/seeds/`.
+Current staff/agreement guides use generic configuration, correct the runtime agreement attachment description and distinguish implemented private package review from proposed public/commerce work. Historical reports keep their original conclusions under an explicit archive notice.
 
-Fresh clones contain schemas, not catalog records. Follow [local catalog setup](../services/README.md#local-catalog-setup) to initialize the empty maintained schema and configure separately supplied populated catalogs. Existing runtime paths under `data/` remain valid local paths; they do not imply that data is distributed by Git.
+## Earlier source cleanup
 
-## Optional material worth reviewing later
+The preceding publication removed 210 files under `data/`, two under `wikidata/` and four root planning PDF/Word originals while preserving local copies. Those exclusions remain. Catalog schema and migration source stay published; travel records must be supplied separately. See [local catalog setup](../services/README.md#local-catalog-setup).
 
-`docs/reports/` accounts for roughly 68.6 MB in this revision. Its largest files are historical SQL-seed audit CSV exports. The audit ZIP overlaps 30 of 31 expanded files exactly; `photos.csv` differs, so the archive is not an exact duplicate of the expanded directory. These reports are not required to start the applications, but may be useful as audit evidence. Keep or relocate them through a separate explicit cleanup decision.
+Removal affects the current published tree; earlier Git history is unchanged. Real environment values, databases, uploads, dependencies and generated runtime artifacts remain outside the source inventory.
 
-No tracked `node_modules/`, virtual environment, uploaded media directory or Python bytecode was found. The tracked SQLite WAL/SHM files were inside the removed `data/` tree. Local environment values and unpublished service/schema changes were not included in this update.
+## Maintenance
 
-## Validation scope
+Change the guide that owns the behavior and update its links and inventory entry. Keep plans marked as proposed until delivered. Preserve useful dated explanations in the archive; keep raw exports and machine-specific recovery state in ignored local storage.
 
-Checks for this publication use a copy containing only the final published files, excluding preserved local `data/` and `wikidata/`. Structure/infrastructure checks and backend regressions verify that those directories are no longer test prerequisites. The service guide separately verifies all 263 pre-existing service file entries and the single 20-revision migration chain. These checks do not exercise a live deployment or provision external catalogs.
+Documentation checks validate links against the tracked publication, not preserved local files. Structure/import checks, static workflow/topology checks and infrastructure regressions cover the coordinated tooling path updates. No application behavior or deployment configuration is changed by this documentation cleanup.
 
-Results: all 470 backend tests and 21 infrastructure tests passed in the source-only copy. Backend Ruff checks, Python 3.11 syntax checks for 245 files, import/path checks and static Compose/workflow validation passed. All 1,424 local Markdown links resolve against published paths. The backend suite reports existing dependency deprecation warnings. Frontend source is unchanged by this update.
+Validation passed in a copy containing only the 665 published files: 1,432 local Markdown links, including 10 heading targets; 18 historical evidence links verified against their pinned Git revision; all 21 infrastructure tests; Python 3.11 syntax, structure/import and static Compose/workflow checks. SHA-256 checks verified the backup of all 77 original documentation files.
