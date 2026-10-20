@@ -1,4 +1,4 @@
-// Purpose: Renders the Footer interface within apps\web\src\components\layout\jsx.
+// Purpose: Renders the configured site branding and product/company navigation links.
 import React from 'react';
 import { Link } from 'react-router-dom';
 import GlobalConfig from '../../../config/globalConfig';
