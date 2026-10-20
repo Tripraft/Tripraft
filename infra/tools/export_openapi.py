@@ -1,4 +1,4 @@
-# Purpose: Exports registered Flask paths and explicit admin/partner schemas using a migrated disposable database.
+# Purpose: Builds services/api/openapi.json from Flask routes and explicit admin/partner schemas using a migrated temporary SQLite database; unspecified response payloads remain unknown.
 """Export registered Flask routes without opening or modifying the user's database.
 
 Known operations have explicit response schemas. Other response payloads remain
