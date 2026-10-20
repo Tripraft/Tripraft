@@ -1,4 +1,4 @@
-// Purpose: Collects debt-bounded settlement payments and displays currency-aware history and save errors.
+// Purpose: Collects payer, recipient, amount and notes, validates against outstanding debt, and closes only after a successful save.
 import ExpenseDialog from './ExpenseDialog';
 import React, { useState, useEffect } from 'react';
 import { formatMoney, settlementCap } from '../../../utils/money';
