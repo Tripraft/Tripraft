@@ -1,2 +1,2 @@
-// Purpose: Renders the admin console with initialized server-account authorization, readiness and ingestion audit results.
+// Purpose: References vite/client so TypeScript recognizes Vite's browser and import.meta.env types.
 /// <reference types="vite/client" />
