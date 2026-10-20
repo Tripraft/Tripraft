@@ -1,3 +1,4 @@
+// Purpose: Filters, sorts and paginates transactions, renders split receipts/history actions, and preserves deleted-row restoration where permitted.
 import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 // Purpose: Renders the Transaction List interface within apps\web\src\features\expenses\jsx.
 import ExpenseDialog from './ExpenseDialog';
