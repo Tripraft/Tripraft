@@ -1,3 +1,4 @@
+// Purpose: Verifies copied-link sign-in continuation, one acceptance, disabled-storage recovery, wrong-account handling and already-joined navigation.
 import React, { StrictMode } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
