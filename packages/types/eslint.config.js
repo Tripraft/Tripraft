@@ -1,2 +1,2 @@
-// Purpose: Applies the shared syntax/error lint rules to packages\types.
+// Purpose: Re-exports shared critical syntax/error lint rules for the handwritten domain contract package.
 export { default } from '@tripraft/config/eslint';
