@@ -1,4 +1,4 @@
-// Purpose: Provides reusable React state/query behavior for Notes Auto Save.
+// Purpose: Saves and clears a group-scoped notes draft in localStorage; it does not send notes to the server.
 import { useState, useCallback } from 'react';
 
 export default function useNotesAutoSave(groupId) {
