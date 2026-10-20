@@ -1,4 +1,4 @@
-// Purpose: Provides tab Config logic and exports for apps\web\src\features\trips\constants.
+// Purpose: Defines the workspace tab keys and labels: Itinerary, Library, Logistics, Treasury, Pulse and Circle.
 /**
  * Tab configuration for the Group Planner workspace.
  */
