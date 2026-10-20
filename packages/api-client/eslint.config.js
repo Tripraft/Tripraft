@@ -1,2 +1,2 @@
-// Purpose: Applies the shared syntax/error lint rules to packages\api-client.
+// Purpose: Re-exports the shared critical JavaScript/TypeScript lint configuration for the typed API client; generated declarations are excluded by that configuration.
 export { default } from '@tripraft/config/eslint';
