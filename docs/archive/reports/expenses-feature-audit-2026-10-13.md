@@ -1,5 +1,7 @@
 # Personal and group expenses audit - October 13, 2026
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 October 14 follow-up: personal pagination and the salary-in-spending display are
 now fixed, with the requested history, amount-field, deletion/revert, and
 settlement-card changes. See [the follow-up record](#october-14-follow-up).
@@ -245,7 +247,7 @@ Recovery commit: `45280d4` (`Recover discarded catalog files and travel database
 configuration`). It restores **639 missing files and 15 discarded edits** from
 the latest complete recoverable local snapshot found, dated October 12. Changes
 made after that snapshot are not guaranteed to be present. See
-[the recovery report](smartlog-recovery-2026-10-13.md) and its linked hash manifest.
+[the recovery report](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/reports/smartlog-recovery-2026-10-13.md) and its linked hash manifest.
 
 UI commit: `8f1cabc` (`Match expense group screens and analytics to the reference
 layout`). Sapling's log was checked and shows both this commit and recovery
