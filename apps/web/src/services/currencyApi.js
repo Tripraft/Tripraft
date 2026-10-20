@@ -1,3 +1,4 @@
+// Purpose: Fetches supported currencies with short-lived listing reuse and requests current or explicitly refreshed exchange rates.
 import apiClient from '../utils/apiClient';
 
 let listing;
