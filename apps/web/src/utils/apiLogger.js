@@ -1,4 +1,4 @@
-// Purpose: Provides api Logger logic and exports for apps\web\src\utils.
+// Purpose: Exposes a silent logger compatibility interface so API callers can retain logging hooks without emitting request data.
 /**
  * API Logger - Frontend
  * No-op implementation for production. All logging functions are silent.
