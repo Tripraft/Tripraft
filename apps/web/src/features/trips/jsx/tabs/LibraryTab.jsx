@@ -1,3 +1,4 @@
+// Purpose: Browses destination-scoped catalog places with state/city filters, pagination and details, and adds selected places to the trip.
 import React, { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MapPin, Star, Search, Compass, ChevronLeft, ChevronRight, X, Plus, Utensils, CalendarDays } from 'lucide-react';
