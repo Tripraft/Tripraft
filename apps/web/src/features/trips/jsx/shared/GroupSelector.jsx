@@ -1,3 +1,4 @@
+// Purpose: Shows searchable trip cards, locally pinned trips and invitation joining, with separate member actions and typed-name deletion confirmation.
 import React, { useState } from 'react';
 import { isPlannerDemo } from '../../demo/demoMode';
 import {
