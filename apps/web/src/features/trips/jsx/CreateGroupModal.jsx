@@ -1,3 +1,4 @@
+// Purpose: Collects trip name, dates, budget currency and optional invitees, requiring a selected catalog destination and validating invitation addresses.
 import React, { useEffect, useRef, useState } from 'react';
 import { X, MapPin, Users, Calendar, Loader2, Mail } from 'lucide-react';
 import groupPlannerApi from '../../../services/groupPlannerApi';
