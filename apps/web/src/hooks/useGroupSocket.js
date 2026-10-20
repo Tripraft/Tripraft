@@ -1,4 +1,4 @@
-// Purpose: Subscribes to cookie-authenticated trip workspace activity updates.
+// Purpose: Subscribes to authenticated group collaboration/presence events and forwards handlers for places, polls, checklists, itineraries and membership.
 /**
  * useGroupSocket — React hook for real-time Group Planner collaboration.
  *
