@@ -1,4 +1,4 @@
-// Purpose: Provides babel.config logic and exports for apps\web.
+// Purpose: Compiles JSX and TypeScript for Jest and applies tests/viteEnvTransform.cjs to Vite environment expressions.
 module.exports = {
   env: { test: { plugins: [require('./tests/viteEnvTransform.cjs')] } },
   presets: [
