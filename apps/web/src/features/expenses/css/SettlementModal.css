@@ -1,4 +1,4 @@
-/* Purpose: Collects debt-bounded settlement payments and displays currency-aware history and save errors. */
+/* Purpose: Styles settlement-entry fields, overlay, action buttons, validation feedback and saving indicator. */
 /* Settlement Modal Styles - Matches expense modal styling */
 .settlement-modal-overlay {
   position: fixed;
