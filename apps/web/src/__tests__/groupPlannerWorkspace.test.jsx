@@ -1,4 +1,4 @@
-// Purpose: Covers calendar day selection and checklist optimistic updates.
+// Purpose: Verifies calendar-based itinerary day filtering and optimistic checklist toggling with rollback after failure.
 import React from 'react';
 import {act, fireEvent, render, renderHook, screen, waitFor} from '@testing-library/react';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
