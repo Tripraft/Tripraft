@@ -1,4 +1,4 @@
-// Purpose: Provides reusable React state/query behavior for Place Search Query.
+// Purpose: Provides cached React Query reads for place search, details and catalog statistics.
 import { useQuery } from '@tanstack/react-query';
 import { searchPlaces, getPlaceDetails, getStats } from '../services/placeSearchService';
 
