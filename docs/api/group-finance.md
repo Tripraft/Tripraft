@@ -186,6 +186,7 @@ debts, safe former-member reversals, complete audit snapshots, paginated totals,
 currency separation, reports, balance repair and membership revocation.
 Existing concurrency and crew-confirmed deletion tests also exercise this ledger.
 
-The personal backend is saved separately on `personal-finance-backend`
-(`43990e456750`); group work is saved on its descendant `group-expenses-backend`.
-See [checkpoint workflow](backend-checkpoints.md) for Interactive Smartlog.
+For regression details, inspect [group lifecycle tests](../../services/api/tests/test_expense_group_lifecycle.py),
+[money integrity tests](../../services/api/tests/test_money_integrity.py) and
+[the migration contract](../../services/api/tests/test_migration_contract.py).
+Historical implementation reports are indexed separately in the [archive](../archive/README.md).
