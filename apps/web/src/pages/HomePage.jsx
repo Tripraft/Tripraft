@@ -1,4 +1,4 @@
-// Purpose: Renders the Home Page interface within apps\web\src\pages.
+// Purpose: Renders the marketing landing page, animated travel artwork, tool links and destination-to-planner navigation.
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
