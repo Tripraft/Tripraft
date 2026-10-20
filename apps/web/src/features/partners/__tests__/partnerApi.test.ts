@@ -1,4 +1,4 @@
-// Purpose: Checks isolated partner CSRF cookies, refresh reads and non-replayed mutations.
+// Purpose: Verifies isolated session probes, partner CSRF, shared refresh, no mutation replay and version/hash-bound agreement acknowledgment.
 jest.mock('../../../config/globalConfig', () => ({ __esModule: true, default: { API_BASE_URL: '/api' } }));
 import { partnerApi } from '../partnerApi';
 
