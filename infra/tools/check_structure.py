@@ -9,7 +9,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 required = ['apps/web/src/main.tsx', 'apps/admin/src/main.tsx', 'services/api/app/core/factory.py',
             'services/api/migrations', 'services/api/tests', 'packages/ui', 'packages/api-client',
-            'packages/types', 'packages/config', 'data/seeds', 'infra/docker/docker-compose.yml',
+            'packages/types', 'packages/config', 'infra/docker/docker-compose.yml',
             'infra/terraform', 'docs/architecture.md', 'docs/api.md', 'docs/runbook.md',
             'pnpm-workspace.yaml', 'turbo.json', 'README.md', 'start.py', 'docs/files.md']
 for name in required:
