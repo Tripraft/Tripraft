@@ -1,4 +1,4 @@
-// Purpose: Regression tests for search Cancellation, including success and failure behavior.
+// Purpose: Verifies stale autocomplete responses cannot replace a newer query and clearing search cancels its pending debounce.
 import React, { useState } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 jest.mock('../services/placeSearchService', () => ({ getAutocompleteSuggestions: jest.fn() }));
