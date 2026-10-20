@@ -1,4 +1,4 @@
-// Purpose: Calendar-safe analytics using recorded splits and excluding deleted expenses.
+// Purpose: Builds spending totals, saved-share breakdowns, category aggregates and complete calendar-day series while excluding income and deleted entries.
 export const ANALYSIS_COLORS = ['#8b5cf6', '#38bdf8', '#34d399', '#fbbf24', '#f472b6', '#a78bfa', '#fb7185', '#2dd4bf'];
 import { isPersonalIncome } from './personalTransactions';
 
