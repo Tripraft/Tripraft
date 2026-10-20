@@ -1,4 +1,4 @@
-// Purpose: Regression tests for chat Query, including success and failure behavior.
+// Purpose: Verifies optimistic rollback preserves incoming messages, echo deduplication across pages, and results update the original group after a switch.
 import React from 'react';import {renderHook,act,waitFor} from '@testing-library/react';import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
 jest.mock('../services/chatApi',()=>({__esModule:true,default:{sendMessage:jest.fn()}}));jest.mock('../context/AuthContext',()=>({useAuth:()=>({currentUser:{uid:'0190-user-uuid'}})}));
 import chat from '../services/chatApi';import {useSendMessage,chatKeys} from '../hooks/useChatQuery';import {mergeMessage,pageMessages} from '../lib/chatCache';
