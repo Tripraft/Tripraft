@@ -1,5 +1,7 @@
 # Remaining-details import
 
+> Historical report. Results, local accounts, file counts and open findings describe the original checkpoint. For current setup and contracts, use the [documentation index](../../../README.md). Raw CSV/JSON/ZIP exports referenced here are preserved locally and in earlier Git history; they are not current repository inputs.
+
 Imported the available data from all 197 SQL files in `sql_database/Old` into
 `data/catalog/tripraft-canonical.db`, retaining the supplied v2.1 schema.
 Existing geography/place IDs were preserved. New IDs are random six-digit integers.
@@ -58,4 +60,4 @@ place/state relationships passed. Seed verification claims were imported without
 independent web verification. Input SQL hashes and per-file import batches are stored
 in the database. A backup was taken before applying the transaction.
 
-The [machine-readable report](report.json) lists every review flag.
+The [machine-readable report](https://github.com/deeppatel1842/Tripraft/blob/aeb599bd399e7aa0f61cc376b56527c190e4b819/docs/reports/full-data-import/report.json) lists every review flag.
