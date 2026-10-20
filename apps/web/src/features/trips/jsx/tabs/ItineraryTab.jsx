@@ -1,4 +1,5 @@
-﻿import React, { useMemo, useState } from 'react';
+﻿// Purpose: Displays the daily schedule, including empty trip dates, and supports stop edits, moves and removal with query refresh.
+import React, { useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Calendar, Plus, Pencil, Trash2, ArrowUp, ArrowDown, MapPin, Clock } from 'lucide-react';
 import { useGroupPlaces, gpKeys } from '../../../../hooks/useGroupPlannerQuery';
