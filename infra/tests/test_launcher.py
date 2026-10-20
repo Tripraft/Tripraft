@@ -1,4 +1,4 @@
-# Purpose: Regression tests for launcher, including success and failure behavior.
+# Purpose: Tests start.py setup preservation, random secrets, process identity and owned-child cleanup, port/session reuse, child environments and reload recovery using mocks and temporary files.
 """Launcher regressions for data/configuration preservation and process ownership."""
 import json
 import socket
