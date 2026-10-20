@@ -1,4 +1,4 @@
-// Purpose: Provides place Search Service logic and exports for apps\web\src\services.
+// Purpose: Wraps place search, cancellable autocomplete, place-detail and catalog-statistics API calls.
 /**
  * Place Search API Service
  *
