@@ -38,7 +38,7 @@ Both startup modes initialize the empty canonical travel database from
 `services/api/schema/tripraft-global-schema-v2.1.sql`. Native mode uses
 `data/catalog/tripraft-canonical.db`; Docker uses its persistent catalog volume.
 No seed files are imported. Existing canonical data is preserved and validated.
-See [local catalog setup](../services/README.md#local-catalog-setup) for manual creation and checks.
+See [local catalog setup](../../services/README.md#local-catalog-setup) for manual creation and checks.
 
 Native mode generates `services/api/.env` only when absent, with its own development
 database at `data/runtime/dev/tripraft.db`. It does not overwrite an existing `.env`
@@ -61,7 +61,7 @@ Configure integrations in the ignored API `.env`, then restart the launcher.
 
 Application review is in the separate staff console at `http://127.0.0.1:5174`.
 Use its staff sign-in with an active, verified employee account enabled through
-`ADMIN_EMAILS`; supplier accounts cannot enter it. See [staff review access](staff-console.md).
+`ADMIN_EMAILS`; supplier accounts cannot enter it. See [staff review access](../guides/staff-console.md).
 
 For PostgreSQL, Redis, and a worker, install/start Docker and use the same file:
 
@@ -98,6 +98,6 @@ the published source.
 
 ## Schema edits during live development
 
-The native development API runs the same backed-up migration command before initializing after a source reload. This requires the explicit launcher development-reload flag and is disabled for production. A second launcher waits briefly for a verified running service to recover from a reload before cleanup, rather than immediately treating its temporarily closed port as a failed session.
+The native development API runs the same backed-up migration command before initializing after a source reload. The launcher sets `TRIPRAFT_DEV_RELOAD=1` for native development; this migration/reload behavior is disabled for production. A second launcher waits briefly for a verified running service to recover from a reload before cleanup, rather than immediately treating its temporarily closed port as a failed session.
 
 Web/admin development proxies return a clear JSON 503 during API downtime. Their frontend servers can stay reachable while the API reinitializes. The staff console has a connection retry; write actions are not automatically replayed. Refresh the application/receipt after recovery. Browser extension context errors are independent of these server/proxy errors.
