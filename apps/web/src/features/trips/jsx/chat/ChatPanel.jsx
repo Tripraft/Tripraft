@@ -1,4 +1,4 @@
-// Purpose: Coordinates message rendering, live chat, AI cards, polls, optimistic sends and group-switch state.
+// Purpose: Renders paginated/live messages, edits, mentions, Scout/Crew cards and polls while coordinating optimistic sends and group-specific composer state.
 import PollFeed from '../../../polls/PollFeed';
 import { isPlannerDemo } from '../../demo/demoMode';
 import { tripDates } from '../../utils/plannerSchedule';
