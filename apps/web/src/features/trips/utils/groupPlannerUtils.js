@@ -1,4 +1,4 @@
-// Purpose: Provides group Planner Utils logic and exports for apps\web\src\features\trips\utils.
+// Purpose: Normalizes API envelopes/arrays, classifies map markers, calculates trip day numbers and escapes popup text.
 /**
  * Data-unwrapping utilities for API response normalization.
  */
