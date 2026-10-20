@@ -1,4 +1,4 @@
-// Purpose: Renders the Trip Planner interface within apps\web\src\pages.
+// Purpose: Calls tripPlannerService and adapts returned plans/place metadata for the single-trip map, itinerary cards, tips and packing checklist.
 import React, { useState, useEffect } from 'react';
 
 import { useAuth } from '../context/AuthContext';
