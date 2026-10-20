@@ -1,4 +1,4 @@
-// Purpose: Provides reusable React state/query behavior for Trip Planner Query.
+// Purpose: Provides city-search/list and pacing queries plus the generated-trip mutation through tripPlannerService.
 import { useQuery, useMutation } from '@tanstack/react-query';
 import tripPlannerService from '../services/tripPlannerService';
 
