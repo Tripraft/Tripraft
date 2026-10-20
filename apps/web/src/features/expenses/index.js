@@ -1,4 +1,4 @@
-// Purpose: Provides index logic and exports for apps\web\src\features\expenses.
+// Purpose: Re-exports expense UI components and currency definitions for feature consumers.
 // Expense Components Index
 export { default as ExpenseAnalytics } from './jsx/ExpenseAnalytics';
 export { default as ExpenseHistoryModal } from './jsx/ExpenseHistoryModal';
