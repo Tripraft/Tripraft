@@ -1,3 +1,4 @@
+// Purpose: Verifies expired-link restrictions, copying without resending, clipboard fallback, invitation permissions and cancellation cleanup.
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import GroupManager from '../features/expenses/jsx/GroupManager';
