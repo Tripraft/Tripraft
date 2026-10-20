@@ -1,4 +1,4 @@
-// Purpose: Renders the Itinerary Stop interface within apps\web\src\features\itinerary\jsx.
+// Purpose: Displays a generated stop's times, place metadata, photos and available details within the itinerary timeline.
 import React, { useState } from 'react';
 import Icon from './Icon';
 
