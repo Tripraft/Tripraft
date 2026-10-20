@@ -1,3 +1,4 @@
+// Purpose: Verifies API-compatible group creation fields and preserving the entered name after validation failure.
 import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import GroupManager from '../features/expenses/jsx/GroupManager';
