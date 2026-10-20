@@ -1,4 +1,4 @@
-// Purpose: Renders the Checklist interface within apps\web\src\features\itinerary\jsx.
+// Purpose: Renders a static travel-packing checklist with component-local checked state; it is separate from shared group checklists.
 import React, { useState } from 'react';
 
 const Checklist = () => {
