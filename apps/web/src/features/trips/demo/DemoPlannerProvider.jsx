@@ -1,3 +1,4 @@
+// Purpose: Provides an isolated demo identity and query client, role switching and reset controls around the planner workspace.
 import React, { useMemo, useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
