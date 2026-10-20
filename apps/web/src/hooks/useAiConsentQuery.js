@@ -1,4 +1,4 @@
-// Purpose: Provides reusable React state/query behavior for Ai Consent Query.
+// Purpose: Defines query keys and React Query reads/mutations for granting, declining or revoking per-group Scout consent.
 /**
  * AI Consent React Query Hooks
  * Query + mutations for Scout consent state per group.
