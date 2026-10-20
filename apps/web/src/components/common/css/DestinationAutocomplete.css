@@ -1,4 +1,4 @@
-/* Purpose: Styles the Destination Autocomplete interface, including its layout and interaction states. */
+/* Purpose: Styles the destination input, suggestion list, type indicators, loading state and responsive variants. */
 .destination-autocomplete {
   position: relative;
   width: 100%;
