@@ -1,4 +1,4 @@
-// Purpose: Mounts the React application into the HTML root element.
+// Purpose: Mounts React with BrowserRouter and QueryClientProvider, initializes optional query persistence, and loads global styles.
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom';
