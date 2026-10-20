@@ -1,4 +1,4 @@
-# Purpose: Checks required workspace files, discovered workflows, and Python/JavaScript/TypeScript import targets.
+# Purpose: Checks required workspace paths, exact workflow-copy synchronization, optional archive mappings and resolvable local Python/JavaScript/TypeScript imports.
 """Guard monorepo paths, workflow discovery copies, and archived source retention."""
 import json
 import ast
