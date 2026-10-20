@@ -1,3 +1,4 @@
+// Purpose: Verifies auth restoration, preserved trip invitation type, single StrictMode acceptance, wrong-account/expired links and already-accepted navigation.
 import React, { StrictMode } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation } from 'react-router-dom';
