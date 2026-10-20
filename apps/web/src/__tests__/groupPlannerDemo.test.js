@@ -1,4 +1,5 @@
-﻿import { APIClient } from '../utils/apiClient';
+﻿// Purpose: Verifies local demo request isolation, permitted public reference reads, role checks, reset/settings behavior, polls and independent crew roles.
+import { APIClient } from '../utils/apiClient';
 import { demoRequest, resetDemo } from '../features/trips/demo/demoApi';
 import { DEMO_VIEWER_KEY } from '../features/trips/demo/demoMode';
 jest.mock('../config/globalConfig', () => ({ __esModule:true, default:{API_BASE_URL:'/api',API_TIMEOUT:1000,API_MAX_RETRIES:0} }));
