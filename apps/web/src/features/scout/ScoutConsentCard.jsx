@@ -1,4 +1,4 @@
-// Purpose: Displays Scout consent choices and retries the original request after consent.
+// Purpose: Presents per-group Scout privacy choices and retries the original request only after the returned consent state allows it.
 import React, { useState } from 'react';
 import { Shield, Eye, EyeOff, Check, X } from 'lucide-react';
 import { useAiConsent, useSubmitAiConsent } from '../../hooks/useAiConsentQuery';
