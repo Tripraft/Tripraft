@@ -1,4 +1,4 @@
-// Purpose: Integrates the real auth provider, service, protected routes and session lifetime.
+// Purpose: Verifies returning-device restoration, identity-before-redirect, retryable login errors, logout cache cleanup and the absence of a mounted idle logout.
 import React from 'react';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
