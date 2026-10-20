@@ -1,6 +1,17 @@
 {
-  "name": "@tripraft/types", "version": "0.1.0", "private": true, "type": "module",
-  "exports": { ".": "./src/index.ts" },
-  "devDependencies": { "@tripraft/config": "workspace:*" },
-  "scripts": { "typecheck": "tsc -p tsconfig.json", "lint": "eslint src" }
+  "name": "@tripraft/types",
+  "description": "Shared TypeScript contracts for accounts, API envelopes, partner onboarding and private tour package drafts.",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "devDependencies": {
+    "@tripraft/config": "workspace:*"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "lint": "eslint src"
+  }
 }
