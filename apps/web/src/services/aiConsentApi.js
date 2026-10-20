@@ -1,4 +1,4 @@
-// Purpose: Provides ai Consent Api logic and exports for apps\web\src\services.
+// Purpose: Calls the planner's consent-status, grant/decline and revoke endpoints through the shared API client.
 /**
  * AI Consent API Service
  * REST endpoints for Scout consent management.
