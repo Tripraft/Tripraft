@@ -1,4 +1,4 @@
-/* Purpose: Responsive reference-inspired expense analysis without fixed chart widths. */
+/* Purpose: Styles analysis filters, insight cards, category/daily charts, legends and responsive chart sizing. */
 .expense-analysis { color: var(--color-text-primary, #111827); min-width: 0; width: 100%; }
 .expense-analysis-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px; margin-bottom: 26px; }
 .expense-analysis-heading h2 { font-size: clamp(20px, 2vw, 25px); letter-spacing: -.035em; margin: 0; overflow-wrap: anywhere; }
