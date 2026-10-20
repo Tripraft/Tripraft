@@ -1,4 +1,4 @@
-// Purpose: Renders the Protected Route interface within apps\web\src\features\auth\jsx.
+// Purpose: Waits for traveler session initialization and displays sign-in/signup actions before rendering authenticated content.
 /**
  * Protected Route Component
  * Secures routes that require authentication
