@@ -1,3 +1,4 @@
+// Purpose: Restores auth before validating and accepting a trip invitation, shares StrictMode acceptance work and opens the exact joined group.
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
