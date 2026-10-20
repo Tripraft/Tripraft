@@ -1,4 +1,4 @@
-// Purpose: Provides index logic and exports for apps\web\src\features\itinerary.
+// Purpose: Re-exports the single-trip planner's form, itinerary, stops, map, suggested places, tips, checklist and icon component.
 // Trip Planner Components Index
 export { default as Checklist } from './jsx/Checklist';
 export { default as Icon } from './jsx/Icon';
