@@ -1,4 +1,4 @@
-// Purpose: Renders Crew question, confirmation, place and success cards.
+// Purpose: Renders Crew follow-up questions, expiring confirmation cards, added-place cards and success messages, with multi-step answer handling.
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MapPin, CheckCircle, AlertTriangle, Clock, ChevronRight } from 'lucide-react';
 import { formatRelativeTime } from '../trips/utils/formatters';
