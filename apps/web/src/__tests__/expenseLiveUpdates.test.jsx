@@ -1,3 +1,4 @@
+// Purpose: Verifies private socket invalidation, burst coalescing, revoked-data cleanup, reconnect/polling recovery, visibility handling and session renewal.
 import React from 'react';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
