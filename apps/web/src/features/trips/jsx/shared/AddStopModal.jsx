@@ -1,3 +1,4 @@
+// Purpose: Adds a stop through the place APIs, optionally schedules it, and refreshes planner queries while reporting partial-save failures.
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { X } from 'lucide-react';
