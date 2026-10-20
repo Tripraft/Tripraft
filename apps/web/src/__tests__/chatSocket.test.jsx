@@ -1,4 +1,4 @@
-// Purpose: Regression tests for chat Socket, including success and failure behavior.
+// Purpose: Verifies cookie-authenticated sockets, message/edit reconciliation, read throttling, group changes, reconnect/refresh recovery and revoked-access cleanup.
 import React from 'react';import {renderHook,act,waitFor} from '@testing-library/react';import {QueryClient,QueryClientProvider} from '@tanstack/react-query';
 jest.mock('../config/globalConfig',()=>({__esModule:true,default:{API_BASE_URL:'http://localhost:5000/api'}}));
 jest.mock('../services/sqlAuthService',()=>({__esModule:true,default:{getIdToken:jest.fn().mockResolvedValue(null),refreshAccessToken:jest.fn().mockResolvedValue({success:false})}}));
