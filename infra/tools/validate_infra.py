@@ -1,4 +1,4 @@
-# Purpose: Checks Compose paths, volumes and dependencies plus workflow YAML without claiming live deployment.
+# Purpose: Statically validates Compose build contexts, Dockerfiles, named/bind volumes and service dependencies plus workflow job/step structure; it does not start containers or deploy.
 """Static local validation when Docker or hosted GitHub execution is unavailable."""
 from pathlib import Path
 import yaml
