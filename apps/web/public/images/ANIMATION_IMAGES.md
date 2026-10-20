@@ -1,40 +1,21 @@
-# Animated Background Images
+# Landing-page animation assets
 
-Place these images in the `public/images/` folder:
+The animation is rendered by [AnimatedBackground.jsx](../../src/components/common/jsx/AnimatedBackground.jsx) and styled by [AnimatedBackground.css](../../src/components/common/css/AnimatedBackground.css). Images are served from this directory using `/images/<filename>` URLs.
 
-## Required Images (from demo.html):
+| File | CSS animation slot | Use |
+|---|---|---|
+| `map.png` | `animated-map` | Map illustration |
+| `passport.png` | `animated-letsgo` | Travel-document illustration |
+| `man.png` | `animated-bagman` | Traveler character |
+| `plane.png` | `animated-plane` | Airplane illustration |
+| `travel_man.png` | `animated-tourist` | Traveler character |
+| `confuse_man.png` | `animated-confuse` | Confused traveler |
+| `search.png` | `animated-content` | Search illustration |
+| `trip_plan.png` | `animated-happy` | Trip-planning illustration |
+| `happy.png` | `animated-student` | Celebration illustration |
 
-1. **map_18880341.png** - Map illustration
-2. **lets-go_18880304.png** - "Let's Go" text/sign
-3. **traveller_5601247.png** - Person with backpack/bag
-4. **takeoff-plane_68380.png** - Airplane taking off
-5. **tourist_9348270.png** - Tourist with map
-6. **confuse_17069761.png** - Confused person icon
-7. **content_17007094.png** - Content/planning illustration
-8. **celebration_5052603.png** - Happy/celebrating person
-9. **student_3066193.png** - Student with backpack
+Some CSS slot names come from an earlier animation design and differ from the artwork now assigned to them. The current JSX image paths are authoritative.
 
-## Image Sources:
-These images appear to be from Flaticon or similar icon/illustration services.
+The sprite sequence uses `--animation-cycle: 24s`. Individual visibility, motion and responsive sizing are defined in the CSS keyframes; the brand text comes from `GlobalConfig.APP_NAME`.
 
-You can:
-- Use the images from your existing web/demo.html location
-- Download similar travel-themed illustrations from:
-  - Flaticon.com
-  - Freepik.com
-  - Undraw.co (free illustrations)
-  - Icons8.com
-
-## Animation Sequence (24 seconds loop):
-1. Map appears (0-14%)
-2. "Let's Go" pops up (10-20%)
-3. Traveller walks in (18-32%)
-4. Plane takes off (30-40%)
-5. Tourist appears (38-50%)
-6. Confusion shake (48-58%)
-7. Content + "Wayfinder" brand (56-68%)
-8. Happy celebration (66-78%)
-9. Student walks in (76-92%)
-
-## To Use Your Own Images:
-Simply replace the image paths in `AnimatedBackground.jsx` with your own image filenames.
+When replacing artwork, keep the filename or update the JSX `src`, check the slot's size and keyframes, and verify the landing page at desktop and mobile widths. Keep source/license evidence with any replacement asset; this file does not establish ownership or a license for the existing PNGs.
