@@ -1,4 +1,5 @@
-﻿import React from 'react';
+﻿// Purpose: Verifies exact itemized splits and small settlements, empty trip dates, preserved time slots and independent access/responsibility permissions.
+import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { gpKeys } from '../hooks/useGroupPlannerQuery';
