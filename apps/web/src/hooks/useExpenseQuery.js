@@ -1,4 +1,4 @@
-// Purpose: Coordinates React Query reads and mutations for expense groups, balances, expenses and settlements.
+// Purpose: Centralizes expense query keys, bootstrap/ledger/history reads, optimistic financial mutations with rollback, invitations and group/personal manager hooks.
 import { useQuery, useMutation, useQueryClient, keepPreviousData, useInfiniteQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useState, useRef } from 'react';
 import expenseApi from '../services/expenseApi';
