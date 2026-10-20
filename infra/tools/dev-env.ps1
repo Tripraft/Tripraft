@@ -1,4 +1,4 @@
-# Purpose: Creates the optional isolated development environment without replacing archived local environments.
+# Purpose: Creates or reuses the workspace .venv with the selected Python version and installs backend runtime/test requirements; start.py remains the full-project launcher.
 <# Optional backend-only setup; start.py provides the complete project launcher. #>
 [CmdletBinding()]
 param([string]$PythonVersion = '3.11')
