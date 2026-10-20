@@ -1,4 +1,4 @@
-// Purpose: Displays and manages expense groups, members, ownership controls and invitations.
+// Purpose: Manages expense-group metadata, membership and invitations with role-aware actions, confirmation and retryable API errors.
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Mail, Trash2, Clock, Settings, Link, Send } from 'lucide-react';
 import { formatDateLocal } from '../../../utils/timezoneUtils';
