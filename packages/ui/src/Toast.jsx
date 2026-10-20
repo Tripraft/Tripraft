@@ -1,4 +1,4 @@
-// Purpose: Renders shared timed notifications used by application features.
+// Purpose: Renders success/error/info notifications with icons and manual close, schedules onClose for positive durations, and clears the timer when its effect resets or unmounts.
 import React, { useEffect } from 'react';
 import { CheckCircle, XCircle, Info, X } from 'lucide-react';
 import './styles/Toast.css';
