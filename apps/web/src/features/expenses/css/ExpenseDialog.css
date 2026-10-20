@@ -1,4 +1,4 @@
-/* Purpose: Shared, isolated dialog geometry; the backdrop never paints over the dialog surface. */
+/* Purpose: Defines isolated dialog/backdrop geometry, responsive expense forms and a separate currency/amount column layout. */
 .expense-dialog-layer {
   position: fixed; inset: 0; z-index: 12000; display: grid; place-items: center;
   padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
