@@ -1,4 +1,4 @@
-# Purpose: Transfers an explicitly selected local demo application to a separate supplier identity and audits private-workspace approval.
+# Purpose: Backs up a local development SQLite database, transfers an explicitly selected staff-owned demo application to a separate partner identity, and records approval without signing terms or granting staff access.
 """Development SQLite only. Never signs terms, sends email or grants staff roles.
 
 Usage: python infra/tools/setup_demo_partner.py APPLICATION_UUID --reviewer STAFF_EMAIL
