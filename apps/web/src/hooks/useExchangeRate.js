@@ -1,3 +1,4 @@
+// Purpose: Fetches and validates the selected currency pair, ignores stale responses, refreshes on focus/timer and exposes loading/error state.
 import {useEffect, useState} from 'react';
 import {getExchangeRate} from '../services/currencyApi';
 
