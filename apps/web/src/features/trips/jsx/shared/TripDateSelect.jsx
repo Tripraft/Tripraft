@@ -1,3 +1,4 @@
+// Purpose: Offers the trip's calendar dates plus an unscheduled option for assigning a stop to a day.
 import React from 'react';
 import {tripDates} from '../../utils/plannerSchedule';
 import {formatDate} from '../../utils/formatters';
