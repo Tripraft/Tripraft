@@ -1,3 +1,4 @@
+// Purpose: Verifies a public email token with shared in-flight work under StrictMode, reports missing/expired/error states and offers explicit resend when signed in.
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { CheckCircle, Mail, AlertCircle } from 'lucide-react';
