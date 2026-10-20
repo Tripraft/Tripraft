@@ -1,4 +1,4 @@
-// Purpose: Provides setup Tests logic and exports for apps\web\src.
+// Purpose: Loads Testing Library DOM assertions and supplies TextEncoder/TextDecoder for the jsdom test environment.
 import '@testing-library/jest-dom';
 import { TextEncoder, TextDecoder } from 'util';
 global.TextEncoder = TextEncoder;
