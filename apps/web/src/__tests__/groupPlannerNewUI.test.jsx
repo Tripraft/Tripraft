@@ -1,4 +1,5 @@
-﻿import React from 'react';
+﻿// Purpose: Verifies trip-card actions, typed-name deletion, date choices, search/pins, safe invitation links and retryable or partial stop-creation failures.
+import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import GroupSelector from '../features/trips/jsx/shared/GroupSelector';
