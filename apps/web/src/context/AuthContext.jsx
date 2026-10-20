@@ -1,4 +1,4 @@
-// Purpose: Provides authenticated account state, initialization, profile updates, and logout cache cleanup.
+// Purpose: Exposes traveler identity, sign-in, sign-up, profile updates and sign-out; clears query state and persisted caches when signing out.
 /**
  * Authentication Context
  * Manages user authentication state globally with SQL backend
