@@ -1,4 +1,4 @@
-// Purpose: Provides index logic and exports for apps\web\src\pages.
+// Purpose: Re-exports the main page components for consumers that use the pages entry module.
 // Page Components Index
 export { default as About } from './About';
 export { default as Analytics } from './Analytics';
