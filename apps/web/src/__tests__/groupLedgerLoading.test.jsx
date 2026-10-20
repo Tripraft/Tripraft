@@ -1,3 +1,4 @@
+// Purpose: Verifies all personal pages include deleted rows, revoked membership removes cached controls/data and group switches do not leak earlier ledgers.
 import React from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
