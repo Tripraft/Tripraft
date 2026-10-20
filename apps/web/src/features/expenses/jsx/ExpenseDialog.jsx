@@ -1,4 +1,4 @@
-// Purpose: Keeps expense dialogs above page stacking contexts with bounded scrolling and keyboard focus.
+// Purpose: Provides a portalled expense dialog with focus containment, Escape handling, scroll locking and focus restoration.
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import '../css/ExpenseDialog.css';
