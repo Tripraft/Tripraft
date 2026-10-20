@@ -1,4 +1,4 @@
-// Purpose: Provides reusable React state/query behavior for Group Planner Query.
+// Purpose: Defines planner query keys and hooks for groups, destination viewports, places, polls, members, expenses, checklists, vault files and activities.
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import groupPlannerApi from '../services/groupPlannerApi';
 
