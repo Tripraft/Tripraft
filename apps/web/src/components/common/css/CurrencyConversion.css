@@ -1,3 +1,4 @@
+/* Purpose: Styles the currency calculator, totals, rate status, swap/refresh controls and responsive layout. */
 .currency-conversion {margin: 18px 0; padding: 22px; background: #fff; border: 1px solid #dcebf0; border-radius: 20px; color: #17394c;}
 .currency-conversion-heading {display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px;}
 .currency-conversion h3 {margin: 0; font-size: 17px; letter-spacing: -.2px;}
