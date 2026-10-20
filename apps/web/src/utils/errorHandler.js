@@ -1,4 +1,4 @@
-// Purpose: Provides error Handler logic and exports for apps\web\src\utils.
+// Purpose: Converts structured API errors into display messages, field errors and authentication-redirect hints with status-code fallbacks.
 /**
  * Error Handler — Centralized status-code-to-message mapping
  *
