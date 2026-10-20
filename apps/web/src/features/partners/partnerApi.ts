@@ -1,4 +1,4 @@
-// Purpose: Uses isolated httpOnly partner sessions and CSRF without traveler-token refresh or mutation replay.
+// Purpose: Calls partner endpoints with isolated partner cookies and CSRF; shares read-probe refresh and never automatically replays failed mutations.
 import GlobalConfig from '../../config/globalConfig';
 import type { AgentAgreementSignInput, PartnerAgreementDocument, PartnerApplicationInput, PartnerSnapshot, TourDraftContent, TourPackageDraft, TourPackageList } from '@tripraft/types';
 
