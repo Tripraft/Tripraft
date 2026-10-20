@@ -1,4 +1,4 @@
-// Purpose: Lets approved suppliers create, copy, save and privately preview seven-step tour content drafts.
+// Purpose: Lists and duplicates private supplier packages and provides a seven-step editor for route, itinerary, services, media, proposed rates and review submission.
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useBeforeUnload, useNavigate, useParams } from 'react-router-dom';
 import type { TourDraftContent, TourPackageDraft, TourPackageList } from '@tripraft/types';
