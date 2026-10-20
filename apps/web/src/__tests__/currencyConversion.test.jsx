@@ -1,3 +1,4 @@
+// Purpose: Verifies original versus converted totals, currency-pair races, stale/unavailable rates, fixed saved currencies and independent calculator pairs.
 import React from 'react';
 import {act, fireEvent, render, screen, waitFor} from '@testing-library/react';
 import CurrencyConversion from '../components/common/jsx/CurrencyConversion';
