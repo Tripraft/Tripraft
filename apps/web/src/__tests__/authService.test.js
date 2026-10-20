@@ -1,4 +1,4 @@
-// Purpose: Regression tests for auth Service, including success and failure behavior.
+// Purpose: Verifies cookie restoration/refresh, verification and resend, session rejection versus transient errors, CSRF/logout and token-free local storage.
 jest.mock('../config/globalConfig',()=>({__esModule:true,default:{API_BASE_URL:'http://localhost/api',ENDPOINTS:{AUTH:'/v1/auth'},STORAGE_KEYS:{ACCESS_TOKEN:'accessToken',REFRESH_TOKEN:'refreshToken',CURRENT_USER:'currentUser'}}}));
 import auth from '../services/sqlAuthService';
 const response=(status,data)=>({ok:status<400,status,json:async()=>data});
