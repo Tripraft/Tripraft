@@ -1,3 +1,4 @@
+// Purpose: Formats amounts in a chosen display currency using the exchange-rate hook while leaving stored amounts and calculation units unchanged.
 import useExchangeRate from './useExchangeRate';
 import {formatMoney} from '../utils/money';
 
