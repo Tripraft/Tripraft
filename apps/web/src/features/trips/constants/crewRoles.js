@@ -1,3 +1,4 @@
+// Purpose: Defines Treasurer, Navigator and Culture Scout responsibility labels and descriptions separately from group access roles.
 export const CREW_ROLES = {
   treasurer: {
     label: 'Treasurer',
