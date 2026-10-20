@@ -1,4 +1,4 @@
-// Purpose: Normalizes currency amounts, whole-cent splits and UUID payer changes.
+// Purpose: Formats currency, allocates equal splits in whole cents, preserves unchanged saved split fields and caps payments by both debt and credit.
 export function formatMoney(amount, currency = 'USD', options = {}) {
   const value = Number(amount);
   const safe = Number.isFinite(value) ? value : 0;
