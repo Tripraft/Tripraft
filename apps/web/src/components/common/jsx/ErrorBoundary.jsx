@@ -1,4 +1,4 @@
-// Purpose: Renders the Error Boundary interface within apps\web\src\components\common\jsx.
+// Purpose: Catches rendering errors with retry/home recovery and exports QueryErrorBoundary for query loading, errors and cached-data fallback.
 import React, { Component } from 'react';
 import { RefreshCw, AlertTriangle, Home } from 'lucide-react';
 import '../css/ErrorBoundary.css';
