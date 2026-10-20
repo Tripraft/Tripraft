@@ -1,4 +1,4 @@
-// Purpose: Renders the Trip Plan Card interface within apps\web\src\features\itinerary\jsx.
+// Purpose: Displays a generated trip plan and its day-by-day itinerary, with plan summary metadata.
 import React from 'react';
 import Itinerary from './Itinerary';
 import SuggestedPlaces from './SuggestedPlaces';
