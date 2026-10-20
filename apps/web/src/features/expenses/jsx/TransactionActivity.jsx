@@ -1,4 +1,4 @@
-// Purpose: Reference-inspired activity cards with edit, split and change-history actions on every screen size.
+// Purpose: Renders transaction activity rows with split/history actions and permission-aware edit, delete and restore controls.
 import React from 'react';
 import { Edit2, History, Split, Trash2, Receipt, RefreshCw } from 'lucide-react';
 import { formatMoney } from '../../../utils/money';
