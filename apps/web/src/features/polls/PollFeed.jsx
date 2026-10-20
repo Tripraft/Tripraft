@@ -1,4 +1,4 @@
-// Purpose: Renders poll choices, vote counts and voter panels using state and handlers supplied by chat.
+// Purpose: Renders poll choices, voting results and voter details, submits option indexes, and exposes deletion only when permitted by the supplied poll state.
 import React from 'react';
 import { Check, Trash2 } from 'lucide-react';
 import { formatRelativeTime } from '../trips/utils/formatters';
