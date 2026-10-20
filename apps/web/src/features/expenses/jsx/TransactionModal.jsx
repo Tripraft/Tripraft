@@ -1,4 +1,4 @@
-// Purpose: Renders the Transaction Modal interface within apps\web\src\features\expenses\jsx.
+// Purpose: Creates or edits personal/group expenses, validating amount, payer and participants while preserving an editing draft across live refetches.
 import ExpenseDialog from './ExpenseDialog';
 import CurrencySelect from '../../../components/common/jsx/CurrencySelect';
 import React, { useState, useEffect, useRef } from 'react';
