@@ -1,4 +1,4 @@
-// Purpose: Gives authenticated staff a complete draft reader and protected original-document download.
+// Purpose: Loads the protected agreement draft on demand, renders its text and tables, and links to the original document download.
 import React, { useState } from 'react';
 import type { PartnerAgreementDocument } from '@tripraft/types';
 
