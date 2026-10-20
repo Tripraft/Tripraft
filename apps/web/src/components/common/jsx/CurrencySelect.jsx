@@ -1,3 +1,4 @@
+// Purpose: Loads supported currencies with a local fallback, preserves an existing saved currency, and reports stale or unavailable listings.
 import React, {useEffect, useState} from 'react';
 import {getCurrencies} from '../../../services/currencyApi';
 import {currencies} from '../../../features/expenses/utils/currencies';
