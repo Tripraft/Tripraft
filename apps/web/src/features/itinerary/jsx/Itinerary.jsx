@@ -1,4 +1,4 @@
-// Purpose: Renders the Itinerary interface within apps\web\src\features\itinerary\jsx.
+// Purpose: Renders day-by-day generated itinerary entries using ItineraryStop.
 import React from 'react';
 import ItineraryStop from './ItineraryStop';
 
