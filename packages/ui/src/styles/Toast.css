@@ -1,4 +1,4 @@
-/* Purpose: Renders shared timed notifications used by application features. */
+/* Purpose: Styles fixed-position Toast notifications, slide-in animation, status colors and close controls, with a full-width mobile layout. */
 .toast {
   position: fixed;
   bottom: 2rem;
