@@ -1,0 +1,104 @@
+
+name: "TripRaft Bug Report"
+description: "Report a bug or unexpected behavior in TripRaft."
+title: "[Bug]: "
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## TripRaft Bug Report
+        Describe the problem so developers can reproduce and fix it.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Bug Description"
+      description: "What is broken?"
+      placeholder: "Describe the problem clearly."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: "Affected Module"
+      description: "Where does the problem occur?"
+      options:
+        - "Login / Signup"
+        - "Group Trip Planning"
+        - "Invitations"
+        - "Expenses"
+        - "Place Search"
+        - "AI / Agents"
+        - "Employee Dashboard"
+        - "Partner Portal"
+        - "Backend API"
+        - "Database"
+        - "Infrastructure"
+        - "Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: "Steps to Reproduce"
+      placeholder: |
+        1. Open the website
+        2. Click...
+        3. Enter...
+        4. Observe the error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: "Expected Result"
+      description: "What should happen?"
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: "Actual Result"
+      description: "What happened instead?"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: "Environment"
+      options:
+        - "Local Development"
+        - "QA / Testing"
+        - "Staging"
+        - "Production"
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: "Screenshots / Error Logs"
+      description: "Attach screenshots or sanitized error logs."
+
+  - type: textarea
+    id: testcases
+    attributes:
+      label: "Related QA Test Cases"
+      description: "List existing test IDs or suggested regression tests."
+      placeholder: "Example: AUTH-003, INV-005"
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: "Bug Report Checklist"
+      options:
+        - label: "I have included steps to reproduce the problem."
+          required: true
+        - label: "I have removed passwords, tokens, and personal information."
+          required: true
