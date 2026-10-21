@@ -1,0 +1,93 @@
+
+name: "TripRaft Feature Request"
+description: "Request a new feature for TripRaft."
+title: "[Feature]: "
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## TripRaft Feature Planning
+        Complete this form before development begins.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: "Feature Description"
+      description: "What are we building and why?"
+      placeholder: "Describe the feature and its purpose."
+    validations:
+      required: true
+
+  - type: textarea
+    id: requirements
+    attributes:
+      label: "Functional Requirements"
+      description: "What should this feature do?"
+      placeholder: |
+        1. Users should be able to...
+        2. The system should...
+        3. The application must...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: components
+    attributes:
+      label: "Affected Components"
+      description: "Which parts of TripRaft are involved?"
+      multiple: true
+      options:
+        - "Frontend (React)"
+        - "Backend (Python API)"
+        - "Database (PostgreSQL)"
+        - "AI / Agents"
+        - "Infrastructure / CI"
+        - "Not sure yet"
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: "Acceptance Criteria"
+      description: "What must work before this task is complete?"
+      placeholder: |
+        - [ ] Requirement 1 works correctly
+        - [ ] Requirement 2 works correctly
+        - [ ] Error handling is implemented
+        - [ ] Required tests pass
+    validations:
+      required: true
+
+  - type: textarea
+    id: testing
+    attributes:
+      label: "QA Test Cases"
+      description: "Describe the scenarios that must be tested."
+      placeholder: |
+        TC-001: Test successful operation
+        TC-002: Test invalid input
+        TC-003: Test permission restrictions
+        TC-004: Test error handling
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: "Dependencies and Risks"
+      description: "List blockers, database changes, or security concerns."
+      placeholder: "List dependencies or write None."
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: "Planning Checklist"
+      options:
+        - label: "Requirements are clearly defined."
+          required: true
+        - label: "Acceptance criteria are documented."
+          required: true
+        - label: "QA testing expectations are documented."
+          required: true
