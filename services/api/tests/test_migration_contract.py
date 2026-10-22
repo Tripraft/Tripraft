@@ -285,3 +285,42 @@ def test_fresh_install_sql_can_be_generated_without_a_database(url, monkeypatch)
     if url.startswith('postgresql'):
         assert 'id UUID' in sql
         assert 'TYPE uuid' not in sql
+        # PostgreSQL rejects integer expressions as defaults for Boolean columns.
+        assert 'is_archived BOOLEAN DEFAULT false NOT NULL' in sql
+        assert 'BOOLEAN DEFAULT 0' not in sql
+    assert 'DROP INDEX ix_user_sessions_refresh_token' in sql
+
+
+def test_session_token_lookup_keeps_exactly_one_index(tmp_path, monkeypatch):
+    url = 'sqlite:///' + (tmp_path / 'session-index.db').as_posix()
+    config = _config(url, monkeypatch)
+    command.upgrade(config, 'e52f60718293')
+    engine = create_engine(url)
+    try:
+        user_id, session_id = uuid4().hex, uuid4().hex
+        with engine.begin() as connection:
+            connection.execute(text('INSERT INTO users (id, email, password_hash) '
+                                    'VALUES (:id, :email, :password)'),
+                               {'id': user_id, 'email': 'index-migration@example.test',
+                                'password': 'unused'})
+            connection.execute(text('INSERT INTO user_sessions '
+                                    '(id, user_id, refresh_token, expires_at) '
+                                    'VALUES (:id, :user, :token, CURRENT_TIMESTAMP)'),
+                               {'id': session_id, 'user': user_id, 'token': 'synthetic-digest'})
+        command.upgrade(config, 'head')
+        _assert_current_schema(engine, config)
+        indexes = inspect(engine).get_indexes('user_sessions')
+        token_indexes = [i['name'] for i in indexes if i['column_names'] == ['refresh_token']]
+        assert token_indexes == ['idx_user_sessions_token']
+        with engine.connect() as connection:
+            assert connection.execute(text('SELECT refresh_token FROM user_sessions '
+                                           'WHERE id=:id'), {'id': session_id}).scalar_one() == 'synthetic-digest'
+        command.downgrade(config, 'e52f60718293')
+        token_indexes = {i['name'] for i in inspect(engine).get_indexes('user_sessions')
+                         if i['column_names'] == ['refresh_token']}
+        assert token_indexes == {'idx_user_sessions_token', 'ix_user_sessions_refresh_token'}
+        with engine.connect() as connection:
+            assert connection.execute(text('SELECT refresh_token FROM user_sessions '
+                                           'WHERE id=:id'), {'id': session_id}).scalar_one() == 'synthetic-digest'
+    finally:
+        engine.dispose()

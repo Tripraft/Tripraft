@@ -114,7 +114,7 @@ class UserSession(Base):
     user_id = Column(Uuid, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     # SHA-256 digest of the refresh token, never the token itself.
     # See app.auth.security.jwt.hash_refresh_token.
-    refresh_token = Column(String(500), nullable=False, index=True)
+    refresh_token = Column(String(500), nullable=False)
     device_info = Column(Text)
     ip_address = Column(String(45))
     expires_at = Column(DateTime, nullable=False)
