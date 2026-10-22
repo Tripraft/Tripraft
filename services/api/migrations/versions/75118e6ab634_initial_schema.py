@@ -201,7 +201,7 @@ def upgrade():
     sa.Column('metadata_json', sa.JSON(), nullable=True),
     sa.Column('parent_message_id', sa.Uuid(), nullable=True),
     sa.Column('is_deleted', sa.Boolean(), nullable=True),
-    sa.Column('is_archived', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('is_archived', sa.Boolean(), server_default=sa.false(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['group_id'], ['travel_groups.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['parent_message_id'], ['gp_chat_messages.id'], ondelete='SET NULL'),
