@@ -3913,6 +3913,12 @@ export interface components {
              * @constant
              */
             github_management: "manual";
+            /**
+             * Invitation Delivery Mode
+             * @default trusted_worker_queue
+             * @enum {string}
+             */
+            invitation_delivery_mode: "disabled_local_demo" | "trusted_worker_queue";
             /** Is Cto */
             is_cto: boolean;
             /**

@@ -46,3 +46,11 @@ The earlier private backup path was unavailable during this checkpoint session; 
 Before real invitations: approve protected control-plane hosting/database roles, the reviewed migration chain, immutable CTO UUID configuration, public HTTPS routing for customer authentication and employee pages on the same origin, Gmail SMTP secret delivery, and installation/startup of the supervised worker. See [employee-access.md](employee-access.md). No secrets are supplied by this checkpoint.
 
 No real invitations, shared/live Supabase migration, GitHub permission change, deployment or merge was performed. The SMTP and GitHub test integrations use mocks. The additional branch is for review only; opening a PR requires the CTO's later direction.
+
+## Local demo cleanup and email status follow-up
+
+At the CTO's explicit request, the active disposable local demo employee directory was cleared after creating a private full database backup. CTO/admin credentials were retained, retired employee sessions were revoked, and the sample employee is no longer automatically seeded after restart. Test data and its backup remain ignored; no reset operation or credentials are published in this branch.
+
+The demo API now reports `invitation_delivery_mode=disabled_local_demo`; onboarding labels and success messages explicitly say no email was sent. Ordinary signup/group email and the isolated demo have separate execution environments. The existing Gmail TLS/login check succeeded without submitting a message, while the local demo intentionally does not load those credentials. A public HTTPS employee origin and an explicitly authorized protected worker are still required for real onboarding delivery. No real SMTP delivery has been enabled.
+
+Follow-up validation: 57 targeted backend tests, 27 dashboard tests and 24 launcher/demo tests passed; admin lint, TypeScript and production build passed. Live loopback checks confirmed an empty directory after restart, working CTO/admin logins, rejected retired employee login, and separation of admin from CTO permissions. No migration was added or changed for this follow-up.

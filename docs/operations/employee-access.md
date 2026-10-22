@@ -53,6 +53,12 @@ The URL must be inside this worktree's ignored `.tripraft` directory, use loopba
 
 The prepared manual test session uses PostgreSQL on port 55441, Flask on 5051 and the shared admin frontend on 5174. Vite's cache is explicitly inside this worktree's `.tripraft/employee-admin-vite-cache`, avoiding writes through dependency links into the original project. Logs, role checks and saved logins are in the ignored manual-test directory. Open the CTO and employee in separate browser profiles or an incognito window.
 
+### Empty employee directory after local testing
+
+An explicitly cleared demo can retain CTO/admin credentials without recreating the sample engineer. Pass `--no-sample-employee` to the demo, or retain its ignored `.tripraft/employee-demo/no-sample-employee` marker across launcher restarts. This option only controls sample seeding; it never deletes database records. The demo health response reports `sample_employee_enabled`.
+
+Local demo email is always disabled, even when the ordinary application's `.env` contains working Gmail SMTP credentials for signup and group invitations. The demo intentionally does not load that file or start the trusted executor. Its API reports `invitation_delivery_mode=disabled_local_demo`; the onboarding form explicitly labels approval as email-disabled and confirms that no mail was sent. A normal portal reports `trusted_worker_queue`, which describes its delivery mechanism and does not claim that a worker is configured or a message was delivered. Use the reviewed trusted-worker setup below for real delivery; do not enable real SMTP in an employee-writable demo.
+
 ## Backup migration rehearsal
 
 `infra/tools/review_employee_backup.py --backup <approved-local-dump>` restores a custom-format archive into a new private PostgreSQL cluster on loopback port 55442. It refuses to reuse a running server. It hashes every original application's row set before and after upgrade, downgrade and re-upgrade, tests SQL grants and immutable audits, runs the PostgreSQL regression in a second empty database, verifies the source backup is unchanged and stops the temporary cluster. Reports and restored data stay private under ignored `.tripraft/backup-readiness-*`. No live database configuration is read. The October 20 backup contains 41 public tables: 40 application tables and `alembic_version`.

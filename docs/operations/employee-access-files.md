@@ -71,6 +71,7 @@ Only the following source, tests, configuration templates, migrations and docume
 - services/api/tests/test_employee_access.py
 - services/api/tests/test_employee_control_plane.py
 - services/api/tests/test_employee_database.py
+- services/api/tests/test_employee_email_mode.py
 - services/api/tests/test_employee_github.py
 - services/api/tests/test_employee_invitations.py
 - services/api/tests/test_employee_manual_github.py

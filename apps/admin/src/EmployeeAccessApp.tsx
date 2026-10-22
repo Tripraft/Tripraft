@@ -117,7 +117,9 @@ export function EmployeeAccessApp({ administration = false }: { administration?:
         ...(data.getAll('teams').length ? { teams: data.getAll('teams') } : {}),
         justification: data.get('justification'), confirmed: data.get('confirmed') === 'on',
       });
-      form.reset(); await load(); setNotice('Employee approved. The trusted worker sends the welcome email automatically when configured. Check the employee audit history for delivery status; approval alone does not mean sent. GitHub access is managed manually by the CTO.');
+      form.reset(); await load(); setNotice(identity?.invitation_delivery_mode === 'disabled_local_demo'
+        ? 'Employee approved. No email was sent: welcome emails are disabled in this isolated local demo. Generate a private test invitation link from the employee directory, or configure the approved public portal and trusted worker for real delivery.'
+        : 'Employee approved. The trusted worker sends the welcome email automatically when configured. Check the employee audit history for delivery status; approval alone does not mean sent. GitHub access is managed manually by the CTO.');
     });
   }
 
@@ -221,6 +223,7 @@ export function EmployeeAccessApp({ administration = false }: { administration?:
           <div><strong>{requests.filter(item => ['pending', 'under_review'].includes(item.status)).length}</strong><span>Requests awaiting review on this page</span></div>
           <div><strong>CTO</strong><span>Organization & release authority</span></div></div><section><h2>Your next actions</h2><div className="employee-quick-actions">{[['employees', 'Manage employees', 'Review team assignments and employee access.'], ['approvals', 'Review requests', 'Approve, reject, or ask for more information.'], ['onboarding', 'Invite a team member', 'Start onboarding with an approved role and team.']].map(([key, title, detail]) => <a key={key} href={base + '/' + key} onClick={event => { event.preventDefault(); setSelected(null); navigate(base + '/' + key); }}><strong>{title}<span>↗</span></strong><small>{detail}</small></a>)}</div></section></>}
         {view === 'onboarding' && <section id="employee-onboarding"><p className="eyebrow">GROW YOUR TEAM</p><h2>Invite an employee</h2><p>Confirm identity, role, and internal engineering teams before approving access. GitHub username is optional. Department defaults apply when no teams are selected.</p>
+          {identity.invitation_delivery_mode === 'disabled_local_demo' && <div className="employee-notice" role="status"><strong>Welcome emails are disabled in this local demo.</strong><p>Approval saves the employee without sending email. The existing signup and group-invitation mail service is separate. Real employee delivery requires the approved public portal and trusted worker; localhost links are for private local testing.</p></div>}
           <form className="employee-form" onSubmit={createEmployee}>
             <label>Full name<input name="display_name" required maxLength={100} /></label>
             <label>Employee email<input type="email" name="email" required /></label>
@@ -228,7 +231,7 @@ export function EmployeeAccessApp({ administration = false }: { administration?:
             <RoleTeams identity={identity} />
             <label className="wide">Business justification<textarea name="justification" required minLength={8} maxLength={2000} /></label>
             <label className="employee-confirm wide"><input type="checkbox" name="confirmed" required />I verified the employee identity and approve the selected portal access.</label>
-            <div className="wide"><button disabled={busy}>Approve and send invitation</button><p>The trusted invitation worker processes this approval automatically. Delivery status appears in the employee audit history. Local demos do not send email.</p></div>
+            <div className="wide"><button disabled={busy}>{identity.invitation_delivery_mode === 'disabled_local_demo' ? 'Approve employee (email disabled)' : 'Approve and send invitation'}</button><p>The trusted invitation worker processes this approval automatically. Delivery status appears in the employee audit history. Local demos do not send email.</p></div>
           </form></section>}
         {view === 'employees' && !selected && <section id="employee-directory"><p className="eyebrow">YOUR ORGANIZATION</p><h2>People in your workspace</h2><div className="scroll"><table><thead><tr><th>Employee</th><th>Role & teams</th><th>Portal</th><th>GitHub</th><th>Manage</th></tr></thead>
           <tbody>{employees.map(employee => <tr key={employee.id}><td><div className="employee-person"><span className="employee-avatar">{initials(employee.display_name)}</span><div><strong>{employee.display_name}</strong><br /><small>{employee.email}</small><br /><small>{employee.github_username ? `@${employee.github_username}` : 'GitHub username not recorded'}</small></div></div></td>

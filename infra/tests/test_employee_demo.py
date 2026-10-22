@@ -12,6 +12,16 @@ spec.loader.exec_module(demo)
 
 
 class EmployeeDemoTests(unittest.TestCase):
+    def test_cleared_employee_directory_stays_empty_across_restarts(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            self.assertTrue(demo.sample_employee_enabled(root))
+            self.assertFalse(demo.sample_employee_enabled(root, disabled=True))
+            marker = root / '.tripraft/employee-demo/no-sample-employee'
+            marker.parent.mkdir(parents=True)
+            marker.write_text('Local demo employee reset; keep the directory empty.\n')
+            self.assertFalse(demo.sample_employee_enabled(root))
+
     def test_saved_credentials_survive_restarts_and_explicit_rotation_changes_them(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder) / 'test-logins.json'

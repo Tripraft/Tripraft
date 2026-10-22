@@ -142,6 +142,20 @@ test('onboarding uses labelled checkbox choices and submits only explicitly appr
   await waitFor(() => expect(fetch).toHaveBeenCalledWith('/api/v1/employees', expect.objectContaining({ method: 'POST', body: JSON.stringify({ email: 'new-engineer@example.com', display_name: 'New Engineer', github_username: null, role: 'engineer', departments: ['backend'], teams: ['backend-engineers'], justification: 'Approved backend engineering onboarding', confirmed: true }) })));
 });
 
+test('local demo explicitly says approval does not send an email', async () => {
+  mockServer({ ...identity, invitation_delivery_mode: 'disabled_local_demo' });
+  render(<EmployeeAccessApp />);
+  fireEvent.click(await screen.findByRole('link', { name: 'Onboarding' }));
+  expect(screen.getByText('Welcome emails are disabled in this local demo.')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Approve and send invitation' })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Full name'), { target: { value: 'Test Engineer' } });
+  fireEvent.change(screen.getByLabelText('Employee email'), { target: { value: 'synthetic@example.com' } });
+  fireEvent.change(screen.getByLabelText('Business justification'), { target: { value: 'Synthetic onboarding verification' } });
+  fireEvent.click(screen.getByLabelText('I verified the employee identity and approve the selected portal access.'));
+  fireEvent.click(screen.getByRole('button', { name: 'Approve employee (email disabled)' }));
+  expect(await screen.findByText(/No email was sent: welcome emails are disabled/)).toBeInTheDocument();
+});
+
 test('CTO review and audit tabs render only their own page content', async () => {
   mockServer(); render(<EmployeeAccessApp administration />);
   fireEvent.click(await screen.findByRole('link', { name: 'Access reviews' }));

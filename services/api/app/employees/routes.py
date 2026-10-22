@@ -138,6 +138,7 @@ def me():
             'roles': list(ROLES), 'teams': list(TEAMS), 'departments': DEPARTMENTS,
             'provisioning_mode': 'queued', 'live_provisioning_enabled': False,
             'github_management': 'manual',
+            'invitation_delivery_mode': 'disabled_local_demo' if current_app.config.get('EMPLOYEE_LOCAL_DEMO') else 'trusted_worker_queue',
         })
 
 

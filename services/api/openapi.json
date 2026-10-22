@@ -875,6 +875,15 @@
             "title": "Github Management",
             "type": "string"
           },
+          "invitation_delivery_mode": {
+            "default": "trusted_worker_queue",
+            "enum": [
+              "disabled_local_demo",
+              "trusted_worker_queue"
+            ],
+            "title": "Invitation Delivery Mode",
+            "type": "string"
+          },
           "is_cto": {
             "title": "Is Cto",
             "type": "boolean"

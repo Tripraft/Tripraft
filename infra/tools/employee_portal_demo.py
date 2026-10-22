@@ -39,6 +39,11 @@ def admin_demo_credentials(credentials_file=None, *, rotate=False):
     return {'email': 'admin-demo@example.com', 'password': 'Test!' + secrets.token_urlsafe(24) + '7a', 'role': 'Admin'}
 
 
+def sample_employee_enabled(root, disabled=False):
+    """An explicitly cleared demo directory stays empty across launcher restarts."""
+    return not disabled and not (Path(root) / '.tripraft/employee-demo/no-sample-employee').is_file()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', type=int, default=5051)
@@ -47,11 +52,13 @@ def main():
     parser.add_argument('--postgres-url-file', type=Path, help='Ignored local file containing a disposable loopback PostgreSQL URL')
     parser.add_argument('--credentials-file', type=Path, help='Write distinct test login credentials inside the worktree .tripraft directory')
     parser.add_argument('--rotate-credentials', action='store_true', help='Explicitly replace saved local test passwords')
+    parser.add_argument('--no-sample-employee', action='store_true', help='Keep CTO/admin logins without seeding an employee profile')
     args = parser.parse_args()
     if not 1024 <= args.frontend_port <= 65535:
         parser.error('Frontend port must be between 1024 and 65535')
     frontend_url = f'http://127.0.0.1:{args.frontend_port}/employee-access'
     root = Path(__file__).resolve().parents[2]
+    seed_employee = sample_employee_enabled(root, args.no_sample_employee)
     demo = root / '.tripraft/employee-demo'
     demo.mkdir(parents=True, exist_ok=True)
     database_url = 'sqlite:///' + (demo / 'application.db').as_posix()
@@ -101,7 +108,7 @@ def main():
     admin_account = admin_demo_credentials(credentials_file, rotate=args.rotate_credentials)
     with get_db_session() as session:
         users = []
-        for account in credentials + [admin_account]:
+        for account in (credentials if seed_employee else credentials[:1]) + [admin_account]:
             email, password = account['email'], account['password']
             name = {'CTO': 'Demo CTO', 'Employee': 'Demo Engineer', 'Admin': 'Demo Administrator'}[account['role']]
             user = session.query(User).filter_by(email=email).first()
@@ -113,40 +120,43 @@ def main():
                 user.password_hash = hash_password(password)
             session.flush()
             users.append(user)
-        cto, engineer = users[:2]
-        employee = session.query(Employee).filter_by(user_id=engineer.id).first()
-        created = employee is None
-        if created:
-            employee, _ = create_employee(session, EmployeeCreate(
-                email=engineer.email, display_name=engineer.display_name, github_username='tripraft-demo-engineer',
-                role='engineer', departments=['backend'], justification='Synthetic local demonstration only', confirmed=True), cto.id)
-            employee.status = 'active'
-        if created:
-            session.add(AccessRequest(employee_id=employee.id, resource='github:team:ai-engineers', access_level='write',
-                justification='Synthetic recommendation diagnostics task', ticket='DEMO-42', duration_hours=8))
+        cto = users[0]
+        if seed_employee:
+            engineer = users[1]
+            employee = session.query(Employee).filter_by(user_id=engineer.id).first()
+            created = employee is None
+            if created:
+                employee, _ = create_employee(session, EmployeeCreate(
+                    email=engineer.email, display_name=engineer.display_name, github_username='tripraft-demo-engineer',
+                    role='engineer', departments=['backend'], justification='Synthetic local demonstration only', confirmed=True), cto.id)
+                employee.status = 'active'
+                session.add(AccessRequest(employee_id=employee.id, resource='github:team:ai-engineers', access_level='write',
+                    justification='Synthetic recommendation diagnostics task', ticket='DEMO-42', duration_hours=8))
         session.commit()
         AppConfig.EMPLOYEE_CTO_USER_IDS = [str(cto.id)]
         AppConfig.ADMIN_EMAILS = [admin_account['email']]
     if credentials_file:
         credentials_file.parent.mkdir(parents=True, exist_ok=True)
-        credentials_file.write_text(json.dumps({'url': frontend_url, 'accounts': credentials,
+        credentials_file.write_text(json.dumps({'url': frontend_url, 'accounts': credentials, 'sample_employee_enabled': seed_employee,
             'admin_url': f'http://127.0.0.1:{args.frontend_port}/admin/login', 'admin_account': admin_account,
             'cto_url': f'http://127.0.0.1:{args.frontend_port}/access-administration/login',
             'employee_url': f'http://127.0.0.1:{args.frontend_port}/employee-access/login'}, indent=2), encoding='utf-8')
         print(f'Local-only test credentials saved to {credentials_file}', flush=True)
     else:
-        for account in credentials + [admin_account]:
+        for account in (credentials if seed_employee else credentials[:1]) + [admin_account]:
             print(f'Local-only {account["role"]} login: {account["email"]} / {account["password"]}', flush=True)
-    print('CTO: cto-demo@example.com\nEmployee: engineer-demo@example.com', flush=True)
+    print('CTO: cto-demo@example.com\nEmployee: ' + ('engineer-demo@example.com' if seed_employee else 'not seeded (empty directory)'), flush=True)
     print(f'API: http://127.0.0.1:{args.port}\nPortal: {frontend_url}', flush=True)
     print('The local launcher proxies employee requests to this isolated API. No external provisioning runs.', flush=True)
     if not args.prepare_only:
         from app.core.factory import create_app
         app = create_app()
+        app.config['EMPLOYEE_LOCAL_DEMO'] = True
 
         @app.get('/api/employee-demo/health')
         def demo_health():
-            return {'environment': 'employee-local-demo', 'root': str(root), 'github_automation': False}
+            return {'environment': 'employee-local-demo', 'root': str(root), 'github_automation': False,
+                    'email_delivery': 'disabled_local_demo', 'sample_employee_enabled': seed_employee}
 
         app.run(host='127.0.0.1', port=args.port, debug=False, use_reloader=False)
 
