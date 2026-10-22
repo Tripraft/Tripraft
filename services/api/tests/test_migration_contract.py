@@ -83,19 +83,20 @@ def test_package_upgrade_preserves_existing_supplier_application(tmp_path, monke
     try:
         command.upgrade(config, 'a18b2c3d4e5f')
         with Session(engine) as session:
-            owner = User(email='supplier-migration@example.com', password_hash='unused', portal_kind='partner')
-            session.add(owner)
-            session.flush()
+            # Seed the historical schema through SQL; today's User model also
+            # includes columns introduced after this foundation revision.
+            owner_id = uuid4()
+            session.execute(text('INSERT INTO users (id, email, password_hash, portal_kind) VALUES (:id, :email, :password, :portal)'),
+                            {'id': owner_id.hex, 'email': 'supplier-migration@example.com', 'password': 'unused', 'portal': 'partner'})
             agent_id = uuid4()
             session.execute(text("""INSERT INTO agents
                 (id, owner_user_id, status, version, business_name, representative_name, contact_email,
                  phone, country_code, business_type, operating_regions, website, created_at, updated_at)
                 VALUES (:id, :owner, 'UNDER_REVIEW', 1, 'Preserve this business', '', '', '', '',
                         'tour_operator', '["Kerala"]', '', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"""),
-                {'id': agent_id.hex, 'owner': owner.id.hex})
-            session.add(AgentUser(agent_id=agent_id, user_id=owner.id, role='owner', is_active=True))
+                {'id': agent_id.hex, 'owner': owner_id.hex})
+            session.add(AgentUser(agent_id=agent_id, user_id=owner_id, role='owner', is_active=True))
             session.commit()
-            owner_id = owner.id
         command.upgrade(config, 'head')
         _assert_current_schema(engine, config)
         with Session(engine) as session:

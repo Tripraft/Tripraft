@@ -171,3 +171,22 @@ it('serializes cookie refreshes across browser tabs and reads the latest CSRF to
   expect(fetch.mock.calls[1][1]).toMatchObject({body:'{}',headers:{'X-CSRF-Token':'rotated'}});
  } finally { Object.defineProperty(navigator,'locks',{configurable:true,value:previous}); }
 });
+
+it('posts public recovery requests without cookies and handles server failures', async () => {
+ fetch.mockResolvedValueOnce(response(200,{success:true,data:{message:'Check your email'}}))
+  .mockResolvedValueOnce(response(400,{error:{message:'This reset link has expired'}}));
+ await expect(auth.requestPasswordReset('  PERSON@EXAMPLE.COM ')).resolves.toMatchObject({success:true,message:'Check your email'});
+ expect(fetch.mock.calls[0][1]).toMatchObject({credentials:'omit',cache:'no-store',body:JSON.stringify({email:'person@example.com'})});
+ await expect(auth.resetPassword('expired-token','NewPassword1!')).resolves.toMatchObject({success:false,message:'This reset link has expired'});
+ expect(JSON.parse(fetch.mock.calls[1][1].body)).toEqual({token:'expired-token',new_password:'NewPassword1!'});
+});
+it('does not restore a different account while explicit sign-in is pending', async () => {
+ let restore, login;
+ fetch.mockReturnValueOnce(new Promise(r=>{restore=r;})).mockReturnValueOnce(new Promise(r=>{login=r;}));
+ const startup=auth.getCurrentUserFromBackend();
+ const explicit=auth.signInWithEmail('new@example.com','Password1!');
+ restore(response(200,{data:{user:{id:'old',email:'old@example.com'}}}));
+ await startup;expect(auth.currentUser).toBeNull();
+ login(response(200,{data:{user:{id:'new',email:'new@example.com'}}}));
+ await explicit;expect(auth.currentUser.id).toBe('new');
+});

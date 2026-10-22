@@ -24,6 +24,8 @@ class User(Base):
     id = Column(Uuid, primary_key=True, default=uuid7)
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
+    # Null preserves existing sessions until the first password recovery.
+    password_reset_version = Column(String(64), nullable=True)
     display_name = Column(String(100))
     photo_url = Column(Text)
     phone = Column(String(20))

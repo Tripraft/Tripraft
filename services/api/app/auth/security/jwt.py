@@ -117,6 +117,17 @@ def create_refresh_token(user_id: str, session_id: Optional[str] = None) -> str:
 _EMAIL_VERIFY_EXPIRES = timedelta(hours=24)
 
 
+def create_password_reset_token(user_id: str, password_hash: str) -> str:
+    """One-hour recovery token invalidated by any successful password change."""
+    now = _utc_now()
+    return jwt.encode({
+        'sub': str(user_id), 'type': 'password_reset',
+        'password_version': hash_refresh_token(password_hash),
+        'jti': secrets.token_urlsafe(16), 'iat': now,
+        'exp': now + timedelta(hours=1),
+    }, _get_signing_key(), algorithm=JWT_ALGORITHM, headers={'kid': _CURRENT_KID})
+
+
 def create_partner_token(user_id, session_id, *, refresh=False):
     """Supplier tokens have distinct types; traveler endpoints reject them."""
     now = _utc_now()

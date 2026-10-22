@@ -17,6 +17,7 @@ const Pricing = lazy(() => import('./pages/Pricing'));
 const Login = lazy(() => import('./features/auth/jsx/Login'));
 const Signup = lazy(() => import('./features/auth/jsx/Signup'));
 const AuthPage = lazy(() => import('./features/auth/jsx/AuthPage'));
+const PasswordRecovery = lazy(() => import('./features/auth/jsx/PasswordRecovery'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const SmartInvitationHandler = lazy(() => import('./pages/SmartInvitationHandler'));
 const PlaceSearchPage = lazy(() => import('./features/discover/jsx/PlaceSearchPage'));
@@ -54,6 +55,8 @@ export default function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/forgot-password" element={<PasswordRecovery />} />
+          <Route path="/reset-password/:token?" element={<PasswordRecovery reset />} />
           <Route path="/verify-email/:token?" element={<VerifyEmail />} />
           <Route path="/partners/*" element={<PartnerPortal />} />
 
