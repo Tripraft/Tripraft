@@ -1,9 +1,9 @@
 # Purpose: Tests start.py setup preservation, random secrets, process identity and owned-child cleanup, port/session reuse, child environments and reload recovery using mocks and temporary files.
 """Launcher regressions for data/configuration preservation and process ownership."""
-import json
 import socket
 import tempfile
 import unittest
+import sys
 from pathlib import Path
 from unittest import mock
 
@@ -35,7 +35,10 @@ class LauncherTests(unittest.TestCase):
         start.configure_native()
         values = dict(line.split('=', 1) for line in (self.api / '.env').read_text().splitlines() if '=' in line and not line.startswith('#'))
         self.assertEqual(legacy.read_bytes(), b'legacy data must remain unchanged')
-        self.assertIn('/data/runtime/dev/tripraft.db', values['DATABASE_URL'])
+        self.assertEqual(values['DATABASE_URL'], '')
+        self.assertEqual(values['TRIPRAFT_DEV_DB_ROLE'], '')
+        self.assertFalse((self.root / 'data/runtime/dev').exists())
+        self.assertEqual(values['DB_POOL_SIZE'], '2')
         self.assertNotEqual(values['SECRET_KEY'], values['JWT_SECRET_KEY'])
         self.assertGreaterEqual(len(values['SECRET_KEY']), 48)
         self.assertEqual(values['REDIS_URL'], '')
@@ -104,16 +107,17 @@ class LauncherTests(unittest.TestCase):
         self.assertEqual(start.read_running_pids(), [])
         mock_wait.assert_called_once()
 
-    def test_stop_existing_frees_pids_and_ports(self):
+    def test_stop_existing_only_stops_recorded_pids(self):
         with mock.patch.object(start, 'process_identity', return_value='created-54321'):
             start.save_running_pids([54321])
         with mock.patch.object(start, 'stop_pid') as mock_stop_pid, \
-                mock.patch.object(start, 'pids_for_port', return_value=set()), \
+                mock.patch.object(start, 'pids_for_port', return_value={98765}) as port_scan, \
                 mock.patch.object(start, 'wait_ports_free') as mock_wait:
             start.stop_existing(docker=False)
         mock_stop_pid.assert_called_once_with(54321)
         self.assertEqual(start.read_running_pids(), [])
-        mock_wait.assert_called_once_with([5000, 5173, 5174], timeout=5)
+        mock_wait.assert_not_called()
+        port_scan.assert_not_called()
 
     def test_reused_pid_does_not_get_stopped(self):
         with mock.patch.object(start, 'process_identity', return_value='original-creation'):
@@ -163,6 +167,59 @@ class LauncherTests(unittest.TestCase):
                 mock.patch.object(start.time, 'sleep'):
             self.assertTrue(start.native_services_ready())
         self.assertEqual(fetch.call_count, 4)
+
+    def test_smoke_launches_only_api_web_admin_without_database_commands(self):
+        children = [mock.Mock(pid=12340 + i, tripraft_service=name)
+                    for i, name in enumerate(('api', 'web', 'admin'))]
+        for child in children:
+            child.poll.return_value = None
+        with mock.patch.object(start, 'native_services_ready', return_value=False), \
+                mock.patch.object(start, 'require_free_ports'), \
+                mock.patch.object(start, 'stop_existing'), \
+                mock.patch.object(start, 'run') as runner, \
+                mock.patch.object(start, 'save_running_pids'), \
+                mock.patch.object(start, 'wait_ports_free', return_value=True), \
+                mock.patch.object(start, 'wait_ready'), \
+                mock.patch.object(start, 'WindowsJob') as job, \
+                mock.patch.object(start, 'stop_child') as stop, \
+                mock.patch.object(start.time, 'sleep'), \
+                mock.patch.object(start.subprocess, 'Popen', side_effect=children) as spawn:
+            job.return_value.name = None
+            start.start('node', docker=False, smoke=True, no_browser=True)
+        runner.assert_not_called()
+        self.assertEqual(spawn.call_count, 3)
+        commands = [call.args[0] for call in spawn.call_args_list]
+        self.assertTrue(commands[0][-1].endswith('run.py'))
+        self.assertTrue(all('vite.js' in command[1] for command in commands[1:]))
+        self.assertEqual(stop.call_count, 3)
+
+    def test_failed_credential_check_prevents_any_service_start(self):
+        with mock.patch.object(sys, 'argv', ['start.py', '--smoke']), \
+                mock.patch.object(start, 'node_runtime', return_value='node'), \
+                mock.patch.object(start, 'setup'), \
+                mock.patch.object(start, 'run', side_effect=RuntimeError('restricted role required')), \
+                mock.patch.object(start, 'start') as launch:
+            with self.assertRaisesRegex(RuntimeError, 'restricted role required'):
+                start.main()
+        launch.assert_not_called()
+
+    def test_docker_is_rejected_before_setup_or_services(self):
+        with mock.patch.object(sys, 'argv', ['start.py', '--docker']), \
+                mock.patch.object(start, 'setup') as setup, \
+                mock.patch.object(start, 'run') as run:
+            with self.assertRaisesRegex(RuntimeError, 'entrypoint runs migrations'):
+                start.main()
+        setup.assert_not_called()
+        run.assert_not_called()
+
+    def test_legacy_migration_switch_cannot_execute(self):
+        with mock.patch.object(sys, 'argv', ['start.py', '--migrate-native']), \
+                mock.patch.object(start, 'run') as run, \
+                mock.patch('sys.stderr'):
+            with self.assertRaises(SystemExit) as error:
+                start.main()
+        self.assertEqual(error.exception.code, 2)
+        run.assert_not_called()
 
 
 if __name__ == '__main__':
