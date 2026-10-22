@@ -56,6 +56,13 @@ def sample_employee_enabled(root, disabled=False):
     return not disabled and not (Path(root) / '.tripraft/employee-demo/no-sample-employee').is_file()
 
 
+def strip_worker_credentials():
+    """Do not inherit the parent launcher's mail/control-plane secrets into Flask."""
+    for key in list(os.environ):
+        if key.startswith(('SMTP_', 'GMAIL_', 'RESEND_', 'TRIPRAFT_CONTROL_PLANE_')) or key == 'FROM_EMAIL':
+            os.environ.pop(key, None)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--port', type=int, default=5051)
@@ -91,6 +98,7 @@ def main():
     credentials_file = args.credentials_file.resolve() if args.credentials_file else None
     if credentials_file and not credentials_file.is_relative_to(root / '.tripraft'):
         parser.error('Test credentials must remain inside this worktree ignored .tripraft directory')
+    strip_worker_credentials()
     # Prevent any application module from finding a parent workstation .env.
     import dotenv
     dotenv.load_dotenv = lambda *args, **kwargs: False

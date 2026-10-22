@@ -1,9 +1,11 @@
 """Local demo restarts preserve isolated account credentials unless rotation is explicit."""
 import importlib.util
 import json
+import os
 from pathlib import Path
 import tempfile
 import unittest
+from unittest import mock
 
 
 spec = importlib.util.spec_from_file_location('employee_portal_demo', Path(__file__).parents[1] / 'tools/employee_portal_demo.py')
@@ -12,6 +14,14 @@ spec.loader.exec_module(demo)
 
 
 class EmployeeDemoTests(unittest.TestCase):
+    def test_flask_does_not_inherit_parent_worker_credentials(self):
+        with mock.patch.dict(os.environ, {'SMTP_PASSWORD': 'synthetic-secret', 'GMAIL_REFRESH_TOKEN': 'synthetic-token',
+                'TRIPRAFT_CONTROL_PLANE_DATABASE_URL': 'synthetic-control-url', 'DATABASE_URL': 'synthetic-app-url'}):
+            demo.strip_worker_credentials()
+            self.assertNotIn('SMTP_PASSWORD', os.environ)
+            self.assertNotIn('GMAIL_REFRESH_TOKEN', os.environ)
+            self.assertNotIn('TRIPRAFT_CONTROL_PLANE_DATABASE_URL', os.environ)
+            self.assertEqual(os.environ['DATABASE_URL'], 'synthetic-app-url')
     def test_cleared_employee_directory_stays_empty_across_restarts(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
