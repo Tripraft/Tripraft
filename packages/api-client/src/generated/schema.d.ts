@@ -3918,7 +3918,7 @@ export interface components {
              * @default trusted_worker_queue
              * @enum {string}
              */
-            invitation_delivery_mode: "disabled_local_demo" | "trusted_worker_queue";
+            invitation_delivery_mode: "disabled_local_demo" | "trusted_worker_queue" | "local_trusted_worker";
             /** Is Cto */
             is_cto: boolean;
             /**

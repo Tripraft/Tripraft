@@ -57,7 +57,41 @@ The prepared manual test session uses PostgreSQL on port 55441, Flask on 5051 an
 
 An explicitly cleared demo can retain CTO/admin credentials without recreating the sample engineer. Pass `--no-sample-employee` to the demo, or retain its ignored `.tripraft/employee-demo/no-sample-employee` marker across launcher restarts. This option only controls sample seeding; it never deletes database records. The demo health response reports `sample_employee_enabled`.
 
-Local demo email is always disabled, even when the ordinary application's `.env` contains working Gmail SMTP credentials for signup and group invitations. The demo intentionally does not load that file or start the trusted executor. Its API reports `invitation_delivery_mode=disabled_local_demo`; the onboarding form explicitly labels approval as email-disabled and confirms that no mail was sent. A normal portal reports `trusted_worker_queue`, which describes its delivery mechanism and does not claim that a worker is configured or a message was delivered. Use the reviewed trusted-worker setup below for real delivery; do not enable real SMTP in an employee-writable demo.
+Local demo email is disabled by default. After the CTO's explicit local-email authorization, the separate email-only worker described below can use the existing Gmail service. Flask still does not load SMTP credentials. The API reports `invitation_delivery_mode=local_trusted_worker` when that local setup is configured, and onboarding shows **Gmail invitations enabled for local development**. Without setup it reports `disabled_local_demo`. A normal hosted portal reports `trusted_worker_queue`; none of these labels claims inbox delivery or employee acceptance.
+
+### Enable email on the CTO's local computer
+
+This is the explicitly approved local-development exception, not public hosting. Run from this portal worktree in the CTO terminal:
+
+```powershell
+& C:/Tripraft/.venv/Scripts/python.exe infra/tools/employee_local_mail.py --configure --approve-local-email --smtp-env-file C:/Tripraft/services/api/.env
+& C:/Tripraft/.venv/Scripts/python.exe infra/tools/employee_local_mail.py --start
+& C:/Tripraft/.venv/Scripts/python.exe infra/tools/employee_local_start.py --restart-api
+& C:/Tripraft/.venv/Scripts/python.exe infra/tools/employee_local_mail.py --status
+```
+
+Configuration copies only the existing Gmail SMTP settings into a private OS-account directory (`%LOCALAPPDATA%/TripRaft/employee-control` on Windows), protected to the current CTO OS account and SYSTEM. Do not distribute that directory or the CTO's local control-plane database credentials. The website reads only a non-secret configured-mode indicator. SMTP credentials are not passed to Flask, React, employee browsers or engineer servers.
+
+The worker pins the prepared disposable loopback PostgreSQL URL, immutable CTO UUID and the two explicitly reviewed local database login roles. It checks effective SQL privileges before processing; adding an engineer-writable login blocks delivery until reviewed. Shared Supabase cannot be selected. It processes **only `portal_invite`** every five seconds, using the existing durable claims, retries and audits. It never processes database-disable, entitlement or GitHub jobs. The ordinary local launcher starts/reuses this owned worker after setup and stops it with the other owned services. No scheduled task, public listener or production service is installed.
+
+Emails are labelled **local development** and explain that `http://127.0.0.1:5174` requires the same CTO-managed environment. Another engineer's localhost and shared Supabase are different databases. Do not portray these links as externally reachable. Only this explicitly configured local worker can select the narrow HTTP loopback exception; the hosted executor still requires public HTTPS. Gmail acceptance appears as a completed invitation job; pending/retry/manual-review states remain visible. A worker crash or ambiguous SMTP acknowledgment never triggers an automatic duplicate.
+
+The local email link also offers **Create local employee account**. Possession of a delivered, unexpired, single-use invitation verifies the invited address. The employee chooses a strong password and is activated only in that local employee database. Existing verified identities must provide their existing password; this form cannot reset someone else's password. The endpoint is registered only by the isolated local launcher, never by the normal application factory, and grants no CTO/admin/GitHub/database authority.
+
+### Choose your CTO and website-admin logins
+
+Use separate email identities. Passwords are prompted invisibly, checked, bcrypt-hashed and updated through parameterized PostgreSQL SQL. The configured identity UUID stays unchanged, existing role sessions are revoked, and the local services restart. This tool rejects shared/live database URLs.
+
+```powershell
+# Option 1: interactive prompts for email, display name and password.
+& C:/Tripraft/.venv/Scripts/python.exe infra/tools/employee_local_accounts.py --role CTO
+& C:/Tripraft/.venv/Scripts/python.exe infra/tools/employee_local_accounts.py --role Admin
+
+# Option 2: choose the email/name as arguments; password is still prompted privately.
+& C:/Tripraft/.venv/Scripts/python.exe infra/tools/employee_local_accounts.py --role CTO --email your-cto@example.com --name "Your name"
+```
+
+There is no password command-line argument. Do not paste passwords into chat, Git or SQL history. Chosen credentials persist as hashes in the ignored local login settings and in `users.password_hash`; the old plaintext entry for the changed role is removed. This local tool does not update a shared Supabase account. `users` stores identity and password hash, while immutable `EMPLOYEE_CTO_USER_IDS` assigns CTO authority and `ADMIN_EMAILS` assigns website-admin authority independently. SQL edits to a user or employee role alone must never confer CTO authority. A future hosted account configuration requires a separately reviewed control-plane configuration and migration, especially when shared schema revisions differ.
 
 ## Backup migration rehearsal
 

@@ -145,4 +145,4 @@ class EmployeeIdentity(BaseModel):
     provisioning_mode: Literal['queued']
     live_provisioning_enabled: Literal[False]
     github_management: Literal['manual']
-    invitation_delivery_mode: Literal['disabled_local_demo', 'trusted_worker_queue'] = 'trusted_worker_queue'
+    invitation_delivery_mode: Literal['disabled_local_demo', 'trusted_worker_queue', 'local_trusted_worker'] = 'trusted_worker_queue'

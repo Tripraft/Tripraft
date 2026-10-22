@@ -156,6 +156,37 @@ test('local demo explicitly says approval does not send an email', async () => {
   expect(await screen.findByText(/No email was sent: welcome emails are disabled/)).toBeInTheDocument();
 });
 
+test('CTO-approved local Gmail mode enables welcome emails', async () => {
+  mockServer({ ...identity, invitation_delivery_mode: 'local_trusted_worker' });
+  render(<EmployeeAccessApp />);
+  fireEvent.click(await screen.findByRole('link', { name: 'Onboarding' }));
+  expect(screen.getByText('Gmail invitations enabled for local development.')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Approve and send invitation' })).toBeInTheDocument();
+  expect(screen.queryByText('Welcome emails are disabled in this local demo.')).not.toBeInTheDocument();
+});
+
+test('local invitation creates only an employee account and clears the email token', async () => {
+  const token = 'local-email-token-for-synthetic-unit-test-123';
+  window.history.replaceState({}, '', '/employee-access#invite=' + token);
+  let signedIn = false;
+  global.fetch = jest.fn(async (url, options) => {
+    if (url.endsWith('/local-options')) return response({ email_account_setup: true });
+    if (url.endsWith('/local-account')) return response({ accepted: true });
+    if (url.endsWith('/session')) { signedIn = true; return response({ signed_in: true }); }
+    if (url.endsWith('/me')) return signedIn ? response({ ...identity, is_cto: false, employee, permissions: ['portal.read'] }) : response({}, 401);
+    if (url.includes('/requests')) return response({ requests: [], total: 0 });
+    return response({});
+  });
+  render(<EmployeeAccessApp />);
+  fireEvent.change(await screen.findByLabelText('Invited email'), { target: { value: employee.email } });
+  fireEvent.change(screen.getByLabelText('Your employee password'), { target: { value: 'SyntheticLocal!Password123' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Create local employee account' }));
+  await waitFor(() => expect(window.location.pathname).toBe('/employee-access'));
+  expect(await screen.findByText(/Welcome back, Alice/)).toBeInTheDocument();
+  expect(sessionStorage.getItem('employee-onboarding-token')).toBeNull();
+  expect(screen.queryByRole('link', { name: 'Access reviews' })).not.toBeInTheDocument();
+});
+
 test('CTO review and audit tabs render only their own page content', async () => {
   mockServer(); render(<EmployeeAccessApp administration />);
   fireEvent.click(await screen.findByRole('link', { name: 'Access reviews' }));

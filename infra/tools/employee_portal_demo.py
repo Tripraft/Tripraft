@@ -13,18 +13,33 @@ import sys
 from urllib.parse import urlsplit
 
 
-def demo_credentials(credentials_file=None, *, rotate=False):
+def validate_saved_account(account, role):
+    from email_validator import validate_email
+    if account.get('role') != role:
+        raise ValueError('Incorrect saved account role')
+    validate_email(account.get('email', ''), check_deliverability=False)
+    password, digest = account.get('password'), account.get('password_hash')
+    if not ((isinstance(password, str) and len(password) >= 20)
+            or (isinstance(digest, str) and len(digest) == 60 and digest.startswith(('$2b$', '$2a$')))):
+        raise ValueError('Invalid saved local credentials')
+    return account
+
+
+def demo_credentials(credentials_file=None, *, rotate=False, include_employee=True):
     """Keep local review accounts usable across server restarts."""
     expected = {'cto-demo@example.com': 'CTO', 'engineer-demo@example.com': 'Employee'}
+    if not include_employee:
+        expected = {'cto-demo@example.com': 'CTO'}
     if credentials_file and credentials_file.exists() and not rotate:
         accounts = json.loads(credentials_file.read_text(encoding='utf-8')).get('accounts', [])
-        by_email = {account.get('email'): account for account in accounts}
-        if (set(by_email) != set(expected) or len(accounts) != 2
-                or any(by_email[email].get('role') != role
-                       or not isinstance(by_email[email].get('password'), str)
-                       or len(by_email[email]['password']) < 20 for email, role in expected.items())):
+        by_role = {account.get('role'): account for account in accounts}
+        if (not include_employee and set(by_role) == {'CTO', 'Employee'} and len(accounts) == 2):
+            accounts = [by_role['CTO']]
+            by_role = {'CTO': by_role['CTO']}
+        if (set(by_role) != set(expected.values()) or len(accounts) != len(expected)
+                or len({account.get('email') for account in accounts}) != len(expected)):
             raise ValueError('Invalid saved demo accounts; use --rotate-credentials to replace them explicitly')
-        return [by_email[email] for email in expected]
+        return [validate_saved_account(by_role[role], role) for role in expected.values()]
     return [{'email': email, 'password': 'Test!' + secrets.token_urlsafe(24) + '7a', 'role': role}
             for email, role in expected.items()]
 
@@ -32,10 +47,7 @@ def demo_credentials(credentials_file=None, *, rotate=False):
 def admin_demo_credentials(credentials_file=None, *, rotate=False):
     saved = json.loads(credentials_file.read_text(encoding='utf-8')).get('admin_account') if credentials_file and credentials_file.exists() else None
     if saved and not rotate:
-        if (saved.get('email') != 'admin-demo@example.com' or saved.get('role') != 'Admin'
-                or not isinstance(saved.get('password'), str) or len(saved['password']) < 20):
-            raise ValueError('Invalid saved administrator demo account')
-        return saved
+        return validate_saved_account(saved, 'Admin')
     return {'email': 'admin-demo@example.com', 'password': 'Test!' + secrets.token_urlsafe(24) + '7a', 'role': 'Admin'}
 
 
@@ -58,6 +70,9 @@ def main():
         parser.error('Frontend port must be between 1024 and 65535')
     frontend_url = f'http://127.0.0.1:{args.frontend_port}/employee-access'
     root = Path(__file__).resolve().parents[2]
+    sys.path.insert(0, str(root / 'infra/tools'))
+    from employee_local_control import delivery_mode
+    email_mode = delivery_mode(root)
     seed_employee = sample_employee_enabled(root, args.no_sample_employee)
     demo = root / '.tripraft/employee-demo'
     demo.mkdir(parents=True, exist_ok=True)
@@ -104,20 +119,23 @@ def main():
     config = Config(str(root / 'services/api/alembic.ini'))
     config.set_main_option('script_location', str(root / 'services/api/migrations'))
     command.upgrade(config, 'head')
-    credentials = demo_credentials(credentials_file, rotate=args.rotate_credentials)
+    credentials = demo_credentials(credentials_file, rotate=args.rotate_credentials, include_employee=seed_employee)
     admin_account = admin_demo_credentials(credentials_file, rotate=args.rotate_credentials)
+    if admin_account['email'] in {item['email'] for item in credentials}:
+        raise ValueError('CTO, admin and employee identities must have different email addresses')
     with get_db_session() as session:
         users = []
         for account in (credentials if seed_employee else credentials[:1]) + [admin_account]:
-            email, password = account['email'], account['password']
+            email = account['email']
+            digest = account.get('password_hash') or hash_password(account['password'])
             name = {'CTO': 'Demo CTO', 'Employee': 'Demo Engineer', 'Admin': 'Demo Administrator'}[account['role']]
             user = session.query(User).filter_by(email=email).first()
             if not user:
                 user = User(email=email, display_name=name, portal_kind='traveler', email_verified=True,
-                            is_active=True, password_hash=hash_password(password))
+                            is_active=True, password_hash=digest)
                 session.add(user)
             else:
-                user.password_hash = hash_password(password)
+                user.password_hash = digest
             session.flush()
             users.append(user)
         cto = users[0]
@@ -144,19 +162,44 @@ def main():
         print(f'Local-only test credentials saved to {credentials_file}', flush=True)
     else:
         for account in (credentials if seed_employee else credentials[:1]) + [admin_account]:
-            print(f'Local-only {account["role"]} login: {account["email"]} / {account["password"]}', flush=True)
-    print('CTO: cto-demo@example.com\nEmployee: ' + ('engineer-demo@example.com' if seed_employee else 'not seeded (empty directory)'), flush=True)
+            print(f'Local-only {account["role"]} login: {account["email"]} / ' + account.get('password', '[chosen password; hash stored]'), flush=True)
+    print('CTO: ' + credentials[0]['email'] + '\nEmployee: ' + (credentials[1]['email'] if seed_employee else 'not seeded (empty directory)'), flush=True)
     print(f'API: http://127.0.0.1:{args.port}\nPortal: {frontend_url}', flush=True)
     print('The local launcher proxies employee requests to this isolated API. No external provisioning runs.', flush=True)
     if not args.prepare_only:
         from app.core.factory import create_app
         app = create_app()
         app.config['EMPLOYEE_LOCAL_DEMO'] = True
+        app.config['EMPLOYEE_INVITATION_DELIVERY_MODE'] = email_mode
+
+        @app.get('/api/v1/employees/local-options')
+        def local_options():
+            return {'success': True, 'data': {'email_account_setup': email_mode == 'local_trusted_worker'}}
+
+        from app.core.rate_limiter import limit_auth
+
+        @app.post('/api/v1/employees/local-account')
+        @limit_auth()
+        def local_account():
+            from flask import jsonify, request
+            if email_mode != 'local_trusted_worker':
+                return jsonify(success=False, error={'message': 'Local email account setup is disabled'}), 403
+            from app.employees.local_onboarding import activate_local_invitation
+            values = request.get_json(silent=True) or {}
+            if not isinstance(values, dict) or set(values) - {'email', 'password', 'token'}:
+                return jsonify(success=False, error={'message': 'Only email, password and invitation token are accepted'}), 400
+            try:
+                with get_db_session() as session:
+                    activate_local_invitation(session, values.get('email'), values.get('password'), values.get('token'))
+                    session.commit()
+            except ValueError as error:
+                return jsonify(success=False, error={'message': str(error)}), 400
+            return jsonify(success=True, data={'accepted': True})
 
         @app.get('/api/employee-demo/health')
         def demo_health():
             return {'environment': 'employee-local-demo', 'root': str(root), 'github_automation': False,
-                    'email_delivery': 'disabled_local_demo', 'sample_employee_enabled': seed_employee}
+                    'email_delivery': email_mode, 'sample_employee_enabled': seed_employee}
 
         app.run(host='127.0.0.1', port=args.port, debug=False, use_reloader=False)
 

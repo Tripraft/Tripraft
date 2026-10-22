@@ -37,7 +37,8 @@ def main():
         UUID(uid)
     os.environ['DATABASE_URL'] = url
     os.environ['EMPLOYEE_CTO_USER_IDS'] = ','.join(config['cto_user_ids'])
-    from app.core.db.connection import get_db_session
+    from app.core.db.connection import get_db_session, _import_all_models
+    _import_all_models()
     from app.employees.models import ProvisioningJob
     from app.employees.provisioning import ManualRequired, TrustedExecutor
     from app.employees.service import expire_grants, queue_expiration_notices

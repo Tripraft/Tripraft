@@ -104,6 +104,32 @@ def test_employee_postgresql_migration_preserves_existing_data(monkeypatch):
             with pytest.raises(DBAPIError):
                 connection.execute(text('CREATE TABLE public.unauthorized_schema_change (id integer)'))
             connection.rollback()
+        # The private account tool updates SQL hashes while retaining authority's
+        # configured UUID; no plaintext password or new administrative identity.
+        import importlib.util
+        tool = root.parents[1] / 'infra/tools/employee_local_accounts.py'
+        spec = importlib.util.spec_from_file_location('isolated_account_tool', tool)
+        accounts_tool = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(accounts_tool)
+        from app.auth.security.password import hash_password
+        saved = {'accounts': [{'role': 'CTO', 'email': 'preserve@example.test', 'password': 'unused'}],
+                 'admin_account': {'role': 'Admin', 'email': 'admin@example.com'}}
+        dbapi = engine.raw_connection()
+        try:
+            with dbapi.cursor() as cursor:
+                cursor.execute('UPDATE users SET is_active=true,email_verified=true WHERE id=%s', (str(uid),))
+            digest = hash_password('SyntheticChosen!Password123')
+            result = accounts_tool.update_account(dbapi, saved, 'CTO', 'chosen@example.com', 'Chosen CTO', digest)
+            assert result == str(uid)
+            assert 'password' not in saved['accounts'][0]
+            with dbapi.cursor() as cursor:
+                cursor.execute('SELECT email,password_hash FROM users WHERE id=%s', (str(uid),))
+                assert cursor.fetchone() == ('chosen@example.com', digest)
+            with pytest.raises(ValueError, match='different account'):
+                accounts_tool.update_account(dbapi, saved, 'CTO', 'admin@example.com', 'Chosen CTO', digest)
+        finally:
+            dbapi.rollback()
+            dbapi.close()
         command.downgrade(config, 'f63a718293a4')
         assert set(inspect(engine).get_table_names()) == original_tables
         with engine.connect() as connection:

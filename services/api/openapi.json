@@ -879,7 +879,8 @@
             "default": "trusted_worker_queue",
             "enum": [
               "disabled_local_demo",
-              "trusted_worker_queue"
+              "trusted_worker_queue",
+              "local_trusted_worker"
             ],
             "title": "Invitation Delivery Mode",
             "type": "string"

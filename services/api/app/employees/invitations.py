@@ -34,7 +34,17 @@ def public_portal_origin(value):
     return f'https://{parsed.netloc}'
 
 
-def welcome_message(employee, origin, token):
+def local_portal_origin(value):
+    """Explicit CTO-only development exception; never accept a remote HTTP host."""
+    parsed = urlsplit(value)
+    if (parsed.scheme != 'http' or parsed.hostname not in ('127.0.0.1', 'localhost')
+            or parsed.port != 5174 or parsed.username or parsed.password
+            or parsed.path not in ('', '/') or parsed.query or parsed.fragment):
+        raise ValueError('Local invitation delivery requires http://127.0.0.1:5174 or http://localhost:5174')
+    return f'http://{parsed.netloc}'
+
+
+def welcome_message(employee, origin, token, *, local_development=False):
     link = origin + '/employee-access#invite=' + token
     role = employee.role.replace('_', ' ').title()
     teams = ', '.join(employee.teams) or 'Your CTO will confirm your team'
@@ -51,15 +61,31 @@ def welcome_message(employee, origin, token):
             'GitHub invitations and team access are managed separately by your CTO. '
             'Development database credentials are issued separately through a private CTO-controlled channel.\n'
             'If you were not expecting this invitation, contact your CTO before accepting.')
+    if local_development:
+        text = (f'Welcome to the TripRaft LOCAL DEVELOPMENT portal, {employee.display_name}.\n\n'
+                f'Your CTO approved {employee.email}.\nRole: {role}\nTeams: {teams}\n\n'
+                f'Local invitation: {link}\n\n'
+                'This is NOT a publicly hosted portal. Localhost refers to the computer opening the link. '
+                'It works only with the CTO-managed local portal and the SAME protected employee database. '
+                'Starting another Flask server against shared Supabase does not make this invitation valid there. '
+                'Ask your CTO to arrange access to the correct local testing environment before accepting.\n\n'
+                'Open the invitation in that environment, choose a strong employee password in the invitation form, '
+                'and select Create local employee account. The email link verifies the invited email address. '
+                'Then sign in to the Employee Portal to see your role, teams, permissions and access requests. '
+                'If you already have a verified account in this environment, sign in and accept the invitation.\n\n'
+                'This private link expires in 48 hours and works once. Do not forward it. '
+                'No password is included in this email. GitHub access and individual database credentials '
+                'remain separately controlled by the CTO. No Supabase or GitHub administrative access is granted.')
     html = ('<h1>Welcome to TripRaft</h1><p>' + escape(text).replace('\n', '<br>') + '</p>'
             f'<p><a href="{escape(link, quote=True)}">Open your employee invitation</a></p>')
-    return 'Your TripRaft employee invitation', html, text
+    return 'Your TripRaft employee invitation' + (' — local development' if local_development else ''), html, text
 
 
 class InvitationProcessor:
-    def __init__(self, executor, email_service, portal_url):
+    def __init__(self, executor, email_service, portal_url, *, local_development=False):
         self.executor, self.email = executor, email_service
-        self.origin = public_portal_origin(portal_url)
+        self.local_development = local_development
+        self.origin = local_portal_origin(portal_url) if local_development else public_portal_origin(portal_url)
 
     def process(self, session, job_id):
         self.executor.guard()
@@ -95,7 +121,8 @@ class InvitationProcessor:
         job.status, job.error_code = 'dispatching', None
         job.attempts += 1
         job.next_attempt_at = now() + timedelta(minutes=10)
-        audit(session, employee, None, 'invitation.dispatching', 'CTO-approved email claimed by trusted worker', result='dispatching', job_id=str(job.id))
+        audit(session, employee, None, 'invitation.dispatching', 'CTO-approved email claimed by trusted worker',
+              result='dispatching', job_id=str(job.id), token_digest=expected_digest)
         session.commit()  # A second worker can never submit this claim again.
 
         # Keep the employee lock through delivery: suspension/revocation/resend
@@ -108,7 +135,7 @@ class InvitationProcessor:
                 job.status = 'superseded'
             session.commit()
             return job.status
-        subject, html, text = welcome_message(employee, self.origin, token)
+        subject, html, text = welcome_message(employee, self.origin, token, local_development=self.local_development)
         try:
             accepted = self.email.send_email(employee.email, subject, html, text,
                 delivery_report=True, message_id=f'<employee-invite-{job.id}@{urlsplit(self.origin).hostname}>')

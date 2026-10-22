@@ -20,6 +20,16 @@ from urllib.parse import urlsplit
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def local_mail(*, stop=False, python=sys.executable):
+    if not (ROOT / '.tripraft/employee-demo/local-email-approved').is_file():
+        return
+    result = subprocess.run([str(python), str(ROOT / 'infra/tools/employee_local_mail.py'),
+                             '--stop' if stop else '--start'], cwd=ROOT,
+                            creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0)
+    if result.returncode:
+        raise RuntimeError('Local email worker could not start; inspect its private configuration')
+
+
 @contextmanager
 def startup_lock():
     """Serialize repeated launcher invocations without a stale-PID lock."""
@@ -124,6 +134,7 @@ def ensure(python):
             saved = json.loads(credentials.read_text(encoding='utf-8'))
             saved['url'] = 'http://127.0.0.1:5174/employee-access'
             credentials.write_text(json.dumps(saved, indent=2), encoding='utf-8')
+        local_mail(python=python)
         return
     if listening(5051):
         raise RuntimeError('Port 5051 belongs to another service. Stop that service before starting the employee demo.')
@@ -164,6 +175,7 @@ def ensure(python):
             'pg_bin': str(pg_bin) if pg_bin else saved.get('pg_bin')}), encoding='utf-8')
         for _ in range(180):
             if demo_ready():
+                local_mail(python=python)
                 return
             if backend.poll() is not None:
                 raise RuntimeError(f'Employee demo API failed to start. Inspect {state / "backend.stderr.log"}')
@@ -186,6 +198,7 @@ def ensure(python):
 
 
 def stop():
+    local_mail(stop=True)
     tools = process_tools()
     for state in (ROOT / '.tripraft/manual-test', ROOT / '.tripraft/employee-demo'):
         path = state / 'launcher-processes.json'

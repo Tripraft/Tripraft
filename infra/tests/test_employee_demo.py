@@ -49,6 +49,26 @@ class EmployeeDemoTests(unittest.TestCase):
             self.assertNotIn(admin['password'], [account['password'] for account in accounts])
             self.assertEqual(demo.demo_credentials(path), accounts)
 
+    def test_chosen_role_emails_and_password_hashes_survive_restart(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'logins.json'
+            accounts = demo.demo_credentials()
+            accounts[0] = {'email': 'chosen-cto@example.com', 'role': 'CTO', 'password_hash': '$2b$12$' + 'a' * 53}
+            admin = {'email': 'chosen-admin@example.com', 'role': 'Admin', 'password_hash': '$2b$12$' + 'b' * 53}
+            path.write_text(json.dumps({'accounts': accounts, 'admin_account': admin}))
+            self.assertEqual(demo.demo_credentials(path)[0], accounts[0])
+            self.assertEqual(demo.admin_demo_credentials(path), admin)
+
+    def test_cleared_demo_removes_sample_employee_credentials(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'logins.json'
+            accounts = demo.demo_credentials()
+            path.write_text(json.dumps({'accounts': accounts}))
+            retained = demo.demo_credentials(path, include_employee=False)
+            self.assertEqual([item['role'] for item in retained], ['CTO'])
+            path.write_text(json.dumps({'accounts': retained}))
+            self.assertEqual(demo.demo_credentials(path, include_employee=False), retained)
+
 
 if __name__ == '__main__':
     unittest.main()

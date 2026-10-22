@@ -28,6 +28,7 @@ export function EmployeeAccessApp({ administration = false }: { administration?:
   const [history, setHistory] = useState<History | null>(null);
   const [action, setAction] = useState('teams');
   const [inviteToken, setInviteToken] = useState(() => new URLSearchParams(window.location.hash.slice(1)).get('invite') || sessionStorage.getItem('employee-onboarding-token') || '');
+  const [localAccountSetup, setLocalAccountSetup] = useState(false);
   const base = identity?.is_cto ? '/access-administration' : '/employee-access';
   const employeeId = identity?.employee?.id;
   const requestedAdmin = route.startsWith('/access-administration') || (!route.startsWith('/employee-access') && administration);
@@ -45,6 +46,15 @@ export function EmployeeAccessApp({ administration = false }: { administration?:
   useEffect(() => {
     if (inviteToken) sessionStorage.setItem('employee-onboarding-token', inviteToken);
     else sessionStorage.removeItem('employee-onboarding-token');
+  }, [inviteToken]);
+
+  useEffect(() => {
+    if (!inviteToken) return;
+    let active = true;
+    employeeApi<{ email_account_setup: boolean }>('/local-options').then(value => {
+      if (active) setLocalAccountSetup(value.email_account_setup === true);
+    }).catch(() => { if (active) setLocalAccountSetup(false); });
+    return () => { active = false; };
   }, [inviteToken]);
 
   useEffect(() => {
@@ -119,7 +129,9 @@ export function EmployeeAccessApp({ administration = false }: { administration?:
       });
       form.reset(); await load(); setNotice(identity?.invitation_delivery_mode === 'disabled_local_demo'
         ? 'Employee approved. No email was sent: welcome emails are disabled in this isolated local demo. Generate a private test invitation link from the employee directory, or configure the approved public portal and trusted worker for real delivery.'
-        : 'Employee approved. The trusted worker sends the welcome email automatically when configured. Check the employee audit history for delivery status; approval alone does not mean sent. GitHub access is managed manually by the CTO.');
+        : identity?.invitation_delivery_mode === 'local_trusted_worker'
+          ? 'Employee approved. Your CTO-machine Gmail worker sends the local-development welcome email automatically. Check delivery in the employee audit history; completed means Gmail accepted it. The email explains that localhost requires the same CTO-managed environment.'
+          : 'Employee approved. The trusted worker sends the welcome email automatically when configured. Check the employee audit history for delivery status; approval alone does not mean sent. GitHub access is managed manually by the CTO.');
     });
   }
 
@@ -179,6 +191,16 @@ export function EmployeeAccessApp({ administration = false }: { administration?:
 
   if (loading || !identity) return <EmployeeSignIn cto={requestedAdmin} loading={loading} busy={busy} unavailable={sessionUnavailable}
     error={error} notice={notice} token={inviteToken} login={login} setToken={setInviteToken}
+    localAccount={localAccountSetup ? event => {
+      event.preventDefault(); const data = new FormData(event.currentTarget);
+      void run(async () => {
+        const email = data.get('email'); const password = data.get('password');
+        await employeeApi('/local-account', 'POST', { email, password, token: inviteToken });
+        setInviteToken('');
+        await employeeApi('/session', 'POST', { email, password });
+        await load(); navigate('/employee-access', true);
+      });
+    } : undefined}
     retry={() => void run(async () => { await load(); })} accept={() => void run(async () => {
       await employeeApi('/accept-invitation', 'POST', { token: inviteToken }); setInviteToken('');
       setNotice('Onboarding accepted. You can now sign in.');
@@ -224,6 +246,7 @@ export function EmployeeAccessApp({ administration = false }: { administration?:
           <div><strong>CTO</strong><span>Organization & release authority</span></div></div><section><h2>Your next actions</h2><div className="employee-quick-actions">{[['employees', 'Manage employees', 'Review team assignments and employee access.'], ['approvals', 'Review requests', 'Approve, reject, or ask for more information.'], ['onboarding', 'Invite a team member', 'Start onboarding with an approved role and team.']].map(([key, title, detail]) => <a key={key} href={base + '/' + key} onClick={event => { event.preventDefault(); setSelected(null); navigate(base + '/' + key); }}><strong>{title}<span>↗</span></strong><small>{detail}</small></a>)}</div></section></>}
         {view === 'onboarding' && <section id="employee-onboarding"><p className="eyebrow">GROW YOUR TEAM</p><h2>Invite an employee</h2><p>Confirm identity, role, and internal engineering teams before approving access. GitHub username is optional. Department defaults apply when no teams are selected.</p>
           {identity.invitation_delivery_mode === 'disabled_local_demo' && <div className="employee-notice" role="status"><strong>Welcome emails are disabled in this local demo.</strong><p>Approval saves the employee without sending email. The existing signup and group-invitation mail service is separate. Real employee delivery requires the approved public portal and trusted worker; localhost links are for private local testing.</p></div>}
+          {identity.invitation_delivery_mode === 'local_trusted_worker' && <div className="employee-notice" role="status"><strong>Gmail invitations enabled for local development.</strong><p>Approval queues a welcome email for your separate CTO-machine worker. Invitations explain how to use this local environment. GitHub access and database credentials remain manual.</p></div>}
           <form className="employee-form" onSubmit={createEmployee}>
             <label>Full name<input name="display_name" required maxLength={100} /></label>
             <label>Employee email<input type="email" name="email" required /></label>
@@ -231,7 +254,7 @@ export function EmployeeAccessApp({ administration = false }: { administration?:
             <RoleTeams identity={identity} />
             <label className="wide">Business justification<textarea name="justification" required minLength={8} maxLength={2000} /></label>
             <label className="employee-confirm wide"><input type="checkbox" name="confirmed" required />I verified the employee identity and approve the selected portal access.</label>
-            <div className="wide"><button disabled={busy}>{identity.invitation_delivery_mode === 'disabled_local_demo' ? 'Approve employee (email disabled)' : 'Approve and send invitation'}</button><p>The trusted invitation worker processes this approval automatically. Delivery status appears in the employee audit history. Local demos do not send email.</p></div>
+            <div className="wide"><button disabled={busy}>{identity.invitation_delivery_mode === 'disabled_local_demo' ? 'Approve employee (email disabled)' : 'Approve and send invitation'}</button><p>{identity.invitation_delivery_mode === 'disabled_local_demo' ? 'This demo saves approval without sending email.' : 'Your trusted worker processes this approval automatically. See the employee audit history for sending, retry or completion status.'}</p></div>
           </form></section>}
         {view === 'employees' && !selected && <section id="employee-directory"><p className="eyebrow">YOUR ORGANIZATION</p><h2>People in your workspace</h2><div className="scroll"><table><thead><tr><th>Employee</th><th>Role & teams</th><th>Portal</th><th>GitHub</th><th>Manage</th></tr></thead>
           <tbody>{employees.map(employee => <tr key={employee.id}><td><div className="employee-person"><span className="employee-avatar">{initials(employee.display_name)}</span><div><strong>{employee.display_name}</strong><br /><small>{employee.email}</small><br /><small>{employee.github_username ? `@${employee.github_username}` : 'GitHub username not recorded'}</small></div></div></td>

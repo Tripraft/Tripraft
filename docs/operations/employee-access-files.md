@@ -34,8 +34,12 @@ Only the following source, tests, configuration templates, migrations and docume
 - infra/employee-access/employee-invitations.service
 - infra/github/workflows/ci.yml
 - infra/tests/test_employee_demo.py
+- infra/tests/test_employee_local_control.py
 - infra/tests/test_employee_local_start.py
 - infra/tools/employee_database_review.py
+- infra/tools/employee_local_accounts.py
+- infra/tools/employee_local_control.py
+- infra/tools/employee_local_mail.py
 - infra/tools/employee_local_start.py
 - infra/tools/employee_portal_demo.py
 - infra/tools/export_openapi.py
@@ -53,6 +57,7 @@ Only the following source, tests, configuration templates, migrations and docume
 - services/api/app/employees/executor.py
 - services/api/app/employees/github.py
 - services/api/app/employees/invitations.py
+- services/api/app/employees/local_onboarding.py
 - services/api/app/employees/models.py
 - services/api/app/employees/policy.py
 - services/api/app/employees/provisioning.py
@@ -74,6 +79,7 @@ Only the following source, tests, configuration templates, migrations and docume
 - services/api/tests/test_employee_email_mode.py
 - services/api/tests/test_employee_github.py
 - services/api/tests/test_employee_invitations.py
+- services/api/tests/test_employee_local_email.py
 - services/api/tests/test_employee_manual_github.py
 - services/api/tests/test_employee_postgresql.py
 - services/api/tests/test_employee_sessions.py
