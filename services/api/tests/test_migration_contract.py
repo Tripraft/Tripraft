@@ -267,7 +267,7 @@ def test_fresh_install_sql_can_be_generated_without_a_database(url, monkeypatch)
     config = _config(url, monkeypatch, output)
     command.upgrade(config, 'head', sql=True)
     sql = output.getvalue()
-    assert sql.count('CREATE TABLE ') == 41  # 40 application tables plus Alembic version.
+    assert sql.count('CREATE TABLE ') == 47  # 40 existing application tables, six employee tables, plus Alembic version.
     assert 'CREATE TABLE tour_package_media' in sql
     assert 'CREATE TABLE tour_package_reviews' in sql
     assert 'CREATE TABLE agent_agreement_acknowledgments' in sql
@@ -285,3 +285,19 @@ def test_fresh_install_sql_can_be_generated_without_a_database(url, monkeypatch)
     if url.startswith('postgresql'):
         assert 'id UUID' in sql
         assert 'TYPE uuid' not in sql
+        # PostgreSQL rejects integer expressions as defaults for Boolean columns.
+        assert 'is_archived BOOLEAN DEFAULT false NOT NULL' in sql
+        assert 'BOOLEAN DEFAULT 0' not in sql
+    assert 'DROP INDEX ix_user_sessions_refresh_token' in sql
+
+
+def test_session_token_lookup_keeps_exactly_one_index(tmp_path, monkeypatch):
+    url = 'sqlite:///' + (tmp_path / 'session-index.db').as_posix()
+    command.upgrade(_config(url, monkeypatch), 'head')
+    engine = create_engine(url)
+    try:
+        indexes = inspect(engine).get_indexes('user_sessions')
+        token_indexes = [i['name'] for i in indexes if i['column_names'] == ['refresh_token']]
+        assert token_indexes == ['idx_user_sessions_token']
+    finally:
+        engine.dispose()

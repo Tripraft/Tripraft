@@ -96,6 +96,9 @@ class Config:
 
     # Admin
     ADMIN_EMAILS: List[str] = _get_list('ADMIN_EMAILS', '')
+    # Immutable CTO configuration, independent of staff allowlists.
+    EMPLOYEE_CTO_USER_IDS: List[str] = _get_list('EMPLOYEE_CTO_USER_IDS', '')
+    EMPLOYEE_SESSION_VERSION: str = os.getenv('EMPLOYEE_SESSION_VERSION', '1')
 
     # A proxy may supply X-Forwarded-For only when its direct address is
     # explicitly trusted.  Empty by default: a public client must never be

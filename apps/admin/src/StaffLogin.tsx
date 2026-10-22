@@ -1,3 +1,4 @@
+import { adminApiBase } from './adminApi';
 // Purpose: Submits employee credentials to /api/v1/admin/session and asks App to recheck identity before showing privileged operations.
 import { useState, type FormEvent } from 'react';
 
@@ -8,7 +9,7 @@ export function StaffLogin({ signedIn }: { signedIn: () => void }) {
     const values = new FormData(event.currentTarget);
     setBusy(true); setError('');
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/admin/session`, {
+      const response = await fetch(`${adminApiBase}/api/v1/admin/session`, {
         method: 'POST', credentials: 'include', cache: 'no-store', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: values.get('email'), password: values.get('password') }),
       });
@@ -18,5 +19,5 @@ export function StaffLogin({ signedIn }: { signedIn: () => void }) {
     } catch (cause) { setError(cause instanceof Error ? cause.message : 'Unable to sign in.'); }
     finally { setBusy(false); }
   }
-  return <section className="staff-login"><h2>Staff sign in</h2><p>For authorized TripRaft administrators and employees. Agent and customer accounts cannot open the operations console.</p><form onSubmit={submit}><label>Employee email<input name="email" type="email" autoComplete="username" required /></label><label>Password<input name="password" type="password" autoComplete="current-password" maxLength={128} required /></label>{error && <p role="alert">{error}</p>}<button disabled={busy}>{busy ? 'Signing in…' : 'Sign in to staff console'}</button></form><p>Access must be enabled by TripRaft. There is no public staff registration.</p></section>;
+  return <section className="staff-login"><h2>Admin sign in</h2><p>For explicitly authorized website administrators. An employee portal account does not grant administrator access.</p><form onSubmit={submit}><label>Administrator email<input name="email" type="email" autoComplete="username" required /></label><label>Password<input name="password" type="password" autoComplete="current-password" maxLength={128} required /></label>{error && <p role="alert">{error}</p>}<button disabled={busy}>{busy ? 'Signing in…' : 'Sign in to admin console'}</button></form><p>Administrator access must be enabled separately. There is no public admin registration.</p></section>;
 }

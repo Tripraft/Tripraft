@@ -218,6 +218,27 @@ def venv_python():
     return VENV / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
 
 
+def employee_demo_tool():
+    """Find the local-only portal bridge without copying feature code into the main checkout."""
+    for checkout in (ROOT, LOCAL / 'employee-access-portal'):
+        tool = checkout / 'infra/tools/employee_local_start.py'
+        if tool.is_file():
+            return tool
+    return None
+
+
+def employee_demo_services(*, stop=False):
+    tool = employee_demo_tool()
+    if tool:
+        python = venv_python()
+        if not python.is_file():
+            # The separate worktree shares the original checkout's installed runtime.
+            original = ROOT.parent.parent / '.venv' / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
+            python = original if original.is_file() else Path(sys.executable)
+        command = [str(python), str(tool)] + (['--stop'] if stop else [])
+        run(command, cwd=tool.parents[2], env=child_env())
+
+
 def child_env():
     """Make local package tools available to nested pnpm/Turbo commands."""
     env = os.environ.copy()
@@ -269,6 +290,9 @@ def migrate_native():
     # Alembic and Flask must use the same selected database, including defaults.
     os.environ['DATABASE_URL'] = Config.DATABASE_URL
     selected = make_url(Config.DATABASE_URL)
+    if selected.get_backend_name() != 'sqlite':
+        print('Skipping automatic migrations for the configured server database. Apply reviewed migrations separately.', flush=True)
+        return
     if selected.get_backend_name() == 'sqlite' and selected.database not in (None, '', ':memory:'):
         database = Path(selected.database).resolve()
         database.parent.mkdir(parents=True, exist_ok=True)
@@ -595,6 +619,9 @@ def stop_child(process):
 def start(node, docker, smoke, no_browser):
     if not docker and native_services_ready():
         print('TripRaft is already running. Web: http://127.0.0.1:5173 | Partners: http://127.0.0.1:5173/partners', flush=True)
+        print('Admin: http://127.0.0.1:5174', flush=True)
+        if employee_demo_tool():
+            print('Employee portal: http://127.0.0.1:5174/employee-access | CTO: http://127.0.0.1:5174/access-administration', flush=True)
         print('Reusing healthy services; their existing launcher keeps live updates running.', flush=True)
         if not no_browser and not smoke:
             webbrowser.open('http://127.0.0.1:5173')
@@ -660,6 +687,8 @@ def start(node, docker, smoke, no_browser):
             check_services(processes)
             time.sleep(.25)
         print('TripRaft is ready. Web: http://127.0.0.1:5173 | Admin: http://127.0.0.1:5174 | API: http://127.0.0.1:5000', flush=True)
+        if employee_demo_tool() and not docker:
+            print('Employee portal: http://127.0.0.1:5174/employee-access | CTO: http://127.0.0.1:5174/access-administration', flush=True)
         print('Frontend live updates are enabled. Native API Python edits reload automatically.', flush=True)
         print(('Press Ctrl+C to stop.' if docker else 'Press Ctrl+C or close this launcher to stop.')
               + ' Logs: .tripraft/logs', flush=True)
@@ -731,6 +760,8 @@ def main():
     args = parser.parse_args()
     if args.stop:
         stop_existing(args.docker)
+        if not args.docker:
+            employee_demo_services(stop=True)
         return
     node = node_runtime()
     if args.check:
@@ -742,6 +773,8 @@ def main():
         return
     setup(node, args.docker, force=args.setup)
     if not args.setup:
+        if not args.docker and not args.smoke:
+            employee_demo_services()
         start(node, args.docker, args.smoke, args.no_browser)
 
 

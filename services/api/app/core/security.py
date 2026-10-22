@@ -111,7 +111,7 @@ def validate_csrf() -> None:
         return
 
     partner = path.startswith('/api/v1/partners/')
-    has_session = (request.cookies.get('partner_access_token') or request.cookies.get('partner_refresh_token')) if partner else request.cookies.get('access_token')
+    has_session = (request.cookies.get('partner_access_token') or request.cookies.get('partner_refresh_token')) if partner else (request.cookies.get('access_token') or request.cookies.get('employee_access_token'))
     if not has_session:
         return
 
