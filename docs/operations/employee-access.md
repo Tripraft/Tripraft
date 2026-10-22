@@ -89,7 +89,21 @@ Use separate email identities. Passwords are prompted invisibly, checked, bcrypt
 
 # Option 2: choose the email/name as arguments; password is still prompted privately.
 & C:/Tripraft/.venv/Scripts/python.exe infra/tools/employee_local_accounts.py --role CTO --email your-cto@example.com --name "Your name"
+
+# Read-only persistence checks; these never display a password or restart services.
+& C:/Tripraft/.venv/Scripts/python.exe infra/tools/employee_local_accounts.py --role CTO --check
+& C:/Tripraft/.venv/Scripts/python.exe infra/tools/employee_local_accounts.py --role Admin --check
 ```
+
+Run from `C:\Tripraft\.tripraft\employee-access-portal`. Password typing is invisible,
+including no dots or stars. Use at least 12 characters (maximum 72 UTF-8 bytes),
+with upper/lowercase, a number and a special character, then confirm it. Invalid
+entries prompt again. Email is the login identifier; display name is not a separate
+username. Setup reports saved-and-verified only after checking SQL against the
+private settings. `--check` exits successfully only when chosen hash, identity and
+display name all match. Original generated demo credentials report `configured:
+false` until you choose credentials. If a service restart fails after saving,
+check persistence before trying another reset.
 
 There is no password command-line argument. Do not paste passwords into chat, Git or SQL history. Chosen credentials persist as hashes in the ignored local login settings and in `users.password_hash`; the old plaintext entry for the changed role is removed. This local tool does not update a shared Supabase account. `users` stores identity and password hash, while immutable `EMPLOYEE_CTO_USER_IDS` assigns CTO authority and `ADMIN_EMAILS` assigns website-admin authority independently. SQL edits to a user or employee role alone must never confer CTO authority. A future hosted account configuration requires a separately reviewed control-plane configuration and migration, especially when shared schema revisions differ.
 

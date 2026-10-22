@@ -93,3 +93,41 @@ def test_local_account_bootstrap_is_not_exposed_by_the_normal_app(app):
     assert all(rule.rule != '/api/v1/employees/local-account' for rule in app.url_map.iter_rules())
     # The generic GET-only legacy router may respond 405 instead of 404.
     assert app.test_client().post('/api/v1/employees/local-account', json={}).status_code in (404, 405)
+
+
+def test_five_demo_engineers_onboard_independently_and_offboarding_revokes_access(employee_setup, app):
+    """Five synthetic identities in pytest's disposable DB; delivery is mocked."""
+    cto, _, _, owner, _ = employee_setup
+    executor = TrustedExecutor(trusted_store=True, authorized=True, security_gate=lambda: True, cto_ids=[owner])
+    email = Mock(enabled=True)
+    email.send_email.return_value = True
+    clients, employees = [], []
+    for index in range(5):
+        body = create_body()
+        body['display_name'] = f'Demo Engineer {index + 1}'
+        created = cto.post('/api/v1/employees', json=body)
+        assert created.status_code == 201
+        employee = payload(created)['employee']
+        with get_db_session() as session:
+            job = session.query(ProvisioningJob).filter_by(employee_id=UUID(employee['id']), operation='portal_invite').one()
+            assert InvitationProcessor(executor, email, 'http://127.0.0.1:5174', local_development=True).process(session, job.id) == 'completed'
+        token = re.search(r'#invite=([\w-]+)', email.send_email.call_args.args[3])[1]
+        with get_db_session() as session:
+            assert activate_local_invitation(session, employee['email'], 'Synthetic!CohortPass123', token).status == 'active'
+            session.commit()
+            with pytest.raises(ValueError):
+                activate_local_invitation(session, employee['email'], 'Synthetic!CohortPass123', token)
+        client = ApiClient(app)
+        assert client.post('/api/v1/employees/session', json={'email': employee['email'], 'password': 'Synthetic!CohortPass123'}).status_code == 200
+        assert payload(client.get('/api/v1/employees/me'))['is_cto'] is False
+        assert client.get('/api/v1/employees').status_code == 403
+        clients.append(client)
+        employees.append(employee)
+    assert email.send_email.call_count == 5  # Mock captures only; no SMTP/network.
+    assert clients[1].get(f'/api/v1/employees/{employees[0]["id"]}/history').status_code == 403
+    current = next(item for item in payload(cto.get('/api/v1/employees'))['employees'] if item['id'] == employees[0]['id'])
+    result = cto.post(f'/api/v1/employees/{current["id"]}/actions', json={
+        'version': current['version'], 'action': 'offboard', 'justification': 'Synthetic cohort cleanup test', 'confirmed': True})
+    assert result.status_code == 200
+    assert clients[0].get('/api/v1/employees/me').status_code == 401
+    assert clients[1].get('/api/v1/employees/me').status_code == 200

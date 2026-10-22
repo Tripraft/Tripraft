@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 import secrets
 import sys
+import uuid
 from urllib.parse import urlsplit
 
 
@@ -22,7 +23,33 @@ def validate_saved_account(account, role):
     if not ((isinstance(password, str) and len(password) >= 20)
             or (isinstance(digest, str) and len(digest) == 60 and digest.startswith(('$2b$', '$2a$')))):
         raise ValueError('Invalid saved local credentials')
+    if 'display_name' in account and (not isinstance(account['display_name'], str)
+                                     or not 1 <= len(account['display_name'].strip()) <= 100):
+        raise ValueError('Invalid saved display name')
+    if account.get('user_id'):
+        uuid.UUID(account['user_id'])
     return account
+
+
+def seed_account(session, user_model, account):
+    """Reuse the saved identity and chosen name instead of resetting demo defaults."""
+    from app.auth.security.password import hash_password
+    user = session.query(user_model).filter_by(email=account['email']).first()
+    if account.get('user_id') and (not user or str(user.id) != account['user_id']):
+        raise ValueError('Saved local identity does not match SQL; refusing to recreate it')
+    digest = account.get('password_hash') or hash_password(account['password'])
+    if not user:
+        name = account.get('display_name') or {'CTO': 'Demo CTO', 'Employee': 'Demo Engineer', 'Admin': 'Demo Administrator'}[account['role']]
+        user = user_model(email=account['email'], display_name=name, portal_kind='traveler',
+                          email_verified=True, is_active=True, password_hash=digest)
+        session.add(user)
+    else:
+        user.password_hash = digest
+        if account.get('display_name'):
+            user.display_name = account['display_name']
+    session.flush()
+    account.update(display_name=user.display_name, user_id=str(user.id))
+    return user
 
 
 def demo_credentials(credentials_file=None, *, rotate=False, include_employee=True):
@@ -118,7 +145,6 @@ def main():
     from alembic import command
     from alembic.config import Config
     from app.auth.models import User
-    from app.auth.security.password import hash_password
     from app.core.db.connection import get_db_session
     from app.employees.models import AccessRequest, Employee
     from app.employees.service import create_employee
@@ -134,18 +160,7 @@ def main():
     with get_db_session() as session:
         users = []
         for account in (credentials if seed_employee else credentials[:1]) + [admin_account]:
-            email = account['email']
-            digest = account.get('password_hash') or hash_password(account['password'])
-            name = {'CTO': 'Demo CTO', 'Employee': 'Demo Engineer', 'Admin': 'Demo Administrator'}[account['role']]
-            user = session.query(User).filter_by(email=email).first()
-            if not user:
-                user = User(email=email, display_name=name, portal_kind='traveler', email_verified=True,
-                            is_active=True, password_hash=digest)
-                session.add(user)
-            else:
-                user.password_hash = digest
-            session.flush()
-            users.append(user)
+            users.append(seed_account(session, User, account))
         cto = users[0]
         if seed_employee:
             engineer = users[1]
