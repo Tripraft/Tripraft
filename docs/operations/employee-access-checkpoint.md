@@ -37,6 +37,8 @@ The checkpoint includes missing prerequisite `f63a718293a4_deduplicate_session_i
 
 Full backend regression and remote CI results are reported with the final pushed commit. CI runs on the additional feature branch without opening a PR. The deploy workflow runs only on main/tags or an explicit dispatch, and was not invoked.
 
+The first CI PostgreSQL run exposed a timing-dependent concurrency-test assertion: a peer may observe `dispatching` between the durable claim and delivery transactions. The corrected regression verifies one SMTP submission and the final committed `completed` state, allowing that intermediate observation. The corrected test passed again on disposable local PostgreSQL.
+
 The earlier private backup path was unavailable during this checkpoint session; no new backup-restoration result is claimed. Current migration validation used a new empty disposable PostgreSQL cluster and synthetic records. The backup rehearsal tool accepts `--postgres-bin-dir` for a separate local PostgreSQL installation.
 
 ## Remaining CTO configuration and approvals

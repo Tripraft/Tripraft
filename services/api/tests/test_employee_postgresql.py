@@ -52,7 +52,7 @@ def test_employee_postgresql_migration_preserves_existing_data(monkeypatch):
                 'compare_type': True, 'compare_server_default': True}), Base.metadata) == []
             assert connection.execute(text("SELECT has_table_privilege('tripraft_dev_runtime', 'employees', 'UPDATE')")).scalar_one() is False
             assert connection.execute(text("SELECT has_table_privilege('tripraft_dev_runtime', 'employee_provisioning_jobs', 'INSERT')")).scalar_one() is False
-        from app.employees.models import AccessEvent, Employee
+        from app.employees.models import AccessEvent, Employee, ProvisioningJob
         from app.employees.database_provisioning import developer_role, provision_sql
         with Session(engine) as session:
             employee = Employee(email='engineer@example.com', display_name='Test Engineer',
@@ -77,8 +77,14 @@ def test_employee_postgresql_migration_preserves_existing_data(monkeypatch):
                 return InvitationProcessor(executor, email, 'https://people.tripraft.com').process(transaction, job_id)
 
         with ThreadPoolExecutor(max_workers=2) as pool:
-            assert list(pool.map(deliver, range(2))) == ['completed', 'completed']
+            statuses = list(pool.map(deliver, range(2)))
+        # A second poll may observe the durable claim between transactions;
+        # dispatching is valid while its peer owns delivery. Assert the durable
+        # outcome and submission count, not thread scheduling on this machine.
+        assert 'completed' in statuses and set(statuses) <= {'completed', 'dispatching'}
         email.send_email.assert_called_once()
+        with Session(engine) as session:
+            assert session.get(ProvisioningJob, job_id).status == 'completed'
         with engine.begin() as connection:
             with pytest.raises(DBAPIError, match='append-only'):
                 connection.execute(text("UPDATE employee_access_events SET result='altered'"))
