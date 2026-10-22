@@ -27,6 +27,36 @@ logger = logging.getLogger(__name__)
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/v1/auth')
 
 
+@auth_bp.route('/forgot-password', methods=['POST'])
+@limit_auth()
+def forgot_password():
+    data, errors = validate_request(CheckEmailSchema, request.get_json(silent=True) or {})
+    if errors:
+        return validation_error_response(errors)
+    success, result = auth_service.request_password_reset(data['email'].strip().lower())
+    if not success:
+        return error_response(result['error'], 503)
+    response, status = success_response(data=result)
+    response.headers['Cache-Control'] = 'no-store'
+    return response, status
+
+
+@auth_bp.route('/reset-password', methods=['POST'])
+@limit_auth()
+def reset_password():
+    data = request.get_json(silent=True) or {}
+    if not isinstance(data, dict) or not isinstance(data.get('token'), str) or not isinstance(data.get('new_password'), str):
+        return error_response('Reset token and new password are required', 400)
+    if len(data['token']) > 4096 or len(data['new_password']) > Config.PASSWORD_MAX_LENGTH:
+        return error_response('Invalid reset request', 400)
+    success, result = auth_service.reset_password(data['token'], data['new_password'])
+    if not success:
+        return error_response(result['error'], 400)
+    response, status = success_response(data=result)
+    response.headers['Cache-Control'] = 'no-store'
+    return response, status
+
+
 @auth_bp.route('/signup', methods=['POST', 'OPTIONS'])
 @limit_auth()
 def signup():

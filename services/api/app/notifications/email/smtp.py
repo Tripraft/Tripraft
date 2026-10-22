@@ -143,7 +143,7 @@ class EmailService:
 
     def send_password_reset(self, to_email: str, reset_token: str) -> bool:
         """Send password reset email."""
-        reset_url = f'{self._frontend_url}/reset-password/{reset_token}'
+        reset_url = f'{self._frontend_url}/reset-password#token={reset_token}'
 
         subject = f'Reset your {self._from_name} password'
         html_body = f'''

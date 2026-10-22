@@ -127,6 +127,8 @@ class SQLAuthService {
    * Sign up with email and password
    */
   async signUpWithEmail(email, password, displayName = '') {
+    // Explicit credentials take priority over any pending cookie restoration.
+    this._authVersion += 1;
     try {
       const response = await this._fetch(`${this.baseUrl}/signup`, {
         method: 'POST',
@@ -173,6 +175,8 @@ class SQLAuthService {
    * Sign in with email and password
    */
   async signInWithEmail(email, password) {
+    // Explicit credentials take priority over any pending cookie restoration.
+    this._authVersion += 1;
     try {
       const response = await this._fetch(`${this.baseUrl}/login`, {
         method: 'POST',
@@ -225,6 +229,28 @@ class SQLAuthService {
     }
     if (this.currentUser) await this.getCurrentUserFromBackend();
     return { success: true, message: data.data?.message || data.message || 'Email verified successfully' };
+  }
+
+  async requestPasswordReset(email) {
+    return this._passwordRecovery('forgot-password', { email: email.trim().toLowerCase() });
+  }
+
+  async resetPassword(token, newPassword) {
+    return this._passwordRecovery('reset-password', { token, new_password: newPassword });
+  }
+
+  async _passwordRecovery(endpoint, body) {
+    try {
+      const response = await this._fetch(`${this.baseUrl}/${endpoint}`, {
+        method: 'POST', credentials: 'omit', cache: 'no-store',
+        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || data.success !== true) return this._requestError(data, 'Could not complete password recovery. Please try again.');
+      return { success: true, message: data.data?.message || data.message };
+    } catch {
+      return { success: false, message: 'Unable to connect. Check your connection and try again.' };
+    }
   }
 
   async resendVerificationEmail() {

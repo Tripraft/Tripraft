@@ -31,17 +31,16 @@ export const invitationDestination = search => {
   return expenseInvite ? '/invitation/' + encodeURIComponent(expenseInvite) : null;
 };
 
-export const passwordError = password => {
-  if (password.length < 8) return 'Use at least 8 characters.';
-  if (new TextEncoder().encode(password).length > 72) return 'Use a password of at most 72 bytes (72 characters for English text).';
-  if (!/\p{Lu}/u.test(password)) return 'Add at least one uppercase letter.';
-  if (!/\p{Ll}/u.test(password)) return 'Add at least one lowercase letter.';
-  if (!/\p{Nd}/u.test(password)) return 'Add at least one number.';
-  if (![...password].some(char => '!@#$%^&*()_+-=[]{}|;:,./<>?'.includes(char))) {
-    return 'Add at least one special character, such as !, @ or #.';
-  }
-  return '';
-};
+export const passwordRequirements = password => [
+  { label: 'At least 8 characters', met: [...password].length >= 8, error: 'Use at least 8 characters.' },
+  { label: 'At most 72 UTF-8 bytes (72 English characters)', met: new TextEncoder().encode(password).length <= 72, error: 'Use a password of at most 72 bytes (72 characters for English text).' },
+  { label: 'One uppercase letter', met: /\p{Lu}/u.test(password), error: 'Add at least one uppercase letter.' },
+  { label: 'One lowercase letter', met: /\p{Ll}/u.test(password), error: 'Add at least one lowercase letter.' },
+  { label: 'One number', met: /\p{Nd}/u.test(password), error: 'Add at least one number.' },
+  { label: 'One special character: !@#$%^&*()_+-=[]{}|;:,./<>?', met: [...password].some(char => '!@#$%^&*()_+-=[]{}|;:,./<>?'.includes(char)), error: 'Add at least one special character, such as !, @ or #.' },
+];
+
+export const passwordError = password => passwordRequirements(password).find(item => !item.met)?.error || '';
 
 export const signupErrors = data => {
   const errors = {};

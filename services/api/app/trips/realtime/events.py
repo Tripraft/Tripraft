@@ -80,7 +80,8 @@ def _authenticate_socket(auth) -> dict | None:
         from app.core.db.connection import get_db_session
         with get_db_session() as session:
             user = session.get(User, UUID(payload['sub']))
-            if not user or not user.is_active or user.portal_kind != 'traveler':
+            if (not user or not user.is_active or user.portal_kind != 'traveler'
+                    or user.password_reset_version != payload.get('password_version')):
                 return None
         return payload
     except Exception as exc:

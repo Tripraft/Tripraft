@@ -3065,6 +3065,22 @@
         }
       }
     },
+    "/api/v1/auth/forgot-password": {
+      "post": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "auth_forgot_password_post_api_v1_auth_forgot_password",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
@@ -3194,6 +3210,22 @@
       "post": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
         "operationId": "auth_resend_verification_post_api_v1_auth_resend_verification",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "auth_reset_password_post_api_v1_auth_reset_password",
         "responses": {
           "default": {
             "content": {

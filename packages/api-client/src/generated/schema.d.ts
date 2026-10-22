@@ -430,6 +430,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        post: operations["auth_forgot_password_post_api_v1_auth_forgot_password"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -544,6 +561,23 @@ export interface paths {
         put?: never;
         /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
         post: operations["auth_resend_verification_post_api_v1_auth_resend_verification"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        post: operations["auth_reset_password_post_api_v1_auth_reset_password"];
         delete?: never;
         options?: never;
         head?: never;
@@ -5167,6 +5201,26 @@ export interface operations {
             };
         };
     };
+    auth_forgot_password_post_api_v1_auth_forgot_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     auth_login_post_api_v1_auth_login: {
         parameters: {
             query?: never;
@@ -5317,6 +5371,26 @@ export interface operations {
         };
     };
     auth_resend_verification_post_api_v1_auth_resend_verification: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    auth_reset_password_post_api_v1_auth_reset_password: {
         parameters: {
             query?: never;
             header?: never;

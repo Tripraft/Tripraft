@@ -3,9 +3,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Plane, UserPlus, AlertCircle, Home } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import QRCode from 'qrcode';
+import PasswordInput from './PasswordInput';
+import PasswordChecklist from './PasswordChecklist';
 import '../css/Signup.css';
-import { isValidEmail, signupErrors, returnDestination, rememberExpenseInvitation, invitationDestination } from '../utils/authForms';
+import { isValidEmail, passwordRequirements, signupErrors, returnDestination, rememberExpenseInvitation, invitationDestination } from '../utils/authForms';
 
 const Signup = ({ onSwitchToLogin }) => {
   const navigate = useNavigate();
@@ -63,43 +64,31 @@ const Signup = ({ onSwitchToLogin }) => {
   }, [currentUser, loading, authLoading, navigate, from, location.search]);
 
   useEffect(() => {
-    if (qrCanvasRef.current) {
-      QRCode.toCanvas(qrCanvasRef.current, 'https://tripraft.com/signup', {
-        width: 150,
-        margin: 1,
-        color: { dark: '#000000', light: '#FFFFFF' }
+    let active = true;
+    const timer = setTimeout(() => {
+      import('qrcode').then(({ default: QRCode }) => {
+        if (active && qrCanvasRef.current) return QRCode.toCanvas(qrCanvasRef.current, 'https://tripraft.com/signup', {
+          width: 150, margin: 1, color: { dark: '#000000', light: '#FFFFFF' }
+        });
       }).catch(() => {});
-    }
+    }, 0);
+    return () => { active = false; clearTimeout(timer); };
   }, []);
 
   // Password strength checker
   const getPasswordStrength = (password) => {
     if (!password) return { score: 0, level: 'None', message: '' };
     
-    let score = 0;
-    const conditions = {
-      hasUpperCase: /[A-Z]/.test(password),
-      hasLowerCase: /[a-z]/.test(password),
-      hasNumbers: /\d/.test(password),
-      hasSpecialChars: [...password].some(char => '!@#$%^&*()_+-=[]{}|;:,./<>?'.includes(char)),
-      isLongEnough: password.length >= 8
-    };
-
-    // Score calculation
-    if (conditions.hasUpperCase) score++;
-    if (conditions.hasLowerCase) score++;
-    if (conditions.hasNumbers) score++;
-    if (conditions.hasSpecialChars) score++;
-    if (conditions.isLongEnough) score++;
+    const score = passwordRequirements(password).filter(item => item.met).length;
 
     let level, message;
     if (score <= 2) {
       level = 'Weak';
       message = 'Add uppercase, numbers, and special characters';
-    } else if (score === 3) {
+    } else if (score <= 4) {
       level = 'Fair';
       message = 'Add more character variety for better security';
-    } else if (score === 4) {
+    } else if (score === 5) {
       level = 'Good';
       message = 'Good password strength';
     } else {
@@ -107,7 +96,7 @@ const Signup = ({ onSwitchToLogin }) => {
       message = 'Excellent password strength';
     }
 
-    return { score, level, message, conditions };
+    return { score, level, message };
   };
 
   const handleInputChange = (e) => {
@@ -125,7 +114,7 @@ const Signup = ({ onSwitchToLogin }) => {
   // Handle signup
   const handleSignup = async event => {
     event.preventDefault();
-    if (submittingRef.current || authLoading) return;
+    if (submittingRef.current) return;
     const values = new FormData(event.currentTarget);
     const submitted = Object.fromEntries(values.entries());
     const validationErrors = signupErrors(submitted);
@@ -274,21 +263,21 @@ const Signup = ({ onSwitchToLogin }) => {
               </div>
               <div className="signup-form-group">
                 <label htmlFor="password" className="signup-label">Password</label>
-                <input type="password" id="password" name="password" value={formData.password}
+                <PasswordInput id="password" name="password" value={formData.password}
                   autoComplete="new-password" required disabled={loading} aria-invalid={!!errors.password} aria-describedby="password-requirements password-error"
                   onChange={handleInputChange} placeholder="Min. 8 characters"
                   className={`signup-input ${errors.password ? 'error' : ''}`} />
-                <p id="password-requirements" className="signup-submit-hint">Use at least 8 characters with uppercase and lowercase letters, a number and a special character such as !, @ or #.</p>
+                <PasswordChecklist password={formData.password} />
                 <p id="password-error" className="signup-field-error" role={errors.password ? 'alert' : undefined}>{errors.password || ''}</p>
                 {formData.password && (
                   <div style={{
                     marginTop: '0.5rem',
                     fontSize: '0.85rem',
                     padding: '0.5rem 0.75rem',
-                    background: passwordStrength.score <= 2 ? '#fee' : passwordStrength.score === 3 ? '#fef3c7' : '#d1fae5',
-                    border: `1px solid ${passwordStrength.score <= 2 ? '#fcc' : passwordStrength.score === 3 ? '#fcd34d' : '#6ee7b7'}`,
+                    background: passwordStrength.score <= 2 ? '#fee' : passwordStrength.score <= 4 ? '#fef3c7' : '#d1fae5',
+                    border: `1px solid ${passwordStrength.score <= 2 ? '#fcc' : passwordStrength.score <= 4 ? '#fcd34d' : '#6ee7b7'}`,
                     borderRadius: '4px',
-                    color: passwordStrength.score <= 2 ? '#c33' : passwordStrength.score === 3 ? '#b45309' : '#047857'
+                    color: passwordStrength.score <= 2 ? '#c33' : passwordStrength.score <= 4 ? '#b45309' : '#047857'
                   }}>
                     <strong>Strength: {passwordStrength.level}</strong> - {passwordStrength.message}
                   </div>
@@ -296,16 +285,16 @@ const Signup = ({ onSwitchToLogin }) => {
               </div>
               <div className="signup-form-group">
                 <label htmlFor="confirmPassword" className="signup-label">Confirm Password</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" value={formData.confirmPassword}
+                <PasswordInput visibilityLabel="confirm password" id="confirmPassword" name="confirmPassword" value={formData.confirmPassword}
                   autoComplete="new-password" required disabled={loading} aria-invalid={!!errors.confirmPassword} aria-describedby={errors.confirmPassword ? 'confirmPassword-error' : undefined}
                   onChange={handleInputChange} 
                   placeholder="Re-enter password"
                   className={`signup-input ${errors.confirmPassword ? 'error' : ''}`} />
                 {errors.confirmPassword && <p id="confirmPassword-error" className="signup-field-error" role="alert">{errors.confirmPassword}</p>}
               </div>
-              <button type="submit" className="signup-submit-button" disabled={loading || authLoading}>
+              <button type="submit" className="signup-submit-button" disabled={loading}>
                 <UserPlus size={20} aria-hidden="true" />
-                {loading ? 'Creating account...' : authLoading ? 'Checking your session...' : 'Create Account'}
+                {loading ? 'Creating account...' : 'Create Account'}
               </button>
               <p className="signup-submit-hint">You will stay signed in on this device until you sign out or your session expires.</p>
             </form>

@@ -29,6 +29,8 @@ _CSRF_HEADER = 'X-CSRF-Token'
 _CSRF_EXEMPT_PATHS = frozenset((
     '/api/v1/auth/signup',
     '/api/v1/auth/login',
+    '/api/v1/auth/forgot-password',
+    '/api/v1/auth/reset-password',
     '/api/v1/auth/check-email',
     '/api/v1/auth/verify-email',
     '/api/v1/partners/register',
