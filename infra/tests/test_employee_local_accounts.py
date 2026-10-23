@@ -142,10 +142,49 @@ class LocalAccountsTests(unittest.TestCase):
             self.assertNotIn('password', actual['admin_account'])
 
     def test_password_prompt_retries_invalid_and_mismatched_values(self):
+        # Passwords remain interactive and are never included in diagnostics.
         strong = 'Synthetic!Password12'
         with mock.patch.object(accounts.getpass, 'getpass', side_effect=['short', strong, 'different', strong, strong]), mock.patch('builtins.print') as output:
             self.assertEqual(accounts.choose_password(), strong)
         self.assertNotIn(strong, str(output.call_args_list))
+
+    def test_persistent_permission_failure_is_not_retried_or_masked_for_either_role(self):
+        for role in ('CTO', 'Admin'):
+            before = copy.deepcopy(self.saved)
+            with tempfile.TemporaryDirectory() as folder:
+                path = Path(folder) / 'synthetic.json'
+                path.write_text(json.dumps(before))
+                error = PermissionError('original ACL failure')
+                with mock.patch.object(accounts, 'write_private', side_effect=error) as write:
+                    with self.assertRaises(PermissionError) as raised:
+                        accounts.persist_account(lambda: self.conn, path, self.saved, role,
+                                                 'chosen@example.com', 'Chosen', 'hash')
+                self.assertIs(raised.exception, error)
+                write.assert_called_once()
+                self.assertEqual(self.saved, before)
+                self.assertEqual(json.loads(path.read_text()), before)
+                self.assertEqual(self.conn.db.execute("SELECT email FROM users WHERE id='cto-id'").fetchone()[0], 'cto@example.com')
+                self.assertEqual(self.conn.db.execute("SELECT email FROM users WHERE id='admin-id'").fetchone()[0], 'admin@example.com')
+
+    def test_sql_commit_failure_restores_published_file_and_memory(self):
+        before = copy.deepcopy(self.saved)
+        connection = self.conn
+        class FailedCommit:
+            def __enter__(self):
+                return connection
+            def __exit__(self, *args):
+                connection.db.rollback()
+                raise RuntimeError('synthetic SQL commit failure')
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'synthetic.json'
+            path.write_text(json.dumps(before))
+            with mock.patch.object(accounts, 'write_private', side_effect=lambda p, v: p.write_text(json.dumps(v))) as write:
+                with self.assertRaisesRegex(RuntimeError, 'synthetic SQL commit failure'):
+                    accounts.persist_account(FailedCommit, path, self.saved, 'Admin', 'chosen@example.com', 'Chosen', 'hash')
+            self.assertEqual(write.call_count, 2)
+            self.assertEqual(json.loads(path.read_text()), before)
+            self.assertEqual(self.saved, before)
+            self.assertEqual(self.conn.db.execute("SELECT email FROM users WHERE id='admin-id'").fetchone()[0], 'admin@example.com')
 
     def test_check_is_read_only_without_prompts_or_service_restart(self):
         accounts.update_account(self.conn, self.saved, 'CTO', 'chosen@example.com', 'Chosen', 'hash')

@@ -105,6 +105,16 @@ display name all match. Original generated demo credentials report `configured:
 false` until you choose credentials. If a service restart fails after saving,
 check persistence before trying another reset.
 
+If an earlier version failed with `icacls` exit status 5 on the
+`.tripraft/manual-test` directory, rerun the command above after updating the
+tool. The save now restricts a new, empty temporary file before writing any
+credentials and replaces the settings atomically. It does not require changing
+the permissions or ownership of an existing checkout directory. Do not run the
+terminal as Administrator or weaken folder permissions to work around that old
+error. Failed writes leave SQL, sessions and saved settings unchanged; a SQL
+commit failure restores the previous settings. Use `--check` for either role
+before signing in if a previous attempt failed.
+
 There is no password command-line argument. Do not paste passwords into chat, Git or SQL history. Chosen credentials persist as hashes in the ignored local login settings and in `users.password_hash`; the old plaintext entry for the changed role is removed. This local tool does not update a shared Supabase account. `users` stores identity and password hash, while immutable `EMPLOYEE_CTO_USER_IDS` assigns CTO authority and `ADMIN_EMAILS` assigns website-admin authority independently. SQL edits to a user or employee role alone must never confer CTO authority. A future hosted account configuration requires a separately reviewed control-plane configuration and migration, especially when shared schema revisions differ.
 
 ## Backup migration rehearsal

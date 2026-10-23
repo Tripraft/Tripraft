@@ -11,7 +11,7 @@ import sys
 import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from employee_local_control import ROOT, local_database_url, protect, write_private
+from employee_local_control import ROOT, local_database_url, write_private
 
 
 def choose_password():
@@ -97,12 +97,25 @@ def update_account(connection, saved, role, email, display_name, digest):
 def persist_account(connect, path, saved, role, email, name, digest):
     """Rollback SQL and restore settings if either persistence step fails."""
     original = json.loads(json.dumps(saved))
+    path = Path(path)
+    original_bytes = path.read_bytes() if path.exists() else None
     try:
         with connect() as connection:
             uid = update_account(connection, saved, role, email, name, digest)
             write_private(path, saved)
     except Exception:
-        write_private(path, original)
+        saved.clear()
+        saved.update(original)
+        # An atomic write failure leaves the old file intact. Do not retry the
+        # same failing filesystem operation and mask the original exception.
+        actual_bytes = path.read_bytes() if path.exists() else None
+        if actual_bytes != original_bytes:
+            # The file was published but the SQL transaction failed to commit.
+            try:
+                write_private(path, original)
+            except Exception as recovery_error:
+                raise RuntimeError('SQL update failed and private settings could not be restored. '
+                                   'Do not sign in until the local settings are recovered.') from recovery_error
         raise
     return uid
 
@@ -162,7 +175,6 @@ def main():
                 if time.monotonic() >= deadline:
                     raise RuntimeError('Local API did not stop; credentials were not changed')
                 time.sleep(.1)
-            protect(path)
             uid = persist_account(lambda: psycopg2.connect(local_database_url(), connect_timeout=5),
                                   path, saved, args.role, email, name, digest)
             persisted = True
@@ -196,4 +208,8 @@ if __name__ == '__main__':
         raise SystemExit(1) from None
     except RuntimeError as error:
         print(f'Account setup stopped: {error}')
+        raise SystemExit(1) from None
+    except OSError:
+        print('Account setup failed: unable to save private local settings. Check that your Windows '
+              'account can create and replace files in .tripraft/manual-test. No password was printed.')
         raise SystemExit(1) from None

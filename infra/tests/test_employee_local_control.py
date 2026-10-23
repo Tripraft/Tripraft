@@ -17,6 +17,51 @@ spec.loader.exec_module(control)
 
 
 class LocalControlTests(unittest.TestCase):
+    def test_existing_directory_is_not_reacled_and_secret_is_protected_before_write(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'settings.json'
+            path.write_text('{"old": true}')
+            calls = []
+            def protect_empty(temporary, *, directory=False):
+                self.assertFalse(directory, 'Existing container must not require WRITE_DAC')
+                self.assertNotEqual(temporary, path)
+                self.assertEqual(temporary.read_bytes(), b'')
+                self.assertEqual(json.loads(path.read_text()), {'old': True})
+                calls.append(temporary)
+            with mock.patch.object(control, 'protect', side_effect=protect_empty):
+                control.write_private(path, {'synthetic': 'private-value'})
+            self.assertEqual(json.loads(path.read_text()), {'synthetic': 'private-value'})
+            self.assertEqual(len(calls), 1)
+            self.assertEqual(list(Path(folder).iterdir()), [path])
+
+    def test_acl_failure_keeps_original_and_cleans_empty_temporary_file(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'settings.json'
+            path.write_text('original')
+            with mock.patch.object(control, 'protect', side_effect=PermissionError('denied')):
+                with self.assertRaises(PermissionError):
+                    control.write_private(path, {'secret': 'never-written'})
+            self.assertEqual(path.read_text(), 'original')
+            self.assertEqual(list(Path(folder).iterdir()), [path])
+
+    def test_new_private_directory_is_protected_before_file(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'new-private' / 'settings.json'
+            with mock.patch.object(control, 'protect') as protect:
+                control.write_private(path, {})
+            self.assertEqual(protect.call_args_list[0], mock.call(path.parent, directory=True))
+            self.assertEqual(protect.call_count, 2)
+
+    def test_failed_replace_keeps_original_and_cleans_protected_temporary(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'settings.json'
+            path.write_text('original')
+            with mock.patch.object(control, 'protect'), mock.patch.object(Path, 'replace', side_effect=PermissionError('busy')):
+                with self.assertRaises(PermissionError):
+                    control.write_private(path, {'secret': 'synthetic'})
+            self.assertEqual(path.read_text(), 'original')
+            self.assertEqual(list(Path(folder).iterdir()), [path])
+
     def test_only_prepared_loopback_store_is_accepted(self):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

@@ -3,6 +3,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import tempfile
 from urllib.parse import urlsplit
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -19,22 +20,46 @@ def protect(path, *, directory=False):
     if os.name == 'nt':
         principal = os.environ['USERDOMAIN'] + '\\' + os.environ['USERNAME']
         suffix = '(OI)(CI)F' if directory else 'F'
-        subprocess.run(['icacls', str(path), '/inheritance:r', '/grant:r',
-                        principal + ':' + suffix, 'SYSTEM:' + suffix],
-                       check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            subprocess.run(['icacls', str(path), '/inheritance:r', '/grant:r',
+                            principal + ':' + suffix, 'SYSTEM:' + suffix],
+                           check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except subprocess.CalledProcessError as error:
+            raise PermissionError('Unable to restrict private local file permissions') from error
     else:
         path.chmod(0o700 if directory else 0o600)
 
 
 def write_private(path, value):
+    """Publish a protected file atomically, without re-ACLing existing containers.
+
+    A checkout directory may be owned by a different Windows account while still
+    granting the CTO permission to create/replace files. Only newly created
+    private directories need their ACL set here. The temporary file is empty
+    until its own permissions have been restricted; replacement retains them.
+    """
     path = Path(path)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    protect(path.parent, directory=True)
-    temporary = path.with_suffix(path.suffix + '.new')
-    temporary.write_text(json.dumps(value, indent=2) + '\n', encoding='utf-8')
-    protect(temporary)
-    temporary.replace(path)
-    protect(path)
+    content = json.dumps(value, indent=2) + '\n'
+    try:
+        path.parent.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        if not path.parent.is_dir():
+            raise
+    else:
+        protect(path.parent, directory=True)
+    descriptor, filename = tempfile.mkstemp(prefix='.' + path.name + '-', suffix='.tmp', dir=path.parent)
+    temporary = Path(filename)
+    try:
+        # Close before icacls/replace on Windows. No secret has been written yet.
+        os.close(descriptor)
+        protect(temporary)
+        with temporary.open('w', encoding='utf-8') as stream:
+            stream.write(content)
+            stream.flush()
+            os.fsync(stream.fileno())
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def local_database_url(root=ROOT):
