@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Purpose: Set up and start TripRaft, replace existing development-port listeners, and clean up child services.
+# Purpose: Set up and run local API/web/admin with restricted development credentials and owned-process cleanup.
 """Set up once, then start TripRaft's API, web app, and admin console.
 
-Usage: python start.py [--setup | --check | --smoke | --stop] [--docker] [--no-browser]
-Requires Node >=22 and Python 3.11 for native mode, or Docker for Docker mode.
-Starting reuses healthy owned services; otherwise it replaces development-port listeners.
+Usage: python start.py [--setup | --check | --check-database | --smoke | --stop] [--no-browser]
+Requires Node >=22 and Python 3.11. Native mode uses personal Supabase dev credentials.
+Starting reuses healthy owned services and refuses unrelated occupied ports.
+Setup, startup, smoke checks and source reloads never run database migrations.
 Windows native services also stop when the launcher window closes.
 Existing configuration and data are preserved; no additional launcher module is required.
 """
@@ -248,48 +249,6 @@ def fingerprint(docker):
     return digest.hexdigest()
 
 
-def migrate_native():
-    """Use the API's exact configuration and back up SQLite before an upgrade."""
-    from datetime import datetime, timezone
-    import sqlite3
-    from contextlib import closing
-    from dotenv import load_dotenv
-    from alembic import command
-    from alembic.config import Config as AlembicConfig
-    from alembic.migration import MigrationContext
-    from alembic.script import ScriptDirectory
-    from sqlalchemy import create_engine
-    from sqlalchemy.engine import make_url
-
-    load_dotenv(API / '.env')
-    sys.path.insert(0, str(API))
-    from app.core.config import Config
-    config = AlembicConfig(str(API / 'alembic.ini'))
-    config.set_main_option('script_location', str(API / 'migrations'))
-    # Alembic and Flask must use the same selected database, including defaults.
-    os.environ['DATABASE_URL'] = Config.DATABASE_URL
-    selected = make_url(Config.DATABASE_URL)
-    if selected.get_backend_name() == 'sqlite' and selected.database not in (None, '', ':memory:'):
-        database = Path(selected.database).resolve()
-        database.parent.mkdir(parents=True, exist_ok=True)
-        if database.is_file() and database.stat().st_size:
-            engine = create_engine(Config.DATABASE_URL)
-            try:
-                with engine.connect() as connection:
-                    current = set(MigrationContext.configure(connection).get_current_heads())
-                pending = current != set(ScriptDirectory.from_config(config).get_heads())
-            finally:
-                engine.dispose()
-            if pending:
-                destination = LOCAL / 'backups' / (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S%fZ') + '-before-migration.db')
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                with closing(sqlite3.connect(database.as_uri() + '?mode=ro', uri=True)) as source:
-                    with closing(sqlite3.connect(destination)) as backup:
-                        source.backup(backup)
-                print(f'Pre-migration SQLite backup: {destination}', flush=True)
-    command.upgrade(config, 'head')
-
-
 def setup_ready(saved, docker):
     """A saved stamp is valid only while the installed entry points still exist."""
     mode = 'docker' if docker else 'native'
@@ -309,16 +268,20 @@ def configure_native():
         'JWT_SECRET_KEY': secrets.token_urlsafe(48),
         'REDIS_URL': '',
         'FLASK_HOST': '127.0.0.1',
+        'DATABASE_URL': '',
+        'TRIPRAFT_DEV_DB_ROLE': '',
+        'TRIPRAFT_DEV_DB_HOST': '',
+        'DB_POOL_SIZE': '2',
+        'DB_MAX_OVERFLOW': '1',
+        'TRAVEL_POOL_SIZE': '1',
+        'TRAVEL_MAX_OVERFLOW': '0',
     }
     lines = []
     for line in (API / '.env.example').read_text(encoding='utf-8').splitlines():
         key = line.split('=', 1)[0]
         lines.append(f'{key}={values[key]}' if key in values else line)
-    database = ROOT / 'data/runtime/dev/tripraft.db'
-    database.parent.mkdir(parents=True, exist_ok=True)
-    lines += ['', '# Separate native development data; existing data/runtime/tripraft.db is preserved.',
-              'DATABASE_URL=sqlite:///' + database.as_posix(),
-              'TRAVEL_DATABASE_DIR=' + (ROOT / 'data/catalog').as_posix()]
+    present = {line.split('=', 1)[0] for line in lines if '=' in line}
+    lines += [f'{key}={value}' for key, value in values.items() if key not in present]
     target.write_text('\n'.join(lines) + '\n', encoding='utf-8')
     if os.name != 'nt':
         target.chmod(0o600)
@@ -387,7 +350,7 @@ def require_free_ports(ports):
             try:
                 probe.bind(('127.0.0.1', port))
             except OSError as exc:
-                raise RuntimeError(f'Port {port} is already in use. Stop its existing service (run \'python start.py --stop\') before starting TripRaft.') from exc
+                raise RuntimeError(f'Port {port} is already in use. Stop it from its owning checkout or application; this launcher will not stop unrecorded listeners.') from exc
 
 
 def pid_file():
@@ -495,25 +458,17 @@ def stop_stale_services():
 
 
 def stop_existing(docker=False, quiet=False):
-    """Stop prior recorded services and listeners on TripRaft's configured ports."""
+    """Stop only identity-verified processes recorded by this worktree."""
     state = _running_state()
     if docker or state.get('docker'):
-        # Release this project's published ports through Compose before PID cleanup.
-        run(docker_command() + ['stop'])
+        raise RuntimeError('Docker sessions require their existing owner to stop them. No services changed.')
     stopped_any = False
     for pid in read_running_pids():
         stopped_any = stop_pid(pid) or stopped_any
-    for port in [5000, 5173, 5174]:
-        for pid in pids_for_port(port):
-            identity = process_identity(pid)
-            # Recheck that this verified process still owns this particular port.
-            if identity and pid in pids_for_port(port):
-                stopped_any = stop_pid(pid, identity) or stopped_any
-    if not wait_ports_free([5000, 5173, 5174], timeout=5):
-        raise RuntimeError('Could not release ports 5000, 5173, 5174. Close their remaining service or check process permissions.')
+    # Other worktrees and unrelated port owners are never ours to stop.
     clear_running_pids()
     if not quiet:
-        print('TripRaft services stopped and ports freed.' if stopped_any else 'No running TripRaft services found.', flush=True)
+        print('Recorded TripRaft services stopped.' if stopped_any else 'No recorded TripRaft services found.', flush=True)
 
 
 def wait_ready(url, process, timeout=90):
@@ -646,9 +601,6 @@ def start(node, docker, smoke, no_browser):
             wait_ready('http://127.0.0.1:5000/api/health/live', None)
         else:
             env.update({'FLASK_HOST': '127.0.0.1', 'FLASK_PORT': '5000', 'TRIPRAFT_DEV_RELOAD': '1'})
-            run([str(venv_python()), str(API / 'init_travel_db.py')], cwd=API, env=env)
-            print('Applying database migrations; existing configuration is respected.', flush=True)
-            run([str(venv_python()), str(ROOT / 'start.py'), '--migrate-native'], cwd=API, env=env)
             api_process = launch('api', [str(venv_python()), str(API / 'run.py')], API)
             wait_ready('http://127.0.0.1:5000/api/health/live', api_process)
         for name, port in [('web', 5173), ('admin', 5174)]:
@@ -725,12 +677,20 @@ def main():
     action.add_argument('--setup', action='store_true', help='Install dependencies/configuration without starting services')
     action.add_argument('--check', action='store_true', help='Check prerequisites/setup status without installing or starting')
     action.add_argument('--smoke', action='store_true', help='Start all services, verify HTTP readiness, then stop')
-    action.add_argument('--stop', action='store_true', help='Stop running TripRaft services and free ports')
-    parser.add_argument('--docker', action='store_true', help='Use PostgreSQL, Redis, API and worker in Docker')
+    action.add_argument('--stop', action='store_true', help='Stop only services recorded by this worktree')
+    action.add_argument('--check-database', action='store_true', help='Read-only check of personal development database privileges')
+    parser.add_argument('--docker', action='store_true', help=argparse.SUPPRESS)
     parser.add_argument('--no-browser', action='store_true', help='Keep the browser closed')
     args = parser.parse_args()
+    if args.docker:
+        raise RuntimeError('Docker mode is disabled for the shared-development workflow: its existing entrypoint runs migrations. Use native startup. Ask the CTO about separate Docker maintenance.')
     if args.stop:
         stop_existing(args.docker)
+        return
+    if args.check_database:
+        if not venv_python().is_file():
+            raise RuntimeError('Run py -3.11 start.py --setup first to install database check dependencies.')
+        run([str(venv_python()), str(ROOT / 'infra/tools/check_dev_database.py')], env=child_env())
         return
     node = node_runtime()
     if args.check:
@@ -742,14 +702,12 @@ def main():
         return
     setup(node, args.docker, force=args.setup)
     if not args.setup:
+        run([str(venv_python()), str(ROOT / 'start.py'), '--check-database'], env=child_env())
         start(node, args.docker, args.smoke, args.no_browser)
 
 
 if __name__ == '__main__':
     try:
-        if sys.argv[1:] == ['--migrate-native']:
-            migrate_native()
-            sys.exit(0)
         if os.name == 'nt' and len(sys.argv) >= 5 and sys.argv[1] == '--owned-child' and sys.argv[3] == '--':
             sys.exit(owned_child(sys.argv[2], sys.argv[4:]))
         main()
