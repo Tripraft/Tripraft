@@ -1,11 +1,12 @@
+import { adminApiBase, adminCsrf } from './adminApi';
 // Purpose: Lists package submissions by status and shows private content, media and proposed rates; sends versioned approval, correction or rejection decisions with required reasons.
 import React, { useEffect, useState } from 'react';
 import type { TourPackageReviewItem, TourPackageReviewList } from '@tripraft/types';
 
-const base = import.meta.env.VITE_API_BASE_URL || '';
+const base = adminApiBase;
 const statuses = ['UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'REJECTED'];
 async function api<T>(path: string, data?: unknown): Promise<T> {
-  const csrf = decodeURIComponent(document.cookie.split('; ').find(value => value.startsWith('csrf_token='))?.slice(11) || '');
+  const csrf = adminCsrf();
   const response = await fetch(`${base}/api/v1/admin/partner-packages${path}`, { method: data ? 'POST' : 'GET', credentials: 'include', cache: 'no-store', headers: { 'Content-Type': 'application/json', ...(data ? { 'X-CSRF-Token': csrf } : {}) }, ...(data ? { body: JSON.stringify(data) } : {}) });
   const body = await response.json();
   if (!response.ok || !body.success) throw new Error(body.error?.message || 'Package review is temporarily unavailable.');

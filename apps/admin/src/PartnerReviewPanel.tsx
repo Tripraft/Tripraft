@@ -1,3 +1,4 @@
+import { adminApiBase, adminCsrf } from './adminApi';
 // Purpose: Paginates supplier applications, displays business and signature evidence, and submits versioned review decisions while blocking self-review controls.
 import React, { useCallback, useEffect, useState } from 'react';
 import type { PartnerReviewApplication, PartnerDecision, PartnerReviewList, PartnerStatus } from '@tripraft/types';
@@ -6,8 +7,8 @@ import { PartnerAgreementPanel } from './PartnerAgreementPanel';
 const statuses: PartnerStatus[] = ['UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'SUSPENDED', 'REJECTED'];
 const title = (value: string) => value.toLowerCase().replaceAll('_', ' ');
 async function api<T>(path: string, method = 'GET', data?: unknown): Promise<T> {
-  const csrf = decodeURIComponent(document.cookie.split('; ').find(value => value.startsWith('csrf_token='))?.slice(11) || '');
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/admin/partners${path}`, {
+  const csrf = adminCsrf();
+  const response = await fetch(`${adminApiBase}/api/v1/admin/partners${path}`, {
     method, credentials: 'include', cache: 'no-store',
     headers: { 'Content-Type': 'application/json', ...(method === 'GET' ? {} : { 'X-CSRF-Token': csrf }) },
     ...(data === undefined ? {} : { body: JSON.stringify(data) }),
@@ -32,7 +33,7 @@ function ReviewCard({ application: a, changed }: { application: PartnerReviewApp
     {a.review_reason && <p>Previous feedback: {a.review_reason}</p>}
     {a.is_demo && <p><strong>Demo operator — private dashboard testing only.</strong></p>}
     <p>Agreement v{a.agreement.document_version}: {a.agreement.agent_signed ? `agent signed by ${a.agreement.signer_name}, ${a.agreement.signer_title}` : a.status === 'APPROVED' ? 'awaiting agent signature' : 'agent signing opens after approval'}. No TripRaft signature step. Commercial activation remains blocked while terms are incomplete.</p>
-    {a.agreement.agent_signed && <details><summary>Agent signature evidence</summary><p>Signed: {a.agreement.signed_at ? new Date(a.agreement.signed_at).toLocaleString() : 'Recorded'}</p><p style={{ overflowWrap: 'anywhere' }}>Original document SHA-256: {a.agreement.source_sha256}</p><a href={`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/admin/partners/${a.id}/agreement/signature`}>View signature receipt</a></details>}
+    {a.agreement.agent_signed && <details><summary>Agent signature evidence</summary><p>Signed: {a.agreement.signed_at ? new Date(a.agreement.signed_at).toLocaleString() : 'Recorded'}</p><p style={{ overflowWrap: 'anywhere' }}>Original document SHA-256: {a.agreement.source_sha256}</p><a href={`${adminApiBase}/api/v1/admin/partners/${a.id}/agreement/signature`}>View signature receipt</a></details>}
     {a.is_own_application && <p>You cannot review your own business application. Ask another authorized staff member to review it.</p>}
     {decisions.length > 0 && <><label>Decision reason, visible to the applicant<textarea value={reason} minLength={5} maxLength={2000} onChange={event => setReason(event.target.value)} /></label><div className="partner-admin-actions">{decisions.map(decision => <button key={decision} disabled={busy || reason.trim().length < 5} onClick={() => void decide(decision)}>{decision === 'APPROVED' ? 'Approve business' : title(decision)}</button>)}</div></>}
     {error && <p role="alert">{error}</p>}
@@ -48,7 +49,7 @@ export function PartnerReviewPanel() {
     api<PartnerReviewList>(`?status=${status}&limit=25&offset=${offset}`).then(value => { if (active) setList(value); }).catch(cause => { if (active) setError(cause instanceof Error ? cause.message : 'Unable to load partners.'); }).finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
   }, [status, offset, revision]);
-  return <section aria-labelledby="partner-review-title"><h2 id="partner-review-title">Partner applications</h2><p>Review business information before granting supplier access. Approval here does not enable package publication or payments.</p><div className="toolbar"><label>Application status <select value={status} onChange={event => { setStatus(event.target.value as PartnerStatus); setOffset(0); }}>{statuses.map(item => <option key={item} value={item}>{title(item)}</option>)}</select></label><button onClick={changed} disabled={loading}>Refresh applications</button></div>
+  return <section aria-labelledby="partner-review-title"><h2 id="partner-review-title">Application review queue</h2><p>Review business information before granting supplier access. Approval here does not enable package publication or payments.</p><div className="toolbar"><label>Application status <select value={status} onChange={event => { setStatus(event.target.value as PartnerStatus); setOffset(0); }}>{statuses.map(item => <option key={item} value={item}>{title(item)}</option>)}</select></label><button onClick={changed} disabled={loading}>Refresh applications</button></div>
     <PartnerAgreementPanel />
     {loading && <p role="status">Loading partner applications…</p>}{error && <p role="alert">{error}</p>}
     {list && <><p>{list.total} applications in this status.</p>{list.applications.map(application => <ReviewCard key={`${application.id}-${application.version}`} application={application} changed={changed} />)}{!list.applications.length && <p>No applications in this status.</p>}<div className="toolbar"><button disabled={offset === 0 || loading} onClick={() => setOffset(Math.max(0, offset - 25))}>Previous applications</button><button disabled={offset + 25 >= list.total || loading} onClick={() => setOffset(offset + 25)}>Next applications</button></div></>}

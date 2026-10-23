@@ -227,6 +227,8 @@ def _register_blueprints(app):
     from app.partners import package_review_routes  # noqa: F401 - private media and immutable package review
     from app.partners import staff_routes  # noqa: F401 - staff-only sign-in
     app.register_blueprint(partners_bp)
+    from app.employees.routes import employees_bp
+    app.register_blueprint(employees_bp)
     from app.expenses.routes.currencies import currencies_bp
     app.register_blueprint(currencies_bp)
     api_prefix = app.config.get("API_PREFIX", "/api/v1")

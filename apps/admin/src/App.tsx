@@ -1,3 +1,4 @@
+import { adminApiBase, adminCsrf } from './adminApi';
 // Purpose: Verifies the server account before loading privileged readiness and ingestion-audit data; renders staff login, review panels, refresh and logout controls.
 import { useEffect, useState } from 'react';
 import { createApiClient, type components } from '@tripraft/api-client';
@@ -5,8 +6,9 @@ import type { AuthUser } from '@tripraft/types';
 import { PartnerReviewPanel } from './PartnerReviewPanel';
 import { PackageReviewPanel } from './PackageReviewPanel';
 import { StaffLogin } from './StaffLogin';
-const api = createApiClient(import.meta.env.VITE_API_BASE_URL || '');
-type Audit = components['schemas']['AuditData'];
+import { AdminWorkspace } from './AdminWorkspace';
+const api = createApiClient(adminApiBase);
+type Audit = components['schemas']['AuditData'] & { available?: boolean; reason?: string };
 type Health = components['schemas']['Health'];
 function isHealth(value: unknown): value is Health {
   if (!value || typeof value !== 'object') return false;
@@ -28,6 +30,8 @@ function isHealth(value: unknown): value is Health {
   return true;
 }
 export function App() {
+  const page = window.location.pathname;
+  const view = page === '/admin/partners' ? 'partners' : page === '/admin/packages' ? 'packages' : page === '/admin/activity' ? 'activity' : 'overview';
   const [account, setAccount] = useState<AuthUser | null>(null);
   const [initializing, setInitializing] = useState(true);
   const [accountError, setAccountError] = useState('');
@@ -41,8 +45,8 @@ export function App() {
   async function signOut() {
     setSigningOut(true);
     try {
-      const csrf = decodeURIComponent(document.cookie.split('; ').find(value => value.startsWith('csrf_token='))?.slice(11) || '');
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/auth/logout`, { method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': csrf } });
+      const csrf = adminCsrf();
+      const response = await fetch(`${adminApiBase}/api/v1/auth/logout`, { method: 'POST', credentials: 'include', headers: { 'X-CSRF-Token': csrf } });
       if (!response.ok) throw new Error('Sign-out failed. Please try again.');
       setAccount(null); setAccountError(''); setHealth(null); setAudit(null); setErrors([]);
     } catch (cause) { setErrors(values => [...values, cause instanceof Error ? cause.message : 'Unable to sign out.']); }
@@ -50,20 +54,29 @@ export function App() {
   }
   useEffect(() => {
     const controller = new AbortController();
-    api
-      .GET('/api/v1/auth/me', { signal: controller.signal })
+    async function verifyIdentity() {
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          const result = await api.GET('/api/v1/auth/me', { signal: controller.signal });
+          if (![502, 503, 504].includes(result.response.status) || attempt === 2) return result;
+        } catch (cause) { if (controller.signal.aborted || attempt === 2) throw cause; }
+        await new Promise(resolve => setTimeout(resolve, 150 * (attempt + 1)));
+      }
+      throw new Error('Administration service unavailable');
+    }
+    verifyIdentity()
       .then(({ data, response }) => {
         if (controller.signal.aborted) return;
         if (!response.ok || !data?.data?.user)
           setAccountError(
             response.status === 401
-              ? 'Sign in with an authorized TripRaft staff account.'
-              : 'Unable to verify your account.',
+              ? ''
+              : 'The website administration service is unavailable. Retry the connection; your account permissions have not changed.',
           );
         else setAccount(data.data.user);
       })
       .catch(() => {
-        if (!controller.signal.aborted) setAccountError('Unable to reach the API.');
+        if (!controller.signal.aborted) setAccountError('Cannot reach the website administration service. Check that start.py is running, then retry.');
       })
       .finally(() => {
         if (!controller.signal.aborted) setInitializing(false);
@@ -100,28 +113,22 @@ export function App() {
     });
     return () => controller.abort();
   }, [account, revision]);
-  return (
+  return <AdminWorkspace signedIn={!!account?.is_admin} email={account?.email || ''} loading={initializing} view={view}>
     <main>
-      <header>
-        <p className="eyebrow">TripRaft</p>
-        <h1>{account?.is_admin ? 'Operations' : 'TripRaft staff'}</h1>
-      </header>
       {initializing ? (
         <p role="status">Checking account…</p>
       ) : !account ? (
-        <section>
-          <p role="alert">{accountError}</p>
-          <button onClick={() => { setInitializing(true); setAccountError(''); setIdentityRevision(value => value + 1); }}>Retry connection</button>
-          <StaffLogin signedIn={() => { setInitializing(true); setAccountError(''); setIdentityRevision(value => value + 1); }} />
-        </section>
+        <div className="admin-login-content">
+          {accountError ? <section><h2>Connection unavailable</h2><p role="alert">{accountError}</p><button onClick={() => { setInitializing(true); setAccountError(''); setIdentityRevision(value => value + 1); }}>Retry connection</button></section> :
+          <StaffLogin signedIn={() => { setInitializing(true); setAccountError(''); setIdentityRevision(value => value + 1); }} />}
+        </div>
       ) : !account.is_admin ? (
         <section><p role="alert">This account does not have administrator access. Application reviews are available only to authorized TripRaft administrators and employees.</p><StaffLogin signedIn={() => { setAccount(null); setInitializing(true); setIdentityRevision(value => value + 1); }} /></section>
       ) : (
         <>
-          <nav aria-label="Operations navigation"><a href="#partner-review-title">Partner applications</a> <a href="#package-review-title">Tour package reviews</a></nav>
           <div className="toolbar">
             <p>Signed in as {account.email}</p>
-            <button disabled={signingOut} onClick={() => void signOut()}>{signingOut ? 'Signing out…' : 'Sign out of staff console'}</button>
+            <button disabled={signingOut} onClick={() => void signOut()}>{signingOut ? 'Signing out…' : 'Sign out of admin console'}</button>
             <button disabled={refreshing} onClick={() => setRevision((value) => value + 1)}>
               {refreshing ? 'Refreshing…' : 'Refresh'}
             </button>
@@ -131,7 +138,7 @@ export function App() {
               {error}
             </p>
           ))}
-          <section>
+          {view === 'overview' && <section id="service-readiness">
             <h2>Service readiness</h2>
             {health ? (
               <>
@@ -149,10 +156,10 @@ export function App() {
             ) : (
               <p>{refreshing ? 'Loading…' : 'No readiness result available.'}</p>
             )}
-          </section>
-          <section>
+          </section>}
+          {view === 'activity' && <section>
             <h2>Recent ingestion activity</h2>
-            {audit ? (
+            {audit?.available === false ? <p>{audit.reason || 'Ingestion activity logging is not configured for this catalog.'}</p> : audit ? (
               <>
                 <p>{audit.total} records in total; showing the latest 25.</p>
                 {audit.logs.length ? (
@@ -185,11 +192,11 @@ export function App() {
             ) : (
               <p>{refreshing ? 'Loading…' : 'No audit result available.'}</p>
             )}
-          </section>
-          <PartnerReviewPanel />
-          <PackageReviewPanel />
+          </section>}
+          {view === 'partners' && <PartnerReviewPanel />}
+          {view === 'packages' && <PackageReviewPanel />}
         </>
       )}
     </main>
-  );
+  </AdminWorkspace>;
 }

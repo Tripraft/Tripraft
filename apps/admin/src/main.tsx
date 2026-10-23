@@ -2,11 +2,12 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
+import { LocalAdminApp } from './LocalAdminApp';
 import './styles.css';
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing application root');
 createRoot(root).render(
   <React.StrictMode>
-    <App />
+    <LocalAdminApp StaffApp={App} />
   </React.StrictMode>,
 );
