@@ -1,0 +1,23 @@
+# Install only after CTO approval on the protected control-plane host.
+[Unit]
+Description=TripRaft trusted employee invitation and expiration worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tripraft-control
+WorkingDirectory=/opt/tripraft/services/api
+EnvironmentFile=/etc/tripraft/employee-invitations.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/tripraft/.venv/bin/python -m app.employees.executor --config /etc/tripraft/employee-invitations.json --execute --approve-external-changes --watch --interval 5
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

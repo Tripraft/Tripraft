@@ -66,6 +66,13 @@ def build(application):
         schema = model.model_json_schema(ref_template='#/components/schemas/{model}')
         schemas.update(schema.pop('$defs', {}))
         schemas[model.__name__] = schema
+    from app.employees import schemas as employee_schemas
+    for name in ('EmployeeCreate', 'EmployeeChange', 'RequestCreate', 'RequestDecision', 'EmployeeLogin',
+                 'InviteAccept', 'EmployeeRecord', 'AccessRequestRecord', 'AccessEventRecord',
+                 'ProvisioningJobRecord', 'EmployeeIdentity'):
+        schema = getattr(employee_schemas, name).model_json_schema(ref_template='#/components/schemas/{model}')
+        schemas.update(schema.pop('$defs', {}))
+        schemas[name] = schema
     status_values = ['DRAFT_APPLICATION', 'UNDER_REVIEW', 'CHANGES_REQUESTED', 'APPROVED', 'SUSPENDED', 'REJECTED']
     application_fields = {name: {'type': 'string'} for name in (
         'business_name', 'representative_name', 'contact_email', 'phone', 'country_code', 'website',
@@ -214,11 +221,46 @@ def build(application):
                         operation['security'].append({})
                 if method != 'GET' and action not in ('register', 'login', 'staff_login'):
                     operation.setdefault('parameters', []).append({'name': 'X-CSRF-Token', 'in': 'header', 'schema': {'type': 'string'}, 'description': 'Required with cookie authentication.'})
+            if rule.endpoint.startswith('employees.'):
+                action = rule.endpoint.split('.')[-1]
+                operation['description'] = 'Employee control plane. CTO authority is independent of ADMIN_EMAILS. External access changes are queued; no provisioning credentials are exposed.'
+                inputs = {'login': 'EmployeeLogin', 'accept_invitation': 'InviteAccept', 'create': 'EmployeeCreate',
+                          'change': 'EmployeeChange', 'submit_request': 'RequestCreate', 'resubmit': 'RequestCreate', 'decide': 'RequestDecision'}
+                if action in inputs:
+                    operation['requestBody'] = {'required': True, 'content': {'application/json': {'schema': ref(inputs[action])}}}
+                fields = {
+                    'login': {'signed_in': {'type': 'boolean'}}, 'logout': {},
+                    'directory': {'employees': {'type': 'array', 'items': ref('EmployeeRecord')}, 'total': {'type': 'integer'}},
+                    'create': {'employee': ref('EmployeeRecord'), 'created': {'type': 'boolean'}},
+                    'change': {'employee': ref('EmployeeRecord'), 'onboarding_token': {'type': 'string', 'description': 'Returned only after confirmed CTO generation of a single-use portal link; never logged or cached.'}}, 'accept_invitation': {'employee': ref('EmployeeRecord')},
+                    'requests': {'requests': {'type': 'array', 'items': ref('AccessRequestRecord')}, 'total': {'type': 'integer'}},
+                    'submit_request': {'request': ref('AccessRequestRecord')}, 'resubmit': {'request': ref('AccessRequestRecord')},
+                    'decide': {'request': ref('AccessRequestRecord')}, 'retry': {'job': ref('ProvisioningJobRecord')},
+                    'history': {'events': {'type': 'array', 'items': ref('AccessEventRecord')},
+                                'jobs': {'type': 'array', 'items': ref('ProvisioningJobRecord')},
+                                'event_total': {'type': 'integer'}, 'job_total': {'type': 'integer'}},
+                }
+                output = ref('EmployeeIdentity') if action == 'me' else {'type': 'object', 'required': [key for key in fields[action] if key != 'onboarding_token'], 'properties': fields[action]}
+                operation['responses'] = {('201' if action in ('create', 'submit_request') else '200'): response(envelope(output))}
+                if action == 'create':
+                    operation['responses']['200'] = response(envelope(output))
+                for status in ('400', '401', '403', '409', '429'):
+                    operation['responses'][status] = response(ref('PartnerError'))
+                if action != 'login':
+                    operation['security'] = [{'cookieAuth' if action == 'accept_invitation' else 'employeeCookieAuth': []}]
+                if method != 'GET':
+                    operation.setdefault('parameters', []).append({'name': 'X-CSRF-Token', 'in': 'header', 'schema': {'type': 'string'}, 'description': 'Required for authenticated cookie mutations.'})
+                if action in ('directory', 'requests', 'history'):
+                    operation.setdefault('parameters', []).extend([
+                        {'name': 'limit', 'in': 'query', 'schema': {'type': 'integer', 'minimum': 1, 'maximum': 100}},
+                        {'name': 'offset', 'in': 'query', 'schema': {'type': 'integer', 'minimum': 0}},
+                    ])
             paths.setdefault(route, {})[method.lower()] = operation
     return {'openapi': '3.1.0', 'info': {'title': 'TripRaft API', 'version': '2.0.0',
             'description': 'Route inventory with explicit admin and partner operations schemas. Unspecified payloads remain unknown.'},
             'paths': paths, 'components': {'schemas': schemas,
-            'securitySchemes': {'cookieAuth': {'type': 'apiKey', 'in': 'cookie', 'name': 'access_token'},
+            'securitySchemes': {'employeeCookieAuth': {'type': 'apiKey', 'in': 'cookie', 'name': 'employee_access_token'},
+                                'cookieAuth': {'type': 'apiKey', 'in': 'cookie', 'name': 'access_token'},
                                 'partnerCookieAuth': {'type': 'apiKey', 'in': 'cookie', 'name': 'partner_access_token'},
                                 'partnerRefreshCookieAuth': {'type': 'apiKey', 'in': 'cookie', 'name': 'partner_refresh_token'}}}}
 

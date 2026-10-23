@@ -24,7 +24,8 @@ psycopg2-binary==2.9.11
 alembic==1.18.4
 
 # --- Authentication ---
-PyJWT==2.10.1
+PyJWT[crypto]==2.10.1
+cryptography==50.0.2
 bcrypt==5.0.0
 
 # --- Validation ---

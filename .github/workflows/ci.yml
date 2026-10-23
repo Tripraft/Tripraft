@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, develop]
+    branches: [main, develop, "feature/employee-access-*"]
 permissions:
   contents: read
 jobs:
@@ -35,3 +35,28 @@ jobs:
           path: |
             apps/web/dist
             apps/admin/dist
+
+  employee-postgresql:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: employee_test
+          POSTGRES_PASSWORD: disposable-test-only
+          POSTGRES_DB: tripraft_employee_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U employee_test -d tripraft_employee_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install -r services/api/requirements.txt -r services/api/requirements-dev.txt
+      - name: Check additive employee migration on disposable PostgreSQL
+        working-directory: services/api
+        env:
+          EMPLOYEE_TEST_POSTGRES_URL: postgresql://employee_test:disposable-test-only@127.0.0.1:5432/tripraft_employee_test
+        run: python -m pytest tests/test_employee_postgresql.py -q

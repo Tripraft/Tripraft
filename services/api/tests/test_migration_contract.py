@@ -268,7 +268,7 @@ def test_fresh_install_sql_can_be_generated_without_a_database(url, monkeypatch)
     config = _config(url, monkeypatch, output)
     command.upgrade(config, 'head', sql=True)
     sql = output.getvalue()
-    assert sql.count('CREATE TABLE ') == 41  # 40 application tables plus Alembic version.
+    assert sql.count('CREATE TABLE ') == 47  # 46 application tables plus Alembic version.
     assert 'CREATE TABLE tour_package_media' in sql
     assert 'CREATE TABLE tour_package_reviews' in sql
     assert 'CREATE TABLE agent_agreement_acknowledgments' in sql
@@ -323,5 +323,29 @@ def test_session_token_lookup_keeps_exactly_one_index(tmp_path, monkeypatch):
         with engine.connect() as connection:
             assert connection.execute(text('SELECT refresh_token FROM user_sessions '
                                            'WHERE id=:id'), {'id': session_id}).scalar_one() == 'synthetic-digest'
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.parametrize('starting_revision', ['a74b8293a4b5', 'a714c3202601'])
+def test_employee_and_recovery_sibling_upgrades_preserve_data(tmp_path, monkeypatch, starting_revision):
+    """Either deployed sibling gains the other feature through one additive head."""
+    url = 'sqlite:///' + (tmp_path / 'sibling-upgrade.db').as_posix()
+    config = _config(url, monkeypatch)
+    engine = create_engine(url)
+    user_id = uuid4().hex
+    try:
+        command.upgrade(config, starting_revision)
+        with engine.begin() as connection:
+            connection.execute(text('INSERT INTO users (id, email, password_hash) '
+                                    'VALUES (:id, :email, :password)'),
+                               {'id': user_id, 'email': 'sibling@example.test', 'password': 'unused'})
+        command.upgrade(config, 'head')
+        _assert_current_schema(engine, config)
+        assert ScriptDirectory.from_config(config).get_heads() == ['b825c4202610']
+        with engine.connect() as connection:
+            assert connection.execute(text('SELECT email, password_reset_version FROM users WHERE id=:id'),
+                                      {'id': user_id}).one() == ('sibling@example.test', None)
+        assert 'employee_access_events' in inspect(engine).get_table_names()
     finally:
         engine.dispose()

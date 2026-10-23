@@ -7,6 +7,7 @@ Professional email handling for expense engine
 import logging
 import os
 import smtplib
+import ssl
 from html import escape
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -22,6 +23,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 logger = logging.getLogger(__name__)
+
+
+class EmailDeliveryError(RuntimeError):
+    """Safe delivery outcome; never contains recipient, token or SMTP credentials."""
+
+    def __init__(self, code, *, retryable=False, uncertain=False):
+        super().__init__(code)
+        self.retryable, self.uncertain = retryable, uncertain
 
 
 class EmailService:
@@ -48,7 +57,8 @@ class EmailService:
         to_email: str,
         subject: str,
         html_body: str,
-        text_body: Optional[str] = None
+        text_body: Optional[str] = None,
+        *, delivery_report: bool = False, message_id: Optional[str] = None
     ) -> bool:
         """
         Send an email
@@ -63,15 +73,20 @@ class EmailService:
             True if sent successfully, False otherwise
         """
         if not self.enabled:
+            if delivery_report:
+                raise EmailDeliveryError('invitation_email_not_configured')
             logger.debug(f"Email to {to_email} not sent (service disabled)")
             return False
         
+        submitted = False
         try:
             # Create message
             msg = MIMEMultipart('alternative')
             msg['From'] = f"{self.from_name} <{self.from_email}>"
             msg['To'] = to_email
             msg['Subject'] = subject
+            if message_id:
+                msg['Message-ID'] = message_id
             
             # Add plain text version
             if text_body:
@@ -84,10 +99,17 @@ class EmailService:
             
             # Send email
             def _send():
+                nonlocal submitted
                 with smtplib.SMTP(self.smtp_host, self.smtp_port, timeout=Config.SMTP_TIMEOUT) as server:
-                    server.starttls()
+                    if delivery_report:
+                        server.starttls(context=ssl.create_default_context())
+                    else:
+                        server.starttls()
                     server.login(self.smtp_user, self.smtp_password)
-                    server.send_message(msg)
+                    submitted = True
+                    refused = server.send_message(msg)
+                    if refused:
+                        raise smtplib.SMTPRecipientsRefused(refused)
 
             smtp_breaker.call(_send)
             
@@ -95,9 +117,18 @@ class EmailService:
             return True
 
         except pybreaker.CircuitBreakerError:
+            if delivery_report:
+                raise EmailDeliveryError('smtp_circuit_open', retryable=True) from None
             logger.warning(f"SMTP circuit breaker open, email to {to_email} not sent")
             return False            
         except Exception as e:
+            if delivery_report:
+                if isinstance(e, (smtplib.SMTPRecipientsRefused, smtplib.SMTPSenderRefused,
+                                  smtplib.SMTPDataError, smtplib.SMTPAuthenticationError)):
+                    code = getattr(e, 'smtp_code', 550)
+                    raise EmailDeliveryError('smtp_rejected', retryable=400 <= code < 500) from None
+                raise EmailDeliveryError('smtp_delivery_uncertain' if submitted else 'smtp_connection_failed',
+                                         retryable=not submitted, uncertain=submitted) from None
             logger.error(f"Failed to send email to {to_email}: {str(e)}")
             return False
     

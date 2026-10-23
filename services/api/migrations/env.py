@@ -36,6 +36,7 @@ from app.auth.models import (AuditLog, User,  # noqa: E402, F401
 # ---------------------------------------------------------------------------
 # Import ALL models so Base.metadata contains every table
 # ---------------------------------------------------------------------------
+from app.employees.models import Employee, AccessRequest, ProvisioningJob, AccessEvent, DeveloperCredential, EmployeeSession  # noqa: F401
 from app.core.db.base import Base  # noqa: E402
 from app.partners.models import Agent, AgentUser, AgentReview, AgentAgreementAcknowledgment, AgentAgreementSignature  # noqa: E402, F401
 from app.partners.package_models import TourPackage, TourPackageRevision  # noqa: E402, F401

@@ -1,8 +1,9 @@
+import { adminApiBase } from './adminApi';
 // Purpose: Loads the protected agreement draft on demand, renders its text and tables, and links to the original document download.
 import React, { useState } from 'react';
 import type { PartnerAgreementDocument } from '@tripraft/types';
 
-const endpoint = `${import.meta.env.VITE_API_BASE_URL || ''}/api/v1/admin/partners/agreement`;
+const endpoint = `${adminApiBase}/api/v1/admin/partners/agreement`;
 export function PartnerAgreementPanel() {
   const [document, setDocument] = useState<PartnerAgreementDocument | null>(null);
   const [busy, setBusy] = useState(false), [error, setError] = useState('');
