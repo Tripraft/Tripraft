@@ -261,6 +261,12 @@ def get_audit_log():
     entity_type = request.args.get("entity_type")
     action = request.args.get("action")
 
+    # Current canonical catalogs do not define the legacy ingestion_log table.
+    # Report that capability explicitly instead of failing every admin page.
+    if not travel_db.execute_query("SELECT name FROM sqlite_master WHERE type='table' AND name='ingestion_log'"):
+        return success_response(data={'total': 0, 'logs': [], 'available': False,
+            'reason': 'Ingestion audit logging is not configured for this catalog schema.'})
+
     where_clauses = []
     params = []
     if entity_type:

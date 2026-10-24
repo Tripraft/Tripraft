@@ -1,5 +1,6 @@
 # Purpose: Excludes local settings, secrets, data, dependencies, build output, and archived extras from publication.
 node_modules/
+.pnpm-store/
 dist/
 .turbo/
 __pycache__/
@@ -35,6 +36,11 @@ Thumbs.db
 /tripraft.db
 # Catalog inputs, generated records and SQLite sidecars stay local.
 /data/
+*.db
+*.sqlite
+*.sqlite3
+*.dump
+*.backup
 /wikidata/
 *.db-wal
 *.db-shm

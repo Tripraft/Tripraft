@@ -24,6 +24,8 @@ class User(Base):
     id = Column(Uuid, primary_key=True, default=uuid7)
     email = Column(String(255), unique=True, nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
+    # Null preserves existing sessions until the first password recovery.
+    password_reset_version = Column(String(64), nullable=True)
     display_name = Column(String(100))
     photo_url = Column(Text)
     phone = Column(String(20))
@@ -114,7 +116,7 @@ class UserSession(Base):
     user_id = Column(Uuid, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     # SHA-256 digest of the refresh token, never the token itself.
     # See app.auth.security.jwt.hash_refresh_token.
-    refresh_token = Column(String(500), nullable=False, index=True)
+    refresh_token = Column(String(500), nullable=False)
     device_info = Column(Text)
     ip_address = Column(String(45))
     expires_at = Column(DateTime, nullable=False)

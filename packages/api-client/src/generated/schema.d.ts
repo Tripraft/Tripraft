@@ -430,6 +430,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        post: operations["auth_forgot_password_post_api_v1_auth_forgot_password"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/login": {
         parameters: {
             query?: never;
@@ -550,6 +567,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        post: operations["auth_reset_password_post_api_v1_auth_reset_password"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/auth/signup": {
         parameters: {
             query?: never;
@@ -611,6 +645,179 @@ export interface paths {
         };
         /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
         get: operations["currencies_currencies_get_api_v1_currencies"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/employees": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Employee control plane. CTO authority is independent of ADMIN_EMAILS. External access changes are queued; no provisioning credentials are exposed. */
+        get: operations["employees_directory_get_api_v1_employees"];
+        put?: never;
+        /** @description Employee control plane. CTO authority is independent of ADMIN_EMAILS. External access changes are queued; no provisioning credentials are exposed. */
+        post: operations["employees_create_post_api_v1_employees"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/employees/accept-invitation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Employee control plane. CTO authority is independent of ADMIN_EMAILS. External access changes are queued; no provisioning credentials are exposed. */
+        post: operations["employees_accept_invitation_post_api_v1_employees_accept_invitation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/employees/jobs/{jid}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Employee control plane. CTO authority is independent of ADMIN_EMAILS. External access changes are queued; no provisioning credentials are exposed. */
+        post: operations["employees_retry_post_api_v1_employees_jobs_jid_retry"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/employees/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Employee control plane. CTO authority is independent of ADMIN_EMAILS. External access changes are queued; no provisioning credentials are exposed. */
+        get: operations["employees_me_get_api_v1_employees_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/employees/requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Employee control plane. CTO authority is independent of ADMIN_EMAILS. External access changes are queued; no provisioning credentials are exposed. */
+        get: operations["employees_requests_get_api_v1_employees_requests"];
+        put?: never;
+        /** @description Employee control plane. CTO authority is independent of ADMIN_EMAILS. External access changes are queued; no provisioning credentials are exposed. */
+        post: operations["employees_submit_request_post_api_v1_employees_requests"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/employees/requests/{rid}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Employee control plane. CTO authority is independent of ADMIN_EMAILS. External access changes are queued; no provisioning credentials are exposed. */
+        post: operations["employees_decide_post_api_v1_employees_requests_rid_decision"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/employees/requests/{rid}/resubmit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Employee control plane. CTO authority is independent of ADMIN_EMAILS. External access changes are queued; no provisioning credentials are exposed. */
+        post: operations["employees_resubmit_post_api_v1_employees_requests_rid_resubmit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/employees/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Employee control plane. CTO authority is independent of ADMIN_EMAILS. External access changes are queued; no provisioning credentials are exposed. */
+        post: operations["employees_login_post_api_v1_employees_session"];
+        /** @description Employee control plane. CTO authority is independent of ADMIN_EMAILS. External access changes are queued; no provisioning credentials are exposed. */
+        delete: operations["employees_logout_delete_api_v1_employees_session"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/employees/{eid}/actions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Employee control plane. CTO authority is independent of ADMIN_EMAILS. External access changes are queued; no provisioning credentials are exposed. */
+        post: operations["employees_change_post_api_v1_employees_eid_actions"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/employees/{eid}/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Employee control plane. CTO authority is independent of ADMIN_EMAILS. External access changes are queued; no provisioning credentials are exposed. */
+        get: operations["employees_history_get_api_v1_employees_eid_history"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3397,6 +3604,68 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AccessEventRecord */
+        AccessEventRecord: {
+            /** Actor Id */
+            actor_id: string | null;
+            /** Created At */
+            created_at: string;
+            /** Details */
+            details: {
+                [key: string]: unknown;
+            };
+            /**
+             * Employee Id
+             * Format: uuid
+             */
+            employee_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Justification */
+            justification: string;
+            /** Operation */
+            operation: string;
+            /** Result */
+            result: string;
+        };
+        /** AccessRequestRecord */
+        AccessRequestRecord: {
+            /** Access Level */
+            access_level: string;
+            /** Created At */
+            created_at: string;
+            /** Decision By */
+            decision_by: string | null;
+            /** Decision Reason */
+            decision_reason: string | null;
+            /** Duration Hours */
+            duration_hours: number;
+            /**
+             * Employee Id
+             * Format: uuid
+             */
+            employee_id: string;
+            /** Expires At */
+            expires_at: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Justification */
+            justification: string;
+            /** Renewal Of */
+            renewal_of: string | null;
+            /** Resource */
+            resource: string;
+            /** Status */
+            status: string;
+            /** Ticket */
+            ticket: string;
+        };
         /** AgentAgreementSign */
         AgentAgreementSign: {
             /**
@@ -3578,6 +3847,185 @@ export interface components {
             /** Version */
             version: number;
         };
+        /** EmployeeChange */
+        EmployeeChange: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "teams" | "activate" | "suspend" | "offboard" | "github_record" | "revoke_invitation" | "portal_invite" | "portal_link";
+            /**
+             * Confirmed
+             * @constant
+             */
+            confirmed: true;
+            /**
+             * Departments
+             * @default null
+             */
+            departments: string[] | null;
+            /**
+             * Github Invitation
+             * @default null
+             */
+            github_invitation: ("not_sent" | "pending" | "accepted" | "failed" | "expired" | "revoked" | "not_required") | null;
+            /**
+             * Github Membership
+             * @default null
+             */
+            github_membership: ("unknown" | "not_invited" | "pending" | "active" | "suspended" | "removed") | null;
+            /**
+             * Github Teams
+             * @default null
+             */
+            github_teams: string[] | null;
+            /**
+             * Github Username
+             * @default null
+             */
+            github_username: string | null;
+            /** Justification */
+            justification: string;
+            /**
+             * Role
+             * @default null
+             */
+            role: ("engineering_lead" | "engineer" | "qa" | "viewer") | null;
+            /**
+             * Teams
+             * @default null
+             */
+            teams: string[] | null;
+            /** Version */
+            version: number;
+        };
+        /** EmployeeCreate */
+        EmployeeCreate: {
+            /**
+             * Confirmed
+             * @constant
+             */
+            confirmed: true;
+            /** Departments */
+            departments?: string[];
+            /** Display Name */
+            display_name: string;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /**
+             * Github Username
+             * @default null
+             */
+            github_username: string | null;
+            /** Justification */
+            justification: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "engineering_lead" | "engineer" | "qa" | "viewer";
+            /**
+             * Teams
+             * @default null
+             */
+            teams: string[] | null;
+        };
+        /** EmployeeIdentity */
+        EmployeeIdentity: {
+            /** Departments */
+            departments: {
+                [key: string]: string;
+            };
+            /** Email */
+            email: string;
+            employee: components["schemas"]["EmployeeRecord"] | null;
+            /**
+             * Github Management
+             * @constant
+             */
+            github_management: "manual";
+            /**
+             * Invitation Delivery Mode
+             * @default trusted_worker_queue
+             * @enum {string}
+             */
+            invitation_delivery_mode: "disabled_local_demo" | "trusted_worker_queue" | "local_trusted_worker";
+            /** Is Cto */
+            is_cto: boolean;
+            /**
+             * Live Provisioning Enabled
+             * @constant
+             */
+            live_provisioning_enabled: false;
+            /** Permissions */
+            permissions: string[];
+            /**
+             * Provisioning Mode
+             * @constant
+             */
+            provisioning_mode: "queued";
+            /** Roles */
+            roles: string[];
+            /** Teams */
+            teams: string[];
+        };
+        /** EmployeeLogin */
+        EmployeeLogin: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Password */
+            password: string;
+        };
+        /** EmployeeRecord */
+        EmployeeRecord: {
+            /** Created At */
+            created_at: string;
+            /** Departments */
+            departments: string[];
+            /** Display Name */
+            display_name: string;
+            /** Email */
+            email: string;
+            /** Github Id */
+            github_id: string | null;
+            /** Github Invitation */
+            github_invitation: string;
+            /** Github Invitation Id */
+            github_invitation_id: string | null;
+            /** Github Invited At */
+            github_invited_at: string | null;
+            /** Github Membership */
+            github_membership: string;
+            /** Github Username */
+            github_username: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Invite Expires At */
+            invite_expires_at: string | null;
+            /** Observed Teams */
+            observed_teams: string[];
+            /** Role */
+            role: string;
+            /** Status */
+            status: string;
+            /** Synced At */
+            synced_at: string | null;
+            /** Teams */
+            teams: string[];
+            /** User Id */
+            user_id: string | null;
+            /** Version */
+            version: number;
+        };
         Health: {
             checks?: {
                 [key: string]: {
@@ -3590,6 +4038,11 @@ export interface components {
             status: string;
             timestamp: string;
             version?: string;
+        };
+        /** InviteAccept */
+        InviteAccept: {
+            /** Token */
+            token: string;
         };
         MeResponse: {
             data: {
@@ -3888,6 +4341,75 @@ export interface components {
             data: components["schemas"]["PartnerSnapshot"];
             message?: string;
             success: boolean;
+        };
+        /** ProvisioningJobRecord */
+        ProvisioningJobRecord: {
+            /**
+             * Approved By
+             * Format: uuid
+             */
+            approved_by: string;
+            /** Attempts */
+            attempts: number;
+            /** Completed At */
+            completed_at: string | null;
+            /** Created At */
+            created_at: string;
+            /**
+             * Employee Id
+             * Format: uuid
+             */
+            employee_id: string;
+            /** Error Code */
+            error_code: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Idempotency Key */
+            idempotency_key: string;
+            /** Next Attempt At */
+            next_attempt_at: string | null;
+            /** Operation */
+            operation: string;
+            /** Request Id */
+            request_id: string | null;
+            /** Revision */
+            revision: number;
+            /** Status */
+            status: string;
+        };
+        /** RequestCreate */
+        RequestCreate: {
+            /**
+             * Access Level
+             * @enum {string}
+             */
+            access_level: "read" | "triage" | "write" | "maintain" | "admin" | "organization_admin";
+            /** Duration Hours */
+            duration_hours: number;
+            /** Justification */
+            justification: string;
+            /**
+             * Renewal Of
+             * @default null
+             */
+            renewal_of: string | null;
+            /** Resource */
+            resource: string;
+            /** Ticket */
+            ticket: string;
+        };
+        /** RequestDecision */
+        RequestDecision: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "under_review" | "approved" | "rejected" | "changes_requested" | "revoked";
+            /** Justification */
+            justification: string;
         };
         /** ReviewDecision */
         ReviewDecision: {
@@ -5167,6 +5689,26 @@ export interface operations {
             };
         };
     };
+    auth_forgot_password_post_api_v1_auth_forgot_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     auth_login_post_api_v1_auth_login: {
         parameters: {
             query?: never;
@@ -5336,6 +5878,26 @@ export interface operations {
             };
         };
     };
+    auth_reset_password_post_api_v1_auth_reset_password: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     auth_signup_post_api_v1_auth_signup: {
         parameters: {
             query?: never;
@@ -5432,6 +5994,1023 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    employees_directory_get_api_v1_employees: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            employees: components["schemas"]["EmployeeRecord"][];
+                            total: number;
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    employees_create_post_api_v1_employees: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required for authenticated cookie mutations. */
+                "X-CSRF-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployeeCreate"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            created: boolean;
+                            employee: components["schemas"]["EmployeeRecord"];
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            created: boolean;
+                            employee: components["schemas"]["EmployeeRecord"];
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    employees_accept_invitation_post_api_v1_employees_accept_invitation: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required for authenticated cookie mutations. */
+                "X-CSRF-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InviteAccept"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            employee: components["schemas"]["EmployeeRecord"];
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    employees_retry_post_api_v1_employees_jobs_jid_retry: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required for authenticated cookie mutations. */
+                "X-CSRF-Token"?: string;
+            };
+            path: {
+                jid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            job: components["schemas"]["ProvisioningJobRecord"];
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    employees_me_get_api_v1_employees_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["EmployeeIdentity"];
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    employees_requests_get_api_v1_employees_requests: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            requests: components["schemas"]["AccessRequestRecord"][];
+                            total: number;
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    employees_submit_request_post_api_v1_employees_requests: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required for authenticated cookie mutations. */
+                "X-CSRF-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestCreate"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            request: components["schemas"]["AccessRequestRecord"];
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    employees_decide_post_api_v1_employees_requests_rid_decision: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required for authenticated cookie mutations. */
+                "X-CSRF-Token"?: string;
+            };
+            path: {
+                rid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestDecision"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            request: components["schemas"]["AccessRequestRecord"];
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    employees_resubmit_post_api_v1_employees_requests_rid_resubmit: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required for authenticated cookie mutations. */
+                "X-CSRF-Token"?: string;
+            };
+            path: {
+                rid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestCreate"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            request: components["schemas"]["AccessRequestRecord"];
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    employees_login_post_api_v1_employees_session: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required for authenticated cookie mutations. */
+                "X-CSRF-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployeeLogin"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            signed_in: boolean;
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    employees_logout_delete_api_v1_employees_session: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required for authenticated cookie mutations. */
+                "X-CSRF-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: Record<string, never>;
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    employees_change_post_api_v1_employees_eid_actions: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required for authenticated cookie mutations. */
+                "X-CSRF-Token"?: string;
+            };
+            path: {
+                eid: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EmployeeChange"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            employee: components["schemas"]["EmployeeRecord"];
+                            /** @description Returned only after confirmed CTO generation of a single-use portal link; never logged or cached. */
+                            onboarding_token?: string;
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+        };
+    };
+    employees_history_get_api_v1_employees_eid_history: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                eid: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: {
+                            event_total: number;
+                            events: components["schemas"]["AccessEventRecord"][];
+                            job_total: number;
+                            jobs: components["schemas"]["ProvisioningJobRecord"][];
+                        };
+                        message?: string;
+                        success: boolean;
+                    };
+                };
+            };
+            /** @description Response */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
+                };
+            };
+            /** @description Response */
+            429: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PartnerError"];
                 };
             };
         };

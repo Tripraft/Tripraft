@@ -83,19 +83,20 @@ def test_package_upgrade_preserves_existing_supplier_application(tmp_path, monke
     try:
         command.upgrade(config, 'a18b2c3d4e5f')
         with Session(engine) as session:
-            owner = User(email='supplier-migration@example.com', password_hash='unused', portal_kind='partner')
-            session.add(owner)
-            session.flush()
+            # Seed the historical schema through SQL; today's User model also
+            # includes columns introduced after this foundation revision.
+            owner_id = uuid4()
+            session.execute(text('INSERT INTO users (id, email, password_hash, portal_kind) VALUES (:id, :email, :password, :portal)'),
+                            {'id': owner_id.hex, 'email': 'supplier-migration@example.com', 'password': 'unused', 'portal': 'partner'})
             agent_id = uuid4()
             session.execute(text("""INSERT INTO agents
                 (id, owner_user_id, status, version, business_name, representative_name, contact_email,
                  phone, country_code, business_type, operating_regions, website, created_at, updated_at)
                 VALUES (:id, :owner, 'UNDER_REVIEW', 1, 'Preserve this business', '', '', '', '',
                         'tour_operator', '["Kerala"]', '', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"""),
-                {'id': agent_id.hex, 'owner': owner.id.hex})
-            session.add(AgentUser(agent_id=agent_id, user_id=owner.id, role='owner', is_active=True))
+                {'id': agent_id.hex, 'owner': owner_id.hex})
+            session.add(AgentUser(agent_id=agent_id, user_id=owner_id, role='owner', is_active=True))
             session.commit()
-            owner_id = owner.id
         command.upgrade(config, 'head')
         _assert_current_schema(engine, config)
         with Session(engine) as session:
@@ -267,7 +268,7 @@ def test_fresh_install_sql_can_be_generated_without_a_database(url, monkeypatch)
     config = _config(url, monkeypatch, output)
     command.upgrade(config, 'head', sql=True)
     sql = output.getvalue()
-    assert sql.count('CREATE TABLE ') == 41  # 40 application tables plus Alembic version.
+    assert sql.count('CREATE TABLE ') == 47  # 46 application tables plus Alembic version.
     assert 'CREATE TABLE tour_package_media' in sql
     assert 'CREATE TABLE tour_package_reviews' in sql
     assert 'CREATE TABLE agent_agreement_acknowledgments' in sql
@@ -285,3 +286,66 @@ def test_fresh_install_sql_can_be_generated_without_a_database(url, monkeypatch)
     if url.startswith('postgresql'):
         assert 'id UUID' in sql
         assert 'TYPE uuid' not in sql
+        # PostgreSQL rejects integer expressions as defaults for Boolean columns.
+        assert 'is_archived BOOLEAN DEFAULT false NOT NULL' in sql
+        assert 'BOOLEAN DEFAULT 0' not in sql
+    assert 'DROP INDEX ix_user_sessions_refresh_token' in sql
+
+
+def test_session_token_lookup_keeps_exactly_one_index(tmp_path, monkeypatch):
+    url = 'sqlite:///' + (tmp_path / 'session-index.db').as_posix()
+    config = _config(url, monkeypatch)
+    command.upgrade(config, 'e52f60718293')
+    engine = create_engine(url)
+    try:
+        user_id, session_id = uuid4().hex, uuid4().hex
+        with engine.begin() as connection:
+            connection.execute(text('INSERT INTO users (id, email, password_hash) '
+                                    'VALUES (:id, :email, :password)'),
+                               {'id': user_id, 'email': 'index-migration@example.test',
+                                'password': 'unused'})
+            connection.execute(text('INSERT INTO user_sessions '
+                                    '(id, user_id, refresh_token, expires_at) '
+                                    'VALUES (:id, :user, :token, CURRENT_TIMESTAMP)'),
+                               {'id': session_id, 'user': user_id, 'token': 'synthetic-digest'})
+        command.upgrade(config, 'head')
+        _assert_current_schema(engine, config)
+        indexes = inspect(engine).get_indexes('user_sessions')
+        token_indexes = [i['name'] for i in indexes if i['column_names'] == ['refresh_token']]
+        assert token_indexes == ['idx_user_sessions_token']
+        with engine.connect() as connection:
+            assert connection.execute(text('SELECT refresh_token FROM user_sessions '
+                                           'WHERE id=:id'), {'id': session_id}).scalar_one() == 'synthetic-digest'
+        command.downgrade(config, 'e52f60718293')
+        token_indexes = {i['name'] for i in inspect(engine).get_indexes('user_sessions')
+                         if i['column_names'] == ['refresh_token']}
+        assert token_indexes == {'idx_user_sessions_token', 'ix_user_sessions_refresh_token'}
+        with engine.connect() as connection:
+            assert connection.execute(text('SELECT refresh_token FROM user_sessions '
+                                           'WHERE id=:id'), {'id': session_id}).scalar_one() == 'synthetic-digest'
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.parametrize('starting_revision', ['a74b8293a4b5', 'a714c3202601'])
+def test_employee_and_recovery_sibling_upgrades_preserve_data(tmp_path, monkeypatch, starting_revision):
+    """Either deployed sibling gains the other feature through one additive head."""
+    url = 'sqlite:///' + (tmp_path / 'sibling-upgrade.db').as_posix()
+    config = _config(url, monkeypatch)
+    engine = create_engine(url)
+    user_id = uuid4().hex
+    try:
+        command.upgrade(config, starting_revision)
+        with engine.begin() as connection:
+            connection.execute(text('INSERT INTO users (id, email, password_hash) '
+                                    'VALUES (:id, :email, :password)'),
+                               {'id': user_id, 'email': 'sibling@example.test', 'password': 'unused'})
+        command.upgrade(config, 'head')
+        _assert_current_schema(engine, config)
+        assert ScriptDirectory.from_config(config).get_heads() == ['b825c4202610']
+        with engine.connect() as connection:
+            assert connection.execute(text('SELECT email, password_reset_version FROM users WHERE id=:id'),
+                                      {'id': user_id}).one() == ('sibling@example.test', None)
+        assert 'employee_access_events' in inspect(engine).get_table_names()
+    finally:
+        engine.dispose()

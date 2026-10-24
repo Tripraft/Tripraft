@@ -122,9 +122,9 @@ it.each([Login, Signup])('keeps the group invitation type through authentication
   expect(localStorage.getItem('pendingInvitation')).toBe('unrelated-expense');
 });
 it.each([[Login, '/login', 'Sign In'], [Signup, '/signup', 'Create Account']])(
-  'waits for session restoration before enabling submission', (Component, path) => {
+  'allows credentials while session restoration is pending', (Component, path) => {
     useAuth.mockReturnValue({ currentUser: null, loading: true }); mount(Component, path);
-    expect(screen.getByRole('button', { name: 'Checking your session...' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: Component === Login ? 'Sign In' : 'Create Account' })).toBeEnabled();
   }
 );
 it('keeps invitation parameters and return state when switching forms', async () => {
@@ -143,4 +143,37 @@ it.each([[Login, '/login'], [Signup, '/signup']])('renders auth pages when brows
     mount(Component, path);
     expect(screen.getByLabelText('Email Address')).toBeInTheDocument();
   } finally { storage.mockRestore(); }
+});
+
+it.each([[Login, '/login', fillLogin], [Signup, '/signup', fillSignup]])('toggles password visibility without submitting or changing its value', (Component, path, fill) => {
+  mount(Component, path); fill();
+  const password = screen.getByLabelText('Password');
+  const original = password.value;
+  expect(password).toHaveAttribute('type', 'password');
+  fireEvent.click(screen.getByRole('button', { name: 'Show password' }));
+  expect(password).toHaveAttribute('type', 'text');
+  expect(password).toHaveValue(original);
+  expect(signIn).not.toHaveBeenCalled(); expect(signUp).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Hide password' }));
+  expect(password).toHaveAttribute('type', 'password');
+});
+it('shows every password requirement before typing and updates each independently', () => {
+  mount(Signup, '/signup');
+  const checklist = screen.getByRole('list', { name: 'Password requirements' });
+  expect(checklist.querySelectorAll('li')).toHaveLength(6);
+  fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Password1!' } });
+  expect(checklist.querySelectorAll('[data-met="true"]')).toHaveLength(6);
+  fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'Password1' } });
+  expect(checklist.querySelectorAll('[data-met="true"]')).toHaveLength(5);
+  fireEvent.click(screen.getByRole('button', { name: 'Show confirm password' }));
+  expect(screen.getByLabelText('Confirm Password')).toHaveAttribute('type', 'text');
+});
+it('links password recovery with the invitation context intact', () => {
+  mount(Login, '/login?redirect=invitation&invitationId=uuid&type=group');
+  expect(screen.getByRole('link', { name: 'Forgot password?' })).toHaveAttribute('href', '/forgot-password?redirect=invitation&invitationId=uuid&type=group');
+});
+it('accepts credentials before startup completes', async () => {
+  useAuth.mockReturnValue({ currentUser: null, loading: true, signIn });
+  mount(Login); fillLogin(); fireEvent.submit(screen.getByLabelText('Password').closest('form'));
+  await waitFor(() => expect(signIn).toHaveBeenCalledWith('person@example.com', 'old-password'));
 });

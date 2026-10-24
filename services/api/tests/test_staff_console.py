@@ -10,6 +10,28 @@ from conftest import payload
 from test_partners import partner as partner
 
 
+def test_canonical_catalog_without_legacy_audit_table_reports_capability(make_user, monkeypatch):
+    client, uid, email = make_user('catalogreviewer')
+    with get_db_session() as session:
+        session.get(User, UUID(uid)).email_verified = True
+        session.commit()
+    monkeypatch.setattr(Config, 'ADMIN_EMAILS', [email])
+    from app.places.routes.admin_places import travel_db
+    calls = []
+
+    def schema_lookup(query, params=()):
+        calls.append(query)
+        assert 'sqlite_master' in query
+        return []
+
+    monkeypatch.setattr(travel_db, 'execute_query', schema_lookup)
+    response = client.get('/api/v1/admin/audit')
+    assert response.status_code == 200
+    assert payload(response)['available'] is False
+    assert payload(response)['logs'] == []
+    assert len(calls) == 1
+
+
 def test_customer_and_supplier_credentials_never_open_staff_sessions(partner, make_user, app, monkeypatch):
     partner_client, snapshot, email = partner
     customer, _, customer_email = make_user('staffexcluded')

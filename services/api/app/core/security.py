@@ -29,6 +29,8 @@ _CSRF_HEADER = 'X-CSRF-Token'
 _CSRF_EXEMPT_PATHS = frozenset((
     '/api/v1/auth/signup',
     '/api/v1/auth/login',
+    '/api/v1/auth/forgot-password',
+    '/api/v1/auth/reset-password',
     '/api/v1/auth/check-email',
     '/api/v1/auth/verify-email',
     '/api/v1/partners/register',
@@ -111,7 +113,7 @@ def validate_csrf() -> None:
         return
 
     partner = path.startswith('/api/v1/partners/')
-    has_session = (request.cookies.get('partner_access_token') or request.cookies.get('partner_refresh_token')) if partner else request.cookies.get('access_token')
+    has_session = (request.cookies.get('partner_access_token') or request.cookies.get('partner_refresh_token')) if partner else (request.cookies.get('access_token') or request.cookies.get('employee_access_token'))
     if not has_session:
         return
 

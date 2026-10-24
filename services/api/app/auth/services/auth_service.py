@@ -24,6 +24,8 @@ from app.core.cache.redis import (check_lockout, clear_lockout,
                                             record_failed_login)
 from app.core.db.connection import get_db_session
 from app.notifications.email.smtp import email_service
+from app.notifications.email.background import submit_auth_email
+from app.auth.security.jwt import create_password_reset_token
 
 
 logger = logging.getLogger(__name__)
@@ -34,6 +36,54 @@ _REFRESH_TOKEN_EXPIRES_SECONDS = Config.JWT_REFRESH_TOKEN_EXPIRES
 
 class AuthService:
     """Service for handling authentication operations"""
+
+    @staticmethod
+    def request_password_reset(email: str):
+        """Always return the same response for existing and unknown accounts."""
+        def deliver():
+            with get_db_session() as session:
+                user = session.query(User).filter_by(email=email, is_active=True, portal_kind='traveler').first()
+                if not user:
+                    return True
+                token = create_password_reset_token(user.id, user.password_hash)
+                recipient = user.email
+            return email_service.send_password_reset(recipient, token)
+
+        # Queue account lookup as well as sending to avoid revealing account existence.
+        if not submit_auth_email(deliver):
+            return False, {'error': 'Password recovery is busy. Please try again shortly.'}
+        return True, {'message': 'If an account exists for this email, a password reset link will arrive shortly. Check your spam folder too.'}
+
+    @staticmethod
+    def reset_password(token: str, new_password: str):
+        """Consume recovery by atomically replacing the password version it names."""
+        payload = decode_token(token)
+        invalid = {'error': 'This reset link is invalid or has expired. Request a new link.'}
+        if not payload or payload.get('type') != 'password_reset':
+            return False, invalid
+        valid, message = is_password_strong(new_password)
+        if not valid:
+            return False, {'error': message}
+        try:
+            with get_db_session() as session:
+                user = session.get(User, payload.get('sub'))
+                if not user or not user.is_active or user.portal_kind != 'traveler':
+                    return False, invalid
+                old_hash = user.password_hash
+                if payload.get('password_version') != hash_refresh_token(old_hash):
+                    return False, invalid
+                changed = session.query(User).filter_by(id=user.id, password_hash=old_hash).update(
+                    {'password_hash': hash_password(new_password), 'password_reset_version': hash_refresh_token(token)}, synchronize_session=False)
+                if not changed:
+                    session.rollback()
+                    return False, invalid
+                session.query(UserSession).filter_by(user_id=user.id).delete(synchronize_session=False)
+                session.commit()
+                clear_lockout(user.email)
+            return True, {'message': 'Password reset successfully. Sign in with your new password.'}
+        except Exception:
+            logger.exception('Password recovery failed')
+            return False, invalid
     
     @staticmethod
     def signup(
@@ -88,7 +138,8 @@ class AuthService:
                 access_token = create_access_token(
                     user_id=user.id,
                     email=user.email,
-                    display_name=user.display_name
+                    display_name=user.display_name,
+                    additional_claims={'password_version': user.password_reset_version}
                 )
                 refresh_token = create_refresh_token(user_id=user.id)
                 
@@ -105,7 +156,7 @@ class AuthService:
                 # Send verification email (best-effort, don't block signup)
                 try:
                     vtoken = create_email_verification_token(user.id, user.email)
-                    email_service.send_verification(user.email, vtoken)
+                    submit_auth_email(email_service.send_verification, user.email, vtoken)
                 except Exception as ve:
                     logger.warning("Failed to send verification email: %s", ve)
                 
@@ -182,7 +233,8 @@ class AuthService:
                 access_token = create_access_token(
                     user_id=user.id,
                     email=user.email,
-                    display_name=user.display_name
+                    display_name=user.display_name,
+                    additional_claims={'password_version': user.password_reset_version}
                 )
                 refresh_token = create_refresh_token(user_id=user.id)
                 
@@ -350,7 +402,8 @@ class AuthService:
                 new_access_token = create_access_token(
                     user_id=user.id,
                     email=user.email,
-                    display_name=user.display_name
+                    display_name=user.display_name,
+                    additional_claims={'password_version': user.password_reset_version}
                 )
                 new_refresh_token = create_refresh_token(user_id=user.id)
                 

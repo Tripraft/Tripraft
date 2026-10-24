@@ -33,8 +33,6 @@ logger = logging.getLogger(__name__)
 def main():
     """Main entry point."""
     config = get_config()
-    from app.core.dev_reload import prepare_native_reload
-    prepare_native_reload(config)
     app = create_app()
     reload_source = os.getenv('TRIPRAFT_DEV_RELOAD') == '1' and config.FLASK_ENV != 'production'
 

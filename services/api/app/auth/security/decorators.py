@@ -81,6 +81,7 @@ def _ensure_user_exists(user_id: str, email: str, name: Optional[str] = None) ->
             user = session.get(User, uid)
             if user:
                 g.account_portal = user.portal_kind
+                g.password_reset_version = user.password_reset_version
                 g.staff_authorized = user.is_admin
                 return True
             logger.warning("User %s not found in DB -- rejecting request", user_id)
@@ -149,6 +150,8 @@ def require_auth(f):
             }), 500
 
         # Set standardised g attributes
+        if getattr(g, 'password_reset_version', None) != payload.get('password_version'):
+            return jsonify({'success': False, 'error': 'Password changed. Please sign in again.'}), 401
         if getattr(g, 'account_portal', 'traveler') != 'traveler':
             return jsonify({'success': False, 'error': 'Partner accounts cannot access traveler services'}), 403
         g.current_user = user_info

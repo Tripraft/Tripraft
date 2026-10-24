@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Plane, Shield, AlertCircle, Home } from 'lucide-react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
-import QRCode from 'qrcode';
+import PasswordInput from './PasswordInput';
 import { isValidEmail, returnDestination, readAuthStorage, rememberExpenseInvitation, invitationDestination } from '../utils/authForms';
 import '../css/Login.css';
 
@@ -65,22 +65,21 @@ const Login = ({ onSwitchToSignup }) => {
 
   // Generate QR Code
   useEffect(() => {
-    if (qrCanvasRef.current) {
-      QRCode.toCanvas(qrCanvasRef.current, 'https://tripraft.com', {
-        width: 150,
-        margin: 1,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        }
+    let active = true;
+    const timer = setTimeout(() => {
+      import('qrcode').then(({ default: QRCode }) => {
+        if (active && qrCanvasRef.current) return QRCode.toCanvas(qrCanvasRef.current, 'https://tripraft.com', {
+          width: 150, margin: 1, color: { dark: '#000000', light: '#FFFFFF' }
+        });
       }).catch(() => {});
-    }
+    }, 0);
+    return () => { active = false; clearTimeout(timer); };
   }, []);
 
   // Handle email/password login
   const handleLogin = async event => {
     event.preventDefault();
-    if (submittingRef.current || authLoading) return;
+    if (submittingRef.current) return;
     const values = new FormData(event.currentTarget);
     const submittedEmail = String(values.get('email') || '').trim().toLowerCase();
     const submittedPassword = String(values.get('password') || '');
@@ -245,8 +244,7 @@ const Login = ({ onSwitchToSignup }) => {
                 <label htmlFor="login-password" className="login-label">
                   Password
                 </label>
-                <input
-                  type="password"
+                <PasswordInput
                   id="login-password"
                   name="password"
                   autoComplete="current-password"
@@ -259,9 +257,11 @@ const Login = ({ onSwitchToSignup }) => {
                 />
               </div>
 
-              <button type="submit" className="login-submit-button" disabled={loading || authLoading}>
+              <Link className="auth-recovery-link" to={'/forgot-password' + location.search} state={location.state}>Forgot password?</Link>
+
+              <button type="submit" className="login-submit-button" disabled={loading}>
                 <Plane size={20} aria-hidden="true" />
-                {loading ? 'Signing in...' : authLoading ? 'Checking your session...' : 'Sign In'}
+                {loading ? 'Signing in...' : 'Sign In'}
               </button>
               <p className="login-submit-hint">You will stay signed in on this device until you sign out or your session expires.</p>
             </form>
