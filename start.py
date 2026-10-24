@@ -680,12 +680,41 @@ def main():
     action.add_argument('--stop', action='store_true', help='Stop only services recorded by this worktree')
     action.add_argument('--check-database', action='store_true', help='Read-only check of personal development database privileges')
     parser.add_argument('--docker', action='store_true', help=argparse.SUPPRESS)
+    action.add_argument('--sync-preview', action='store_true', help='Safely sync the separate develop preview')
+    parser.add_argument('--preview-path', help='Separate preview checkout path')
+    parser.add_argument('--preview-env', help='Backend environment file for schema checks')
+    parser.add_argument('--preview-python', help='Python executable for schema checks')
     parser.add_argument('--no-browser', action='store_true', help='Keep the browser closed')
     args = parser.parse_args()
     if args.docker:
         raise RuntimeError('Docker mode is disabled for the shared-development workflow: its existing entrypoint runs migrations. Use native startup. Ask the CTO about separate Docker maintenance.')
     if args.stop:
         stop_existing(args.docker)
+        return
+    if args.sync_preview:
+        if os.name != 'nt':
+            raise RuntimeError('Preview synchronization currently requires Windows.')
+
+        script = ROOT / 'infra/tools/team_sync/team-preview-sync.ps1'
+        preview = Path(args.preview_path).resolve() if args.preview_path else ROOT / '.tripraft/worktrees/team-auto-preview'
+        env_file = Path(args.preview_env).resolve() if args.preview_env else API / '.env'
+        python_exe = Path(args.preview_python).resolve() if args.preview_python else venv_python()
+
+        if preview.resolve() == ROOT.resolve():
+            raise RuntimeError('Cannot synchronize the active checkout.')
+
+        for required in (script, preview, env_file, python_exe):
+            if not required.exists():
+                raise RuntimeError(f'Preview setup is incomplete: {required}')
+
+        run([
+            'powershell.exe', '-NoProfile', '-NonInteractive',
+            '-ExecutionPolicy', 'Bypass',
+            '-File', str(script),
+            '-Preview', str(preview),
+            '-EnvFile', str(env_file),
+            '-PythonExe', str(python_exe),
+        ])
         return
     if args.check_database:
         if not venv_python().is_file():
@@ -702,7 +731,35 @@ def main():
         return
     setup(node, args.docker, force=args.setup)
     if not args.setup:
+        # Verify the personal development connection.
         run([str(venv_python()), str(ROOT / 'start.py'), '--check-database'], env=child_env())
+
+        # Check this checkout's schema version before starting.
+        checker = ROOT / 'infra/tools/team_sync/check-team-preview-schema.py'
+        if checker.is_file():
+            run([str(venv_python()), str(checker), str(ROOT), str(API / '.env')], env=child_env())
+
+        # Safely synchronize a separate develop preview, if configured.
+        preview = ROOT / '.tripraft/worktrees/team-auto-preview'
+        sync_script = ROOT / 'infra/tools/team_sync/team-preview-sync.ps1'
+
+        if os.name == 'nt' and preview.is_dir() and sync_script.is_file():
+            try:
+                run([
+                    'powershell.exe', '-NoProfile', '-NonInteractive',
+                    '-ExecutionPolicy', 'Bypass',
+                    '-File', str(sync_script),
+                    '-Preview', str(preview),
+                    '-EnvFile', str(API / '.env'),
+                    '-PythonExe', str(venv_python()),
+                ])
+            except RuntimeError:
+                print(
+                    'TripRaft: Preview synchronization failed or was blocked. '
+                    'Continuing with the verified current checkout.',
+                    file=sys.stderr,
+                )
+
         start(node, args.docker, args.smoke, args.no_browser)
 
 
