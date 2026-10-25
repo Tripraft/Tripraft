@@ -14,7 +14,7 @@ export default function TransactionActivity({ transactions, group, currentUserId
       <div className="expense-activity-body"><div className="expense-activity-title"><h3>{expense.description || 'Expense'}</h3><strong>{formatMoney(expense.amount, currency)}</strong></div>
         <p><span>{expense.paid_by_name || getMemberName(expense.paid_by)} paid</span><span>{expense.category || 'Other'}</span><time>{formatDate(expense.expense_date || expense.date)}</time></p>
         <div className="expense-activity-actions">{expense.is_deleted ? <><span className="deleted-badge">Deleted</span>
-          <DeletedTransactionActions expense={expense} permissions={permissions} onRestore={onRestore}
+          <DeletedTransactionActions expense={expense} permissions={permissions} onRestore={onRestore} mode="group"
             onPermanentDelete={onPermanentDelete} busy={busy} restoring={restoringId === id} />
           <button onClick={() => onHistory(expense)} title="View edit history"><History size={14} />History</button>
         </> : <>
