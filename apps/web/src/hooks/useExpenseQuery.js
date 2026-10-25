@@ -1292,8 +1292,13 @@ export function usePersonalExpenses() {
       }
       return { expenses: [...new Map(expenses.map(row => [row.id || row.expense_id, row])).values()] };
     },
-    staleTime: 0,
-    gcTime: 5 * 60 * 1000,
+    // Live notifications and reconnect/poll recovery own freshness. Returning
+    // to a tab keeps the cached ledger visible instead of starting a reload.
+    staleTime: Infinity,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   const expenses = data?.expenses || [];

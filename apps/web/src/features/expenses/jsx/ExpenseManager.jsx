@@ -664,7 +664,7 @@ const ExpenseManager = () => {
       </section>}
       {mode === 'personal' && personalDashboard.loading && <p role="status">Converting transactions to {personalCurrency}...</p>}
       {mode === 'personal' && personalDashboard.error && <div role="alert">Unable to convert all transactions. Totals and analytics will be available when exchange rates return. Original amounts are shown below. <button onClick={personalDashboard.retry}>Retry conversion</button></div>}
-      {mode === 'personal' && personalDashboard.stale && <p role="status">Using cached exchange rates. Totals will update when fresh rates are available.</p>}
+      {mode === 'personal' && personalDashboard.stale && <p role="status">Using the last available exchange rates for this session.</p>}
       {/* Personal Expense Summary */}
       {mode === 'personal' && !personalConversionPending && (
         <ExpenseSummary 

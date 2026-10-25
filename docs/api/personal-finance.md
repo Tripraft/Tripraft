@@ -90,11 +90,21 @@ applies to the new transaction only: changing it does not switch dashboards or
 hide previous transactions. The web client converts each original amount using
 the exchange-rate API and rounds it to the selected currency's precision for summary cards, history,
 analytics and PDF exports. History also shows the original amount for converted
-rows, and editing always uses the saved original currency and amount. Rate
-refreshes can change displayed estimates; saved records are not rewritten.
+rows, and editing always uses the saved original currency and amount. The selected
+currency and loaded exchange-rate pairs stay cached during the session. Switching
+dashboard tabs, changing modes, returning to the browser tab or live transaction
+updates do not reload those pairs. A new transaction currency fetches only its
+missing pair; an explicit display-currency change uses the selected target's
+pairs. Failed requests can be retried. Saved records are not rewritten.
 When a required rate is unavailable, original history remains accessible while
 totals, analytics and export wait for a successful conversion. Cached rates are
 identified. API reports below continue to expose original currency totals.
+
+Committed personal transaction changes send private Socket.IO invalidations to
+the owner's devices. The client updates the ledger in the background, preserving
+the selected currency and loaded rates. Reconnect, visibility recovery and
+polling catch missed transaction changes. Explicit currency-preference changes
+also notify the owner's other devices. Rollbacks do not broadcast changes.
 
 `/personal/summary` accepts currency and date bounds. Every currency has its own
 row in `data.balances`; currencies are never added together or converted.

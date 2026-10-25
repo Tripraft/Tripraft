@@ -17,6 +17,7 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
     const invalidate = key => queryClient.invalidateQueries({ queryKey: key, refetchType: 'active' });
     const refresh = () => {
       if (cancelled || document.hidden || navigator.onLine === false) return;
+      invalidate(['personalExpenses']);
       invalidate(['groups']);
       invalidate(['invitations']);
       if (activeGroupRef.current) groups.add(activeGroupRef.current);
@@ -33,7 +34,14 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
       timer = setTimeout(() => { timer = null; refresh(); }, 150);
     };
     const onChange = data => {
-      if (cancelled || !data?.group_id) return;
+      if (cancelled) return;
+      if (data?.personal) {
+        if (data.currency_changed) invalidate(['user', 'personal-currency', userId]);
+        for (const id of data.expense_ids || []) expenses.add(id);
+        schedule();
+        return;
+      }
+      if (!data?.group_id) return;
       groups.add(data.group_id);
       for (const id of data.expense_ids || []) expenses.add(id);
       if (data.access_revoked) {
