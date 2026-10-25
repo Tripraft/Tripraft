@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main, develop, "feature/employee-access-*"]
+    branches: [main, develop, 'feature/employee-access-*']
 permissions:
   contents: read
 jobs:
@@ -59,4 +59,4 @@ jobs:
         working-directory: services/api
         env:
           EMPLOYEE_TEST_POSTGRES_URL: postgresql://employee_test:disposable-test-only@127.0.0.1:5432/tripraft_employee_test
-        run: python -m pytest tests/test_employee_postgresql.py -q
+        run: python -m pytest tests/test_employee_postgresql.py tests/test_database_release_postgresql.py -q

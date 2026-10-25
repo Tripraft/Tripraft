@@ -21,7 +21,7 @@ Each source/configuration file has a specific `Purpose:` comment. Update that co
 | [docker/.env.example](docker/.env.example) | Documents local Compose PostgreSQL/password, application-secret and staff-email settings; the sample values are development placeholders. | Template only; real `.env` values remain ignored. |
 | [docker/docker-compose.yml](docker/docker-compose.yml) | Runs local PostgreSQL, Redis and the Flask API with loopback ports and persistent data volumes; an optional workers profile starts Celery after API readiness. | Used by `start.py --docker`; starting Compose creates containers/volumes and initializes the API database. |
 | [github/workflows/ci.yml](github/workflows/ci.yml) | Defines canonical CI dependency installation, workspace checks, generated API-contract verification and frontend artifact upload; sync its discovery copy with sync-workflows.mjs. | Installs dependencies, runs workspace verification and checks regenerated API declarations on CI triggers. |
-| [github/workflows/deploy.yml](github/workflows/deploy.yml) | Defines canonical release verification and opt-in staging/production deploy-hook calls; release-verify gates deployment and tags select production. | Runs release-verify; a configured opt-in deploy hook can be invoked after checks. Version tags select production. |
+| [github/workflows/deploy.yml](github/workflows/deploy.yml) | Verifies and migrates development/staging releases, then requires staged-commit evidence and administrator approval for production. | Environment-scoped credentials and `DATABASE_RELEASES_ENABLED` control activation; see the release guide. |
 | [terraform/README.md](terraform/README.md) | Explains that Terraform provisioning is a placeholder, lists the hosting decisions needed before implementation, and links deployment guidance. | Documentation only; no resources are provisioned. |
 | [tests/test_catalog_supabase_import.py](tests/test_catalog_supabase_import.py) | Tests PostgreSQL COPY escaping, supported canonical SQLite DDL conversion and stable export ordering with temporary or in-memory data; no remote database is contacted. | Uses in-memory SQLite and temporary COPY files; no remote database. |
 | [tests/test_launcher.py](tests/test_launcher.py) | Tests start.py setup preservation, random secrets, process identity and owned-child cleanup, port/session reuse, child environments and reload recovery using mocks and temporary files. | Uses temporary workspace files and mocks for process/configuration behavior. |
@@ -39,6 +39,20 @@ Each source/configuration file has a specific `Purpose:` comment. Update that co
 | [tools/setup_supabase.py](tools/setup_supabase.py) | Builds TLS PostgreSQL URLs from ignored Supabase settings, checks connectivity by default, and supports offline migration SQL or explicit fresh-setup/upgrade actions with redacted errors. | Default connects and checks tables. `--sql PATH` exports migration SQL offline; `--apply` creates a fresh public application schema; `--upgrade` migrates an existing one. |
 | [tools/sync-workflows.mjs](tools/sync-workflows.mjs) | Copies the canonical infra CI/deployment YAML files into .github/workflows so GitHub discovers the same definitions validated by the workspace checks. | Overwrites `.github/workflows/ci.yml` and `deploy.yml` with their canonical files. |
 | [tools/validate_infra.py](tools/validate_infra.py) | Statically validates Compose build contexts, Dockerfiles, named/bind volumes and service dependencies plus workflow job/step structure; it does not start containers or deploy. | Reads Compose/workflow YAML and local paths. Static validation does not establish live Docker or hosting readiness. |
+
+## Database release tools
+
+Follow the [shared development and release guide](../docs/operations/database-releases.md)
+or open its [interactive checklist](../docs/operations/database-release-checklist.html).
+
+| File | Responsibility |
+| --- | --- |
+| [tools/deploy_database.py](tools/deploy_database.py) | Read-only migration planning by default; explicit authorized upgrades with target pins, session locking and schema verification. |
+| [tools/check_release_gate.py](tools/check_release_gate.py) | Verify the selected environment, exact-commit staging evidence and production approval protections. |
+| [tools/deploy_application.py](tools/deploy_application.py) | Send an exact commit SHA to the hosting adapter and wait for matching readiness. |
+| [tools/isolated_database.py](tools/isolated_database.py) | Optional private local PostgreSQL auto-migrations, separate from team testing. |
+| [tests/test_database_releases.py](tests/test_database_releases.py) | Release credential isolation, provenance, workflow ordering and hosting verification regressions. |
+| [tests/test_isolated_database.py](tests/test_isolated_database.py) | Owned loopback database and explicit startup-mode regressions. |
 
 ## Common development checks
 

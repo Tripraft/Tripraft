@@ -1,0 +1,111 @@
+<!doctype html>
+<!-- Purpose: Local interactive release checklist; it never connects to services or approves a deployment. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'none'; connect-src 'none'">
+  <title>TripRaft · Database release checklist</title>
+  <style>
+    :root { color-scheme: light dark; --bg:#f4f6fa; --panel:#fff; --ink:#17263b; --muted:#53647a; --line:#d6dfe9; --accent:#176958; --soft:#eaf4ef; }
+    @media(prefers-color-scheme:dark) { :root { --bg:#101821; --panel:#192532; --ink:#e9f0f7; --muted:#b3c3d5; --line:#3c4e61; --accent:#8fdec3; --soft:#203d36; } }
+    * { box-sizing:border-box } body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.55 system-ui,sans-serif }
+    main { max-width:1000px; margin:auto; padding:48px 24px } .eyebrow { color:var(--accent); font-weight:700; letter-spacing:.08em; font-size:13px }
+    h1 { font-size:clamp(28px,5vw,42px); letter-spacing:-.04em; line-height:1.2; margin:12px 0 } p { color:var(--muted); max-width:75ch }
+    nav { display:flex; gap:12px; flex-wrap:wrap; margin:28px 0 } button { border:1px solid var(--line); background:var(--panel); color:var(--ink); padding:12px 18px; border-radius:10px; font:inherit; cursor:pointer }
+    button[aria-pressed=true] { background:var(--soft); border-color:var(--accent); font-weight:700 } button:focus-visible,a:focus-visible,input:focus-visible { outline:3px solid var(--accent); outline-offset:3px }
+    .card { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:24px; margin:20px 0 } .row { display:flex; justify-content:space-between; gap:16px; align-items:center }
+    h2 { margin:0; font-size:23px } progress { display:block; width:100%; height:12px; margin:18px 0; accent-color:var(--accent) } label { display:flex; gap:14px; padding:16px 0; border-top:1px solid var(--line); cursor:pointer } input { width:20px; height:20px; flex-shrink:0; accent-color:var(--accent); margin-top:3px }
+    .note { background:var(--soft); padding:16px; border-radius:10px } a { color:var(--accent) } #count { font-variant-numeric:tabular-nums; white-space:nowrap } .small { font-size:14px } @media print { nav,button { display:none } main { padding:0 } }
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">TRIPRAFT / RELEASE OPERATIONS</div>
+  <h1>Test first. Approve. Release.</h1>
+  <p>Employees build and test with development data. Release administrators decide what reaches the final production database.</p>
+  <p class="note"><strong>Planning aid only.</strong> This file makes no network requests and performs no database changes. Checkmarks are kept only while this page is open. Actual approval happens in GitHub.</p>
+  <nav aria-label="Choose release stage">
+    <button type="button" data-stage="setup" aria-pressed="true">1. Administrator setup</button>
+    <button type="button" data-stage="employee" aria-pressed="false">2. Employee development</button>
+    <button type="button" data-stage="staging" aria-pressed="false">3. Staging acceptance</button>
+    <button type="button" data-stage="production" aria-pressed="false">4. Production approval</button>
+  </nav>
+  <section class="card" aria-labelledby="stage-title">
+    <div class="row"><h2 id="stage-title"></h2><span id="count" aria-live="polite"></span></div>
+    <p id="owner"></p>
+    <progress id="progress" max="1" value="0" aria-label="Checklist completion"></progress>
+    <div id="items"></div>
+    <p id="result" class="note" aria-live="polite"></p>
+  </section>
+  <div class="row"><a href="database-releases.md">Read the full team guide</a><button id="reset" type="button">Reset this stage</button></div>
+  <p class="small">Creating profiles and changing records are CRUD operations. Changing a column or table needs a reviewed migration. Never change the stored migration number just to pass startup.</p>
+</main>
+<script>
+  'use strict';
+  const stages = {
+    setup: { title:'Prepare the release environments', owner:'Owner: repository and database administrator', items:[
+      'Create separate development, staging and production databases with approved data.',
+      'Keep employee and application runtime credentials restricted; store migration credentials separately.',
+      'Configure the three GitHub environments, target pins and environment-scoped secrets.',
+      'Restrict production to main and designated admin reviewers; disable approval bypass.',
+      'Protect develop and main with PR review, CI and CODEOWNER approval.',
+      'Verify the hosting adapter deploys the requested SHA and readiness reports the same RELEASE_SHA.',
+      'Verify backups, runtime grants and recovery; then enable DATABASE_RELEASES_ENABLED.'
+    ] },
+    employee: { title:'Build and test in development', owner:'Owner: developer; schema deployment: release process', items:[
+      'Pull the approved team code and use your personal development credentials.',
+      'Run python start.py and read the schema diagnostics.',
+      'Test profiles, login and CRUD with development test data.',
+      'Include a new migration only if the schema changed; test schema experiments in an isolated database.',
+      'Open a PR with code, migrations and tests for review.',
+      'If shared development is behind, wait for its approved deployment and retry startup.'
+    ] },
+    staging: { title:'Verify the selected release', owner:'Owner: reviewer and QA; target: staging only', items:[
+      'Review exactly which code and migrations should ship.',
+      'Merge the selected release to main and wait for the staging Deploy run to succeed.',
+      'Record that staging run ID and the full commit SHA.',
+      'Test signup, login/logout and profile creation, viewing and editing.',
+      'Test affected CRUD, permissions, validation and feature behavior.',
+      'Review data preservation, runtime grants and compatibility with the currently running app.'
+    ] },
+    production: { title:'Approve the final database release', owner:'Owner: designated release administrator', items:[
+      'Confirm the exact main commit passed staging; stage again if main changed.',
+      'Verify the production backup or snapshot and recovery procedure.',
+      'Schedule maintenance if the schema and old running app cannot coexist.',
+      'Run Deploy from main with the successful staging run ID, acceptance confirmation and backup reference.',
+      'Review and approve the waiting production environment job in GitHub.',
+      'Wait for migrations, matching-commit application deployment and readiness to succeed.',
+      'Perform production smoke checks and retain the release evidence. Investigate failures before retrying.'
+    ] }
+  };
+  const completed = Object.fromEntries(Object.keys(stages).map(key => [key,new Set()]));
+  let active = 'setup';
+  function updateProgress() {
+    const done = completed[active].size, total = stages[active].items.length;
+    document.getElementById('count').textContent = `${done} / ${total}`;
+    const progress = document.getElementById('progress'); progress.max = total; progress.value = done;
+    document.getElementById('result').textContent = done === total
+      ? 'Checklist complete for this stage. GitHub checks and the required administrator approval still control deployment.'
+      : 'Complete the checks for this stage. This page never releases code or changes a database.';
+  }
+  function render() {
+    const stage = stages[active];
+    document.getElementById('stage-title').textContent = stage.title;
+    document.getElementById('owner').textContent = stage.owner;
+    const list = document.getElementById('items'); list.replaceChildren();
+    stage.items.forEach((text,index) => {
+      const label = document.createElement('label'), checkbox = document.createElement('input'), span = document.createElement('span');
+      checkbox.type = 'checkbox'; checkbox.checked = completed[active].has(index); span.textContent = text;
+      checkbox.addEventListener('change', () => { checkbox.checked ? completed[active].add(index) : completed[active].delete(index); updateProgress(); });
+      label.append(checkbox,span); list.append(label);
+    });
+    document.querySelectorAll('[data-stage]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.stage === active)));
+    updateProgress();
+  }
+  document.querySelectorAll('[data-stage]').forEach(button => button.addEventListener('click', () => { active = button.dataset.stage; render(); }));
+  document.getElementById('reset').addEventListener('click', () => { completed[active].clear(); render(); });
+  render();
+</script>
+</body>
+</html>

@@ -207,7 +207,7 @@ class LauncherTests(unittest.TestCase):
         with mock.patch.object(sys, 'argv', ['start.py', '--docker']), \
                 mock.patch.object(start, 'setup') as setup, \
                 mock.patch.object(start, 'run') as run:
-            with self.assertRaisesRegex(RuntimeError, 'entrypoint runs migrations'):
+            with self.assertRaisesRegex(RuntimeError, 'Docker mode is disabled'):
                 start.main()
         setup.assert_not_called()
         run.assert_not_called()
