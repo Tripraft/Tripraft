@@ -47,7 +47,7 @@
     setup: { title:'Prepare the release environments', owner:'Owner: repository and database administrator', items:[
       'Create separate development, staging and production databases with approved data.',
       'Keep employee and application runtime credentials restricted; store migration credentials separately.',
-      'Configure the three GitHub environments, target pins and environment-scoped secrets.',
+      'Configure GitHub environments and install the approved-startup migration SQL once in the shared testing project.',
       'Restrict production to main and designated admin reviewers; disable approval bypass.',
       'Protect develop and main with PR review, CI and CODEOWNER approval.',
       'Verify the hosting adapter deploys the requested SHA and readiness reports the same RELEASE_SHA.',
@@ -55,7 +55,7 @@
     ] },
     employee: { title:'Build and test in development', owner:'Owner: developer; schema deployment: release process', items:[
       'Pull the approved team code and use your personal development credentials.',
-      'Run python start.py and read the schema diagnostics.',
+      'Run python start.py; approved development migrations run automatically after the one-time owner setup.',
       'Test profiles, login and CRUD with development test data.',
       'Include a new migration only if the schema changed; test schema experiments in an isolated database.',
       'Open a PR with code, migrations and tests for review.',

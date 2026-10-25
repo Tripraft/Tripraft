@@ -19,8 +19,9 @@ class SchemaStatus:
         if self.state == 'behind':
             changes = '; '.join(f'{revision}: {description.rstrip(".")}' for revision, description in self.pending)
             return ('Database is behind this checkout. Pending migrations: ' + changes
-                    + '. Ask the release administrator to deploy these migrations to this environment, '
-                    'then retry. Employee startup never applies migrations.')
+                    + '. Automatic startup can only run owner-approved development migrations. '
+                    'The owner must enable the approved migration function once or deploy this revision. '
+                    'Setup: infra/sql/development/enable_approved_startup_migrations.sql.')
         if self.state == 'uninitialized':
             return 'Database has no migration history. Ask the release administrator to review initial provisioning.'
         if self.state == 'multiple-code-heads':

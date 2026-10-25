@@ -48,11 +48,11 @@ or open its [interactive checklist](../docs/operations/database-release-checklis
 | File | Responsibility |
 | --- | --- |
 | [tools/deploy_database.py](tools/deploy_database.py) | Read-only migration planning by default; explicit authorized upgrades with target pins, session locking and schema verification. |
+| [tools/request_development_migration.py](tools/request_development_migration.py) | Employee startup requests a fixed owner-approved development migration without general DDL credentials. |
+| [sql/development/enable_approved_startup_migrations.sql](sql/development/enable_approved_startup_migrations.sql) | One-time owner installation of the development-only approved migration function. |
 | [tools/check_release_gate.py](tools/check_release_gate.py) | Verify the selected environment, exact-commit staging evidence and production approval protections. |
 | [tools/deploy_application.py](tools/deploy_application.py) | Send an exact commit SHA to the hosting adapter and wait for matching readiness. |
-| [tools/isolated_database.py](tools/isolated_database.py) | Optional private local PostgreSQL auto-migrations, separate from team testing. |
 | [tests/test_database_releases.py](tests/test_database_releases.py) | Release credential isolation, provenance, workflow ordering and hosting verification regressions. |
-| [tests/test_isolated_database.py](tests/test_isolated_database.py) | Owned loopback database and explicit startup-mode regressions. |
 
 ## Common development checks
 

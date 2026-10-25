@@ -11,9 +11,11 @@ The root `start.py` automates one-time setup and starts the whole project; see
 For shared development, use `python start.py` with personal restricted credentials.
 The separate [database release process](database-releases.md) applies shared
 migrations after approved merges to `develop`. Employees use the same development
-database for group/invitation tests; production is a separate target. For private
-local schema experiments, `python start.py --isolated` automatically migrates a
-checkout-owned PostgreSQL database.
+database for group/invitation tests; production is a separate target.
+
+For automatic shared startup, the owner can install the reviewed development-only
+function described in the release guide. `python start.py` then invokes only its
+fixed approved migration; employees never receive general DDL privileges.
 
 For an explicitly owned local database, authorized developers can run
 `alembic upgrade head` from `services/api`, then `python run.py`.

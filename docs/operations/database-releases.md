@@ -2,7 +2,8 @@
 
 Employees develop and test with restricted credentials. A separate release process
 changes shared database schemas. Production releases need the release administrator's
-approval after staging acceptance. Starting TripRaft never applies a migration.
+approval after staging acceptance. Employee startup can request a fixed,
+owner-approved development migration without receiving schema-owner credentials.
 
 Open [the interactive checklist](database-release-checklist.html) in a browser for a
 local planning aid. It does not connect to GitHub or a database, and checking a box
@@ -17,9 +18,10 @@ does not grant approval or deploy anything. GitHub records the actual approvals.
 4. Open a PR for changes. Include a new Alembic migration only when the schema
    changes. Never edit an already deployed migration or make shared schema edits
    directly in the Supabase dashboard.
-5. If startup reports pending migrations, send the sanitized revision list to the
-   release administrator. Wait for the approved development deployment or use an
-   isolated database for schema work. Do not change `alembic_version` manually.
+5. Startup automatically requests an approved development migration if needed.
+   If it still reports pending migrations, send the sanitized revision list to
+   the release administrator. The migration may need one-time function setup or
+   approval/deployment. Do not change `alembic_version` manually.
 
 Engineers may experiment with schemas in their own isolated databases. Their
 personal login to the shared development database still has no schema privileges.
@@ -33,6 +35,32 @@ migration code the separate deployment identity executes. Do not grant employees
 table ownership to bypass startup. Deleting individual permitted test records
 through CRUD is different from dropping a table or database.
 
+## Automatic migration on `python start.py`
+
+The owner/CTO runs [the one-time development setup SQL](../../infra/sql/development/enable_approved_startup_migrations.sql)
+in the **shared testing project's** Supabase SQL Editor. It creates a locked
+`tripraft_dev_ops` schema and a security-definer function callable by existing
+members of `tripraft_dev_runtime`. If personal logins do not inherit that role,
+the owner must review their membership separately; no role membership is granted
+by this script. Never install this development-only function in production.
+
+After this one-time setup, employees just run `python start.py`. Startup verifies
+the restricted login, reads the migration state and, when behind, requests the
+checkout's target revision from that function. The database owner has explicitly
+approved only the `b825c4202610` → `c62f718293a4` currency-column migration in its
+fixed body. It cannot execute caller SQL, accept table names, drop tables, delete
+rows or change an arbitrary version. The column and migration record change in
+one transaction under the shared release lock. A second employee start is a safe
+no-op. Startup then independently checks the resulting revision and the API checks
+actual schema parity before accepting traffic.
+
+Future migrations are normally reviewed and deployed automatically by the
+central `develop` workflow before employees pull that code. The startup function
+refuses unapproved target revisions; the owner can explicitly review and replace
+its fixed body for additional approved operations. This avoids giving employees
+general migration credentials. The one-time function installation itself requires
+an owner session: restricted credentials cannot create their own privilege bridge.
+
 ## Shared groups and testing between employees
 
 Use **one common development Supabase database** for the team, separate from the
@@ -43,8 +71,8 @@ test records. Invite two test users to the same group to exercise membership,
 expenses, invitations and other interactions. The app's normal authorization
 still applies: sharing a database does not expose every private group to everyone.
 
-Approved `develop` changes automatically migrate this common development database
-in CI. Employees pull the matching code and run `python start.py`; no migration
+Once CI releases are enabled, approved `develop` changes automatically migrate
+the common development database. Employees pull the matching code and run `python start.py`; no migration
 owner password is distributed to their machines. Development does not need an
 application hosting hook because the team runs the application locally. Separate
 local Socket.IO servers do not broadcast events to each other automatically;
@@ -52,17 +80,6 @@ refresh/refetch reads the common records. To test live updates between machines,
 use one shared hosted development API or a separately configured shared Redis
 message queue and validate that setup. Database sharing alone does not provide
 cross-process WebSocket delivery.
-
-For optional private schema experiments, `python start.py --isolated` creates a
-checkout-owned local PostgreSQL database and auto-migrates it on each invocation.
-It never uses Supabase credentials, edits `.env` or copies real accounts. Local
-PostgreSQL tools (`initdb` and `pg_ctl`) must be installed/on PATH; the launcher
-also recognizes `.tripraft/tools/postgresql/bin`. Its data and private settings
-persist under ignored `.tripraft/isolated-development`. The app gets a separate
-local CRUD login; the local migration owner is used only by the helper. Stop the
-app before switching modes. `python start.py --stop --isolated` also stops the
-owned local database after a terminal crash. Records in this optional local
-database are not shared with teammates and are not the main team workflow.
 
 ## What runs automatically
 
@@ -202,21 +219,6 @@ database privileges and access to release credentials enforce the authority.
 The environment argument labels the operation; independent target pins and
 correctly scoped GitHub environment secrets determine the actual database.
 
-## Current currency-column mismatch
-
-If code is at `c62f718293a4` and the database is at `b825c4202610`, the pending
-migration adds nullable `users.personal_display_currency`. It leaves existing
-rows and their `default_currency` values in place. Test and apply it through the
-appropriate environment's release process. No version stamping is needed.
-
-If the owner uses Supabase's signed-in SQL Editor instead of local migration
-credentials, run the reviewed [guarded development SQL](../../infra/sql/development/c62f718293a4_personal_display_currency.sql)
-in the **shared testing project**. It checks the starting revision, adds the actual
-column and updates migration history in one transaction. It is safe to rerun
-after success and refuses an unexpected history or inconsistent column. This is
-a one-time owner migration; the CI workflow handles subsequent approved releases
-once valid migration credentials are configured. Retry `python start.py` afterward.
-
 ## Failure and recovery
 
 If verification or approval fails, migration/deployment does not start. If a
@@ -243,3 +245,4 @@ driver SQL/parameters. Debug privately; do not paste `.env` contents into a PR.
 - [GitHub environments and deployment protections](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments)
 - [Alembic shared migration connections](https://alembic.sqlalchemy.org/en/latest/cookbook.html#sharing-a-connection-across-one-or-more-programmatic-migration-commands)
 - [PostgreSQL advisory locks](https://www.postgresql.org/docs/current/explicit-locking.html#ADVISORY-LOCKS)
+- [PostgreSQL ownership and privileges](https://www.postgresql.org/docs/17/ddl-priv.html)

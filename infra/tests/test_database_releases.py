@@ -12,6 +12,7 @@ import yaml
 from infra.tools import check_release_gate as gate
 from infra.tools import deploy_application as application
 from infra.tools import deploy_database as database
+from infra.tools import request_development_migration as requester
 
 sys.path.insert(0, str(database.API))
 from schema_status import schema_status  # noqa: E402
@@ -20,6 +21,28 @@ SHA = 'a' * 40
 
 
 class DatabaseReleaseTests(unittest.TestCase):
+    def scripts(self):
+        config = Config()
+        config.set_main_option('script_location', str(database.API / 'migrations'))
+        return ScriptDirectory.from_config(config)
+
+    def test_current_shared_database_never_invokes_a_migration(self):
+        connection = mock.MagicMock()
+        with mock.patch.object(requester.MigrationContext, 'configure') as context:
+            context.return_value.get_current_heads.return_value = self.scripts().get_heads()
+            self.assertTrue(requester.request_migration(connection, self.scripts()))
+        connection.execute.assert_not_called()
+
+    def test_missing_owner_approval_only_reads_metadata(self):
+        connection = mock.MagicMock()
+        connection.execute.return_value.scalar_one.return_value = None
+        with mock.patch.object(requester.MigrationContext, 'configure') as context:
+            context.return_value.get_current_heads.return_value = ['b825c4202610']
+            self.assertFalse(requester.request_migration(connection, self.scripts()))
+        statements = [str(call.args[0]) for call in connection.execute.call_args_list]
+        self.assertTrue(all(statement.lstrip().startswith('SELECT') for statement in statements))
+        connection.begin.assert_not_called()
+
     def test_graph_reports_real_pending_migration(self):
         config = Config()
         config.set_main_option('script_location', str(database.API / 'migrations'))

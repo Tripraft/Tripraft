@@ -8,9 +8,10 @@ from alembic import command
 import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import make_url
+from sqlalchemy.exc import DBAPIError
 
 
-@pytest.mark.parametrize('apply_method', ['runner', 'sql_editor'])
+@pytest.mark.parametrize('apply_method', ['runner', 'approved_startup'])
 def test_release_lock_and_upgrade_on_postgresql(monkeypatch, apply_method):
     raw = os.environ.get('EMPLOYEE_TEST_POSTGRES_URL', '')
     if not raw:
@@ -47,15 +48,38 @@ def test_release_lock_and_upgrade_on_postgresql(monkeypatch, apply_method):
         runner.deploy({}, 'development', apply=False)
         with engine.connect() as connection:
             assert connection.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == 'b825c4202610'
-        if apply_method == 'sql_editor':
-            migration_sql = (root / 'infra/sql/development/c62f718293a4_personal_display_currency.sql').read_text()
+        if apply_method == 'approved_startup':
+            with engine.begin() as connection:
+                if not connection.execute(text("SELECT 1 FROM pg_roles WHERE rolname='tripraft_dev_runtime'")).scalar():
+                    connection.execute(text('CREATE ROLE tripraft_dev_runtime NOLOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS'))
+                connection.execute(text('GRANT SELECT ON public.alembic_version TO tripraft_dev_runtime'))
             raw_connection = engine.raw_connection()
             try:
                 with raw_connection.cursor() as cursor:
-                    cursor.execute(migration_sql)
-                    cursor.execute(migration_sql)  # Safe no-op after the first successful application.
+                    cursor.execute((root / 'infra/sql/development/enable_approved_startup_migrations.sql').read_text())
             finally:
                 raw_connection.close()
+            request_spec = importlib.util.spec_from_file_location('dev_migration_request', root / 'infra/tools/request_development_migration.py')
+            requester = importlib.util.module_from_spec(request_spec)
+            request_spec.loader.exec_module(requester)
+            from alembic.script import ScriptDirectory
+            with engine.connect() as restricted:
+                restricted.execute(text('SET ROLE tripraft_dev_runtime'))
+                restricted.commit()
+                for statement in ('ALTER TABLE public.users ADD COLUMN forbidden_test integer',
+                                  'DROP TABLE public.users',
+                                  "UPDATE public.alembic_version SET version_num='fake'"):
+                    with pytest.raises(DBAPIError) as failure:
+                        restricted.execute(text(statement))
+                    assert failure.value.orig.pgcode == '42501'
+                    restricted.rollback()
+                with pytest.raises(DBAPIError):
+                    restricted.execute(text("SELECT tripraft_dev_ops.apply_approved_migration('unapproved; DROP TABLE public.users')"))
+                restricted.rollback()
+                restricted.execute(text('SET TRANSACTION READ ONLY'))
+                assert requester.request_migration(restricted, ScriptDirectory.from_config(runner.migration_config()))
+                restricted.execute(text('RESET ROLE'))
+                restricted.commit()
         else:
             runner.deploy({}, 'development', apply=True)
         runner.deploy({}, 'development', apply=True)

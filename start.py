@@ -5,9 +5,9 @@
 Usage: python start.py [--setup | --check | --check-database | --smoke | --stop] [--no-browser]
 Requires Node >=22 and Python 3.11. Native mode uses personal Supabase dev credentials.
 Starting reuses healthy owned services and refuses unrelated occupied ports.
-Shared startup never runs migrations. --isolated auto-migrates a private local PostgreSQL database.
+Shared startup can request a fixed owner-approved development migration without DDL credentials.
 Windows native services also stop when the launcher window closes.
-Existing configuration and data are preserved; private local development is optional.
+Existing configuration and data are preserved.
 """
 import argparse
 import ctypes
@@ -370,7 +370,7 @@ def _running_state():
     return {}
 
 
-def save_running_pids(pids, *, ports=None, docker=False, database_mode='shared'):
+def save_running_pids(pids, *, ports=None, docker=False):
     """Persist creation identities, not just PIDs, for safe later recovery."""
     records = []
     for pid in pids:
@@ -378,8 +378,7 @@ def save_running_pids(pids, *, ports=None, docker=False, database_mode='shared')
         if identity:
             records.append({'pid': pid, 'created': identity})
     state = {'version': 2, 'workspace': str(ROOT.resolve()), 'owner_pid': os.getpid(),
-             'processes': records, 'ports': ports or [5000, 5173, 5174], 'docker': docker,
-             'database_mode': database_mode}
+             'processes': records, 'ports': ports or [5000, 5173, 5174], 'docker': docker}
     LOCAL.mkdir(parents=True, exist_ok=True)
     temporary = pid_file().with_suffix(f'.{os.getpid()}.tmp')
     temporary.write_text(json.dumps(state, indent=2), encoding='utf-8')
@@ -548,10 +547,8 @@ def stop_child(process):
             pass
 
 
-def start(node, docker, smoke, no_browser, isolated=False):
+def start(node, docker, smoke, no_browser):
     if not docker and native_services_ready():
-        if _running_state().get('database_mode', 'shared') != ('isolated' if isolated else 'shared'):
-            raise RuntimeError('TripRaft is running with a different database mode. Run python start.py --stop before switching.')
         print('TripRaft is already running. Web: http://127.0.0.1:5173 | Partners: http://127.0.0.1:5173/partners', flush=True)
         print('Reusing healthy services; their existing launcher keeps live updates running.', flush=True)
         if not no_browser and not smoke:
@@ -582,7 +579,7 @@ def start(node, docker, smoke, no_browser, isolated=False):
         process.tripraft_service = name
         processes.append(process)
         save_running_pids([p.pid for p in processes if getattr(p, 'pid', None) and isinstance(p.pid, int)],
-                          ports=managed_ports, docker=docker, database_mode='isolated' if isolated else 'shared')
+                          ports=managed_ports, docker=docker)
         return process
 
     previous_signals = {}
@@ -605,10 +602,7 @@ def start(node, docker, smoke, no_browser, isolated=False):
             wait_ready('http://127.0.0.1:5000/api/health/live', None)
         else:
             env.update({'FLASK_HOST': '127.0.0.1', 'FLASK_PORT': '5000', 'TRIPRAFT_DEV_RELOAD': '1'})
-            api_command = [str(venv_python()), str(API / 'run.py')]
-            if isolated:
-                api_command = [str(venv_python()), str(ROOT / 'infra/tools/isolated_database.py'), 'run', *api_command]
-            api_process = launch('api', api_command, API)
+            api_process = launch('api', [str(venv_python()), str(API / 'run.py')], API)
             wait_ready('http://127.0.0.1:5000/api/health/live', api_process)
         for name, port in [('web', 5173), ('admin', 5174)]:
             app = ROOT / 'apps' / name
@@ -620,8 +614,6 @@ def start(node, docker, smoke, no_browser, isolated=False):
             time.sleep(.25)
         print('TripRaft is ready. Web: http://127.0.0.1:5173 | Admin: http://127.0.0.1:5174 | API: http://127.0.0.1:5000', flush=True)
         print('Frontend live updates are enabled. Native API Python edits reload automatically.', flush=True)
-        if isolated:
-            print('Database: private local PostgreSQL. Run this command again after pulling schema changes to auto-migrate.', flush=True)
         print(('Press Ctrl+C to stop.' if docker else 'Press Ctrl+C or close this launcher to stop.')
               + ' Logs: .tripraft/logs', flush=True)
         if smoke:
@@ -694,17 +686,11 @@ def main():
     parser.add_argument('--preview-env', help='Backend environment file for schema checks')
     parser.add_argument('--preview-python', help='Python executable for schema checks')
     parser.add_argument('--no-browser', action='store_true', help='Keep the browser closed')
-    parser.add_argument('--isolated', action='store_true', help='Auto-migrate a private local PostgreSQL development database; never connect to Supabase')
     args = parser.parse_args()
-    if args.isolated and (args.check_database or args.sync_preview or args.docker):
-        raise RuntimeError('--isolated cannot be combined with shared credential checks, preview synchronization or Docker mode.')
     if args.docker:
         raise RuntimeError('Docker mode is disabled for the shared-development workflow. Use native startup with restricted personal credentials. Database provisioning and migrations use the separate release process.')
     if args.stop:
-        isolated_session = args.isolated or _running_state().get('database_mode') == 'isolated'
         stop_existing(args.docker)
-        if isolated_session:
-            run([str(venv_python()), str(ROOT / 'infra/tools/isolated_database.py'), 'stop'], env=child_env())
         return
     if args.sync_preview:
         if os.name != 'nt':
@@ -746,22 +732,12 @@ def main():
         return
     setup(node, args.docker, force=args.setup)
     if not args.setup:
-        if args.isolated:
-            reuse_isolated = native_services_ready()
-            if reuse_isolated and _running_state().get('database_mode', 'shared') != 'isolated':
-                raise RuntimeError('TripRaft is running with a different database mode. Run python start.py --stop before switching.')
-            helper = ROOT / 'infra/tools/isolated_database.py'
-            run([str(venv_python()), str(helper), 'prepare'], env=child_env())
-            if reuse_isolated:
-                start(node, False, args.smoke, args.no_browser, isolated=True)
-                return
-            try:
-                start(node, False, args.smoke, args.no_browser, isolated=True)
-            finally:
-                run([str(venv_python()), str(helper), 'stop'], env=child_env())
-            return
         # Verify the personal development connection.
         run([str(venv_python()), str(ROOT / 'start.py'), '--check-database'], env=child_env())
+
+        # Employees may invoke a narrowly scoped function installed once by the
+        # shared-development owner. It cannot execute arbitrary migration code.
+        run([str(venv_python()), str(ROOT / 'infra/tools/request_development_migration.py')], env=child_env())
 
         # Check this checkout's schema version before starting.
         checker = ROOT / 'infra/tools/team_sync/check-team-preview-schema.py'
