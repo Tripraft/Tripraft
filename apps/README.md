@@ -325,6 +325,8 @@ The following tables contain one entry for each of the 300 application files. Fo
 | [web/src/hooks/useGroupPlannerQuery.js](web/src/hooks/useGroupPlannerQuery.js) | Defines planner query keys and hooks for groups, destination viewports, places, polls, members, expenses, checklists, vault files and activities. | `web/hooks` |
 | [web/src/hooks/useGroupSocket.js](web/src/hooks/useGroupSocket.js) | Subscribes to authenticated group collaboration/presence events and forwards handlers for places, polls, checklists, itineraries and membership. | `web/hooks` |
 | [web/src/hooks/useMoneyDisplay.js](web/src/hooks/useMoneyDisplay.js) | Formats amounts in a chosen display currency using the exchange-rate hook while leaving stored amounts and calculation units unchanged. | `web/hooks` |
+| [web/src/hooks/usePersonalCurrency.js](web/src/hooks/usePersonalCurrency.js) | Loads and saves the user's explicit dashboard currency choice on their account. | `web/hooks` |
+| [web/src/hooks/usePersonalDashboard.js](web/src/hooks/usePersonalDashboard.js) | Converts personal transactions into one dashboard currency without changing saved records. | `web/hooks` |
 | [web/src/hooks/useNotesAutoSave.js](web/src/hooks/useNotesAutoSave.js) | Saves and clears a group-scoped notes draft in localStorage; it does not send notes to the server. | `web/hooks` |
 | [web/src/hooks/usePlaceSearchQuery.js](web/src/hooks/usePlaceSearchQuery.js) | Provides cached React Query reads for place search, details and catalog statistics. | `web/hooks` |
 | [web/src/hooks/useTripPlannerQuery.js](web/src/hooks/useTripPlannerQuery.js) | Provides city-search/list and pacing queries plus the generated-trip mutation through tripPlannerService. | `web/hooks` |
@@ -424,6 +426,8 @@ The following tables contain one entry for each of the 300 application files. Fo
 | [web/src/__tests__/openFreeMap.test.js](web/src/__tests__/openFreeMap.test.js) | Verifies safe provider style expressions, key-free OpenFreeMap attribution, zero/missing coordinates and date-line marker wrapping. | `web/tests` |
 | [web/src/__tests__/ownerAndInactivity.test.jsx](web/src/__tests__/ownerAndInactivity.test.jsx) | Verifies UUID owner controls and actual personal share, and tests the optional idle tracker's warning/activity reset in isolation. | `web/tests` |
 | [web/src/__tests__/p3Behavior.test.jsx](web/src/__tests__/p3Behavior.test.jsx) | Verifies safe date/file formatting, Crew question transitions, long-trip day lists and map viewport, theme and calendar-day behavior. | `web/tests` |
+| [web/src/__tests__/personalCurrency.test.jsx](web/src/__tests__/personalCurrency.test.jsx) | Verifies account-backed currency persistence, save failures and user isolation. | `web/tests` |
+| [web/src/__tests__/personalDashboard.test.jsx](web/src/__tests__/personalDashboard.test.jsx) | Verifies mixed-currency personal totals, original records, failed rates and stale response isolation. | `web/tests` |
 | [web/src/__tests__/plannerHeader.test.jsx](web/src/__tests__/plannerHeader.test.jsx) | Verifies group count and plain current title, with a return-to-cards group-selection action. | `web/tests` |
 | [web/src/__tests__/pollFeed.test.jsx](web/src/__tests__/pollFeed.test.jsx) | Verifies unique voters, option-index vote payloads, creator-only deletion and member-name resolution from UUIDs. | `web/tests` |
 | [web/src/__tests__/routes.test.jsx](web/src/__tests__/routes.test.jsx) | Verifies invitation route dispatch and administrator access/unavailable analytics behavior without absent-endpoint calls. | `web/tests` |

@@ -31,6 +31,12 @@ class UserUpdateRequest(BaseModel):
     phone: Optional[str] = Field(None, max_length=20)
     photo_url: Optional[str] = None
     default_currency: Optional[str] = Field(None, min_length=3, max_length=3)
+    personal_display_currency: Optional[str] = Field(None, pattern=r'^[A-Z]{3}$')
+
+    @field_validator('personal_display_currency', mode='before')
+    @classmethod
+    def normalize_personal_currency(cls, value):
+        return value.strip().upper() if isinstance(value, str) else value
 
 
 class PasswordChangeRequest(BaseModel):
@@ -52,6 +58,7 @@ class UserResponse(BaseModel):
     photo_url: Optional[str] = None
     phone: Optional[str] = None
     default_currency: str = Config.DEFAULT_CURRENCY
+    personal_display_currency: Optional[str] = None
     is_active: bool = True
     email_verified: bool = False
     created_at: Optional[datetime] = None

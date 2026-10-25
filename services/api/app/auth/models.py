@@ -30,6 +30,8 @@ class User(Base):
     photo_url = Column(Text)
     phone = Column(String(20))
     default_currency = Column(String(3), default='USD')
+    # Null means the user has not chosen a personal dashboard currency yet.
+    personal_display_currency = Column(String(3), nullable=True)
     is_active = Column(Boolean, default=True)
     email_verified = Column(Boolean, default=False)
     portal_kind = Column(String(16), nullable=False, default='traveler', server_default='traveler')
@@ -84,6 +86,7 @@ class User(Base):
             'photo_url': self.photo_url,
             'phone': self.phone,
             'default_currency': self.default_currency,
+            'personal_display_currency': self.personal_display_currency,
             'is_active': self.is_active,
             # Derived server-side from ADMIN_EMAILS. The client needs it to
             # decide what to show; it is not the gate. Admin routes are

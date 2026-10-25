@@ -1,11 +1,12 @@
 // Purpose: Verifies exact group URLs, browser back, selected-group restoration, dashboard/empty states and navigation after group creation or invitation acceptance.
-jest.mock('../services/currencyApi', () => ({getCurrencies: jest.fn().mockResolvedValue({currencies: [{code: 'USD', name: 'US Dollar'}, {code: 'INR', name: 'Indian Rupee'}]})}));
+jest.mock('../services/currencyApi', () => ({getCurrencies: jest.fn().mockResolvedValue({currencies: [{code: 'USD', name: 'US Dollar'}, {code: 'INR', name: 'Indian Rupee'}]}), getExchangeRate: jest.fn(async (base, quote) => ({base, quote, rate: base === 'USD' ? 80 : 0.0125}))}));
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import ExpenseManager from '../features/expenses/jsx/ExpenseManager';
 jest.mock('../hooks/useExpenseLiveUpdates', () => ({ __esModule: true, default: jest.fn() }));
 import expenseApi from '../services/expenseApi';
+import {generateExpensePDF} from '../services/pdfExportService';
 import { useAuth, useGroups, useGroupDetail, useInvitations, usePersonalExpenses } from '../hooks/useExpenseQuery';
 
 jest.mock('../hooks/useExpenseQuery', () => ({
@@ -13,7 +14,7 @@ jest.mock('../hooks/useExpenseQuery', () => ({
   useInvitations: jest.fn(), usePersonalExpenses: jest.fn(),
 }));
 jest.mock('../services/expenseApi', () => ({ __esModule: true, default: {
-  createGroup: jest.fn(), acceptInvitation: jest.fn(),
+  createGroup: jest.fn(), acceptInvitation: jest.fn(), createExpense: jest.fn(), getUser: jest.fn(), updateUser: jest.fn(),
 } }));
 jest.mock('../services/pdfExportService', () => ({ generateExpensePDF: jest.fn() }));
 jest.mock('../features/expenses/jsx/GroupManager', () => function Group(props) {
@@ -25,14 +26,19 @@ jest.mock('../features/expenses/jsx/GroupManager', () => function Group(props) {
 jest.mock('../features/expenses/jsx/ModeToggle', () => function Toggle(props) {
   return <button onClick={props.onToggle}>Mode: {props.mode}</button>;
 });
-jest.mock('../features/expenses/jsx/PersonalTabbedView', () => () => <p>Personal expenses</p>);
+jest.mock('../features/expenses/jsx/PersonalTabbedView', () => function Personal(props) {
+  return <><p>Personal expenses</p>{props.transactions.map(row => <button key={row.id} onClick={() => props.onEdit(row)}>{row.description}: {row.amount} {row.currency}</button>)}<button onClick={props.onExportPDF}>Export personal PDF</button></>;
+});
 jest.mock('../features/expenses/jsx/TabbedGroupView', () => function GroupView(props) {
   const ActualView = jest.requireActual('../features/expenses/jsx/TabbedGroupView').default;
   return <><p>Group expenses: {props.group.id}</p><ActualView {...props} /></>;
 });
 jest.mock('../features/expenses/jsx/ExpenseSummary', () => () => null);
 jest.mock('../features/expenses/jsx/SettlementHistoryModal', () => () => null);
-jest.mock('../features/expenses/jsx/TransactionModal', () => () => null);
+jest.mock('../features/expenses/jsx/TransactionModal', () => function Modal(props) {
+  return <div role="dialog" aria-label="Transaction">{props.editingTransaction && <p>Editing original: {props.editingTransaction.amount} {props.editingTransaction.currency}</p>}
+    <button onClick={() => props.onSave({description: 'INR dinner', amount: 8000, currency: 'INR', category: 'Food'})}>Save INR transaction</button></div>;
+});
 
 const groups = [{ id: 'first-group', name: 'First trip' }, { id: 'joined-group', name: 'Joined trip' }];
 let auth;
@@ -58,6 +64,8 @@ beforeEach(() => {
   usePersonalExpenses.mockReturnValue({ expenses: [], refetch: jest.fn() });
   expenseApi.createGroup.mockResolvedValue({ success: true, data: { group: { id: 'new-group' }, groups } });
   expenseApi.acceptInvitation.mockResolvedValue({ success: true, data: { group: { id: 'joined-group' }, groups } });
+  expenseApi.getUser.mockResolvedValue({success: true, data: {user: {personal_display_currency: 'USD'}}});
+  expenseApi.updateUser.mockImplementation(async updates => ({success: true, data: {user: updates}}));
 });
 
 it('opens the exact invitation group without selecting the first group or personal expenses', () => {
@@ -143,4 +151,65 @@ it('preserves a legacy group query when adding the canonical path', async () => 
   render(<Page entry="/expenses?view=group&groupId=joined-group" />);
   expect(await screen.findByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
   expect(screen.getByText('Group expenses: joined-group')).toBeInTheDocument();
+});
+
+it('keeps old and new currencies together after saving, exports converted values and edits originals', async () => {
+  let expenses = [{id: 'usd', description: 'USD dinner', amount: 100, currency: 'USD'}];
+  const refetch = jest.fn(async () => { expenses = [...expenses, {id: 'inr', description: 'INR dinner', amount: 8000, currency: 'INR'}]; });
+  usePersonalExpenses.mockImplementation(() => ({expenses, refetch}));
+  expenseApi.createExpense.mockResolvedValue({success: true});
+  render(<Page entry="/expenses/friend-uuid/personal" />);
+  await screen.findByLabelText('Show all transactions in');
+  expect(screen.queryByLabelText('Personal ledger currency')).toBeNull();
+  expect(screen.queryByLabelText('Convert to currency')).toBeNull();
+  fireEvent.click(screen.getByRole('button', {name: 'Add Transaction'}));
+  fireEvent.click(screen.getByRole('button', {name: 'Save INR transaction'}));
+  expect(await screen.findByRole('button', {name: 'INR dinner: 100 USD'})).toBeInTheDocument();
+  expect(screen.getByRole('button', {name: 'USD dinner: 100 USD'})).toBeInTheDocument();
+  expect(expenseApi.createExpense).toHaveBeenCalledWith(expect.objectContaining({amount: 8000, currency: 'INR'}));
+  fireEvent.click(screen.getByRole('button', {name: 'Export personal PDF'}));
+  expect(generateExpensePDF).toHaveBeenCalledWith(expect.objectContaining({currency: 'USD', expenses: [expect.objectContaining({id: 'usd', amount: 100}), expect.objectContaining({id: 'inr', amount: 100})]}));
+  fireEvent.click(screen.getByRole('button', {name: 'INR dinner: 100 USD'}));
+  expect(screen.getByText('Editing original: 8000 INR')).toBeInTheDocument();
+});
+
+it('asks for a first currency choice and converts the same history after subsequent dropdown changes', async () => {
+  expenseApi.getUser.mockResolvedValue({success: true, data: {user: {personal_display_currency: null}}});
+  usePersonalExpenses.mockReturnValue({expenses: [{id: 'usd', description: 'USD dinner', amount: 100, currency: 'USD'}, {id: 'inr', description: 'INR dinner', amount: 8000, currency: 'INR'}]});
+  render(<Page entry="/expenses/friend-uuid/personal" />);
+  expect(await screen.findByRole('heading', {name: 'Choose your dashboard currency'})).toBeInTheDocument();
+  const select = screen.getByLabelText('Show all transactions in');
+  expect(select).toHaveValue('');
+  fireEvent.change(select, {target: {value: 'INR'}});
+  expect(await screen.findByRole('button', {name: 'USD dinner: 8000 INR'})).toBeInTheDocument();
+  expect(screen.getByRole('button', {name: 'INR dinner: 8000 INR'})).toBeInTheDocument();
+  expect(screen.queryByRole('heading', {name: 'Choose your dashboard currency'})).toBeNull();
+  expect(expenseApi.updateUser).toHaveBeenLastCalledWith({personal_display_currency: 'INR'});
+  fireEvent.change(select, {target: {value: 'USD'}});
+  expect(await screen.findByRole('button', {name: 'INR dinner: 100 USD'})).toBeInTheDocument();
+  expect(screen.getByRole('button', {name: 'USD dinner: 100 USD'})).toBeInTheDocument();
+  expect(expenseApi.updateUser).toHaveBeenLastCalledWith({personal_display_currency: 'USD'});
+});
+
+it('shows a floating add action only after scrolling above the original CTA, and opens its form', () => {
+  const original = global.IntersectionObserver;
+  let observe;
+  const disconnect = jest.fn();
+  global.IntersectionObserver = jest.fn(callback => { observe = callback; return {observe: jest.fn(), disconnect}; });
+  try {
+    const view = render(<Page entry="/expenses/friend-uuid/personal" />);
+    expect(screen.getAllByRole('button', {name: 'Add Transaction'})).toHaveLength(1);
+    act(() => observe([{boundingClientRect: {top: 10, bottom: 60}}]));
+    expect(screen.getAllByRole('button', {name: 'Add Transaction'})).toHaveLength(1);
+    act(() => observe([{boundingClientRect: {top: -60, bottom: -10}}]));
+    expect(screen.getAllByRole('button', {name: 'Add Transaction'})).toHaveLength(2);
+    act(() => observe([{boundingClientRect: {top: 10, bottom: 60}}]));
+    expect(screen.getAllByRole('button', {name: 'Add Transaction'})).toHaveLength(1);
+    act(() => observe([{boundingClientRect: {top: -60, bottom: -10}}]));
+    fireEvent.click(screen.getAllByRole('button', {name: 'Add Transaction'})[1]);
+    expect(screen.getByRole('dialog', {name: 'Transaction'})).toBeInTheDocument();
+    expect(screen.getAllByRole('button', {name: 'Add Transaction'})).toHaveLength(1);
+    view.unmount();
+    expect(disconnect).toHaveBeenCalled();
+  } finally { global.IntersectionObserver = original; }
 });

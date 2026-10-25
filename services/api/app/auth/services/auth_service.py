@@ -513,7 +513,8 @@ class AuthService:
         display_name: Optional[str] = None,
         phone: Optional[str] = None,
         photo_url: Optional[str] = None,
-        default_currency: Optional[str] = None
+        default_currency: Optional[str] = None,
+        personal_display_currency: Optional[str] = None
     ) -> Tuple[bool, Dict[str, Any]]:
         """Update user profile."""
         try:
@@ -527,6 +528,8 @@ class AuthService:
                 kwargs['photo_url'] = photo_url
             if default_currency is not None:
                 kwargs['default_currency'] = default_currency.upper()
+            if personal_display_currency is not None:
+                kwargs['personal_display_currency'] = personal_display_currency.strip().upper()
             user_data = user_service.update_profile(user_id, **kwargs)
             return True, {'user': user_data}
         except Exception as e:

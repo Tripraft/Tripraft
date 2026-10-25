@@ -70,6 +70,30 @@ it('keeps an existing personal expense currency fixed when editing', async () =>
   expect(screen.getByLabelText('Currency')).toHaveValue('INR');
 });
 
+it.each(['expense', 'income'])('locks the form, animates saving and prevents duplicate %s submissions', async type => {
+  let reject;
+  const save = jest.fn().mockReturnValue(new Promise((resolve, fail) => {reject = fail;}));
+  const alert = jest.fn(), close = jest.fn();
+  render(<TransactionModal mode="personal" currency="USD" currentUser={{uid:'user'}} onSave={save} onClose={close} onAlert={alert}/>);
+  if (type === 'income') fireEvent.click(screen.getByRole('radio', {name: 'Income'}));
+  fireEvent.change(screen.getByLabelText('Description'), {target: {value: 'Payment'}});
+  fireEvent.change(screen.getByLabelText('Amount'), {target: {value: '100'}});
+  const form = screen.getByLabelText('Amount').closest('form');
+  fireEvent.submit(form);
+  fireEvent.submit(form);
+  expect(save).toHaveBeenCalledTimes(1);
+  expect(form).toHaveAttribute('aria-busy', 'true');
+  expect(screen.getByRole('status')).toHaveTextContent('Saving...');
+  expect(form.querySelector('.spinning')).toBeInTheDocument();
+  for (const field of form.querySelectorAll('input, select, button')) expect(field).toBeDisabled();
+  fireEvent.keyDown(document, {key: 'Escape'});
+  expect(close).not.toHaveBeenCalled();
+  await act(async () => reject(new Error('Please retry')));
+  expect(alert).toHaveBeenCalledWith('Please retry');
+  expect(screen.getByLabelText('Description')).toBeEnabled();
+  expect(screen.getByLabelText('Amount')).toHaveValue(100);
+});
+
 it('lets the user swap the calculator pair while keeping group totals in their saved currency', async () => {
   getExchangeRate.mockImplementation(async (from, to) => ({...rate, base: from, quote: to, rate: from === 'INR' ? 1 / 96 : 96}));
   render(<CurrencyConversion base="USD" amounts={amounts}/>);
