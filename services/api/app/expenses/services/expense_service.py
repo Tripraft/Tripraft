@@ -1024,14 +1024,16 @@ class ExpenseServiceSQL:
     @staticmethod
     def delete_expense(
         expense_id: str, user_id: str, expected_group_id: Optional[str] = None,
+        *, permanent: bool = False,
     ) -> Tuple[bool, Dict[str, Any]]:
         """
-        Delete an expense (soft delete) - personal or group
+        Soft-delete an expense, or explicitly remove a previously deleted one.
         
         Args:
             expense_id: Expense ID
             user_id: Requesting user ID
             expected_group_id: Optional ledger scope for a linked-trip action
+            permanent: Remove the deleted expense, splits and history permanently
             
         Returns:
             Tuple of (success, message/error)
@@ -1042,8 +1044,8 @@ class ExpenseServiceSQL:
             with get_db_session() as session:
                 expense = lock_money_record(session, Expense, expense_id)
                 
-                if not expense or expense.is_deleted:
-                    return False, {'error': 'Expense not found'}
+                if not expense:
+                    return False, {'error': 'Expense not found', 'status_code': 404}
 
                 # Validate the confirmed ledger scope while holding the money
                 # lock, before permissions, balances or deletion are changed.
@@ -1054,7 +1056,7 @@ class ExpenseServiceSQL:
                 if expense.group_id is None:
                     # Personal expense - only creator can delete
                     if expense.created_by != user_id:
-                        return False, {'error': 'You can only delete your own personal expenses'}
+                        return False, {'error': 'You can only delete your own personal expenses', 'status_code': 403}
                 else:
                     group, member = access(session, expense.group_id, user_id)
                     require_contributor(member)
@@ -1064,6 +1066,19 @@ class ExpenseServiceSQL:
                     
                     if not is_group_owner and not is_expense_creator:
                         return False, {'error': 'You can only delete expenses you created', 'status_code': 403}
+
+                # Permanent removal is explicit: retrying a soft delete must
+                # never erase a recoverable transaction or reverse money twice.
+                if permanent:
+                    if not expense.is_deleted:
+                        return False, {'error': 'Delete the expense before permanently removing it', 'status_code': 409}
+                    session.delete(expense)
+                    session.commit()
+                    return True, {'message': 'Transaction permanently deleted', 'permanently_deleted': True}
+                if expense.is_deleted:
+                    return True, {'message': 'Expense already deleted'}
+
+                if expense.group_id is not None:
                     
                     # Reverse balances for group expenses
                     old_splits = session.query(ExpenseSplit).filter(

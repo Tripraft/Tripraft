@@ -468,23 +468,25 @@ const ExpenseManager = () => {
     setShowTransactionModal(true);
   };
 
-  const handleDeleteTransaction = async (id) => {
+  const handleDeleteTransaction = async (id, { permanent = false } = {}) => {
     try {
       if (id && id.toString().startsWith('temp-')) return;
       
       setMutationLoading(true);
       showToast('Deleting transaction...', 'info');
       
-      if (mode === 'personal') {
+      if (mode === 'personal' && !permanent) {
         markPersonalAsDeleted(id);
       }
       
-      const result = unwrapEnvelope(await expenseApi.deleteExpense(id));
+      const result = unwrapEnvelope(await expenseApi.deleteExpense(id, { permanent }));
       
       // INSTANT UPDATE: Use returned data if available
       if (mode === 'group' && (result?.expenses || result?.group_balances)) {
-        updateExpensesAndBalances(activeGroupExpenses.map(item => (item.id || item.expense_id) === id
-          ? { ...item, is_deleted: true } : item), result.group_balances);
+        const expenses = permanent
+          ? activeGroupExpenses.filter(item => (item.id || item.expense_id) !== id)
+          : activeGroupExpenses.map(item => (item.id || item.expense_id) === id ? { ...item, is_deleted: true } : item);
+        updateExpensesAndBalances(expenses, result.group_balances);
         await refetchGroupDetail();
       } else if (mode === 'personal') {
         await refetchPersonalExpenses();
@@ -492,12 +494,13 @@ const ExpenseManager = () => {
         await refetchGroupDetail();
       }
       
-      showToast('Transaction deleted!', 'success');
+      showToast(permanent ? 'Transaction permanently deleted.' : 'Transaction deleted!', 'success');
     } catch (error) {
-      if (mode === 'personal') {
+      if (mode === 'personal' && !permanent) {
         rollbackPersonalDelete(id);
       }
       showToast(`Failed to delete: ${error.message}`, 'error');
+      if (permanent) throw error;
     } finally {
       setMutationLoading(false);
     }

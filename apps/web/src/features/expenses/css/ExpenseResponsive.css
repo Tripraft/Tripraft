@@ -71,6 +71,9 @@
 .expense-activity-item.is-deleted .expense-activity-title strong { text-decoration: line-through; color: #9ca3af; }
 .expense-revert-button { display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; padding: 6px 8px; min-height: 34px; border: 1px solid #c4b5fd; border-radius: 8px; background: #fff; color: #7c3aed; font: inherit; font-size: 11px; cursor: pointer; }
 .expense-revert-button:disabled { opacity: .6; cursor: wait; }
+.expense-deleted-actions { display: inline-flex; align-items: center; gap: 6px; }
+.expense-deleted-actions > button { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; min-height: 34px; }
+.expense-deleted-actions > button:disabled { opacity: .6; cursor: wait; }
 .expense-manager .transaction-deleted { opacity: 1; background: #f3f4f6 !important; box-shadow: inset 0 0 0 1px #e5e7eb; }
 .expense-manager .transaction-deleted:hover { background: #e5e7eb !important; }
 .expense-manager .transaction-deleted .deleted-badge, .expense-activity-item.is-deleted .deleted-badge { background: #e5e7eb; color: #6b7280; }

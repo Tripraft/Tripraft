@@ -44,6 +44,10 @@
 .expense-dialog-surface .entry-content, .expense-dialog-surface .change-item { min-width: 0; }
 .expense-dialog-surface .entry-meta, .expense-dialog-surface .change-values { flex-wrap: wrap; }
 .expense-dialog-surface .modal-content { min-height: 0; overflow-y: auto; }
+.expense-dialog-layer > .expense-permanent-delete-dialog { max-width: 460px; padding: 24px; }
+.expense-delete-confirm-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.expense-delete-confirm-actions button { padding: 9px 14px; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; }
+.expense-delete-confirm-actions button:last-child { background: #be123c; color: white; border-color: #be123c; }
 /* Currency takes its own column, so three-letter codes never overlap the amount. */
 .expense-dialog-surface .expense-amount-field { display: flex; align-items: center; width: 100%; min-width: 0; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; overflow: hidden; }
 .expense-dialog-surface .expense-amount-currency { flex: 0 0 auto; padding: 0 12px; font-size: 14px; font-weight: 600; color: #6b7280; border-right: 1px solid #e5e7eb; }

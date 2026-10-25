@@ -295,7 +295,7 @@ def update_expense(expense_id):
 @require_auth
 def delete_expense(expense_id):
     """
-    Soft-delete an expense and return a recent-expense snapshot.
+    Soft-delete an expense, or permanently remove a deleted expense when requested.
     
     Response includes:
     - message: confirmation message
@@ -305,7 +305,9 @@ def delete_expense(expense_id):
     user_id = get_current_user_id()
     expense_id = record_uuid(expense_id)
     
-    success, result = expense_service_sql.delete_expense(expense_id, user_id)
+    success, result = expense_service_sql.delete_expense(
+        expense_id, user_id, permanent=parse_boolean('permanent'),
+    )
     
     if success:
         # Include the first page of remaining expenses and pagination metadata.
@@ -316,6 +318,7 @@ def delete_expense(expense_id):
         )
         
         response_data = {
+            'permanently_deleted': result.get('permanently_deleted', False),
             'expenses': all_expenses_result.get('expenses', []) if all_expenses_success else [],
             'expenses_total': all_expenses_result.get('total', 0) if all_expenses_success else 0,
             'expenses_has_more': all_expenses_result.get('has_more', False) if all_expenses_success else False,

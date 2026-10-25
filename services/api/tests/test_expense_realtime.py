@@ -197,6 +197,20 @@ def test_personal_currency_changes_notify_only_the_owner(alice, bob, watch):
     assert changes(observer) == []
 
 
+@pytest.mark.parametrize('personal', [True, False])
+def test_permanent_deletion_invalidates_authorized_devices(group_of_two, watch, personal):
+    owner, owner_id, member, _, gid = group_of_two
+    eid = create(owner, owner_id, None if personal else gid)
+    assert owner.delete('/api/v1/expenses/%s' % eid).status_code == 200
+    own_device, member_device = watch(owner), watch(member)
+    response = owner.delete('/api/v1/expenses/%s?permanent=true' % eid)
+    assert response.status_code == 200, response.get_json()
+    expected = ({'personal': True, 'expense_ids': [eid], 'currency_changed': False} if personal else
+                {'group_id': gid, 'expense_ids': [eid], 'access_revoked': False})
+    assert changes(own_device) == [expected]
+    assert changes(member_device) == ([] if personal else [expected])
+
+
 def test_personal_income_changes_are_private_and_committed(alice, bob, watch):
     owner, _, _ = alice
     other, _, _ = bob
