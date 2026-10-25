@@ -997,6 +997,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/expenses/friends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["expense_friends_list_friends_get_api_v1_expenses_friends"];
+        put?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        post: operations["expense_friends_save_friend_post_api_v1_expenses_friends"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/expenses/group/{group_id}": {
         parameters: {
             query?: never;
@@ -4026,6 +4044,36 @@ export interface components {
             /** Version */
             version: number;
         };
+        ExpenseFriend: {
+            display_name?: string | null;
+            /** Format: email */
+            email: string;
+            /** Format: uuid */
+            id: string;
+            is_registered: boolean;
+            label: string;
+            nickname?: string | null;
+            /** Format: uuid */
+            user_id?: string | null;
+        };
+        ExpenseFriendResponse: {
+            data: {
+                friend: components["schemas"]["ExpenseFriend"];
+            };
+            message?: string;
+            success: boolean;
+        };
+        ExpenseFriendsResponse: {
+            data: {
+                friends: components["schemas"]["ExpenseFriend"][];
+                has_more: boolean;
+                limit: number;
+                offset: number;
+                total: number;
+            };
+            message?: string;
+            success: boolean;
+        };
         Health: {
             checks?: {
                 [key: string]: {
@@ -4422,6 +4470,11 @@ export interface components {
             reason: string;
             /** Version */
             version: number;
+        };
+        SaveExpenseFriend: {
+            /** Format: email */
+            email: string;
+            nickname?: string | null;
         };
         /** SaveTourDraft */
         SaveTourDraft: {
@@ -7242,6 +7295,72 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    expense_friends_list_friends_get_api_v1_expenses_friends: {
+        parameters: {
+            query?: {
+                search?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseFriendsResponse"];
+                };
+            };
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    expense_friends_save_friend_post_api_v1_expenses_friends: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveExpenseFriend"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseFriendResponse"];
+                };
+            };
             /** @description Response */
             default: {
                 headers: {

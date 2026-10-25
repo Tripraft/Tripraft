@@ -1,11 +1,12 @@
 // Purpose: Manages expense-group metadata, membership and invitations with role-aware actions, confirmation and retryable API errors.
-import React, { useState, useEffect } from 'react';
-import { Users, Plus, Mail, Trash2, Clock, Settings, Link, Send } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Users, Plus, Mail, Trash2, Clock, Settings, Link, Send, LoaderCircle } from 'lucide-react';
 import { formatDateLocal } from '../../../utils/timezoneUtils';
 import expenseApi from '../../../services/expenseApi';
 import { groupPermissions } from '../utils/groupPermissions';
 import CurrencySelect from '../../../components/common/jsx/CurrencySelect';
 import ExpenseDialog from './ExpenseDialog';
+import ExpenseFriendPicker from './ExpenseFriendPicker';
 import { formatMoney } from '../../../utils/money';
 
 const unwrapEnvelope = response => response?.data ?? response;
@@ -62,7 +63,15 @@ const GroupManager = ({
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupCurrency, setNewGroupCurrency] = useState('USD');
   const [newMemberEmail, setNewMemberEmail] = useState('');
+  const [friendNickname, setFriendNickname] = useState('');
+  const [selectedFriend, setSelectedFriend] = useState(null);
+  const [friendRevision, setFriendRevision] = useState(0);
+  const [savingFriend, setSavingFriend] = useState(false);
+  const [friendFeedback, setFriendFeedback] = useState('');
+  const [friendError, setFriendError] = useState('');
   const [inviting, setInviting] = useState(false);
+  const invitingRef = useRef(false);
+  const savingFriendRef = useRef(false);
   const [resendingInvitationId, setResendingInvitationId] = useState(null);
   const [creating, setCreating] = useState(false);
   const [pendingInvitations, setPendingInvitations] = useState([]);
@@ -205,7 +214,7 @@ const GroupManager = ({
     e.preventDefault();
     
     // Prevent double submission
-    if (inviting) {
+    if (invitingRef.current || savingFriendRef.current) {
       return;
     }
     
@@ -222,17 +231,16 @@ const GroupManager = ({
       return;
     }
 
-    // Immediately clear the email to prevent duplicate submissions
-    if (!isResend) {
-      setNewMemberEmail('');
-    }
-
+    // Preserve the draft on both success and failure. A synchronous guard
+    // prevents duplicate submissions without erasing what the user entered.
+    invitingRef.current = true;
     setInviting(true);
     try {
       // Direct API call - simple and clean
       const response = unwrapEnvelope(await expenseApi.sendInvitation({
         group_id: activeGroupId,
-        invitee_email: invitedEmail
+        invitee_email: invitedEmail,
+        ...(!isResend && (friendNickname.trim() || selectedFriend) && {nickname: friendNickname.trim() || null}),
       }));
       
       // Reload invitations to get updated list
@@ -243,6 +251,7 @@ const GroupManager = ({
         ...previous.filter(inv => (inv.id || inv.invitation_id) !== (response.invitation.id || response.invitation.invitation_id)),
         response.invitation,
       ]);
+      setFriendRevision(value => value + 1);
       setActiveTab('pending');
       showAlert(response.email_status === 'sent' ? 'Invitation email sent.' : 'Invitation created.');
       
@@ -255,8 +264,28 @@ const GroupManager = ({
     } catch (error) {
       showAlert(`Failed to send invitation: ${error.message}`);
     } finally {
+      invitingRef.current = false;
       setInviting(false);
     }
+  };
+
+  const handleSaveFriend = async () => {
+    if (savingFriendRef.current || invitingRef.current) return;
+    const email = newMemberEmail.trim().toLowerCase();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFriendError('Enter a valid email address or choose a saved friend.');
+      return;
+    }
+    savingFriendRef.current = true;
+    setSavingFriend(true); setFriendError(''); setFriendFeedback('');
+    try {
+      const response = unwrapEnvelope(await expenseApi.saveFriend({email, nickname: friendNickname.trim() || null}));
+      if (!response?.friend) throw new Error('Unable to save this friend.');
+      setSelectedFriend(response.friend);
+      setFriendRevision(value => value + 1);
+      setFriendFeedback('Friend saved. You can invite them to any expense group later.');
+    } catch (error) { setFriendError(error.message || 'Unable to save this friend.'); }
+    finally { savingFriendRef.current = false; setSavingFriend(false); }
   };
 
   const handleResendInvitation = async invitation => {
@@ -317,10 +346,24 @@ const GroupManager = ({
     );
   }
 
-  const inviteForm = permissions.can_invite && <form className="expense-member-invite" onSubmit={handleInviteMember}>
+  const inviteForm = permissions.can_invite && <form className="expense-member-invite" onSubmit={handleInviteMember} aria-busy={inviting}>
     <h3><Mail size={17} />Invite your crew</h3><p>Share the journey and keep every expense together.</p>
-    <label htmlFor="expense-member-email">Email address</label><input id="expense-member-email" type="email" placeholder="Email address to invite..." value={newMemberEmail} onChange={event => setNewMemberEmail(event.target.value)} required disabled={inviting} />
-    <button className="expense-primary-button" disabled={inviting}><Plus size={16} />{inviting ? 'Inviting...' : 'Invite Member'}</button>
+    <ExpenseFriendPicker userId={userId} revision={friendRevision} disabled={inviting || savingFriend} onSelect={friend => {
+      setSelectedFriend(friend); setNewMemberEmail(friend.email); setFriendNickname(friend.nickname || ''); setFriendFeedback(''); setFriendError('');
+    }} />
+    {selectedFriend ? <div className="expense-selected-friend"><strong>Inviting {selectedFriend.label}</strong><button type="button" disabled={inviting || savingFriend}
+      onClick={() => { setSelectedFriend(null); setNewMemberEmail(''); setFriendNickname(''); setFriendFeedback(''); }}>Choose someone else</button></div> : <>
+      <label htmlFor="expense-member-email">Email address</label><input id="expense-member-email" type="email" placeholder="Email address to invite..." value={newMemberEmail}
+        onChange={event => { setNewMemberEmail(event.target.value); setFriendFeedback(''); setFriendError(''); }} required disabled={inviting || savingFriend} />
+    </>}
+    <label htmlFor="expense-friend-nickname">Nickname (optional)</label><input id="expense-friend-nickname" value={friendNickname} maxLength={100}
+      onChange={event => setFriendNickname(event.target.value)} disabled={inviting || savingFriend} placeholder="A name you will remember" />
+    <button className="expense-primary-button" disabled={inviting || savingFriend}>
+      {inviting ? <LoaderCircle className="spinning" size={16} aria-hidden="true" /> : <Plus size={16} aria-hidden="true" />}{inviting ? 'Inviting...' : 'Invite Member'}</button>
+    <button className="expense-secondary-button" type="button" onClick={handleSaveFriend} disabled={inviting || savingFriend}>
+      {savingFriend && <LoaderCircle className="spinning" size={16} aria-hidden="true" />}{savingFriend ? 'Saving friend...' : 'Save friend without inviting'}</button>
+    <p className="expense-invite-help">If the invitation is not received, ask your friend to check their spam or junk folder.</p>
+    {friendFeedback && <p role="status">{friendFeedback}</p>}{friendError && <p role="alert">{friendError}</p>}
   </form>;
   const invitationsList = <section className="expense-member-invitations" aria-label="Group invitations"><h3><Clock size={16} />Pending invitations ({pendingInvitations.length})</h3>
     {loadingInvitations ? <p>Loading invitations...</p> : !pendingInvitations.length ? <p className="expense-member-empty">No pending invitations.</p> : <ul>{pendingInvitations.map(invitation => {
@@ -361,7 +404,7 @@ const GroupManager = ({
     {activeGroupId && activeGroup && <>
       <div className="expense-members-grid"><section className="expense-members-panel"><div className="expense-section-toolbar"><h2>Group Members &amp; Invitations</h2><span className="expense-member-count">{members.length} members</span></div>
         {!compact && <div className="expense-members-switch"><button aria-pressed={activeTab === 'members'} onClick={() => setActiveTab('members')}>Members ({members.length})</button><button aria-pressed={activeTab === 'pending'} onClick={() => setActiveTab('pending')}>Pending ({pendingInvitations.length})</button></div>}
-        {compact || activeTab === 'members' ? <>{members.length ? memberList : <p className="expense-member-empty">No members yet. Invite someone to get started!</p>}{!compact && inviteForm}</> : invitationsList}
+        {compact || activeTab === 'members' ? <>{members.length ? memberList : <p className="expense-member-empty">No members yet. Invite someone to get started!</p>}{!compact && inviteForm}</> : <>{!compact && inviteForm}{invitationsList}</>}
       </section>{compact && <aside className="expense-members-aside">{inviteForm}{invitationsList}</aside>}</div>
       <details className="expense-member-settings" open={!compact || editingGroup || undefined}><summary><Settings size={16} />Group settings</summary><div className="expense-member-settings-content">
         <div className="expense-member-settings-info"><strong>{activeGroup.name}</strong><span>{activeGroup.currency || 'USD'} &middot; {members.length} members</span></div>

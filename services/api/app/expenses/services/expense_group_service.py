@@ -199,6 +199,8 @@ class GroupServiceSQL:
                 raise NotFoundError('User not found; they must sign up first')
             member = join_member(session, group, user.id, role)
             accept_pending_for_member(session, group, user)
+            from app.expenses.services.friend_service import save_contact
+            save_contact(session, requester.user_id, user.email)
             session.commit()
             return {'member': _member_dict(group, member), 'group': group_dict(group, requester)}
 

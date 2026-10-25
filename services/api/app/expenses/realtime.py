@@ -6,15 +6,17 @@ from flask_socketio import ConnectionRefusedError, join_room
 from sqlalchemy import event, inspect
 from sqlalchemy.orm import Session
 
-from app.auth.models import User
+from app.auth.models import FriendContact, User
 from app.expenses.models import Expense, ExpenseHistory, Group, GroupBalance, GroupMember, Income, Invitation, Settlement
 from app.trips.realtime.events import _authenticate_socket
 from app.trips.realtime.socketio_ext import socketio
+from app.expenses.services.friend_service import FRIEND_CHANGE_KEY
 
 logger = logging.getLogger(__name__)
 NAMESPACE = '/expenses'
 _PENDING = 'expense_live_changes'
 _PERSONAL_PENDING = 'personal_live_changes'
+_FRIEND_NAMES_PENDING = 'friend_contact_names_changed'
 
 
 def _user_room(user_id):
@@ -42,6 +44,8 @@ def _capture_changes(session, flush_context):
     personal = session.info.setdefault(_PERSONAL_PENDING, {})
     for row in list(session.new) + list(session.dirty) + list(session.deleted):
         if isinstance(row, User):
+            if row in session.new or inspect(row).attrs.display_name.history.has_changes():
+                session.info.setdefault(_FRIEND_NAMES_PENDING, set()).add(row.email.strip().lower())
             if row in session.dirty and inspect(row).attrs.personal_display_currency.history.has_changes():
                 personal.setdefault(row.id, {'expenses': set(), 'currency_changed': False})['currency_changed'] = True
             continue
@@ -79,7 +83,9 @@ def _publish_changes(session):
         return  # Savepoint release is not a committed ledger change yet.
     changes = session.info.pop(_PENDING, {})
     personal = session.info.pop(_PERSONAL_PENDING, {})
-    if (not changes and not personal) or socketio.server is None:
+    contact_owners = session.info.pop(FRIEND_CHANGE_KEY, set())
+    changed_names = session.info.pop(_FRIEND_NAMES_PENDING, set())
+    if (not changes and not personal and not contact_owners and not changed_names) or socketio.server is None:
         return
     try:
         from app.core.db.connection import SessionLocal
@@ -87,6 +93,10 @@ def _publish_changes(session):
         # Use a new read transaction: the committing session cannot issue SQL
         # in after_commit. Membership is checked afresh for every broadcast.
         with SessionLocal() as reader:
+            if changed_names:
+                contact_owners.update(owner_id for owner_id, in reader.query(FriendContact.owner_id).filter(
+                    FriendContact.email.in_(changed_names),
+                ).distinct())
             for group_id, user_id in reader.query(GroupMember.group_id, GroupMember.user_id).filter(
                 GroupMember.group_id.in_(changes), GroupMember.is_active.is_(True),
             ):
@@ -104,6 +114,10 @@ def _publish_changes(session):
                 'expense_ids': sorted(str(eid) for eid in change['expenses'] if eid),
                 'currency_changed': change['currency_changed'],
             }, room=_user_room(user_id), namespace=NAMESPACE)
+        for owner_id in contact_owners:
+            # The client rereads only its private list. Names and email addresses
+            # never travel in Socket.IO notifications or group-wide rooms.
+            socketio.emit('expenses:friends-changed', {}, room=_user_room(owner_id), namespace=NAMESPACE)
     except Exception:
         # A delivery outage must never turn an already-committed payment into
         # an HTTP failure that encourages the caller to submit it again.
@@ -113,6 +127,8 @@ def _publish_changes(session):
 def _discard_changes(session):
     session.info.pop(_PENDING, None)
     session.info.pop(_PERSONAL_PENDING, None)
+    session.info.pop(FRIEND_CHANGE_KEY, None)
+    session.info.pop(_FRIEND_NAMES_PENDING, None)
 
 
 def init_expense_realtime():

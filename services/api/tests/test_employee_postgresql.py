@@ -143,7 +143,7 @@ def test_employee_postgresql_migration_preserves_existing_data(monkeypatch):
             command.upgrade(config, 'head')
             with engine.connect() as connection:
                 assert connection.execute(text('SELECT email FROM users WHERE id=:id'), {'id': uid}).scalar_one() == 'preserve@example.test'
-                assert connection.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == 'c62f718293a4'
+                assert connection.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == 'd73f8293a5b6'
                 assert compare_metadata(MigrationContext.configure(connection, opts={
                     'compare_type': True, 'compare_server_default': True}), Base.metadata) == []
     finally:

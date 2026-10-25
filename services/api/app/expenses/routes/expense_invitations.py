@@ -8,7 +8,7 @@ from app.core.config import Config
 from app.core.rate_limiter import limit_api
 from app.core.schemas.invitations import CreateExpenseInvitationSchema
 from app.expenses.routes.expense_groups import _invalidate_group_caches
-from app.expenses.services.group_access import identifier
+from app.expenses.services.group_access import UNSET, identifier
 from app.expenses.services.expense_group_service import group_service_sql
 from app.expenses.services.expense_invite_service import invitation_service_sql
 
@@ -38,7 +38,7 @@ def send_invitation():
     data = g.validated_data
     user_id = get_current_user_id()
     email = data.get('invitee_email') or data.get('invited_email') or data.get('email')
-    success, result = invitation_service_sql.send_invitation(data['group_id'], email, user_id)
+    success, result = invitation_service_sql.send_invitation(data['group_id'], email, user_id, data.get('nickname', UNSET))
     if success:
         listed, invitations = invitation_service_sql.get_group_invitations(data['group_id'], user_id)
         result['invitations'] = invitations.get('invitations', []) if listed else []

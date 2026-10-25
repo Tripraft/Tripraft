@@ -1121,6 +1121,122 @@
         "title": "EmployeeRecord",
         "type": "object"
       },
+      "ExpenseFriend": {
+        "properties": {
+          "display_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "is_registered": {
+            "type": "boolean"
+          },
+          "label": {
+            "type": "string"
+          },
+          "nickname": {
+            "maxLength": 100,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "user_id": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "label",
+          "is_registered"
+        ],
+        "type": "object"
+      },
+      "ExpenseFriendResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "friend": {
+                "$ref": "#/components/schemas/ExpenseFriend"
+              }
+            },
+            "required": [
+              "friend"
+            ],
+            "type": "object"
+          },
+          "message": {
+            "type": "string"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ],
+        "type": "object"
+      },
+      "ExpenseFriendsResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "friends": {
+                "items": {
+                  "$ref": "#/components/schemas/ExpenseFriend"
+                },
+                "type": "array"
+              },
+              "has_more": {
+                "type": "boolean"
+              },
+              "limit": {
+                "type": "integer"
+              },
+              "offset": {
+                "type": "integer"
+              },
+              "total": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "friends",
+              "total",
+              "has_more",
+              "limit",
+              "offset"
+            ],
+            "type": "object"
+          },
+          "message": {
+            "type": "string"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ],
+        "type": "object"
+      },
       "Health": {
         "properties": {
           "checks": {
@@ -2302,6 +2418,26 @@
           "reason"
         ],
         "title": "ReviewDecision",
+        "type": "object"
+      },
+      "SaveExpenseFriend": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "nickname": {
+            "maxLength": 100,
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "email"
+        ],
         "type": "object"
       },
       "SaveTourDraft": {
@@ -6041,6 +6177,103 @@
             "description": "Response"
           }
         }
+      }
+    },
+    "/api/v1/expenses/friends": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "expense_friends_list_friends_get_api_v1_expenses_friends",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseFriendsResponse"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      },
+      "post": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "expense_friends_save_friend_post_api_v1_expenses_friends",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveExpenseFriend"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseFriendResponse"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/v1/expenses/group/{group_id}": {

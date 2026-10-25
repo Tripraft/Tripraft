@@ -57,6 +57,21 @@ def build(application):
             'total': {'type': 'integer'}, 'logs': {'type': 'array', 'items': ref('AuditRecord')},
         }},
         'MeResponse': envelope({'type': 'object', 'required': ['user'], 'properties': {'user': ref('User')}}),
+        'ExpenseFriend': {'type': 'object', 'required': ['id', 'email', 'label', 'is_registered'], 'properties': {
+            'id': {'type': 'string', 'format': 'uuid'}, 'email': {'type': 'string', 'format': 'email'},
+            'nickname': {'type': ['string', 'null'], 'maxLength': 100},
+            'display_name': {'type': ['string', 'null']}, 'label': {'type': 'string'},
+            'is_registered': {'type': 'boolean'}, 'user_id': {'type': ['string', 'null'], 'format': 'uuid'},
+        }},
+        'SaveExpenseFriend': {'type': 'object', 'required': ['email'], 'additionalProperties': False, 'properties': {
+            'email': {'type': 'string', 'format': 'email'},
+            'nickname': {'type': ['string', 'null'], 'maxLength': 100},
+        }},
+        'ExpenseFriendsResponse': envelope({'type': 'object', 'required': ['friends', 'total', 'has_more', 'limit', 'offset'], 'properties': {
+            'friends': {'type': 'array', 'items': ref('ExpenseFriend')}, 'total': {'type': 'integer'},
+            'has_more': {'type': 'boolean'}, 'limit': {'type': 'integer'}, 'offset': {'type': 'integer'},
+        }}),
+        'ExpenseFriendResponse': envelope({'type': 'object', 'required': ['friend'], 'properties': {'friend': ref('ExpenseFriend')}}),
         'AuditResponse': envelope(ref('AuditData')),
     }
     for model in (PartnerRegister, PartnerLogin, ApplicationUpdate, ApplicationSubmit, ReviewDecision,
@@ -129,6 +144,17 @@ def build(application):
             if route == '/api/v1/auth/me' and method == 'GET':
                 operation['responses']['200'] = response(ref('MeResponse'))
                 operation['security'] = [{'cookieAuth': []}]
+            elif route == '/api/v1/expenses/friends':
+                operation['security'] = [{'cookieAuth': []}]
+                operation['responses']['200'] = response(ref('ExpenseFriendsResponse' if method == 'GET' else 'ExpenseFriendResponse'))
+                if method == 'POST':
+                    operation['requestBody'] = {'required': True, 'content': {'application/json': {'schema': ref('SaveExpenseFriend')}}}
+                else:
+                    operation['parameters'] = [
+                        {'name': 'search', 'in': 'query', 'schema': {'type': 'string', 'maxLength': 255}},
+                        {'name': 'limit', 'in': 'query', 'schema': {'type': 'integer', 'minimum': 1, 'maximum': 100}},
+                        {'name': 'offset', 'in': 'query', 'schema': {'type': 'integer', 'minimum': 0}},
+                    ]
             elif route in {'/api/health/live', '/api/health/ready', '/api/health/'}:
                 operation['responses']['200'] = response(ref('Health'))
                 if route.endswith('/ready'):

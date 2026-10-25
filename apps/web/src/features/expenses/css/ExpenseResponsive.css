@@ -133,6 +133,18 @@
 .expense-group-confirm [role="alert"] { color: #be123c; }
 .expense-group-confirm [role="alertdialog"] > div { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
 .expense-members-switch { display: flex; gap: 8px; margin-bottom: 18px; }
+.expense-friend-picker {margin:16px 0; padding:12px; border:1px solid #e5e7eb; border-radius:12px; background:#fafafa;}
+.expense-friend-picker h4 {display:flex; align-items:center; gap:8px; margin:0 0 10px; font-size:14px;}
+.expense-friend-picker ul {list-style:none; padding:0; margin:10px 0 0; max-height:240px; overflow:auto; display:grid; gap:6px;}
+.expense-friend-picker li button {display:flex; flex-direction:column; align-items:flex-start; gap:4px; width:100%; text-align:left; padding:10px; border:1px solid #e5e7eb; border-radius:8px; background:white; cursor:pointer; overflow-wrap:anywhere;}
+.expense-friend-picker li button:hover {border-color:#a78bfa; background:#f5f3ff;}
+.expense-friend-picker li span, .expense-friend-picker li small {font-size:11px; color:#64748b;}
+.expense-friend-picker input {width:100%;}
+.expense-selected-friend {display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 0; overflow-wrap:anywhere;}
+.expense-selected-friend button {border:0; background:none; color:#7c3aed; cursor:pointer; font-size:12px;}
+.expense-member-invite .expense-invite-help {font-size:12px; line-height:1.6; color:#64748b;}
+.expense-member-invite .spinning {animation:spin 1s linear infinite;}
+@media (prefers-reduced-motion:reduce) { .expense-member-invite .spinning {animation:none;} }
 .expense-members-switch button { padding: 9px 12px; border: 1px solid #e5e7eb; border-radius: 9px; font: inherit; font-size: 12px; background: #fff; cursor: pointer; }
 .expense-members-switch button[aria-pressed="true"] { background: #f5f3ff; color: #7c3aed; border-color: #ddd6fe; }
 .expense-legacy-create { display: grid; gap: 10px; margin-top: 20px; }
