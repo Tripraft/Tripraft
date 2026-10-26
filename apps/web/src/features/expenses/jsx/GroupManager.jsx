@@ -12,6 +12,11 @@ import { formatMoney } from '../../../utils/money';
 const unwrapEnvelope = response => response?.data ?? response;
 const invitationLink = invitation => invitation.invitation_link ||
   `${window.location.origin}/invitation/${encodeURIComponent(invitation.invitation_id || invitation.id)}`;
+const invitationExpired = invitation => {
+  if (invitation.is_expired != null) return invitation.is_expired;
+  const expiry = invitation.expires_at;
+  return Boolean(expiry && new Date(/(?:Z|[+-]\d{2}:?\d{2})$/.test(expiry) ? expiry : `${expiry}Z`) <= new Date());
+};
 const deliveryMessage = status => ({
   sent: 'Invitation email sent.',
   queued: 'Invitation email queued.',
@@ -244,8 +249,7 @@ const GroupManager = ({
     try {
       const existing = pendingInvitations.find(inv =>
         (inv.invitee_email || inv.invited_email || '').toLowerCase() === invitedEmail &&
-        inv.status?.toLowerCase() === 'pending' && !inv.is_expired &&
-        (!inv.expires_at || new Date(inv.expires_at) > new Date()));
+        inv.status?.toLowerCase() === 'pending' && !invitationExpired(inv));
       const response = unwrapEnvelope(await (existing
         ? expenseApi.resendInvitation(existing.invitation_id || existing.id)
         : expenseApi.sendInvitation({
@@ -376,14 +380,13 @@ const GroupManager = ({
     {loadingInvitations ? <p>Loading invitations...</p> : !pendingInvitations.length ? <p className="expense-member-empty">No pending invitations.</p> : <ul>{pendingInvitations.map(invitation => {
       const id = invitation.invitation_id || invitation.id;
       const declined = invitation.status?.toLowerCase() === 'declined';
-      const expiry = invitation.expires_at;
-      const expired = invitation.is_expired ?? Boolean(expiry && new Date(/(?:Z|[+-]\d{2}:?\d{2})$/.test(expiry) ? expiry : `${expiry}Z`) < new Date());
-      const canRetry = String(invitation.invited_by) === String(userId) || permissions.can_update_group;
+      const expired = invitationExpired(invitation);
+      const canRetry = permissions.can_invite && (String(invitation.invited_by) === String(userId) || permissions.can_update_group);
       return <li key={id}><div className="expense-member-invitation-heading"><strong>{invitation.invited_email || invitation.invitee_email || invitation.invited_username || 'Invited member'}</strong><span>{declined ? 'Declined' : expired ? 'Expired' : 'Pending'}</span></div>
         <small>Invited {formatDateLocal(invitation.created_at, { year: 'numeric', month: 'short', day: 'numeric' })}</small>
         <div className="expense-member-invitation-actions">{!declined && !expired && <button onClick={() => handleCopyInvitation(invitation)}><Link size={13} />Copy invite link</button>}
           {!declined && !expired && canRetry && <button disabled={Boolean(resendingInvitationId)} onClick={() => handleResendInvitation(invitation)}><Send size={13} />{resendingInvitationId === id ? 'Sending...' : 'Resend email'}</button>}
-          {(declined || expired) && <button disabled={inviting} onClick={event => handleInviteMember(event, true, invitation.invited_email || invitation.invitee_email)}>Resend</button>}
+          {(declined || expired) && permissions.can_invite && <button disabled={inviting} onClick={event => handleInviteMember(event, true, invitation.invited_email || invitation.invitee_email)}>Resend</button>}
           {!declined && canRetry && <button disabled={actionBusy} onClick={() => confirm('Cancel this invitation? Its link will no longer allow joining.', async () => {
             await expenseApi.cancelInvitation(id); setPendingInvitations(previous => previous.filter(row => (row.invitation_id || row.id) !== id)); await refreshGroup();
           })}>Cancel invitation</button>}

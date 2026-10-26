@@ -108,3 +108,46 @@ permission change is part of this fix.
 
 Local verification logs are under ignored `.tripraft/expense-latency-*`; they
 are not required to run the committed regressions.
+
+## Cancellation and resend follow-up — October 26, 2026
+
+The first fix is Git commit `47fea32`. Its corrected local API, web and admin
+services each returned HTTP 200, and Interactive Smartlog resolves its Git
+branch and commit correctly.
+
+The additional lifecycle audit confirmed that cancellation already prevented
+acceptance, but queued email jobs had no current-state check. Both native
+background and Celery delivery now check status, group activity, expiry and the
+invitation creation timestamp immediately before SMTP. Jobs for cancelled,
+declined, accepted, expired, archived or superseded invitations are skipped.
+An old job cannot become active again when a cancelled recipient is re-invited.
+Already-sent email cannot be recalled, and a cancellation racing after SMTP
+starts may still allow that message to arrive; its link cannot join while the
+invitation remains cancelled.
+
+Authorized repeated cancellation is idempotent and preserves the original
+response timestamp. Resend now checks the group lock and current contributor
+role, including an inviter who has since become a viewer. Viewer UI actions
+are hidden accordingly. Cancellation failures retain the pending link and allow
+retry; success removes it. Re-inviting the same person resets the permanent row
+to a new pending generation. Pending resend keeps the original ID/link/expiry;
+accepted/cancelled resend remains rejected. No duplicate invitation or membership
+rows are created. A reissued invitation intentionally reuses its existing link.
+
+Cancelled/declined acceptance pages now explain the unavailable invitation and
+clear saved login continuation, without redirecting into a group. Expiry checks
+in the form consistently treat the database's naive timestamps as UTC.
+
+Follow-up regressions cover the endpoint sequence from send to cancel, repeated
+cancel, rejected acceptance/resend, re-invitation, resend and acceptance; wrong
+accounts and viewer restrictions; both delivery transports across all six
+obsolete states; successful current-generation delivery; failed cancellation
+retry; and browser handling of cancelled/declined links. Mail is mocked in all
+of these tests. Local follow-up logs use `.tripraft/expense-cancellation-*`.
+
+Final follow-up validation: **90 backend tests passed**, including **16 new
+cancellation/delivery tests**, and **39 web invitation tests passed**. Changed
+Python/web lint, web typecheck and production build passed. The running Vite
+proxy returned 200 for API liveness and 401 with `private, no-store` for anonymous
+cancel/resend requests. No real invitation was changed and no email was sent by
+the live-route verification. The API's source reloader picked up the follow-up.

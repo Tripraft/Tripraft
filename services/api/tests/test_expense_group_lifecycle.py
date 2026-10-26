@@ -508,6 +508,7 @@ def test_native_invitation_email_queues_smtp_without_a_task_broker(monkeypatch):
     from app.notifications.services.email_service import email_service
     from app.core.workers.tasks.email_tasks import send_invitation_email
     from app.notifications.email import background
+    from app.notifications.email.expense_invitations import deliver_pending_invitation_job
     monkeypatch.setattr(Config, 'CELERY_BROKER_URL', '')
     monkeypatch.setattr(email_service, 'enabled', True)
     queued, submitted = [], []
@@ -515,7 +516,7 @@ def test_native_invitation_email_queues_smtp_without_a_task_broker(monkeypatch):
     monkeypatch.setattr(background, 'submit_auth_email', lambda *args: submitted.append(args) or True)
     assert DELIVER_EMAIL('friend@example.test', 'Alice', 'Weekend', 'invite-id') == 'queued'
     assert not queued
-    assert submitted == [(email_service.send_group_invitation, 'friend@example.test', 'Alice', 'Weekend', 'invite-id')]
+    assert submitted == [(deliver_pending_invitation_job, 'invite-id', None)]
     monkeypatch.setattr(background, 'submit_auth_email', lambda *args: False)
     assert DELIVER_EMAIL('friend@example.test', 'Alice', 'Weekend', 'invite-id') == 'failed'
 

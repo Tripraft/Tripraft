@@ -124,3 +124,17 @@ it('reopens an already accepted invitation at the same group', async () => {
   act(() => jest.advanceTimersByTime(2000));
   expect(screen.getByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
 });
+
+it.each(['cancelled', 'declined'])('shows a %s invitation as unavailable and clears login continuation', async state => {
+  auth.currentUser = { uid: 'friend-uuid' };
+  localStorage.setItem('pendingInvitation', 'invite-uuid');
+  localStorage.setItem('invitationEmail', 'friend@example.test');
+  expenseApi.acceptInvitation.mockRejectedValue(Object.assign(new Error(`Invitation is already ${state}`), { status: 409 }));
+  render(<Flow />);
+  await screen.findByText(`This invitation was ${state}. Ask the inviter to send a new invitation.`);
+  act(() => jest.advanceTimersByTime(3000));
+  expect(expenseApi.getInvitationDetails).not.toHaveBeenCalled();
+  expect(screen.queryByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeNull();
+  expect(localStorage.getItem('pendingInvitation')).toBeNull();
+  expect(localStorage.getItem('invitationEmail')).toBeNull();
+});

@@ -132,6 +132,22 @@ receive 401; other members or outsiders receive 403. Non-pending invitations
 return 409 and expired pending invitations return 410. This endpoint is subject
 to the existing invitation rate limit and does not change membership.
 
+Cancellation stores `status=cancelled` and `responded_at`, removes the invitation
+from the recipient's pending list and prevents acceptance/decline or delivery
+retry. Repeating cancellation by an authorized caller returns success without
+changing its timestamp. A contributor can invite the same address again through
+the creation endpoint: the permanent row is reset to pending with a new creation
+timestamp and expiry. Membership is added only on acceptance, never on resend.
+Viewers cannot send, resend or cancel, including invitations they created before
+their role changed.
+
+Native and Celery email workers recheck invitation status, active group, expiry
+and creation timestamp immediately before SMTP. Cancelled, declined, accepted,
+expired, archived or superseded jobs are consumed without sending or retrying.
+Re-inviting cannot revive an older job. A current-generation pending resend is
+still deliverable. This check does not recall already-sent mail or stop SMTP
+that has already started; acceptance always rechecks current invitation state.
+
 ## Expenses, settlements and balances
 
 Expense POST, PUT/PATCH and DELETE accept `?compact=true`. These responses

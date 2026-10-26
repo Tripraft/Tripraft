@@ -45,6 +45,15 @@ Submitting the same address again in the web form retries its pending invitation
 instead of attempting another creation. Failed and disabled delivery are shown
 explicitly, with retry/copy guidance. Saving an invitation does not prove that
 an email was delivered.
+
+**Cancel invitation** disables joining through its link and removes the pending
+entry. Mail already sent cannot be recalled. Queued workers check for
+cancellation before starting SMTP; old jobs also stay obsolete if the same
+person is invited again. To invite a cancelled/declined/expired recipient again,
+submit their address in **Invite Member**. This issues a new pending generation
+using the same invitation row/link and resets its expiry. **Resend email** on an
+existing pending invitation keeps its original expiry. Cancelled or declined
+links display an unavailable message and clear saved login continuation.
 It does not display a persistent delivery banner or raw URL box. If the clipboard
 is unavailable, requesting a copy shows the link in an alert.
 
