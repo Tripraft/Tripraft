@@ -519,6 +519,13 @@ const ExpenseManager = () => {
     } finally { setMutationLoading(false); }
   };
 
+  const requestDeleteTransaction = (id, options = {}) => {
+    // TransactionList already confirms permanent deletion. Preserve its options
+    // and promise so it can wait for the actual API result and show failures.
+    if (options.permanent) return handleDeleteTransaction(id, options);
+    showConfirm('Are you sure you want to delete this transaction?', () => handleDeleteTransaction(id));
+  };
+
   // Settlement handler - with INSTANT UPDATES
   const handleSettlementSuccess = async (settlementData) => {
     try {
@@ -750,7 +757,7 @@ const ExpenseManager = () => {
           activeGroupMembers={activeGroupMembers || []}
           currentUserId={currentUser?.uid || currentUser?.user_id}
           onEdit={handleEditTransaction}
-          onDelete={(id) => showConfirm('Are you sure you want to delete this transaction?', () => handleDeleteTransaction(id))}
+          onDelete={requestDeleteTransaction}
           onRestore={handleRestoreTransaction}
           onExportPDF={handleExportPDF}
         /></div>
@@ -767,7 +774,7 @@ const ExpenseManager = () => {
             filter: { ...prev.filter, [filterType]: value }
           }))}
           onEdit={handleEditTransaction}
-          onDelete={(id) => showConfirm('Are you sure you want to delete this transaction?', () => handleDeleteTransaction(id))}
+          onDelete={requestDeleteTransaction}
           onRestore={handleRestoreTransaction}
           currentUserId={currentUser?.uid || currentUser?.user_id}
           currency={personalCurrency || 'USD'}
@@ -810,7 +817,7 @@ const ExpenseManager = () => {
 
       {/* Confirm Modal */}
       {showConfirmModal && (
-        <ExpenseDialog label="Confirm expense deletion" onClose={() => setShowConfirmModal(false)} className="modal modal-small">
+        <ExpenseDialog label="Confirm expense deletion" onClose={() => setShowConfirmModal(false)} className="modal modal-small expense-delete-confirm-dialog">
             <h2>Are you sure?</h2>
             <p>{confirmMessage}</p>
             <div className="modal-actions">

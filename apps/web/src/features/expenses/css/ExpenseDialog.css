@@ -45,6 +45,10 @@
 .expense-dialog-surface .entry-meta, .expense-dialog-surface .change-values { flex-wrap: wrap; }
 .expense-dialog-surface .modal-content { min-height: 0; overflow-y: auto; }
 .expense-dialog-layer > .expense-permanent-delete-dialog { max-width: 460px; padding: 24px; }
+.expense-dialog-surface:is(.expense-delete-confirm-dialog, .expense-permanent-delete-dialog) { font-size: 14px; }
+.expense-dialog-surface:is(.expense-delete-confirm-dialog, .expense-permanent-delete-dialog) h2 { font-size: 18px; line-height: 1.4; font-weight: 600; margin: 0 0 10px; }
+.expense-dialog-surface:is(.expense-delete-confirm-dialog, .expense-permanent-delete-dialog) p { font-size: 14px; line-height: 1.6; margin: 0; }
+.expense-dialog-surface:is(.expense-delete-confirm-dialog, .expense-permanent-delete-dialog) button { font-size: 14px; }
 .expense-delete-confirm-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
 .expense-delete-confirm-actions button { padding: 9px 14px; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; }
 .expense-delete-confirm-actions button:last-child { background: #be123c; color: white; border-color: #be123c; }

@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 from typing import Dict, List
+from urllib.parse import urlsplit, urlunsplit
 
 from dotenv import load_dotenv
 
@@ -32,6 +33,19 @@ def _get_list(key: str, default: str = '') -> List[str]:
     """Parse comma-separated list from environment variable."""
     value = os.getenv(key, default)
     return [item.strip() for item in value.split(',') if item.strip()]
+
+
+def _development_cors_origins(origins: List[str]) -> List[str]:
+    """Accept both local hostnames for explicitly configured development ports."""
+    expanded = list(origins)
+    aliases = {'localhost': '127.0.0.1', '127.0.0.1': 'localhost'}
+    for origin in origins:
+        parsed = urlsplit(origin)
+        alias = aliases.get(parsed.hostname)
+        if alias and parsed.scheme in ('http', 'https'):
+            netloc = alias + (f':{parsed.port}' if parsed.port is not None else '')
+            expanded.append(urlunsplit((parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment)))
+    return list(dict.fromkeys(expanded))
 
 
 class Config:
@@ -448,6 +462,7 @@ class DevelopmentConfig(Config):
     DEBUG: bool = True
     FLASK_ENV: str = 'development'
     LOG_LEVEL: str = 'DEBUG'
+    CORS_ORIGINS: List[str] = _development_cors_origins(Config.CORS_ORIGINS)
 
 
 class ProductionConfig(Config):

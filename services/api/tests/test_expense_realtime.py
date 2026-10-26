@@ -1,4 +1,5 @@
 """Independent authenticated clients receive only committed changes they may know about."""
+import json
 from uuid import UUID
 
 import pytest
@@ -10,6 +11,25 @@ from app.expenses.services.expense_invite_service import InvitationServiceSQL
 from app.trips.realtime.socketio_ext import socketio
 
 NS = '/expenses'
+
+
+@pytest.mark.parametrize('origin', ['http://localhost:5173', 'http://127.0.0.1:5173'])
+def test_development_socket_handshake_accepts_both_local_hostnames(app, origin):
+    client = app.test_client()
+    path = '/socket.io/?EIO=4&transport=polling'
+    opened = client.get(path, headers={'Origin': origin})
+    assert opened.status_code == 200, opened.get_data(as_text=True)
+    sid = json.loads(opened.get_data(as_text=True)[1:])['sid']
+    # Polling POSTs and websocket upgrades carry Origin even when the initial
+    # same-origin GET did not. Close the test session through that POST path.
+    closed = client.post(path + '&sid=' + sid, data='1', content_type='text/plain', headers={'Origin': origin})
+    assert closed.status_code == 200, closed.get_data(as_text=True)
+
+
+@pytest.mark.parametrize('origin', ['http://127.0.0.1:9999', 'https://untrusted.example'])
+def test_development_socket_handshake_rejects_unconfigured_origins(app, origin):
+    response = app.test_client().get('/socket.io/?EIO=4&transport=polling', headers={'Origin': origin})
+    assert response.status_code == 400
 
 
 @pytest.fixture(autouse=True)
