@@ -90,6 +90,13 @@ const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', curren
     if (field === 'splits' && Array.isArray(value)) {
       return value.map(split => `${getMemberName(split.user_id)}: ${formatMoney(split.amount, currency)}`).join('; ');
     }
+    if (field === 'split_details' && typeof value === 'object') {
+      if (value.adjustments) return Object.entries(value.adjustments).map(([id, amount]) => `${getMemberName(id)}: ${formatMoney(amount, currency)}`).join('; ');
+      if (value.items) return [
+        ...value.items.map(item => `${item.name}: ${formatMoney(item.amount, currency)} (${item.user_ids.map(getMemberName).join(', ')})`),
+        ...['tax', 'tip', 'discount'].filter(key => Number(value[key])).map(key => `${key}: ${formatMoney(value[key], currency)}`),
+      ].join('; ');
+    }
     
     return String(value);
   };
@@ -104,6 +111,7 @@ const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', curren
       notes: 'Notes',
       expense_date: 'Date',
       splits: 'Split With',
+      split_details: 'Bill and adjustments',
       split_status: 'Split Type',
       currency: 'Currency'
     };
@@ -195,7 +203,7 @@ const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', curren
                                 if (mode === 'personal' && ['splits', 'split_type', 'split_status', 'paid_by'].includes(fieldName)) return false;
                                 
                                 // Amounts and participants can change while the row count stays equal.
-                                if (fieldName === 'splits') {
+                                if (fieldName === 'splits' || fieldName === 'split_details') {
                                   return JSON.stringify(oldVal) !== JSON.stringify(newVal) || Boolean(change.added_members?.length || change.removed_members?.length);
                                 }
                                 

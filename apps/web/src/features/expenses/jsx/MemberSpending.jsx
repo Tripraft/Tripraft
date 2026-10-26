@@ -101,7 +101,7 @@ const MemberSpending = ({
             ? ((member.totalPaid / totalGroupSpend) * 100).toFixed(1)
             : 0;
           const barWidth = maxSpend > 0 
-            ? (member.totalPaid / maxSpend) * 100
+            ? Math.max(0, member.totalPaid / maxSpend) * 100
             : 0;
           const isCurrentUser =
             member.userId != null &&

@@ -24,6 +24,25 @@ export function expensePayload(data, { groupId, editingExpense, currency = 'USD'
   const paidBy = data.paidBy;
   if (!paidBy) throw new Error('Select a payer.');
   if (!editingExpense || String(editingExpense.paid_by || editingExpense.paidBy) !== String(paidBy)) payload.paid_by = String(paidBy);
+  if (data.split_type && data.splits) {
+    // A metadata edit must still work after a saved participant leaves the group.
+    const saved = editingExpense?.splits || [];
+    const savedType = String(editingExpense?.split_type || '').toLowerCase();
+    const canonicalJSON = value => JSON.stringify(value, (_, entry) => entry && typeof entry === 'object' && !Array.isArray(entry)
+      ? Object.fromEntries(Object.entries(entry).sort(([a], [b]) => a.localeCompare(b))) : entry);
+    const unchanged = editingExpense && savedType === data.split_type
+      && Math.round(Math.abs(Number(editingExpense.amount)) * 100) === Math.round(amount * 100)
+      && saved.length === data.splits.length && data.splits.every(split => {
+        const row = saved.find(entry => String(entry.user_id) === String(split.user_id));
+        return row && Math.round(Math.abs(Number(row.amount)) * 100) === Math.round(Number(split.amount) * 100)
+          && (data.split_type !== 'percentage' || Number(row.percentage) === Number(split.percentage))
+          && (data.split_type !== 'shares' || Number(row.shares) === Number(split.shares))
+          && (data.split_type !== 'adjustment' || Number(editingExpense.split_details?.adjustments?.[split.user_id] || 0) === Number(split.adjustment || 0));
+      }) && (data.split_type !== 'itemized' || canonicalJSON(editingExpense.split_details) === canonicalJSON(data.split_details));
+    if (unchanged) return payload;
+    Object.assign(payload, { amount, split_type: data.split_type, splits: data.splits, split_details: data.split_details ?? null });
+    return payload;
+  }
   const splitType = String(editingExpense?.split_type || 'equal').toLowerCase();
   if (editingExpense && splitType !== 'equal') {
     if (Math.round(amount * 100) !== Math.round(Number(editingExpense.amount) * 100)) throw new Error('This form preserves custom split amounts. Edit the description, date, category or payer instead.');

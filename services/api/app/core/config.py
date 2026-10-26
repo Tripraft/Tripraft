@@ -355,7 +355,7 @@ class Config:
     )
     DEFAULT_PAYMENT_METHOD: str = os.getenv('DEFAULT_PAYMENT_METHOD', 'cash')
     SPLIT_TYPES: List[str] = _get_list(
-        'SPLIT_TYPES', 'equal,exact,percentage,shares,none'
+        'SPLIT_TYPES', 'equal,exact,percentage,shares,adjustment,reimbursement,itemized,none'
     )
     PRIORITY_LEVELS: List[str] = _get_list('PRIORITY_LEVELS', 'low,medium,high')
     DEFAULT_PRIORITY: str = os.getenv('DEFAULT_PRIORITY', 'medium')

@@ -37,6 +37,7 @@ class SplitValidationError(ValueError):
 
 class ExpenseServiceSQL:
     """Service for expense operations using SQL database"""
+    error_type = SplitValidationError
     
     @staticmethod
     def create_expense(
@@ -51,7 +52,8 @@ class ExpenseServiceSQL:
         expense_date: Optional[str] = None,
         notes: Optional[str] = None,
         receipt_url: Optional[str] = None,
-        currency: str = 'USD'
+        currency: str = 'USD',
+        split_details: Optional[Dict] = None,
     ) -> Tuple[bool, Dict[str, Any]]:
         """
         Create a new expense (personal or group)
@@ -120,6 +122,9 @@ class ExpenseServiceSQL:
                 # Get group currency
                 exp_date = ExpenseServiceSQL._parse_expense_date(expense_date)
                 
+                # Refunds are negative ledger entries, reducing spend and reversing debts.
+                if split_type.lower() == 'reimbursement':
+                    amount = -amount
                 # Create expense
                 expense = Expense(
                     group_id=group_id,
@@ -139,11 +144,12 @@ class ExpenseServiceSQL:
                 
                 # Calculate and create splits
                 expense_splits = ExpenseServiceSQL._calculate_splits(
-                    session, group_id, expense.id, amount, paid_by, split_type, splits
+                    session, group_id, expense.id, amount, paid_by, split_type, splits, split_details
                 )
                 
                 if not expense_splits:
                     return False, {'error': 'Failed to calculate splits'}
+                expense.split_details = ExpenseServiceSQL._split_details(split_type, splits, split_details)
                 
                 for split in expense_splits:
                     session.add(split)
@@ -280,7 +286,8 @@ class ExpenseServiceSQL:
         amount: Decimal,
         paid_by: str,
         split_type: str,
-        splits: Optional[List[Dict]]
+        splits: Optional[List[Dict]],
+        split_details: Optional[Dict] = None,
     ) -> List[ExpenseSplit]:
         """Calculate a valid, zero-sum set of cent-accurate expense splits.
 
@@ -297,6 +304,8 @@ class ExpenseServiceSQL:
         member_ids = {str(member.user_id): member.user_id for member in members}
         split_type_lower = (split_type or '').lower()
         total = ExpenseServiceSQL._money(amount, 'Expense amount')
+        if split_type_lower == 'reimbursement':
+            total = abs(total)
 
         if total <= 0:
             raise SplitValidationError('Expense amount must be positive')
@@ -325,6 +334,11 @@ class ExpenseServiceSQL:
             return result_splits
 
         entries = ExpenseServiceSQL._validated_split_entries(splits, member_ids)
+        if split_type_lower in {'adjustment', 'reimbursement', 'itemized'}:
+            from app.expenses.services.split_methods import advanced_split
+            amounts = advanced_split(ExpenseServiceSQL, split_type_lower, total, entries, split_details)
+            return [ExpenseSplit(expense_id=expense_id, user_id=entry['user_id'], amount=value)
+                    for entry, value in zip(entries, amounts)]
         if split_type_lower == 'exact':
             amounts = [ExpenseServiceSQL._money(entry.get('amount'), 'Split amount')
                        for entry in entries]
@@ -395,6 +409,21 @@ class ExpenseServiceSQL:
         for index in order[:remaining]:
             amounts[index] += _CENT
         return amounts
+
+    @staticmethod
+    def _split_details(kind, splits, details):
+        if kind.lower() == 'adjustment':
+            return {'adjustments': {str(e['user_id']): str(e.get('adjustment', 0)) for e in (splits or [])}}
+        if kind.lower() == 'itemized':
+            # Persist JSON-safe data only, with a bounded document size.
+            try:
+                encoded = json.dumps(details)
+            except (TypeError, ValueError):
+                raise SplitValidationError('Bill details must be JSON data') from None
+            if len(encoded) > 100000:
+                raise SplitValidationError('Bill details are too large')
+            return json.loads(encoded)
+        return None
 
     @staticmethod
     def _validated_split_entries(splits, active_members):
@@ -716,6 +745,7 @@ class ExpenseServiceSQL:
         notes: Optional[str] = _UNSET,
         receipt_url: Optional[str] = _UNSET,
         currency: Optional[str] = _UNSET,
+        split_details: Optional[Dict] = _UNSET,
     ) -> Tuple[bool, Dict[str, Any]]:
         """
         Update an expense (personal or group)
@@ -839,7 +869,8 @@ class ExpenseServiceSQL:
                 )
                 desired_payer = paid_by if paid_by is not None else old_paid_by
                 desired_split_type = (split_type or old_split_type).lower()
-                if desired_split_type not in {'equal', 'exact', 'percentage', 'shares'}:
+                desired_amount = abs(desired_amount) * (-1 if desired_split_type == 'reimbursement' else 1)
+                if desired_split_type not in {'equal', 'exact', 'percentage', 'shares', 'adjustment', 'reimbursement', 'itemized'}:
                     raise SplitValidationError('Unsupported split type')
 
                 payer_member = session.query(GroupMember).filter(
@@ -856,10 +887,13 @@ class ExpenseServiceSQL:
                 amount_changed = desired_amount != old_amount
                 split_type_changed = desired_split_type != old_split_type
                 replace_splits = splits is not None or split_type_changed or amount_changed
+                if split_details is not _UNSET and splits is None:
+                    raise SplitValidationError('Splits are required when changing bill details')
                 if splits is not None:
                     new_splits = ExpenseServiceSQL._calculate_splits(
                         session, expense.group_id, expense_id, desired_amount,
                         desired_payer, desired_split_type, splits,
+                        expense.split_details if split_details is _UNSET else split_details,
                     )
                 elif desired_split_type == 'equal' and replace_splits:
                     # An equal split can safely recalculate its existing
@@ -882,6 +916,12 @@ class ExpenseServiceSQL:
                     new_splits = old_splits
 
                 changes = []
+                if replace_splits:
+                    details = ExpenseServiceSQL._split_details(desired_split_type, splits,
+                        expense.split_details if split_details is _UNSET else split_details)
+                    if details != expense.split_details:
+                        changes.append({'field': 'split_details', 'old': expense.split_details, 'new': details})
+                    expense.split_details = details
                 if description is not None:
                     new_desc = description.strip()
                     if new_desc != old_description:

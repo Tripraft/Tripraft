@@ -11,14 +11,17 @@ export function SpendAreaChart({ daily, currency = 'USD', displayCurrency = curr
   const formatMoney = useMoneyDisplay(currency, displayCurrency);
   const id = `spend-${useId().replace(/:/g, '')}`;
   const max = Math.max(...daily.map(day => Number(day.amount) || 0), 1);
-  const points = daily.map((day, index) => ({ ...day, x: 14 + index / Math.max(1, daily.length - 1) * 572, y: 146 - Number(day.amount) / max * 120 }));
+  const min = Math.min(...daily.map(day => Number(day.amount) || 0), 0);
+  const zeroY = 146 - (0 - min) / (max - min) * 120;
+  const points = daily.map((day, index) => ({ ...day, x: 14 + index / Math.max(1, daily.length - 1) * 572, y: 146 - (Number(day.amount) - min) / (max - min) * 120 }));
   const line = points.map(point => `${point.x},${point.y}`).join(' ');
   return <div className="expense-analysis-area">
     <div className="expense-analysis-chart-scale"><span>{formatMoney(max === 1 && daily.every(day => !day.amount) ? 0 : max, currency)}</span><span>Daily amount</span></div>
     <svg viewBox="0 0 600 170" role="img" aria-label="Daily spending over 14 calendar days">
       <defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop stopColor="#8b5cf6" stopOpacity=".25" /><stop offset="1" stopColor="#8b5cf6" stopOpacity="0" /></linearGradient></defs>
       {[26, 66, 106, 146].map(y => <line key={y} x1="14" x2="586" y1={y} y2={y} stroke="currentColor" strokeOpacity=".08" strokeDasharray="4 5" />)}
-      <polygon points={`14,146 ${line} 586,146`} fill={`url(#${id})`} />
+      <line x1="14" x2="586" y1={zeroY} y2={zeroY} stroke="currentColor" strokeOpacity=".2" />
+      <polygon points={`14,${zeroY} ${line} 586,${zeroY}`} fill={`url(#${id})`} />
       <polyline points={line} stroke="#8b5cf6" strokeWidth="2.5" fill="none" strokeLinejoin="round" />
       {points.map(point => <circle key={point.date} cx={point.x} cy={point.y} r="3.5" fill="white" stroke="#8b5cf6" strokeWidth="2"><title>{dayLabel(point.date)}: {formatMoney(point.amount, currency)}</title></circle>)}
     </svg>
@@ -70,7 +73,7 @@ export default function ExpenseAnalysisView({ mode = 'personal', expenses = [], 
             })}</svg><div className="expense-analysis-donut-center"><strong>{money(analysis.total)}</strong><span>{scope === 'share' ? 'your share' : mode === 'group' ? 'group total' : 'total spend'}</span></div>
         </div><ul className="expense-analysis-legend">{analysis.categoryData.map(category => <li key={category.name}><i style={{ background: category.color }} /><span>{category.name}</span><strong>{Math.round(category.percent)}%</strong></li>)}</ul></article>
         <article className="expense-analysis-panel"><h3>Spend by category</h3><p className="expense-analysis-panel-caption">{scope === 'share' ? 'Your recorded split of each category.' : 'The things that made the journey.'}</p>
-          <div className="expense-analysis-bars">{analysis.categoryData.map(category => <div className="expense-analysis-bar" key={category.name}><span>{category.name}</span><strong>{money(category.value)}</strong><span className="expense-analysis-bar-track"><i style={{ background: category.color, width: `${category.value / topCategory.value * 100}%` }} /></span></div>)}</div>
+          <div className="expense-analysis-bars">{analysis.categoryData.map(category => <div className="expense-analysis-bar" key={category.name}><span>{category.name}</span><strong>{money(category.value)}</strong><span className="expense-analysis-bar-track"><i style={{ background: category.color, width: `${topCategory?.value > 0 ? Math.max(0, category.value) / topCategory.value * 100 : 0}%` }} /></span></div>)}</div>
         </article>
       </div>
       <article className="expense-analysis-panel expense-analysis-daily"><div className="expense-analysis-panel-heading"><h3>Daily spending</h3><span>14 days ending {dayLabel(analysis.daily[13].date)}</span></div><SpendAreaChart daily={analysis.daily} currency={currency} displayCurrency={displayCurrency} /></article>

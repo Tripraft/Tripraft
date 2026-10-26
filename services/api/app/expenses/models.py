@@ -7,6 +7,7 @@ All expense-specific models (Group, Expense, Settlement, etc.) are defined here.
 """
 
 from datetime import date
+import json
 from decimal import Decimal, ROUND_HALF_UP
 
 from app.auth.models import User, UserSession
@@ -19,6 +20,19 @@ from sqlalchemy import (JSON, Boolean, CheckConstraint, Column, Date, DateTime, 
                         UniqueConstraint)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy.types import TypeDecorator
+
+
+class SplitDetailsJSON(TypeDecorator):
+    """JSON split inputs stored as portable text, supported by additive dev migrations."""
+    impl = Text
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        return json.dumps(value) if value is not None else None
+
+    def process_result_value(self, value, dialect):
+        return json.loads(value) if value is not None else None
 
 
 _MONEY_QUANTUM = Decimal('0.01')
@@ -135,6 +149,7 @@ class Expense(Base):
     currency = Column(String(3), default='USD')
     paid_by = Column(Uuid, ForeignKey('users.id'), nullable=False)
     split_type = Column(String(20), default='equal')  # equal, exact, percentage, shares, none
+    split_details = Column(SplitDetailsJSON, nullable=True)
     category = Column(String(50))
     notes = Column(Text)
     expense_date = Column(Date, default=date.today)
@@ -165,6 +180,7 @@ class Expense(Base):
             'paid_by': str(self.paid_by),
             'paid_by_name': self.payer.display_name if self.payer else None,
             'split_type': self.split_type,
+            'split_details': self.split_details,
             'category': self.category,
             'notes': self.notes,
             'expense_date': self.expense_date.isoformat() if self.expense_date is not None else None,  # type: ignore
