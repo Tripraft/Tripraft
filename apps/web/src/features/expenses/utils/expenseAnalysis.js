@@ -1,6 +1,7 @@
 // Purpose: Builds spending totals, saved-share breakdowns, category aggregates and complete calendar-day series while excluding income and deleted entries.
 export const ANALYSIS_COLORS = ['#8b5cf6', '#38bdf8', '#34d399', '#fbbf24', '#f472b6', '#a78bfa', '#fb7185', '#2dd4bf'];
 import { isPersonalIncome } from './personalTransactions';
+import { expenseParticipation } from './expensePeople';
 
 export function expenseDay(expense) {
   const raw = expense.expense_date || expense.date || expense.created_at;
@@ -29,9 +30,9 @@ export function analyzeExpenses(expenses, { range = 'all', scope = 'group', mode
   const entries = active.map(expense => ({
     ...expense,
     day: expenseDay(expense),
-    value: scope === 'share' ? (expense.splits || []).reduce((sum, split) =>
-      sum + (String(split.user_id) === String(userId) ? Number(split.amount) || 0 : 0), 0) : Number(expense.amount) || 0,
-  })).filter(expense => expense.value !== 0);
+    value: scope === 'share' ? expenseParticipation(expense, userId).amount : Number(expense.amount) || 0,
+    involved: scope === 'share' ? expenseParticipation(expense, userId).involved : true,
+  })).filter(expense => mode === 'group' || expense.value !== 0);
   const categories = {}, dayTotals = {};
   entries.forEach(expense => {
     categories[expense.category || 'Other'] = (categories[expense.category || 'Other'] || 0) + expense.value;
@@ -39,8 +40,11 @@ export function analyzeExpenses(expenses, { range = 'all', scope = 'group', mode
   });
   const total = entries.reduce((sum, expense) => sum + expense.value, 0);
   const positiveCategoryTotal = Object.values(categories).reduce((sum, value) => sum + Math.max(0, value), 0);
-  const categoryData = Object.entries(categories).sort((a, b) => b[1] - a[1]).map(([name, value], index) =>
-    ({ name, value, percent: positiveCategoryTotal ? Math.max(0, value) / positiveCategoryTotal * 100 : 0, color: ANALYSIS_COLORS[index % ANALYSIS_COLORS.length] }));
+  const categoryNames = Object.keys(categories).sort();
+  const categoryData = Object.entries(categories).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([name, value]) =>
+    ({ name, value, involved: entries.some(e => (e.category || 'Other') === name && e.involved),
+      percent: positiveCategoryTotal ? Math.max(0, value) / positiveCategoryTotal * 100 : 0,
+      color: ANALYSIS_COLORS[categoryNames.indexOf(name) % ANALYSIS_COLORS.length] }));
   const dates = Object.keys(dayTotals).sort();
   const end = dates[dates.length - 1] || today;
   const endDate = new Date(`${end}T12:00:00`);

@@ -8,7 +8,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import ExpenseSummary from './ExpenseSummary';
 import CurrencySelect from '../../../components/common/jsx/CurrencySelect';
-import CurrencyConversion from '../../../components/common/jsx/CurrencyConversion';
 import usePersonalDashboard from '../../../hooks/usePersonalDashboard';
 import usePersonalCurrency from '../../../hooks/usePersonalCurrency';
 
@@ -693,11 +692,6 @@ const ExpenseManager = () => {
           <GroupDetailHeader group={activeGroupData} members={activeGroupMembers || []} overview={overview}
             busy={mutationLoading || groupDetailLoading} onBack={() => { setExpenseView('group'); refetchGroups(); }}
             onCreate={() => setShowNewGroup(true)} onAdd={handleOpenModal} onSettle={() => openGroupTab('settleup')} />
-          <CurrencyConversion key={activeGroupId} base={activeGroupData.currency || 'USD'} preferredCurrency={activeGroupData.display_currency || activeGroupData.currency || 'USD'} amounts={[
-            {label: 'Total group spend', amount: transactions.filter(t => !t.is_deleted).reduce((sum, t) => sum + Number(t.amount || 0), 0)},
-            {label: 'Outstanding balances', amount: remainingBalance},
-            {label: 'Settled', amount: (activeGroupSettlements || []).reduce((sum, t) => sum + Number(t.amount || 0), 0)},
-          ]} />
           <GroupSummaryCards remainingBalance={remainingBalance}
             totalSettlements={(activeGroupSettlements || []).reduce((sum, settlement) => sum + (Number(settlement.amount) || 0), 0)}
             settlementCount={(activeGroupSettlements || []).length}
@@ -782,7 +776,7 @@ const ExpenseManager = () => {
         />
       )}
 
-      {showNewGroup && <NewExpenseGroupModal onClose={() => setShowNewGroup(false)} onCreate={handleCreateGroup} />}
+      {showNewGroup && <NewExpenseGroupModal onClose={() => { setShowNewGroup(false); if (activeGroupId) refetchGroupDetail(); }} onCreate={handleCreateGroup} />}
 
       {mode === 'personal' && showFloatingAdd && !showTransactionModal && <button
         className="btn-add-transaction expense-floating-add" onClick={handleOpenModal} disabled={mutationLoading}>

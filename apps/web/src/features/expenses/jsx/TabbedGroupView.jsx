@@ -84,6 +84,8 @@ const TabbedGroupView = ({
       {/* Tab Headers */}
       <div className="expense-group-tablist" role="tablist" aria-label="Group details" style={{
         display: 'flex',
+        flexWrap: 'wrap',
+        overflow: 'visible',
         borderBottom: '1px solid #e5e7eb',
         background: '#f9fafb'
       }}>
@@ -110,7 +112,7 @@ const TabbedGroupView = ({
               }}
               onClick={() => setActiveTab(tab.id)}
               style={{
-                flex: 1,
+                flex: '1 1 150px',
                 padding: '1rem',
                 border: 'none',
                 background: isActive ? 'white' : 'transparent',
@@ -123,9 +125,7 @@ const TabbedGroupView = ({
                 fontSize: '0.95rem',
                 fontWeight: isActive ? '600' : '500',
                 transition: 'all 0.2s ease',
-                borderBottom: isActive ? `3px solid ${tab.color}` : 'none',
-                position: 'relative',
-                top: isActive ? '1px' : '0'
+                borderBottom: `2px solid ${isActive ? tab.color : 'transparent'}`,
               }}
             >
               <Icon size={18} style={{ color: tab.color }} />

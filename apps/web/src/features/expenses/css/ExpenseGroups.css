@@ -97,8 +97,8 @@
 .expense-detail-summary-card strong { font-size: 22px; font-weight: 700; letter-spacing: -.03em; overflow-wrap: anywhere; }
 .expense-detail-summary-card small { display: flex; align-items: center; gap: 6px; color: var(--expense-accent); font-size: 11px; margin-top: auto; }
 .expense-group-tabs { border-radius: 18px !important; }
-.expense-group-tablist { overflow-x: auto; background: var(--expense-surface) !important; }
-.expense-group-tablist > button { flex: 1 0 auto !important; white-space: nowrap; gap: 7px !important; padding: 16px 17px !important; font-size: 13px !important; border-bottom: 2px solid transparent !important; background: transparent !important; }
+.expense-group-tablist { flex-wrap: wrap; overflow: visible; background: var(--expense-surface) !important; }
+.expense-group-tablist > button { flex: 1 1 150px !important; min-width: 0; white-space: normal; gap: 7px !important; padding: 16px 12px !important; font-size: 13px !important; border-bottom: 2px solid transparent !important; background: transparent !important; }
 .expense-group-tablist > button svg { color: inherit !important; }
 .expense-group-tablist > button[aria-selected="true"] { color: var(--expense-accent) !important; border-bottom-color: var(--expense-accent) !important; background: var(--expense-tint) !important; }
 .expense-group-tabpanel .group-cards { display: grid; grid-template-columns: 1fr 1.4fr; gap: 20px; }
@@ -109,7 +109,10 @@
 .expense-create-dialog h2 { font-size: 24px; letter-spacing: -.03em; margin: 18px 0 5px; }
 .expense-create-dialog > p { font-size: 13px; color: var(--color-text-tertiary, #6b7280); margin-bottom: 23px; }
 .expense-create-dialog label { display: block; font-size: 13px; font-weight: 600; margin: 16px 0 7px; }
-.expense-create-dialog input, .expense-create-dialog select { display: block; width: 100%; border: 1px solid var(--color-border-default, #d1d5db); border-radius: 10px; background: var(--color-bg-primary, #fff); color: inherit; padding: 12px; font: inherit; font-size: 14px; }
+.expense-create-dialog input, .expense-create-dialog select, .expense-create-dialog textarea { display: block; width: 100%; border: 1px solid var(--color-border-default, #d1d5db); border-radius: 10px; background: var(--color-bg-primary, #fff); color: inherit; padding: 12px; font: inherit; font-size: 14px; }
+.expense-create-dialog textarea { resize: vertical; }
+.expense-create-invite-results { list-style: none; padding: 0; display: grid; gap: 12px; font-size: 12px; overflow-wrap: anywhere; }
+.expense-create-invite-results li { display: grid; gap: 5px; }
 .expense-create-hint { font-size: 12px; line-height: 1.6; color: var(--color-text-tertiary, #6b7280); margin-top: 13px; }
 .expense-form-error { color: #be123c; font-size: 13px; margin-top: 12px; }
 .expense-create-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
