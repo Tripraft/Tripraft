@@ -82,7 +82,7 @@ class ExpenseApiService {
   // =========================================================================
 
   async createGroup(groupData) {
-    return apiClient.post(`${BASE}/groups`, groupData);
+    return apiClient.post(`${BASE}/groups?compact=true`, groupData);
   }
 
   async getGroup(groupId) {

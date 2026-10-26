@@ -120,8 +120,10 @@ class GroupServiceSQL:
             session.add(group)
             session.flush()
             member = join_member(session, group, user_id)
+            session.flush()
+            result = {'group': group_dict(group, member, trips={})}
             session.commit()
-            return {'group': group_dict(group, member)}
+            return result
 
     @staticmethod
     @service_result
@@ -177,8 +179,10 @@ class GroupServiceSQL:
                 else:
                     setattr(group, key, value)
             group.updated_at = datetime.now(timezone.utc)
+            session.flush()
+            result = {'group': group_dict(group, member)}
             session.commit()
-            return {'group': group_dict(group, member)}
+            return result
 
     @staticmethod
     @service_result
@@ -193,8 +197,9 @@ class GroupServiceSQL:
             for invitation in session.query(Invitation).filter_by(group_id=group.id, status='pending'):
                 invitation.status = 'cancelled'
                 invitation.responded_at = datetime.now(timezone.utc)
+            result = {'message': 'Group deleted successfully', 'group_id': str(group.id)}
             session.commit()
-            return {'message': 'Group deleted successfully', 'group_id': str(group.id)}
+            return result
 
     @staticmethod
     @service_result

@@ -1272,35 +1272,34 @@ export function useInvitations() {
  * Personal expenses with optimistic delete / rollback.
  * Uses a dedicated React Query key since no existing hook covers this.
  */
-export function usePersonalExpenses() {
+export function usePersonalExpenses({enabled = true} = {}) {
   const queryClient = useQueryClient();
   const personalKey = ['personalExpenses'];
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: personalKey,
+    enabled,
     queryFn: async () => {
       // Keep soft-deleted rows after reload without letting them displace active pages.
-      const expenses = [];
-      let offset = 0;
-      for (;;) {
-        const page = unwrapEnvelope(await expenseApi.getUserExpenses({ personal_only: true, include_deleted: true, limit: 100, offset }));
-        const rows = page.expenses || [];
-        expenses.push(...rows);
-        offset += rows.length;
-        if (!page.has_more) break;
-        if (!rows.length) throw new Error('Personal history changed while loading. Please refresh.');
-      }
-      if (expenseApi.getIncomes) {
-        let incomeOffset = 0;
+      const readPages = async (read, field, convert = row => row) => {
+        const result = [];
+        let offset = 0;
         for (;;) {
-          const page = unwrapEnvelope(await expenseApi.getIncomes({limit: 100, offset: incomeOffset}));
-          const rows = page.incomes || [];
-          expenses.push(...rows.map(row => ({...row, _income: true, type: 'income', expense_date: row.income_date, created_by: row.user_id})));
-          incomeOffset += rows.length;
+          const page = unwrapEnvelope(await read(offset));
+          const rows = page[field] || [];
+          result.push(...rows.map(convert));
+          offset += rows.length;
           if (!page.has_more) break;
-          if (!rows.length) throw new Error('Income history changed while loading. Please refresh.');
+          if (!rows.length) throw new Error('Personal history changed while loading. Please refresh.');
         }
-      }
+        return result;
+      };
+      const [expenseRows, incomeRows] = await Promise.all([
+        readPages(offset => expenseApi.getUserExpenses({personal_only: true, include_deleted: true, limit: 100, offset}), 'expenses'),
+        expenseApi.getIncomes ? readPages(offset => expenseApi.getIncomes({limit: 100, offset}), 'incomes',
+          row => ({...row, _income: true, type: 'income', expense_date: row.income_date, created_by: row.user_id})) : [],
+      ]);
+      const expenses = [...expenseRows, ...incomeRows];
       return { expenses: [...new Map(expenses.map(row => [row.id || row.expense_id, row])).values()] };
     },
     // Live notifications and reconnect/poll recovery own freshness. Returning

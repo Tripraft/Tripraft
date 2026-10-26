@@ -78,6 +78,15 @@ Description and category can be cleared with JSON `null`. Currency can change
 only before any expense or settlement has ever been recorded, including rows
 subsequently deleted; metadata edits never imply a currency conversion.
 
+`POST /groups?compact=true` returns the created `group` and `group_id` without
+reloading the account's other groups and summaries. The web client inserts the
+saved group immediately and reconciles its cards in the background. Omitting
+`compact` preserves the existing response with the account's `groups` list.
+Settlement create/delete responses serialize balances and simplified debts from
+the write transaction before committing, avoiding separate post-save reads.
+New-group invitations run with at most three concurrent requests, retain delivery
+feedback for each recipient, and retry only unsuccessful recipients.
+
 Creation and update also accept `display_currency`, nullable `budget`, and
 nullable ISO `start_date`/`end_date`. Only the owner may update these settings.
 Budget is a nonnegative amount in ledger currency, at most 9999999999.99,

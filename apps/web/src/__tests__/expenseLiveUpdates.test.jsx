@@ -58,6 +58,19 @@ it('coalesces bursts and updates group cards, balances, invitations and open his
   expect(invalidate.mock.calls.filter(([options]) => options.queryKey[0] === 'group')).toHaveLength(1);
 });
 
+it('keeps personal and unrelated group ledgers out of targeted live refreshes', async () => {
+  const invalidate = jest.spyOn(client, 'invalidateQueries');
+  renderHook(() => useExpenseLiveUpdates('member', 'current'), { wrapper });
+  await waitFor(() => expect(io).toHaveBeenCalled());
+  act(() => { events['expenses:changed']({ group_id: 'other' }); jest.advanceTimersByTime(150); });
+  expect(invalidate).toHaveBeenCalledWith({ queryKey: ['group', 'other'], refetchType: 'active' });
+  expect(invalidate).not.toHaveBeenCalledWith({ queryKey: ['personalExpenses'], refetchType: 'active' });
+  expect(invalidate).not.toHaveBeenCalledWith({ queryKey: ['group', 'current'], refetchType: 'active' });
+  invalidate.mockClear();
+  act(() => { events['expenses:changed']({ personal: true }); jest.advanceTimersByTime(150); });
+  expect(invalidate.mock.calls.map(([options]) => options.queryKey)).toEqual([['personalExpenses']]);
+});
+
 it('clears revoked private data immediately rather than waiting for the API', async () => {
   client.setQueryData(['group', 'group'], { group: { id: 'group', expenses: [{ amount: 50 }] } });
   client.setQueryData(['groups'], { groups: [{ id: 'group' }, { id: 'other' }] });

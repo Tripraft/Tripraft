@@ -6467,6 +6467,17 @@
       "post": {
         "description": "Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger.",
         "operationId": "groups_sql_create_group_post_api_v1_expenses_groups",
+        "parameters": [
+          {
+            "description": "Return the created group without reloading all account groups and their summaries.",
+            "in": "query",
+            "name": "compact",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {

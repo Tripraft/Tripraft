@@ -41,21 +41,28 @@ export default function NewExpenseGroupModal({ onClose, onCreate, defaultCurrenc
             groupRef.current = id;
           }
           const next = { ...deliveries };
-          for (const email of recipients) {
-            if (next[email]?.success) continue;
-            try {
-              const response = next[email]?.id
-                ? await expenseApi.resendInvitation(next[email].id)
-                : await expenseApi.sendInvitation({ group_id: groupRef.current, invitee_email: email });
-              if (response?.success === false) throw new Error(response.error?.message || response.message || 'Could not send invitation.');
-              const result = response?.data || response;
-              const status = result?.email_status;
-              const success = status === 'sent' || status === 'queued';
-              next[email] = { success, id: result?.invitation?.id || result?.invitation?.invitation_id || next[email]?.id,
-                message: status === 'sent' ? 'Invitation email sent.' : status === 'queued' ? 'Invitation email queued.' : 'Invitation created, but email was not delivered. You can retry from here or share its link in Members.' };
-            } catch (failure) { next[email] = { ...next[email], success: false, message: failure.message || 'Could not send invitation. Please retry.' }; }
-            setDeliveries({ ...next });
-          }
+          const pending = recipients.filter(email => !next[email]?.success);
+          // Bound concurrency so larger groups finish promptly without flooding
+          // the API or resending recipients whose delivery already succeeded.
+          let cursor = 0;
+          const sendNext = async () => {
+            while (cursor < pending.length) {
+              const email = pending[cursor++];
+              try {
+                const response = next[email]?.id
+                  ? await expenseApi.resendInvitation(next[email].id)
+                  : await expenseApi.sendInvitation({ group_id: groupRef.current, invitee_email: email });
+                if (response?.success === false) throw new Error(response.error?.message || response.message || 'Could not send invitation.');
+                const result = response?.data || response;
+                const status = result?.email_status;
+                const success = status === 'sent' || status === 'queued';
+                next[email] = { success, id: result?.invitation?.id || result?.invitation?.invitation_id || next[email]?.id,
+                  message: status === 'sent' ? 'Invitation email sent.' : status === 'queued' ? 'Invitation email queued.' : 'Invitation created, but email was not delivered. You can retry from here or share its link in Members.' };
+              } catch (failure) { next[email] = { ...next[email], success: false, message: failure.message || 'Could not send invitation. Please retry.' }; }
+              setDeliveries({ ...next });
+            }
+          };
+          await Promise.all(Array.from({length: Math.min(3, pending.length)}, sendNext));
         } catch (failure) { setError(failure.message || 'Could not create group. Please try again.'); }
         finally { busyRef.current = false; setSaving(false); }
       }}>

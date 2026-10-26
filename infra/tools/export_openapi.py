@@ -172,6 +172,11 @@ def build(application):
                 operation['requestBody'] = {'required': True, 'content': {'application/json': {
                     'schema': ref('CreateExpenseGroup' if method == 'POST' else 'UpdateExpenseGroup')}}}
                 operation['description'] = 'Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger.'
+                if method == 'POST':
+                    operation.setdefault('parameters', []).append({
+                        'name': 'compact', 'in': 'query', 'schema': {'type': 'boolean', 'default': False},
+                        'description': 'Return the created group without reloading all account groups and their summaries.',
+                    })
             elif route == '/api/v1/expenses/friends':
                 operation['security'] = [{'cookieAuth': []}]
                 operation['responses']['200'] = response(ref('ExpenseFriendsResponse' if method == 'GET' else 'ExpenseFriendResponse'))

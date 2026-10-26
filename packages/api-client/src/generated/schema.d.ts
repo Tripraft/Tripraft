@@ -7451,7 +7451,10 @@ export interface operations {
     };
     groups_sql_create_group_post_api_v1_expenses_groups: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the created group without reloading all account groups and their summaries. */
+                compact?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;

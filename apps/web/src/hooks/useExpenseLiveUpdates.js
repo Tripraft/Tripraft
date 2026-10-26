@@ -13,30 +13,34 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
   useEffect(() => {
     if (!userId) return;
     let cancelled = false, connecting = false, socket, timer, authRecoveryUsed = false;
+    let personalChanged = false;
     const groups = new Set(), expenses = new Set();
     const invalidate = key => queryClient.invalidateQueries({ queryKey: key, refetchType: 'active' });
-    const refresh = () => {
+    const refresh = (full = true) => {
       if (cancelled || document.hidden || navigator.onLine === false) return;
-      invalidate(['personalExpenses']);
-      invalidate(['user', 'expense-friends', userId]);
-      invalidate(['groups']);
-      invalidate(['invitations']);
-      if (activeGroupRef.current) groups.add(activeGroupRef.current);
+      if (full || personalChanged) invalidate(['personalExpenses']);
+      if (full || groups.size) {
+        invalidate(['user', 'expense-friends', userId]);
+        invalidate(['groups']);
+        invalidate(['invitations']);
+      }
+      if (full && activeGroupRef.current) groups.add(activeGroupRef.current);
       for (const id of groups) {
         for (const prefix of ['group', 'expenses', 'settlements', 'recent-history', 'mega-bootstrap']) invalidate([prefix, id]);
       }
       if (expenses.size) {
         for (const id of expenses) invalidate(['expense-edit-history', id]);
-      } else invalidate(['expense-edit-history']); // Also recover an already-open history after missed events.
-      groups.clear(); expenses.clear();
+      } else if (full) invalidate(['expense-edit-history']); // Recover history after missed events.
+      groups.clear(); expenses.clear(); personalChanged = false;
     };
     const schedule = () => {
       if (timer) return;
-      timer = setTimeout(() => { timer = null; refresh(); }, 150);
+      timer = setTimeout(() => { timer = null; refresh(false); }, 150);
     };
     const onChange = data => {
       if (cancelled) return;
       if (data?.personal) {
+        personalChanged = true;
         if (data.currency_changed) invalidate(['user', 'personal-currency', userId]);
         for (const id of data.expense_ids || []) expenses.add(id);
         schedule();

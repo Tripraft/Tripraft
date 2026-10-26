@@ -112,7 +112,7 @@ const ExpenseManager = () => {
     setExpenses: setPersonalExpenses,
     markAsDeleted: markPersonalAsDeleted,
     rollbackDelete: rollbackPersonalDelete
-  } = usePersonalExpenses();
+  } = usePersonalExpenses({enabled: mode === 'personal' && isAuthenticated});
 
   const personalDashboard = usePersonalDashboard(personalExpenses || [], personalCurrency || 'USD', mode === 'personal' && Boolean(personalCurrency));
   const personalConversionPending = !personalCurrency || personalDashboard.loading || Boolean(personalDashboard.error);
@@ -342,7 +342,7 @@ const ExpenseManager = () => {
       if (result?.groups && Array.isArray(result.groups)) {
         updateGroupsFromResponse(result.groups);
       } else {
-        // Fallback: Refetch groups if not returned
+        if (result?.group) setGroups(previous => [result.group, ...previous.filter(group => String(group.id || group.group_id) !== String(result.group.id))]);
         refreshAfterSave(refetchGroups);
       }
       
