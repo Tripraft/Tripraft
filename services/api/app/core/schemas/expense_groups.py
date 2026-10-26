@@ -1,19 +1,33 @@
 """Expense group inputs match persisted limits and reject unsupported role escalation."""
 from marshmallow import Schema, ValidationError, fields, validate, validates_schema
+from decimal import Decimal, ROUND_HALF_UP
 
 from app.core.config import Config
 from app.core.schemas.fields import CurrencyCode, TrimmedString
 from app.core.schemas.invitations import _EmailNormalizingSchema
 
 
-class CreateExpenseGroupSchema(Schema):
+class GroupPreferencesSchema(Schema):
+    display_currency = CurrencyCode()
+    budget = fields.Decimal(places=2, rounding=ROUND_HALF_UP, allow_none=True,
+                            validate=validate.Range(min=Decimal('0'), max=Decimal('9999999999.99')))
+    start_date = fields.Date(allow_none=True)
+    end_date = fields.Date(allow_none=True)
+
+    @validates_schema
+    def valid_dates(self, data, **kwargs):
+        if data.get('start_date') and data.get('end_date') and data['start_date'] > data['end_date']:
+            raise ValidationError('End date must be on or after start date')
+
+
+class CreateExpenseGroupSchema(GroupPreferencesSchema):
     name = TrimmedString(required=True, validate=validate.Length(min=1, max=100))
     description = TrimmedString(validate=validate.Length(max=1000), allow_none=True)
     currency = CurrencyCode(load_default=Config.DEFAULT_CURRENCY)
     category = TrimmedString(validate=validate.Length(max=50), allow_none=True)
 
 
-class UpdateExpenseGroupSchema(Schema):
+class UpdateExpenseGroupSchema(GroupPreferencesSchema):
     name = TrimmedString(validate=validate.Length(min=1, max=100))
     description = TrimmedString(validate=validate.Length(max=1000), allow_none=True)
     currency = CurrencyCode()

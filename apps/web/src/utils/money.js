@@ -15,7 +15,15 @@ export function equalSplits(amount, ids) {
   return members.map((user_id, i) => ({ user_id, amount: (base + (i < remainder ? 1 : 0)) / 100 }));
 }
 
+export function expenseInput(expense) {
+  if (!expense?.original) return expense;
+  return {...expense, amount: expense.original.amount, currency: expense.original.currency,
+    splits: expense.original.splits, split_type: expense.original.split_type,
+    split_details: expense.original.split_details};
+}
+
 export function expensePayload(data, { groupId, editingExpense, currency = 'USD' } = {}) {
+  editingExpense = expenseInput(editingExpense);
   const amount = Math.round(Number(data.amount) * 100) / 100;
   if (!Number.isFinite(amount) || amount <= 0) throw new Error('Enter a positive amount.');
   const payload = { description: data.description.trim(), category: data.category, expense_date: data.expense_date };
@@ -31,6 +39,7 @@ export function expensePayload(data, { groupId, editingExpense, currency = 'USD'
     const canonicalJSON = value => JSON.stringify(value, (_, entry) => entry && typeof entry === 'object' && !Array.isArray(entry)
       ? Object.fromEntries(Object.entries(entry).sort(([a], [b]) => a.localeCompare(b))) : entry);
     const unchanged = editingExpense && savedType === data.split_type
+      && (!data.currency || data.currency === editingExpense.currency)
       && Math.round(Math.abs(Number(editingExpense.amount)) * 100) === Math.round(amount * 100)
       && saved.length === data.splits.length && data.splits.every(split => {
         const row = saved.find(entry => String(entry.user_id) === String(split.user_id));
@@ -40,7 +49,7 @@ export function expensePayload(data, { groupId, editingExpense, currency = 'USD'
           && (data.split_type !== 'adjustment' || Number(editingExpense.split_details?.adjustments?.[split.user_id] || 0) === Number(split.adjustment || 0));
       }) && (data.split_type !== 'itemized' || canonicalJSON(editingExpense.split_details) === canonicalJSON(data.split_details));
     if (unchanged) return payload;
-    Object.assign(payload, { amount, split_type: data.split_type, splits: data.splits, split_details: data.split_details ?? null });
+      Object.assign(payload, { amount, currency: data.currency || currency, split_type: data.split_type, splits: data.splits, split_details: data.split_details ?? null });
     return payload;
   }
   const splitType = String(editingExpense?.split_type || 'equal').toLowerCase();

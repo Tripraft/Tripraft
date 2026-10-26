@@ -6,6 +6,7 @@ Raw SQL audit CSV exports, compressed bundles, detailed JSON dumps and local Sma
 
 | Report | Recorded subject |
 |---|---|
+| [reports/expense-collaboration-currency-analysis-2026-10-26.md](reports/expense-collaboration-currency-analysis-2026-10-26.md) | Shared group updates, source currency receipts, mutual friends, budgets and calendar analysis |
 | [reports/expense-invitations-latency-2026-10-25.md](reports/expense-invitations-latency-2026-10-25.md) | Pending invitation retries, accurate email feedback and expense mutation latency |
 | [reports/agent-signature-and-live-reload-2026-10-19.md](reports/agent-signature-and-live-reload-2026-10-19.md) | Agent-only signing after approval and local server recovery |
 | [reports/email-verification-page-fix.md](reports/email-verification-page-fix.md) | Email verification blank page — 2026-10-12 |

@@ -58,6 +58,12 @@ const GroupManager = ({
   const [editingGroup, setEditingGroup] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [groupDescription, setGroupDescription] = useState('');
+  const [groupCurrency, setGroupCurrency] = useState('USD');
+  const [groupBudget, setGroupBudget] = useState('');
+  const [groupStart, setGroupStart] = useState('');
+  const [groupEnd, setGroupEnd] = useState('');
+  const [groupCategory, setGroupCategory] = useState('');
+  const isOwner = String(activeGroup?.created_by) === String(userId);
   useEffect(() => { setConfirmation(null); setActionError(''); setEditingGroup(false); }, [activeGroupId, canViewGroup]);
   const runAction = async (action) => {
     if (actionBusy) return;
@@ -417,13 +423,23 @@ const GroupManager = ({
         {compact || activeTab === 'members' ? <>{members.length ? memberList : <p className="expense-member-empty">No members yet. Invite someone to get started!</p>}{!compact && inviteForm}</> : <>{!compact && inviteForm}{invitationsList}</>}
       </section>{compact && <aside className="expense-members-aside">{inviteForm}{invitationsList}</aside>}</div>
       <details className="expense-member-settings" open={!compact || editingGroup || undefined}><summary><Settings size={16} />Group settings</summary><div className="expense-member-settings-content">
-        <div className="expense-member-settings-info"><strong>{activeGroup.name}</strong><span>{activeGroup.currency || 'USD'} &middot; {members.length} members</span></div>
-        <div className="expense-member-settings-actions">{permissions.can_update_group && !editingGroup && <button className="expense-secondary-button" onClick={() => { setGroupName(activeGroup.name); setGroupDescription(activeGroup.description || ''); setEditingGroup(true); }}>Edit group</button>}
+        <div className="expense-member-settings-info"><strong>{activeGroup.name}</strong><span>{activeGroup.display_currency || activeGroup.currency || 'USD'} display · {activeGroup.currency || 'USD'} ledger · {members.length} members</span>
+          <p>{activeGroup.description || 'No description yet'}</p><p>Budget: {activeGroup.budget != null ? formatMoney(activeGroup.budget, activeGroup.currency || 'USD') : 'Not set'}</p>
+          <p>{activeGroup.start_date || 'No start date'} – {activeGroup.end_date || 'No end date'}{activeGroup.category ? ` · ${activeGroup.category}` : ''}</p></div>
+        <div className="expense-member-settings-actions">{permissions.can_update_group && !editingGroup && <button className="expense-secondary-button" onClick={() => { setGroupName(activeGroup.name); setGroupDescription(activeGroup.description || ''); setGroupCurrency(activeGroup.display_currency || activeGroup.currency || 'USD'); setGroupBudget(activeGroup.budget ?? ''); setGroupStart(activeGroup.start_date || ''); setGroupEnd(activeGroup.end_date || ''); setGroupCategory(activeGroup.category || ''); setEditingGroup(true); }}>Edit group</button>}
         {permissions.can_leave_group && <button className="expense-secondary-button" disabled={actionBusy} onClick={() => confirm('Leave this group? Your balance must be zero. Your existing expense and payment history will be retained.', async () => { await expenseApi.leaveGroup(activeGroupId); if (onGroupLeave) await onGroupLeave(); })}>Leave group</button>}
         {permissions.can_delete_group && <button className="expense-secondary-button expense-member-remove" title="Delete Group (Owner Only)" onClick={() => confirm('Delete this group? All balances must be settled. The group will be archived and pending invitations cancelled.', handleDeleteGroup)}><Trash2 size={15} />Delete group</button>}</div>
         {editingGroup && permissions.can_update_group && <form className="expense-member-edit" onSubmit={event => {
-          event.preventDefault(); runAction(async () => { await expenseApi.updateGroup(activeGroupId, { name: groupName.trim(), description: groupDescription.trim() || null }); await refreshGroup(); setEditingGroup(false); });
-        }}><label>Group name<input value={groupName} maxLength={100} required onChange={event => setGroupName(event.target.value)} /></label><label>Description<textarea value={groupDescription} maxLength={1000} onChange={event => setGroupDescription(event.target.value)} /></label><div><button className="expense-primary-button" disabled={actionBusy || !groupName.trim()}>Save group</button><button className="expense-secondary-button" type="button" disabled={actionBusy} onClick={() => setEditingGroup(false)}>Cancel edit</button></div></form>}
+          event.preventDefault(); runAction(async () => { await expenseApi.updateGroup(activeGroupId, { name: groupName.trim(), description: groupDescription.trim() || null,
+            ...(groupCategory.trim() !== (activeGroup.category || '') && {category: groupCategory.trim() || null}),
+            ...(isOwner && {display_currency: groupCurrency, budget: groupBudget === '' ? null : groupBudget, start_date: groupStart || null, end_date: groupEnd || null}) }); await refreshGroup(); setEditingGroup(false); });
+        }}><fieldset disabled={actionBusy} style={{border: 0, padding: 0}}><label>Group name<input value={groupName} maxLength={100} required onChange={event => setGroupName(event.target.value)} /></label><label>Description<textarea value={groupDescription} maxLength={1000} onChange={event => setGroupDescription(event.target.value)} /></label>
+          <label>Category<input value={groupCategory} maxLength={50} onChange={event => setGroupCategory(event.target.value)} /></label>
+          {isOwner && <><label>Default display currency<CurrencySelect aria-label="Default display currency" value={groupCurrency} onChange={event => setGroupCurrency(event.target.value)} /></label>
+            <p>New expenses start in {groupCurrency}. Any member can enter another currency. Saved amounts stay in the {activeGroup.currency} group ledger.</p>
+            <label>Group budget ({activeGroup.currency})<input type="number" min="0" step="0.01" value={groupBudget} onChange={event => setGroupBudget(event.target.value)} /></label>
+            <label>Start date<input type="date" value={groupStart} onChange={event => setGroupStart(event.target.value)} /></label><label>End date<input type="date" min={groupStart || undefined} value={groupEnd} onChange={event => setGroupEnd(event.target.value)} /></label></>}
+          <div><button className="expense-primary-button" disabled={!groupName.trim()}>Save group</button><button className="expense-secondary-button" type="button" onClick={() => setEditingGroup(false)}>Cancel edit</button></div></fieldset></form>}
       </div></details>
     </>}
     {actionError && !confirmation && <p role="alert">{actionError}</p>}

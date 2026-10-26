@@ -19,7 +19,7 @@ import '../css/ExpenseHistoryModal.css';
 const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', currentUserId, currency = expense?.currency || 'USD' }) => {
   const expenseId = expense?.id || expense?.expense_id;
   
-  const { data, isLoading, error } = useExpenseEditHistory(expenseId);
+  const { data, isLoading, error } = useExpenseEditHistory(...(expense?._income ? [expenseId, true] : [expenseId]));
   
   const history = data?.history || [];
   const loadingState = isLoading;

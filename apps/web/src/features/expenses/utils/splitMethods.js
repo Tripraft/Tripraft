@@ -27,6 +27,18 @@ function allocate(total, weights) {
   return amounts;
 }
 
+// Convert the total first, then distribute whole ledger cents using the same
+// weights as the server. Converting each rounded source share can lose cents.
+export function convertedSplitPreview(result, amount, rate) {
+  const total = cents(number(amount) * number(rate));
+  const weights = result.splits.map(row => result.split_type === 'equal' ? 1
+    : result.split_type === 'percentage' ? number(row.percentage)
+    : result.split_type === 'shares' ? number(row.shares) : Math.abs(number(row.amount)));
+  const amounts = allocate(total, weights);
+  return {total: total / 100, splits: result.preview.map((row, index) => ({...row,
+    amount: amounts[index] / 100 * (result.split_type === 'reimbursement' ? -1 : 1)}))};
+}
+
 export function buildSplit({ splitType = 'equal', splitWith = [], splitValues = {}, bill, amount }) {
   const total = cents(amount), ids = splitWith.map(String);
   if (total <= 0) throw new Error('Enter a positive amount.');

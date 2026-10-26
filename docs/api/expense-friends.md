@@ -1,9 +1,10 @@
 # Saved friends for expense invitations
 
-Friends are private contacts owned by the signed-in user. Saving a contact does
-not send an invitation, create a mutual friendship or grant group membership.
-The picker is available in expense group membership management; group-planner
-integration is outside this change.
+Friends include saved contacts in either direction and all active co-members
+of every active expense group the signed-in user belongs to. A saved contact
+becomes reciprocal when its email belongs to an account. This does not grant
+group membership. Friends of friends and groups the caller does not belong to
+are excluded. Unregistered saved contacts remain visible to their saver.
 
 `GET /api/v1/expenses/friends` accepts `search`, `limit` (1–100, default 50) and
 `offset`. Search matches email, nickname and the registered user's full display
@@ -17,12 +18,20 @@ identities are rejected. Both routes require authentication; cookie mutations
 also require the existing CSRF header. Responses are private and not cached.
 
 Each friend includes `id`, `email`, `nickname`, `display_name`, `label`,
-`is_registered` and `user_id`. The label uses the private nickname first,
+`is_registered` and `user_id`. List rows also include `is_saved` and
+`shared_groups: [{id, name}]`; shared groups include only the caller's own
+groups. Derived friends use their account UUID as the row ID. The label uses the private nickname first,
 otherwise the registered display name, otherwise email. The UI shows registered
 friends by name rather than exposing their email in the picker. Selecting a
 friend supplies the email internally. Names resolve at read time, so a contact
 who signs up later appears by name without another invitation. Private live
-notifications refresh the owner's list when contacts or names change.
+notifications refresh affected users' lists when contacts, names or group
+membership change. Each viewer sees only their own saved nickname, otherwise
+the account display name or email. Another user's nickname is never copied.
+
+The existing expenses screen includes a collapsible friends/shared-groups
+graph and paginated friend list. Settlement suggestions include a directional
+payment graph. Neither graph expands into private groups or transitive contacts.
 
 Expense invitations accept an optional `nickname`. Successful invitation
 creation/resending and direct member addition save the contact for the actor.

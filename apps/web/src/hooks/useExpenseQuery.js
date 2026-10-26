@@ -363,11 +363,11 @@ export function useGroupHistory(groupId) {
 /**
  * Fetches individual expense edit history (for ExpenseHistoryModal).
  */
-export function useExpenseEditHistory(expenseId) {
+export function useExpenseEditHistory(expenseId, income = false) {
   return useQuery({
     queryKey: queryKeys.expenseEditHistory(expenseId),
     queryFn: async () => {
-      const response = await expenseApi.getExpenseHistory(expenseId);
+      const response = await (income ? expenseApi.getIncomeHistory(expenseId) : expenseApi.getExpenseHistory(expenseId));
       if (response && response.success === false) throw new Error(response.error || 'Failed to load history');
       return unwrapEnvelope(response);
     },
@@ -1289,6 +1289,17 @@ export function usePersonalExpenses() {
         offset += rows.length;
         if (!page.has_more) break;
         if (!rows.length) throw new Error('Personal history changed while loading. Please refresh.');
+      }
+      if (expenseApi.getIncomes) {
+        let incomeOffset = 0;
+        for (;;) {
+          const page = unwrapEnvelope(await expenseApi.getIncomes({limit: 100, offset: incomeOffset}));
+          const rows = page.incomes || [];
+          expenses.push(...rows.map(row => ({...row, _income: true, type: 'income', expense_date: row.income_date, created_by: row.user_id})));
+          incomeOffset += rows.length;
+          if (!page.has_more) break;
+          if (!rows.length) throw new Error('Income history changed while loading. Please refresh.');
+        }
       }
       return { expenses: [...new Map(expenses.map(row => [row.id || row.expense_id, row])).values()] };
     },

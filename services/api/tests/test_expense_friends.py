@@ -83,7 +83,8 @@ def test_direct_member_addition_saves_friend_for_the_actor(expense_group, bob):
     response = api.post('/api/v1/expenses/groups/' + group_id + '/members', json={'email': email})
     assert response.status_code == 201, response.get_json()
     assert friends(api)['friends'][0]['email'] == email
-    assert friends(other)['total'] == 0
+    assert friends(other)['total'] == 1
+    assert friends(other)['friends'][0]['shared_groups'][0]['id'] == group_id
 
 
 def test_search_is_literal_and_paginated(alice):

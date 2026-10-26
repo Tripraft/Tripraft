@@ -1,11 +1,11 @@
 // Purpose: Progressive split controls with participant toggles, bill item assignments and a live preview.
 import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
-import { SPLIT_METHODS, buildSplit } from '../utils/splitMethods';
+import { SPLIT_METHODS, buildSplit, convertedSplitPreview } from '../utils/splitMethods';
 import { formatMoney } from '../../../utils/money';
 import '../css/ExpenseSplitEditor.css';
 
-export default function ExpenseSplitEditor({ form, setForm, members, currency }) {
+export default function ExpenseSplitEditor({ form, setForm, members, currency, previewCurrency = currency, previewRate }) {
   const idOf = m => String(m.user_id || m.id);
   const nameOf = m => m.user?.display_name || m.display_name || m.user?.email || m.email || 'Member';
   const update = patch => setForm(prev => ({ ...prev, ...patch }));
@@ -16,6 +16,10 @@ export default function ExpenseSplitEditor({ form, setForm, members, currency })
   const itemChange = (index, patch) => update({ bill: { ...form.bill, items: form.bill.items.map((item, i) => i === index ? { ...item, ...patch } : item) } });
   let result, error;
   try { result = buildSplit(form); } catch (e) { error = e.message; }
+  const converted = result && previewRate > 0 && currency !== previewCurrency
+    ? convertedSplitPreview(result, form.amount, previewRate) : null;
+  const outputCurrency = converted ? previewCurrency : currency;
+  const preview = converted?.splits || result?.preview;
   const kind = form.splitType;
   const unit = kind === 'percentage' ? '%' : kind === 'shares' ? 'shares' : currency;
   const entered = form.splitWith.reduce((sum, id) => sum + (Number(form.splitValues[id]) || 0), 0);
@@ -25,6 +29,7 @@ export default function ExpenseSplitEditor({ form, setForm, members, currency })
       {SPLIT_METHODS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
     </select>
     <p id="split-help" className="split-help">{SPLIT_METHODS.find(([value]) => value === kind)?.[2]}</p>
+    {converted && <p className="split-help">Estimated shares in {outputCurrency}. Amount inputs use {currency}.</p>}
     {kind === 'percentage' && <p className="split-progress" aria-live="polite">{Number(entered.toFixed(2))}% of 100% · {Number((100 - entered).toFixed(2))}% remaining</p>}
     {['exact', 'reimbursement'].includes(kind) && <p className="split-progress" aria-live="polite">{formatMoney(entered, currency)} allocated · {formatMoney(Number(form.amount || 0) - entered, currency)} remaining</p>}
     <div className="split-members">
@@ -36,7 +41,7 @@ export default function ExpenseSplitEditor({ form, setForm, members, currency })
             <input type="number" aria-label={`${name} ${kind}`} step={kind === 'shares' ? '1' : '0.01'} min={kind === 'adjustment' ? undefined : '0'}
               placeholder={kind === 'shares' ? '1' : '0'} value={form.splitValues[id] ?? ''}
               onChange={e => update({ splitValues: { ...form.splitValues, [id]: e.target.value } })} /><span>{unit}</span></label>}
-          {included && result && <output aria-label={`${name} share`}>{formatMoney(result.preview.find(s => s.user_id === id)?.amount, currency)}</output>}
+          {included && result && <output aria-label={`${name} share`}>{formatMoney(preview.find(s => s.user_id === id)?.amount, outputCurrency)}</output>}
         </div>;
       })}
     </div>
@@ -52,6 +57,6 @@ export default function ExpenseSplitEditor({ form, setForm, members, currency })
       <button className="split-add-item" type="button" disabled={form.bill.items.length >= 100} onClick={() => update({ bill: { ...form.bill, items: [...form.bill.items, { name: '', amount: '', user_ids: [...form.splitWith] }] } })}><Plus size={16} /> Add item</button>
       <div className="split-bill-extras">{['tax', 'tip', 'discount'].map(key => <label key={key}>{key[0].toUpperCase() + key.slice(1)}<input aria-label={key[0].toUpperCase() + key.slice(1)} type="number" min="0" step="0.01" value={form.bill[key]} onChange={e => update({ bill: { ...form.bill, [key]: e.target.value } })} /></label>)}</div>
     </div>}
-    <p className={`split-status${error ? ' has-error' : ''}`} aria-live="polite">{error || `Total allocated: ${formatMoney(form.amount, currency)}${kind === 'reimbursement' ? ' refunded' : ''}`}</p>
+    <p className={`split-status${error ? ' has-error' : ''}`} aria-live="polite">{error || `Total allocated: ${formatMoney(converted?.total ?? form.amount, outputCurrency)}${kind === 'reimbursement' ? ' refunded' : ''}`}</p>
   </section>;
 }

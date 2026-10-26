@@ -1433,20 +1433,24 @@ button.btn-icon.btn-delete:active {
 .expense-dashboard-currency label {color:#334155; margin-right:12px;}
 .expense-dashboard-currency select {max-width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; background:white; color:#1e293b;}
 .expense-dashboard-currency p {margin:8px 0;}
-.expense-manager .expense-floating-add {
+.expense-manager .expense-floating-add,
+.expense-manager .expense-floating-actions {
   position:fixed;
   right:max(24px, env(safe-area-inset-right));
   bottom:calc(24px + env(safe-area-inset-bottom));
   z-index:90;
   box-shadow:0 8px 24px rgb(37 99 235 / 30%);
 }
+.expense-floating-actions {display:flex; flex-direction:column; gap:10px;}
+.expense-floating-actions .btn-add-transaction {justify-content:center; box-shadow:0 4px 12px rgb(37 99 235 / 15%);}
 .expense-transaction-fields {border:0; padding:0; margin:0; min-width:0;}
 .expense-transaction-fields:disabled {opacity:0.75;}
 .expense-transaction-fields .btn-save {display:inline-flex; align-items:center; justify-content:center; gap:8px;}
 .expense-transaction-fields .spinning {animation:spin 1s linear infinite;}
 .expense-original-amount {display:block; color:#64748b; font-size:12px; margin-top:4px;}
 @media (max-width:640px) {
-  .expense-manager .expense-floating-add {right:16px; bottom:calc(80px + env(safe-area-inset-bottom));}
+  .expense-manager .expense-floating-add,
+  .expense-manager .expense-floating-actions {right:16px; bottom:calc(80px + env(safe-area-inset-bottom));}
 }
 @media (prefers-reduced-motion:reduce) {
   .expense-transaction-fields .spinning {animation:none;}

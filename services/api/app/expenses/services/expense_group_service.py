@@ -1,6 +1,6 @@
 """Expense groups: explicit roles, serialized membership changes and truthful group snapshots."""
 import secrets
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from marshmallow import ValidationError as SchemaError
 from sqlalchemy import case, func
@@ -25,7 +25,7 @@ def generate_group_code(length=Config.GROUP_CODE_LENGTH):
 
 def _validate(schema, data):
     try:
-        return schema.load(data)
+        return schema.load({key: value.isoformat() if isinstance(value, date) else value for key, value in data.items()})
     except SchemaError as exc:
         raise ValidationError('Invalid group data', payload=exc.messages) from None
 
@@ -46,7 +46,7 @@ def group_dict(group, member, trips=None):
     from app.trips.models import TravelGroup
     session = object_session(group)
     trip = trips.get(group.id) if trips is not None else (session.query(TravelGroup).filter_by(expense_group_id=group.id, is_active=True).first() if session else None)
-    data['display_currency'] = trip.budget_currency if trip else group.currency
+    data['display_currency'] = group.display_currency or (trip.budget_currency if trip else group.currency)
     if trip:
         data['trip_group_id'] = str(trip.id)
         data['trip_start_date'] = trip.start_date.isoformat() if trip.start_date else None
@@ -103,10 +103,10 @@ def group_summaries(session, group_ids, user_id):
 class GroupServiceSQL:
     @staticmethod
     @service_result
-    def create_group(user_id, name, description=None, currency=Config.DEFAULT_CURRENCY, category=None):
+    def create_group(user_id, name, description=None, currency=Config.DEFAULT_CURRENCY, category=None, **preferences):
         user_id = identifier(user_id)
         data = _validate(CreateExpenseGroupSchema(), {
-            'name': name, 'description': description, 'currency': currency, 'category': category,
+            'name': name, 'description': description, 'currency': currency, 'category': category, **preferences,
         })
         with get_db_session() as session:
             if session.get(User, user_id) is None:
@@ -114,7 +114,9 @@ class GroupServiceSQL:
             code = generate_group_code()
             while session.query(Group.id).filter_by(group_code=code).first():
                 code = generate_group_code()
-            group = Group(created_by=user_id, group_code=code, **data)
+            budget = data.pop('budget', None)
+            group = Group(created_by=user_id, group_code=code, **data,
+                          budget_minor=int(budget * 100) if budget is not None else None)
             session.add(group)
             session.flush()
             member = join_member(session, group, user_id)
@@ -147,23 +149,33 @@ class GroupServiceSQL:
 
     @staticmethod
     @service_result
-    def update_group(group_id, user_id, name=None, description=UNSET, currency=None, category=UNSET):
+    def update_group(group_id, user_id, name=None, description=UNSET, currency=None, category=UNSET, **preferences):
         data = {key: value for key, value in {'name': name, 'currency': currency}.items() if value is not None}
         if description is not UNSET:
             data['description'] = description
         if category is not UNSET:
             data['category'] = category
+        data.update(preferences)
         data = _validate(UpdateExpenseGroupSchema(), data)
         with get_db_session() as session:
             group, member = access(session, group_id, user_id, lock=True)
             require_admin(group, member)
+            if any(key in data for key in ('display_currency', 'budget', 'start_date', 'end_date')):
+                require_owner(group, member.user_id)
+            start = data.get('start_date', group.start_date)
+            end = data.get('end_date', group.end_date)
+            if start and end and start > end:
+                raise ValidationError('End date must be on or after start date')
             if data.get('currency', group.currency) != group.currency:
                 # A currency rename cannot retroactively convert persisted money or its audit history.
                 if (session.query(Expense.id).filter_by(group_id=group.id).first()
                         or session.query(Settlement.id).filter_by(group_id=group.id).first()):
                     raise ConflictError('Cannot change currency after expenses or settlements have been recorded')
             for key, value in data.items():
-                setattr(group, key, value)
+                if key == 'budget':
+                    group.budget_minor = int(value * 100) if value is not None else None
+                else:
+                    setattr(group, key, value)
             group.updated_at = datetime.now(timezone.utc)
             session.commit()
             return {'group': group_dict(group, member)}

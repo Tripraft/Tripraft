@@ -161,7 +161,7 @@ def create_expense():
         expense_date=expense_date,
         notes=validated.get('notes'),
         receipt_url=validated.get('receipt_url'),
-        currency=validated.get('currency', 'USD')
+        currency=validated.get('currency') if 'currency' in data else None
     )
     
     if success:

@@ -28,6 +28,13 @@ export function GroupPosition({ net, currency, displayCurrency = currency }) {
 function SpendSparkline({ daily }) {
   const id = useId().replace(/:/g, '');
   if (!daily.length) return <div className="expense-card-trend expense-trend-empty">Add an expense to start your spending story</div>;
+  const amounts = new Map(daily.map(day => [day.date.slice(0, 10), Number(day.amount) || 0]));
+  const end = [...amounts.keys()].sort().at(-1);
+  daily = Array.from({length: 14}, (_, index) => {
+    const date = new Date(`${end}T12:00:00Z`); date.setUTCDate(date.getUTCDate() - 13 + index);
+    const day = date.toISOString().slice(0, 10);
+    return {date: day, amount: amounts.get(day) || 0};
+  });
   const values = daily.map(day => Number(day.amount) || 0);
   const max = Math.max(...values, 1);
   const points = values.map((value, index) => `${values.length === 1 ? 150 : 4 + index / (values.length - 1) * 292},${53 - value / max * 44}`);
@@ -72,13 +79,14 @@ function ExpenseGroupCard({group, currentUserId, onSelect}) {
             const members = group.members || [];
             return <button type="button" className="expense-group-card" key={group.id || group.group_id} onClick={() => onSelect(group.id || group.group_id)} aria-label={`Open ${group.name}`}>
               <span className="expense-group-card-title">{group.name}<ArrowUpRight size={18} /></span>
-              <span className="expense-group-dates">{groupDateRange(group.trip_start_date || overview.start, group.trip_end_date || overview.end)}</span>
+              <span className="expense-group-dates">{groupDateRange(group.start_date || group.trip_start_date || overview.start, group.end_date || group.trip_end_date || overview.end)}</span>
               <span className="expense-group-members"><MemberAvatars members={members} /><span>{members.length} member{members.length === 1 ? '' : 's'}</span></span>
               <SpendSparkline daily={overview.daily} />
               <span className="expense-card-metrics">
                 <span><span>Total spend</span><strong>{formatMoney(overview.total, currency)}</strong></span>
                 <span><span>Your share</span><strong>{formatMoney(overview.share, currency)}</strong></span>
                 <span><span>You paid</span><strong>{formatMoney(overview.paid, currency)}</strong></span>
+                {group.budget != null && <span><span>Group budget</span><strong>{formatMoney(group.budget, currency)}</strong></span>}
               </span>
               <GroupPosition net={overview.net} currency={currency} displayCurrency={group.display_currency || currency} />
               <span className="expense-group-top-category">{overview.topCategory ? <>Top category: <strong>{overview.topCategory.name} · {overview.topCategory.percentage}%</strong></> : 'No spending yet. Make your first memory.'}</span>

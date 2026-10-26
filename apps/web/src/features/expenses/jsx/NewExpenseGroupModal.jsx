@@ -5,9 +5,10 @@ import { Plus, Users, X } from 'lucide-react';
 import CurrencySelect from '../../../components/common/jsx/CurrencySelect';
 import expenseApi from '../../../services/expenseApi';
 
-export default function NewExpenseGroupModal({ onClose, onCreate }) {
+export default function NewExpenseGroupModal({ onClose, onCreate, defaultCurrency = 'USD' }) {
   const [name, setName] = useState('');
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState(defaultCurrency);
+  const [budget, setBudget] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [emails, setEmails] = useState('');
@@ -31,7 +32,7 @@ export default function NewExpenseGroupModal({ onClose, onCreate }) {
         setSaving(true); setError('');
         try {
           if (!groupRef.current) {
-            const response = await onCreate({ name: name.trim(), currency });
+            const response = await onCreate({ name: name.trim(), currency, ...(budget !== '' && {budget}) });
             setGroupCreated(true);
             if (!recipients.length) { onClose(); return; }
             const result = response?.data || response;
@@ -60,6 +61,7 @@ export default function NewExpenseGroupModal({ onClose, onCreate }) {
       }}>
         <label htmlFor="expense-group-name">Group name</label><input id="expense-group-name" placeholder="e.g. Goa Getaway" value={name} onChange={event => setName(event.target.value)} required maxLength={100} disabled={saving || groupCreated} />
         <label htmlFor="expense-group-currency">Group currency</label><CurrencySelect id="expense-group-currency" value={currency} onChange={event => setCurrency(event.target.value)} disabled={saving || groupCreated} />
+        <label htmlFor="expense-group-budget">Group budget (optional, {currency})</label><input id="expense-group-budget" type="number" min="0" step="0.01" value={budget} onChange={event => setBudget(event.target.value)} disabled={saving || groupCreated} />
         <label htmlFor="expense-group-invites">Invite by email (optional)</label><textarea id="expense-group-invites" rows={2} placeholder="friend@example.com, another@example.com" value={emails} onChange={event => setEmails(event.target.value)} disabled={saving || groupCreated} aria-describedby="expense-group-invite-help" />
         <p id="expense-group-invite-help" className="expense-create-hint">Add up to 20 email addresses, separated by commas or new lines. You can also invite people later. If an invitation isn't received, ask them to check their spam or junk folder.</p>
         {Object.keys(deliveries).length > 0 && <ul className="expense-create-invite-results" aria-label="Invitation delivery">{Object.entries(deliveries).map(([email, result]) => <li key={email}><strong>{email}</strong><span role={result.success ? 'status' : 'alert'}>{result.message}</span></li>)}</ul>}
