@@ -41,9 +41,9 @@ it('honors the backend expiry flag instead of exposing an invalid copy link', ()
 });
 
 it.each([
-  ['disabled', 'Invitation created.'],
-  ['failed', 'Invitation created.'],
-  ['queued', 'Invitation created.'],
+  ['disabled', 'Email delivery is unavailable. You can copy the invite link.'],
+  ['failed', 'Email could not be sent. Try again shortly or copy the invite link.'],
+  ['queued', 'Invitation email queued.'],
   ['sent', 'Invitation email sent.'],
 ])('offers copying after %s delivery without a persistent delivery message or URL box', async (email_status, text) => {
   expenseApi.sendInvitation.mockResolvedValue({ success: true, data: { invitation, email_status, invitation_link: link } });
@@ -55,8 +55,19 @@ it.each([
   expect(screen.queryByLabelText('Invitation link')).toBeNull();
   expect(screen.queryByText(/Email was not sent/)).toBeNull();
   expect(showAlert).toHaveBeenCalledWith(text);
-  expect(expenseApi.getGroupInvitations).toHaveBeenCalledWith('group-uuid', expect.any(Number));
+  expect(expenseApi.getGroupInvitations).not.toHaveBeenCalled();
   if (email_status !== 'sent') expect(showAlert).not.toHaveBeenCalledWith(expect.stringContaining('Invitation email sent'));
+});
+
+it('reuses a pending invitation when the same email is submitted again', async () => {
+  expenseApi.resendInvitation.mockResolvedValue({ success: true, data: { invitation, email_status: 'queued' } });
+  const showAlert = setup([invitation]);
+  fireEvent.change(screen.getByPlaceholderText('Email address to invite...'), { target: { value: 'FRIEND@example.test' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Invite Member' }));
+  await waitFor(() => expect(showAlert).toHaveBeenCalledWith('Invitation email queued.'));
+  expect(expenseApi.resendInvitation).toHaveBeenCalledWith('invite-uuid');
+  expect(expenseApi.sendInvitation).not.toHaveBeenCalled();
+  expect(expenseApi.getGroupInvitations).not.toHaveBeenCalled();
 });
 
 it('can copy an existing pending invitation without creating or sending another', async () => {

@@ -89,6 +89,14 @@ class InvitationServiceSQL:
         from app.notifications.services.email_service import email_service
         if not email_service.enabled:
             return 'disabled'
+        if not Config.CELERY_BROKER_URL:
+            from app.notifications.email.background import submit_auth_email
+            # Native development has no broker. Bound SMTP work off the request
+            # thread; queued means accepted locally, never confirmed delivery.
+            return 'queued' if submit_auth_email(
+                email_service.send_group_invitation,
+                invitee_email, inviter_name, group_name, str(invitation_id),
+            ) else 'failed'
         if Config.CELERY_BROKER_URL:
             try:
                 from app.core.workers.tasks.email_tasks import send_invitation_email
@@ -141,10 +149,11 @@ class InvitationServiceSQL:
             # Contact and invitation commit together, even when email delivery
             # is disabled or later fails. A rejected invitation saves nothing.
             save_contact(session, member.user_id, invitee_email, nickname)
-            session.commit()
+            session.flush()
             data = _invitation_dict(invitation)
             invitation_id, group_name = str(invitation.id), group.name
             inviter_name = member.user.display_name or member.user.email.split('@')[0]
+            session.commit()
         # External delivery begins only after the membership/invitation transaction commits.
         email_status = InvitationServiceSQL._send_invitation_email(
             invitee_email, inviter_name, group_name, invitation_id,

@@ -152,7 +152,21 @@ class ExpenseApiService {
   // =========================================================================
 
   async sendInvitation(invitationData) {
-    return apiClient.post(`${BASE}/invitations`, invitationData);
+    try {
+      return await apiClient.post(`${BASE}/invitations`, invitationData);
+    } catch (error) {
+      // Another tab or a previous timed-out request may already have saved it.
+      // Only the pending-duplicate conflict is retryable as a delivery attempt.
+      if (error.status !== 409 || !/invitation already sent and is pending/i.test(error.message)) throw error;
+      const response = await this.getGroupInvitations(invitationData.group_id);
+      const email = (invitationData.invitee_email || invitationData.invited_email || invitationData.email || '').trim().toLowerCase();
+      const existing = (response?.data?.invitations || response?.invitations || []).find(invitation =>
+        (invitation.invitee_email || invitation.invited_email || '').toLowerCase() === email &&
+        invitation.status === 'pending' && !invitation.is_expired);
+      if (!existing) throw error;
+      // The resend endpoint enforces inviter/admin permissions and expiry.
+      return this.resendInvitation(existing.id || existing.invitation_id);
+    }
   }
 
   async getInvitationDetails(invitationId) {
@@ -189,7 +203,7 @@ class ExpenseApiService {
   // =========================================================================
 
   async createExpense(expenseData) {
-    return apiClient.post(`${BASE}`, expenseData);
+    return apiClient.post(`${BASE}?compact=true`, expenseData);
   }
 
   async getExpense(expenseId) {
@@ -197,11 +211,11 @@ class ExpenseApiService {
   }
 
   async updateExpense(expenseId, updates) {
-    return apiClient.put(`${BASE}/${expenseId}`, updates);
+    return apiClient.put(`${BASE}/${expenseId}?compact=true`, updates);
   }
 
   async deleteExpense(expenseId, { permanent = false } = {}) {
-    return apiClient.delete(`${BASE}/${expenseId}${permanent ? '?permanent=true' : ''}`);
+    return apiClient.delete(`${BASE}/${expenseId}?compact=true${permanent ? '&permanent=true' : ''}`);
   }
 
   async restoreExpense(expenseId) {

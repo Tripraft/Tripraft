@@ -503,19 +503,21 @@ def test_invitation_email_uses_registered_expense_route(monkeypatch):
     assert '/invitations?id=' not in delivered[0][2]
 
 
-def test_native_invitation_email_uses_smtp_without_a_task_broker(monkeypatch):
+def test_native_invitation_email_queues_smtp_without_a_task_broker(monkeypatch):
     from app.core.config import Config
     from app.notifications.services.email_service import email_service
     from app.core.workers.tasks.email_tasks import send_invitation_email
+    from app.notifications.email import background
     monkeypatch.setattr(Config, 'CELERY_BROKER_URL', '')
     monkeypatch.setattr(email_service, 'enabled', True)
-    queued, sent = [], []
+    queued, submitted = [], []
     monkeypatch.setattr(send_invitation_email, 'delay', lambda *args: queued.append(args))
-    monkeypatch.setattr(email_service, 'send_group_invitation', lambda **kwargs: sent.append(kwargs) or True)
-    assert DELIVER_EMAIL('friend@example.test', 'Alice', 'Weekend', 'invite-id') == 'sent'
+    monkeypatch.setattr(background, 'submit_auth_email', lambda *args: submitted.append(args) or True)
+    assert DELIVER_EMAIL('friend@example.test', 'Alice', 'Weekend', 'invite-id') == 'queued'
     assert not queued
-    assert sent == [{'to_email': 'friend@example.test', 'inviter_name': 'Alice',
-                     'group_name': 'Weekend', 'invitation_id': 'invite-id'}]
+    assert submitted == [(email_service.send_group_invitation, 'friend@example.test', 'Alice', 'Weekend', 'invite-id')]
+    monkeypatch.setattr(background, 'submit_auth_email', lambda *args: False)
+    assert DELIVER_EMAIL('friend@example.test', 'Alice', 'Weekend', 'invite-id') == 'failed'
 
 
 def test_concurrent_invites_create_one_pending_row(expense_group, monkeypatch):

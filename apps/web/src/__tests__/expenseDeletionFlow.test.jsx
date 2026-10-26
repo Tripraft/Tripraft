@@ -83,3 +83,16 @@ it.each(['personal', 'group'])('keeps the %s permanent-delete dialog open on API
   await waitFor(() => expect(screen.queryByText('Dinner')).toBeNull());
   expect(expenseApi.deleteExpense).toHaveBeenLastCalledWith('expense', { permanent: true });
 });
+
+it('finishes a committed deletion while the group refresh remains slow', async () => {
+  ledger[0].permissions = { can_edit: true, can_delete: true, can_restore: false, can_permanently_delete: false };
+  await openExpenses('group');
+  // Keep reconciliation pending indefinitely: it must not block the saved result.
+  expenseApi.getGroupFull.mockImplementation(() => new Promise(() => {}));
+  fireEvent.click(screen.getByTitle('Delete transaction'));
+  const dialog = screen.getByRole('dialog', { name: 'Confirm expense deletion' });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Delete' }));
+  await screen.findByRole('button', { name: 'Permanently delete Dinner' });
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(screen.getByText('Transaction deleted!')).toBeInTheDocument();
+});

@@ -31,11 +31,20 @@ inviting people on other devices.
 Saving an invitation and sending its email are separate operations. The API
 reports `disabled`, `queued`, `sent`, or `failed` in `data.email_status`.
 `sent` means the SMTP server accepted it; it does not prove inbox delivery.
+Without a task broker, expense mail uses a bounded background SMTP worker.
+`queued` means accepted by that local worker. Check API logs for later delivery
+failures, then use **Resend email** if needed. This queue is best effort and does
+not survive an API restart; use a configured broker and running worker for
+durable task delivery. A full/unavailable local queue reports `failed`.
 The expense group screen offers **Copy invite link** for pending invitations.
 The inviter and group admins can also choose **Resend email** to retry delivery
 of an unexpired pending invitation after correcting SMTP settings. This keeps
 the same link and expiry and reports the new delivery result. It does not send
 old invitations automatically when the application restarts.
+Submitting the same address again in the web form retries its pending invitation
+instead of attempting another creation. Failed and disabled delivery are shown
+explicitly, with retry/copy guidance. Saving an invitation does not prove that
+an email was delivered.
 It does not display a persistent delivery banner or raw URL box. If the clipboard
 is unavailable, requesting a copy shows the link in an alert.
 

@@ -22,6 +22,7 @@ from app.core.config import Config
 from app.core.exceptions import AppError
 from app.expenses.services.group_access import access, preserve_former_member_balances
 from app.expenses.services.money_lock import lock_group, lock_money_record
+from app.expenses.services.ledger_math import member_balances
 from sqlalchemy import update
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -177,21 +178,11 @@ class ExpenseServiceSQL:
                 # Update group timestamp
                 group.updated_at = datetime.now(timezone.utc)
                 
+                session.flush()
+                result = {'expense': ExpenseServiceSQL._get_expense_dict(session, expense),
+                          'balances': member_balances(session, group)}
                 session.commit()
-                session.refresh(expense)
-                
-                logger.info(f"Expense created: {expense.id} in group {group_id}")
-                
-                # Get updated balances for instant UI update
-                from app.expenses.services.settlement_service import \
-                    settlement_service_sql
-                balances_success, balances_result = settlement_service_sql.get_group_balances(group_id, user_id)
-                
-                # Return full expense data with balances
-                result = {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
-                if balances_success:
-                    result['balances'] = balances_result.get('balances', [])
-                
+                logger.info('Expense created: %s in group %s', result['expense']['id'], group_id)
                 return True, result
                 
         except SplitValidationError as exc:
@@ -1008,21 +999,10 @@ class ExpenseServiceSQL:
                 )
                 session.add(history)
                 
+                session.flush()
+                result = {'expense': ExpenseServiceSQL._get_expense_dict(session, expense),
+                          'balances': member_balances(session, group)}
                 session.commit()
-                session.refresh(expense)
-                
-                # Get updated balances for instant UI update
-                from app.expenses.services.settlement_service import \
-                    settlement_service_sql
-                balances_success, balances_result = settlement_service_sql.get_group_balances(expense.group_id, user_id)
-                
-                logger.info(f"Update expense {expense.id}: balances_success={balances_success}, balances_count={len(balances_result.get('balances', [])) if balances_success else 0}")
-                
-                result = {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
-                if balances_success:
-                    result['balances'] = balances_result.get('balances', [])
-                    logger.info(f"Returning balances: {result['balances']}")
-                
                 return True, result
                 
         except SplitValidationError as exc:
@@ -1155,19 +1135,12 @@ class ExpenseServiceSQL:
                 )
                 session.add(history)
                 
-                session.commit()
-                
-                logger.info(f"Expense deleted: {expense_id}")
-                
-                # Get updated balances for instant UI update if group expense
+                session.flush()
                 result = {'message': 'Expense deleted successfully'}
                 if group_id_for_balances:
-                    from app.expenses.services.settlement_service import \
-                        settlement_service_sql
-                    balances_success, balances_result = settlement_service_sql.get_group_balances(group_id_for_balances, user_id)
-                    if balances_success:
-                        result['balances'] = balances_result.get('balances', [])
-                
+                    result['balances'] = member_balances(session, group)
+                session.commit()
+                logger.info('Expense deleted: %s', expense_id)
                 return True, result
                 
         except AppError as exc:

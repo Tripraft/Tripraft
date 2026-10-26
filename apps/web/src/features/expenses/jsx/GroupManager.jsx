@@ -12,6 +12,12 @@ import { formatMoney } from '../../../utils/money';
 const unwrapEnvelope = response => response?.data ?? response;
 const invitationLink = invitation => invitation.invitation_link ||
   `${window.location.origin}/invitation/${encodeURIComponent(invitation.invitation_id || invitation.id)}`;
+const deliveryMessage = status => ({
+  sent: 'Invitation email sent.',
+  queued: 'Invitation email queued.',
+  disabled: 'Email delivery is unavailable. You can copy the invite link.',
+  failed: 'Email could not be sent. Try again shortly or copy the invite link.',
+}[status] || 'Invitation saved. You can copy the invite link.');
 
 
 
@@ -236,15 +242,17 @@ const GroupManager = ({
     invitingRef.current = true;
     setInviting(true);
     try {
-      // Direct API call - simple and clean
-      const response = unwrapEnvelope(await expenseApi.sendInvitation({
+      const existing = pendingInvitations.find(inv =>
+        (inv.invitee_email || inv.invited_email || '').toLowerCase() === invitedEmail &&
+        inv.status?.toLowerCase() === 'pending' && !inv.is_expired &&
+        (!inv.expires_at || new Date(inv.expires_at) > new Date()));
+      const response = unwrapEnvelope(await (existing
+        ? expenseApi.resendInvitation(existing.invitation_id || existing.id)
+        : expenseApi.sendInvitation({
         group_id: activeGroupId,
         invitee_email: invitedEmail,
         ...(!isResend && (friendNickname.trim() || selectedFriend) && {nickname: friendNickname.trim() || null}),
-      }));
-      
-      // Reload invitations to get updated list
-      loadPendingInvitations();
+      })));
       
       if (response.invitations) setPendingInvitations(response.invitations);
       else if (response.invitation) setPendingInvitations(previous => [
@@ -253,15 +261,14 @@ const GroupManager = ({
       ]);
       setFriendRevision(value => value + 1);
       setActiveTab('pending');
-      showAlert(response.email_status === 'sent' ? 'Invitation email sent.' : 'Invitation created.');
-      
-      if (onMemberAdd) await onMemberAdd();
-      
-      // Notify parent to refresh if needed
-      if (onRefreshInvitations) {
-        onRefreshInvitations();
-      }
+      showAlert(deliveryMessage(response.email_status));
+      // No membership changed. Refresh once in the background after showing the result.
+      if (onRefreshInvitations) Promise.resolve().then(onRefreshInvitations).catch(() => {});
     } catch (error) {
+      if (error.status === 409) {
+        await loadPendingInvitations();
+        setActiveTab('pending');
+      }
       showAlert(`Failed to send invitation: ${error.message}`);
     } finally {
       invitingRef.current = false;
