@@ -3,6 +3,41 @@ from conftest import payload
 from app.expenses.services.expense_service import ExpenseServiceSQL
 
 
+def test_group_read_query_count_does_not_grow_with_members(expense_group, make_user, monkeypatch):
+    from sqlalchemy import event
+    from app.auth.services.auth_service import email_service
+    from app.core.db.connection import engine
+    monkeypatch.setattr(email_service, 'send_verification', lambda *args: True)
+    api, _, gid = expense_group
+    statements = []
+
+    def capture(conn, cursor, statement, parameters, context, executemany):
+        statements.append(statement)
+
+    def read():
+        statements.clear()
+        event.listen(engine, 'before_cursor_execute', capture)
+        try:
+            response = api.get('/api/v1/expenses/groups/' + gid + '/full')
+        finally:
+            event.remove(engine, 'before_cursor_execute', capture)
+        assert response.status_code == 200, response.get_json()
+        return payload(response)['group'], len(statements)
+
+    initial, before = read()
+    assert len(initial['members']) == 1
+    for index in range(5):
+        _, _, email = make_user('latency' + str(index))
+        response = api.post('/api/v1/expenses/groups/' + gid + '/members', json={'email': email})
+        assert response.status_code == 201, response.get_json()
+    expanded, after = read()
+    assert len(expanded['members']) == 6
+    assert expanded['permissions']['can_delete_group']
+    assert len(expanded['balances']) == 6
+    assert after == before, (before, after)
+    print('Group full SQL, one/six members:', before, after)
+
+
 def test_compact_group_creation_skips_account_listing(alice, monkeypatch):
     from app.expenses.services.expense_group_service import GroupServiceSQL
     api, _, _ = alice

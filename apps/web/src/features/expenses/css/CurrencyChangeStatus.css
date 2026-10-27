@@ -4,6 +4,7 @@
 .expense-currency-status strong { display: block; font-size: 13px; line-height: 1.5; }
 .expense-currency-status span { display: flex; align-items: center; gap: 8px; margin-top: 3px; font-size: 12px; }
 .expense-currency-status small { display: block; margin-top: 5px; }
+.expense-currency-status button { margin-top: 8px; padding: 8px 12px; min-height: 44px; border: 1px solid currentColor; border-radius: 8px; color: inherit; background: transparent; cursor: pointer; }
 .expense-currency-status.is-error { color: #9f1239; background: #fff1f2; border-color: #fecdd3; }
 .expense-currency-spinner { animation: expense-currency-spin 1s linear infinite; }
 .expense-currency-progress { position: absolute; height: 2px; width: 35%; bottom: 0; left: 0; background: #8b5cf6; animation: expense-currency-progress 1.4s ease-in-out infinite alternate; }

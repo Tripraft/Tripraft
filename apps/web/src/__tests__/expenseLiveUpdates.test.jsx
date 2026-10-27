@@ -28,6 +28,24 @@ beforeEach(() => {
 });
 afterEach(() => { client.clear(); jest.useRealTimers(); });
 
+it('preserves an in-flight cached read on connection recovery but restarts it after a ledger change', async () => {
+  let complete;
+  client.setQueryData(['group', 'group'], {amount: 10});
+  const read = jest.fn(() => new Promise(resolve => {complete = resolve;}));
+  renderHook(() => {
+    useExpenseLiveUpdates('member', 'group');
+    return useQuery({queryKey: ['group', 'group'], queryFn: read});
+  }, {wrapper});
+  await waitFor(() => expect(events.connect).toBeDefined());
+  expect(read).toHaveBeenCalledTimes(1);
+  act(() => {events.connect(); window.dispatchEvent(new Event('focus'));});
+  expect(read).toHaveBeenCalledTimes(1);
+  act(() => {events['expenses:changed']({group_id: 'group'}); jest.advanceTimersByTime(150);});
+  expect(read).toHaveBeenCalledTimes(2);
+  await act(async () => complete({amount: 20}));
+  expect(client.getQueryData(['group', 'group'])).toEqual({amount: 20});
+});
+
 it('authenticates once and refreshes visible member data when another user saves', async () => {
   let ledger = [{ id: 'expense', amount: 10 }];
   const read = jest.fn(async () => ledger);
@@ -53,7 +71,7 @@ it('coalesces bursts and updates group cards, balances, invitations and open his
     jest.advanceTimersByTime(150);
   });
   for (const key of [['groups'], ['invitations'], ['group', 'group'], ['settlements', 'group'], ['expense-edit-history', 'expense']]) {
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: key, refetchType: 'active' });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: key, refetchType: 'active' }, {cancelRefetch: true});
   }
   expect(invalidate.mock.calls.filter(([options]) => options.queryKey[0] === 'group')).toHaveLength(1);
 });
@@ -63,9 +81,9 @@ it('keeps personal and unrelated group ledgers out of targeted live refreshes', 
   renderHook(() => useExpenseLiveUpdates('member', 'current'), { wrapper });
   await waitFor(() => expect(io).toHaveBeenCalled());
   act(() => { events['expenses:changed']({ group_id: 'other' }); jest.advanceTimersByTime(150); });
-  expect(invalidate).toHaveBeenCalledWith({ queryKey: ['group', 'other'], refetchType: 'active' });
-  expect(invalidate).not.toHaveBeenCalledWith({ queryKey: ['personalExpenses'], refetchType: 'active' });
-  expect(invalidate).not.toHaveBeenCalledWith({ queryKey: ['group', 'current'], refetchType: 'active' });
+  expect(invalidate).toHaveBeenCalledWith({ queryKey: ['group', 'other'], refetchType: 'active' }, {cancelRefetch: true});
+  expect(invalidate).not.toHaveBeenCalledWith({ queryKey: ['personalExpenses'], refetchType: 'active' }, {cancelRefetch: true});
+  expect(invalidate).not.toHaveBeenCalledWith({ queryKey: ['group', 'current'], refetchType: 'active' }, {cancelRefetch: true});
   invalidate.mockClear();
   act(() => { events['expenses:changed']({ personal: true }); jest.advanceTimersByTime(150); });
   expect(invalidate.mock.calls.map(([options]) => options.queryKey)).toEqual([['personalExpenses']]);
@@ -86,10 +104,10 @@ it('catches up on reconnect and falls back when the transport disconnects', asyn
   renderHook(() => useExpenseLiveUpdates('member', 'group'), { wrapper });
   await waitFor(() => expect(io).toHaveBeenCalled());
   act(() => events.connect());
-  expect(invalidate).toHaveBeenCalledWith({ queryKey: ['expense-edit-history'], refetchType: 'active' });
+  expect(invalidate).toHaveBeenCalledWith({ queryKey: ['expense-edit-history'], refetchType: 'active' }, {cancelRefetch: false});
   invalidate.mockClear(); socket.connected = false;
   act(() => jest.advanceTimersByTime(20000));
-  expect(invalidate).toHaveBeenCalledWith({ queryKey: ['group', 'group'], refetchType: 'active' });
+  expect(invalidate).toHaveBeenCalledWith({ queryKey: ['group', 'group'], refetchType: 'active' }, {cancelRefetch: false});
 });
 
 it('waits while hidden, catches up on return, and disconnects on unmount', async () => {
@@ -162,9 +180,9 @@ it('invalidates the saved preference only when a currency change is announced', 
   renderHook(() => useExpenseLiveUpdates('member', null), {wrapper});
   await waitFor(() => expect(io).toHaveBeenCalled());
   act(() => events['expenses:changed']({personal: true, expense_ids: ['expense']}));
-  expect(invalidate).not.toHaveBeenCalledWith({queryKey: ['user', 'personal-currency', 'member'], refetchType: 'active'});
+  expect(invalidate).not.toHaveBeenCalledWith({queryKey: ['user', 'personal-currency', 'member'], refetchType: 'active'}, {cancelRefetch: true});
   act(() => events['expenses:changed']({personal: true, currency_changed: true}));
-  expect(invalidate).toHaveBeenCalledWith({queryKey: ['user', 'personal-currency', 'member'], refetchType: 'active'});
+  expect(invalidate).toHaveBeenCalledWith({queryKey: ['user', 'personal-currency', 'member'], refetchType: 'active'}, {cancelRefetch: true});
   expect(invalidate).not.toHaveBeenCalledWith(expect.objectContaining({queryKey: ['personal-dashboard-rate']}));
 });
 
@@ -174,5 +192,5 @@ it('refreshes only the private friends list after a saved contact or signup name
   await waitFor(() => expect(events['expenses:friends-changed']).toBeDefined());
   act(() => events['expenses:friends-changed']({}));
   expect(invalidate).toHaveBeenCalledTimes(1);
-  expect(invalidate).toHaveBeenCalledWith({queryKey: ['user', 'expense-friends', 'member'], refetchType: 'active'});
+  expect(invalidate).toHaveBeenCalledWith({queryKey: ['user', 'expense-friends', 'member'], refetchType: 'active'}, {cancelRefetch: true});
 });

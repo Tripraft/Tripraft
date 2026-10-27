@@ -131,7 +131,7 @@ export function useUserQuery() {
 /**
  * Fetches groups. Skips API when mega-bootstrap has hydrated cache.
  */
-export function useGroupsQuery() {
+export function useGroupsQuery(options = {}) {
   const queryClient = useQueryClient();
 
   return useQuery({
@@ -144,7 +144,9 @@ export function useGroupsQuery() {
     refetchOnReconnect: false,
     refetchInterval: false,
     placeholderData: keepPreviousData,
-    enabled: true,
+    enabled: options.enabled !== false,
+    // APIClient already retries GETs; avoid replaying its entire retry loop.
+    retry: false,
   });
 }
 
@@ -161,8 +163,8 @@ export function useGroupQuery(groupId, options = {}) {
     refetchOnMount: true,
     // The expense live-update hook already reconciles on focus/reconnect.
     refetchOnWindowFocus: false,
-    retry: (count, error) => ![401, 403, 404].includes(error?.status || error?.statusCode) && count < 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    refetchOnReconnect: false,
+    retry: false,
   });
 }
 
@@ -186,13 +188,8 @@ export function usePrefetchGroups(groups, prefetchCount = 3) {
   return { prefetchOnHover };
 }
 
-export function useFetchGroups() {
-  return useQuery({
-    queryKey: queryKeys.groups,
-    queryFn: async () => unwrapEnvelope(await expenseApi.getUserGroups()),
-    staleTime: 0,
-    gcTime: 10 * 60 * 1000,
-  });
+export function useFetchGroups(options = {}) {
+  return useGroupsQuery(options);
 }
 
 export function useExpensesQuery(groupId) {
@@ -330,6 +327,8 @@ export function useInvitationsQuery(options = {}) {
     refetchInterval: false,
     placeholderData: keepPreviousData,
     enabled: options.enabled !== false,
+    refetchOnReconnect: false,
+    retry: false,
   });
 }
 
@@ -1108,9 +1107,9 @@ export function useAuth() {
  * Groups list with instant-update helpers.
  * Wraps useGroupsQuery() and exposes setQueryData-based update callbacks.
  */
-export function useGroups() {
+export function useGroups(options = {}) {
   const queryClient = useQueryClient();
-  const { data, isLoading, error, refetch } = useFetchGroups();
+  const { data, isLoading, error, refetch } = useFetchGroups(options);
   const groups = data?.groups || [];
 
   const updateGroupsFromResponse = useCallback((responseGroups) => {
@@ -1221,9 +1220,9 @@ export function useGroupDetail(groupId) {
  * Pending invitations with instant-update helpers.
  * Wraps useInvitationsQuery().
  */
-export function useInvitations() {
+export function useInvitations(options = {}) {
   const queryClient = useQueryClient();
-  const { data, isLoading, error, refetch } = useInvitationsQuery();
+  const { data, isLoading, error, refetch } = useInvitationsQuery(options);
   const invitations = data?.invitations || [];
 
   const updateInvitationsFromResponse = useCallback((responseInvitations) => {
@@ -1280,6 +1279,7 @@ export function usePersonalExpenses({enabled = true} = {}) {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: personalKey,
     enabled,
+    retry: false,
     queryFn: async () => {
       // Keep soft-deleted rows after reload without letting them displace active pages.
       const readPages = async (read, field, convert = row => row) => {

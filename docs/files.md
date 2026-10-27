@@ -758,3 +758,7 @@ remain a record of that earlier review.
 | `docs/plans/expenses/README.md` | Index and status of the proposed expense feature backlog. |
 | `docs/plans/expenses/ranked-feature-backlog.md` | Combined ranked 60-item proposed backlog. |
 | `docs/plans/expenses/advanced-concepts.md` | Advanced expense/travel concepts with examples and possible first versions. |
+| `apps/web/src/__tests__/expenseReadLatency.test.jsx` | Verifies single-layer expense retries, deferred group reads and live-owned focus refresh. |
+| `apps/web/src/__tests__/groupCurrencyProgress.test.jsx` | Verifies currency saving, pending conversion, failure and retry in group settings. |
+| `services/api/app/core/db/cooperative.py` | Enables cooperative psycopg2 waits in gevent workers before PostgreSQL connections open. |
+| `services/api/tests/test_cooperative_database.py` | Verifies concurrent work during database waits and callback setup and preservation. |

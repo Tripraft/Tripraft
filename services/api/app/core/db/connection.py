@@ -86,6 +86,11 @@ def _create_sqlite_engine(url: str, pool_size_hint: int = 0):
 
 def _create_pg_engine(url: str, pool_size: int = 20, max_overflow: int = 10):
     """Create a PostgreSQL engine with production-grade pool settings."""
+    if make_url(url).get_driver_name() == 'psycopg2':
+        # gevent's stdlib patch cannot patch libpq's C-level blocking I/O.
+        # Install before any engine opens a connection, including travel reads.
+        from .cooperative import configure_psycopg_wait
+        configure_psycopg_wait()
     return create_engine(
         url,
         pool_size=pool_size,

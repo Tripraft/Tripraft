@@ -129,7 +129,7 @@ class GroupServiceSQL:
     @service_result
     def get_group(group_id, user_id):
         with get_db_session() as session:
-            group, member = access(session, group_id, user_id)
+            group, member = access(session, group_id, user_id, details=True)
             return {'group': group_dict(group, member)}
 
     @staticmethod
@@ -301,14 +301,14 @@ class GroupServiceSQL:
     @service_result
     def get_group_members(group_id, user_id):
         with get_db_session() as session:
-            group, _ = access(session, group_id, user_id)
+            group, _ = access(session, group_id, user_id, details=True)
             return {'members': [_member_dict(group, row) for row in group.members if row.is_active]}
 
     @staticmethod
     @service_result
     def get_group_full(group_id, user_id, expense_limit=50, expense_offset=0, settlement_limit=50, settlement_offset=0, include_deleted=False):
         with get_db_session() as session:
-            group, member = access(session, group_id, user_id)
+            group, member = access(session, group_id, user_id, details=True)
             return {'group': GroupServiceSQL._full_group_data(
                 session, group, member, expense_limit, expense_offset, settlement_limit, settlement_offset, include_deleted,
             )}

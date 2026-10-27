@@ -15,22 +15,26 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
     let cancelled = false, connecting = false, socket, timer, authRecoveryUsed = false;
     let personalChanged = false;
     const groups = new Set(), expenses = new Set();
-    const invalidate = key => queryClient.invalidateQueries({ queryKey: key, refetchType: 'active' });
+    // Joining the socket or returning focus must not restart a slow read that
+    // is already in flight. Its authenticated response still reconciles data.
+    const invalidate = (key, preserve = false) => queryClient.invalidateQueries({ queryKey: key, refetchType: 'active' }, {cancelRefetch: !preserve});
     const refresh = (full = true) => {
       if (cancelled || document.hidden || navigator.onLine === false) return;
-      if (full || personalChanged) invalidate(['personalExpenses']);
+      const preserve = full && !personalChanged && !groups.size && !expenses.size;
+      const reconcile = key => invalidate(key, preserve);
+      if (full || personalChanged) reconcile(['personalExpenses']);
       if (full || groups.size) {
-        invalidate(['user', 'expense-friends', userId]);
-        invalidate(['groups']);
-        invalidate(['invitations']);
+        reconcile(['user', 'expense-friends', userId]);
+        reconcile(['groups']);
+        reconcile(['invitations']);
       }
       if (full && activeGroupRef.current) groups.add(activeGroupRef.current);
       for (const id of groups) {
-        for (const prefix of ['group', 'expenses', 'settlements', 'recent-history', 'mega-bootstrap']) invalidate([prefix, id]);
+        for (const prefix of ['group', 'expenses', 'settlements', 'recent-history', 'mega-bootstrap']) reconcile([prefix, id]);
       }
       if (expenses.size) {
-        for (const id of expenses) invalidate(['expense-edit-history', id]);
-      } else if (full) invalidate(['expense-edit-history']); // Recover history after missed events.
+        for (const id of expenses) reconcile(['expense-edit-history', id]);
+      } else if (full) reconcile(['expense-edit-history']); // Recover history after missed events.
       groups.clear(); expenses.clear(); personalChanged = false;
     };
     const schedule = () => {

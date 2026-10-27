@@ -69,7 +69,7 @@ const ExpenseManager = () => {
     refetch: refetchGroups,
     updateGroupsFromResponse,  // INSTANT UPDATE helper
     setGroups
-  } = useGroups();
+  } = useGroups({enabled: mode === 'group' && isAuthenticated});
   
   const [state, setState] = useState({
     editingTransactionId: null,
@@ -100,7 +100,7 @@ const ExpenseManager = () => {
     refetch: refetchInvitations,
     updateInvitationsFromResponse,  // INSTANT UPDATE helper
     removeInvitation  // INSTANT UPDATE helper
-  } = useInvitations();
+  } = useInvitations({enabled: isAuthenticated});
   
   // Personal expenses
   const {
@@ -704,7 +704,7 @@ const ExpenseManager = () => {
         </>}
       </section>}
       {mode === 'personal' && <CurrencyChangeStatus currency={personalCurrency} targetCurrency={currencyPreference.targetCurrency || personalCurrency}
-        pending={currencyPreference.saving || personalDashboard.loading} error={currencyPreference.saveError || personalDashboard.error} />}
+        saving={currencyPreference.saving} pending={currencyPreference.saving || personalDashboard.loading} error={currencyPreference.saveError || personalDashboard.error} />}
       {mode === 'personal' && personalError && <div role="alert">Unable to load the complete personal ledger. <button onClick={refetchPersonalExpenses}>Retry transactions</button></div>}
       {mode === 'personal' && personalDashboard.error && <div role="alert">Unable to convert all transactions. Totals and analytics will be available when exchange rates return. Original amounts are shown below. <button onClick={personalDashboard.retry}>Retry conversion</button></div>}
       {mode === 'personal' && personalDashboard.stale && <p role="status">Using the last available exchange rates for this session.</p>}

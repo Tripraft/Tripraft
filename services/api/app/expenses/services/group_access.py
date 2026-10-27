@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from functools import wraps
 from uuid import UUID
+from sqlalchemy.orm import joinedload, selectinload
 
 from app.core.exceptions import AppError, AuthorizationError, ConflictError, NotFoundError, ValidationError
 from app.expenses.models import Group, GroupBalance, GroupMember, Invitation
@@ -34,19 +35,27 @@ def service_result(function):
     return wrapped
 
 
-def active_group(session, group_id, *, lock=False):
+def active_group(session, group_id, *, lock=False, details=False):
     group_id = identifier(group_id)
-    group = lock_group(session, group_id) if lock else session.get(Group, group_id)
+    options = [joinedload(Group.owner), joinedload(Group.members).joinedload(GroupMember.user),
+               selectinload(Group.balances)] if details and not lock else []
+    group = lock_group(session, group_id) if lock else session.get(Group, group_id, options=options)
     if group is None or not group.is_active:
         raise NotFoundError('Group not found')
     return group
 
 
-def access(session, group_id, user_id, *, lock=False):
-    group = active_group(session, group_id, lock=lock)
-    member = session.query(GroupMember).filter_by(
-        group_id=group.id, user_id=identifier(user_id), is_active=True,
-    ).first()
+def access(session, group_id, user_id, *, lock=False, details=False):
+    group = active_group(session, group_id, lock=lock, details=details)
+    if details and not lock:
+        # The full read already needs these members. Reuse the same snapshot
+        # for authorization instead of querying membership and each user again.
+        uid = identifier(user_id)
+        member = next((row for row in group.members if row.user_id == uid and row.is_active), None)
+    else:
+        member = session.query(GroupMember).filter_by(
+            group_id=group.id, user_id=identifier(user_id), is_active=True,
+        ).first()
     if member is None:
         raise AuthorizationError('Not a member of this group')
     return group, member
