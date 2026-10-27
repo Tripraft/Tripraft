@@ -1,4 +1,5 @@
 """Independent authenticated clients receive only committed changes they may know about."""
+import json
 from uuid import UUID
 
 import pytest
@@ -10,6 +11,25 @@ from app.expenses.services.expense_invite_service import InvitationServiceSQL
 from app.trips.realtime.socketio_ext import socketio
 
 NS = '/expenses'
+
+
+@pytest.mark.parametrize('origin', ['http://localhost:5173', 'http://127.0.0.1:5173'])
+def test_development_socket_handshake_accepts_both_local_hostnames(app, origin):
+    client = app.test_client()
+    path = '/socket.io/?EIO=4&transport=polling'
+    opened = client.get(path, headers={'Origin': origin})
+    assert opened.status_code == 200, opened.get_data(as_text=True)
+    sid = json.loads(opened.get_data(as_text=True)[1:])['sid']
+    # Polling POSTs and websocket upgrades carry Origin even when the initial
+    # same-origin GET did not. Close the test session through that POST path.
+    closed = client.post(path + '&sid=' + sid, data='1', content_type='text/plain', headers={'Origin': origin})
+    assert closed.status_code == 200, closed.get_data(as_text=True)
+
+
+@pytest.mark.parametrize('origin', ['http://127.0.0.1:9999', 'https://untrusted.example'])
+def test_development_socket_handshake_rejects_unconfigured_origins(app, origin):
+    response = app.test_client().get('/socket.io/?EIO=4&transport=polling', headers={'Origin': origin})
+    assert response.status_code == 400
 
 
 @pytest.fixture(autouse=True)
@@ -195,6 +215,20 @@ def test_personal_currency_changes_notify_only_the_owner(alice, bob, watch):
     assert changes(outsider) == []
     assert owner.put('/api/v1/auth/user/profile', json={'display_name': 'New name'}).status_code == 200
     assert changes(observer) == []
+
+
+@pytest.mark.parametrize('personal', [True, False])
+def test_permanent_deletion_invalidates_authorized_devices(group_of_two, watch, personal):
+    owner, owner_id, member, _, gid = group_of_two
+    eid = create(owner, owner_id, None if personal else gid)
+    assert owner.delete('/api/v1/expenses/%s' % eid).status_code == 200
+    own_device, member_device = watch(owner), watch(member)
+    response = owner.delete('/api/v1/expenses/%s?permanent=true' % eid)
+    assert response.status_code == 200, response.get_json()
+    expected = ({'personal': True, 'expense_ids': [eid], 'currency_changed': False} if personal else
+                {'group_id': gid, 'expense_ids': [eid], 'access_revoked': False})
+    assert changes(own_device) == [expected]
+    assert changes(member_device) == ([] if personal else [expected])
 
 
 def test_personal_income_changes_are_private_and_committed(alice, bob, watch):

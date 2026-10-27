@@ -312,9 +312,10 @@ class GroupServiceSQL:
         ).offset(expense_offset).limit(expense_limit).all()
         data['expenses'] = [ExpenseServiceSQL._get_expense_dict(session, row) for row in expenses]
         for row in data['expenses']:
-            authorized = owner(group, user_id) or row['created_by'] == str(identifier(user_id))
+            authorized = member.role != 'viewer' and (owner(group, user_id) or row['created_by'] == str(identifier(user_id)))
             row['permissions'] = {'can_edit': authorized and not row['is_deleted'],
                                   'can_delete': authorized and not row['is_deleted'],
+                                  'can_permanently_delete': authorized and row['is_deleted'],
                                   'can_restore': authorized and row['is_deleted']}
         data['expense_pagination'] = {'total': total, 'limit': expense_limit, 'offset': expense_offset,
                                       'has_more': expense_offset + len(expenses) < total}

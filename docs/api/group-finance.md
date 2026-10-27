@@ -137,6 +137,16 @@ splits. Changing non-equal amounts or algorithms requires new explicit splits.
 Changing payer reverses the original credit and applies the new credit within
 the same transaction. Invalid edits leave the ledger unchanged.
 
+Deleted expenses remain visible with `include_deleted=true`. Their icon-only
+actions restore the original expense through POST `/{expense_id}/restore` or,
+after UI confirmation, permanently remove it through DELETE
+`/{expense_id}?permanent=true`. Permanent deletion removes the expense, splits
+and history without reversing balances again, and is rejected with 409 unless
+the expense is already soft-deleted. Only its creator or the group owner may
+restore or permanently delete it; viewers and former members cannot. Rows expose
+`permissions.can_restore` and `permissions.can_permanently_delete` for these
+actions. Regular DELETE retries leave a deleted expense recoverable.
+
 POST `/settlements` records payment with `group_id`, `from_user_id`,
 `to_user_id`, `amount`, optional `method` and `notes`. Amounts must be positive,
 within the configured maximum, and no greater than both the payer's debt and

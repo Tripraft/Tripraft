@@ -3,7 +3,8 @@ import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 // Purpose: Renders the Transaction List interface within apps\web\src\features\expenses\jsx.
 import ExpenseDialog from './ExpenseDialog';
 import TransactionActivity from './TransactionActivity';
-import React, { useState, useEffect, useMemo } from 'react';
+import DeletedTransactionActions from './DeletedTransactionActions';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Edit2, Trash2, FolderOpen, Info, ChevronLeft, ChevronRight, History, RefreshCw, Utensils, Car, Home, ShoppingBag, Plane, Heart, Zap, Film, Gift, Coffee, Hotel, Gamepad2, Shirt, Pill, Briefcase, Music, Dumbbell, Banknote, CircleDollarSign, HelpCircle } from 'lucide-react';
 import { formatDateLocal } from '../../../utils/timezoneUtils';
 import ExpenseHistoryModal from './ExpenseHistoryModal';
@@ -85,14 +86,38 @@ const TransactionList = ({
   const [historyTransaction, setHistoryTransaction] = useState(null);
   const [restoringId, setRestoringId] = useState(null);
   const [restoreError, setRestoreError] = useState('');
+  const [confirmingDelete, setConfirmingDelete] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [deleteError, setDeleteError] = useState('');
+  const actionPending = useRef(false);
+  const busy = Boolean(restoringId || deletingId);
+
+  const handlePermanentDelete = async () => {
+    if (actionPending.current || !confirmingDelete) return;
+    const id = confirmingDelete.id || confirmingDelete.expense_id;
+    actionPending.current = true;
+    setDeletingId(id);
+    setDeleteError('');
+    try {
+      await onDelete(id, { permanent: true });
+      setConfirmingDelete(null);
+    } catch (error) { setDeleteError(error.message || 'Unable to permanently delete transaction'); }
+    finally { actionPending.current = false; setDeletingId(null); }
+  };
+
+  const confirmPermanentDelete = expense => {
+    setDeleteError('');
+    setConfirmingDelete(expense);
+  };
 
   const handleRestore = async id => {
-    if (restoringId) return;
+    if (actionPending.current) return;
+    actionPending.current = true;
     setRestoringId(id);
     setRestoreError('');
     try { await onRestore(id); }
     catch (error) { setRestoreError(error.message || 'Unable to restore expense'); }
-    finally { setRestoringId(null); }
+    finally { actionPending.current = false; setRestoringId(null); }
   };
   
   // Pagination state
@@ -326,7 +351,8 @@ const TransactionList = ({
           {mode === 'group' ? <TransactionActivity transactions={paginatedTransactions} group={activeGroup}
             currentUserId={currentUserId} getMemberName={getMemberName} formatDate={formatDate} wasEdited={wasEdited}
             onSplit={handleViewDetails} onHistory={handleViewHistory} onEdit={onEdit} onDelete={onDelete}
-            onRestore={onRestore ? handleRestore : undefined} restoringId={restoringId} currency={currency} /> : <div className="table-container">
+            onRestore={onRestore ? handleRestore : undefined} restoringId={restoringId} busy={busy}
+            onPermanentDelete={onDelete ? confirmPermanentDelete : undefined} currency={currency} /> : <div className="table-container">
             <table>
               <thead>
                 <tr>
@@ -462,11 +488,10 @@ const TransactionList = ({
                         aria-label={`View split details for ${t.description || 'expense'}`}
                       ><Info size={15} /></button>}
                       {isDeleted ? (
-                        permissions.can_restore && onRestore ? <button className="expense-revert-button"
-                          disabled={Boolean(restoringId)} onClick={() => handleRestore(t.id || t.expense_id)}
-                          aria-label={`Revert deletion of ${t.description || 'expense'}`}>
-                          <RefreshCw size={14} />{restoringId === (t.id || t.expense_id) ? 'Restoring...' : 'Revert'}
-                        </button> : <span className="deleted-indicator"><Trash2 size={14} /></span>
+                        <DeletedTransactionActions expense={t} permissions={permissions}
+                          onRestore={onRestore ? handleRestore : undefined}
+                          onPermanentDelete={onDelete ? confirmPermanentDelete : undefined}
+                          busy={busy} restoring={restoringId === (t.id || t.expense_id)} />
                       ) : permissions.can_edit || permissions.can_delete ? (
                         <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}>
                           {permissions.can_edit && <button
@@ -615,6 +640,18 @@ const TransactionList = ({
 
       {/* Phase 12: Expense History Modal */}
       {restoreError && <p role="alert">{restoreError}</p>}
+      {confirmingDelete && <ExpenseDialog label="Permanently delete transaction" busy={Boolean(deletingId)} className="expense-permanent-delete-dialog"
+        onClose={() => setConfirmingDelete(null)}>
+        <h2>Permanently delete transaction?</h2>
+        <p>Delete “{confirmingDelete.description || 'this transaction'}” permanently? You cannot restore it afterward.</p>
+        {deleteError && <p role="alert">{deleteError}</p>}
+        <div className="expense-delete-confirm-actions">
+          <button type="button" disabled={Boolean(deletingId)} onClick={() => setConfirmingDelete(null)}>Cancel</button>
+          <button type="button" disabled={Boolean(deletingId)} onClick={handlePermanentDelete}>
+            {deletingId ? 'Deleting...' : 'Delete permanently'}
+          </button>
+        </div>
+      </ExpenseDialog>}
       {showHistoryModal && historyTransaction && (
         <ExpenseHistoryModal currency={historyTransaction?.original_currency || historyTransaction?.currency || currency}
           expense={transactions.find(transaction => (transaction.id || transaction.expense_id) === (historyTransaction.id || historyTransaction.expense_id)) || historyTransaction}

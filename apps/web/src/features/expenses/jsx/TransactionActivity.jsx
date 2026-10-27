@@ -3,8 +3,9 @@ import React from 'react';
 import { Edit2, History, Split, Trash2, Receipt, RefreshCw } from 'lucide-react';
 import { formatMoney } from '../../../utils/money';
 import { expensePermissions } from '../utils/groupPermissions';
+import DeletedTransactionActions from './DeletedTransactionActions';
 
-export default function TransactionActivity({ transactions, group, currentUserId, getMemberName, formatDate, wasEdited, onSplit, onHistory, onEdit, onDelete, onRestore, restoringId, currency }) {
+export default function TransactionActivity({ transactions, group, currentUserId, getMemberName, formatDate, wasEdited, onSplit, onHistory, onEdit, onDelete, onRestore, onPermanentDelete, restoringId, busy, currency }) {
   return <ol className="expense-activity-feed" aria-label="Expense activity">{transactions.map((expense, index) => {
     const permissions = expensePermissions(expense, group, currentUserId, 'group');
     const id = expense.id || expense.expense_id;
@@ -13,7 +14,8 @@ export default function TransactionActivity({ transactions, group, currentUserId
       <div className="expense-activity-body"><div className="expense-activity-title"><h3>{expense.description || 'Expense'}</h3><strong>{formatMoney(expense.amount, currency)}</strong></div>
         <p><span>{expense.paid_by_name || getMemberName(expense.paid_by)} paid</span><span>{expense.category || 'Other'}</span><time>{formatDate(expense.expense_date || expense.date)}</time></p>
         <div className="expense-activity-actions">{expense.is_deleted ? <><span className="deleted-badge">Deleted</span>
-          {permissions.can_restore && onRestore && <button disabled={Boolean(restoringId)} onClick={() => onRestore(id)} aria-label={`Revert deletion of ${expense.description || 'expense'}`}><RefreshCw size={14} />{restoringId === id ? 'Restoring...' : 'Revert'}</button>}
+          <DeletedTransactionActions expense={expense} permissions={permissions} onRestore={onRestore} mode="group"
+            onPermanentDelete={onPermanentDelete} busy={busy} restoring={restoringId === id} />
           <button onClick={() => onHistory(expense)} title="View edit history"><History size={14} />History</button>
         </> : <>
           <button onClick={() => onSplit(expense)} title="View split details"><Split size={14} />{expense.split_type || 'Equal'} split</button>

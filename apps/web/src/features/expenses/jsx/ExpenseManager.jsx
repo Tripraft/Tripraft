@@ -468,23 +468,25 @@ const ExpenseManager = () => {
     setShowTransactionModal(true);
   };
 
-  const handleDeleteTransaction = async (id) => {
+  const handleDeleteTransaction = async (id, { permanent = false } = {}) => {
     try {
       if (id && id.toString().startsWith('temp-')) return;
       
       setMutationLoading(true);
       showToast('Deleting transaction...', 'info');
       
-      if (mode === 'personal') {
+      if (mode === 'personal' && !permanent) {
         markPersonalAsDeleted(id);
       }
       
-      const result = unwrapEnvelope(await expenseApi.deleteExpense(id));
+      const result = unwrapEnvelope(await expenseApi.deleteExpense(id, { permanent }));
       
       // INSTANT UPDATE: Use returned data if available
       if (mode === 'group' && (result?.expenses || result?.group_balances)) {
-        updateExpensesAndBalances(activeGroupExpenses.map(item => (item.id || item.expense_id) === id
-          ? { ...item, is_deleted: true } : item), result.group_balances);
+        const expenses = permanent
+          ? activeGroupExpenses.filter(item => (item.id || item.expense_id) !== id)
+          : activeGroupExpenses.map(item => (item.id || item.expense_id) === id ? { ...item, is_deleted: true } : item);
+        updateExpensesAndBalances(expenses, result.group_balances);
         await refetchGroupDetail();
       } else if (mode === 'personal') {
         await refetchPersonalExpenses();
@@ -492,12 +494,13 @@ const ExpenseManager = () => {
         await refetchGroupDetail();
       }
       
-      showToast('Transaction deleted!', 'success');
+      showToast(permanent ? 'Transaction permanently deleted.' : 'Transaction deleted!', 'success');
     } catch (error) {
-      if (mode === 'personal') {
+      if (mode === 'personal' && !permanent) {
         rollbackPersonalDelete(id);
       }
       showToast(`Failed to delete: ${error.message}`, 'error');
+      if (permanent) throw error;
     } finally {
       setMutationLoading(false);
     }
@@ -514,6 +517,13 @@ const ExpenseManager = () => {
       showToast(`Failed to restore: ${error.message}`, 'error');
       throw error;
     } finally { setMutationLoading(false); }
+  };
+
+  const requestDeleteTransaction = (id, options = {}) => {
+    // TransactionList already confirms permanent deletion. Preserve its options
+    // and promise so it can wait for the actual API result and show failures.
+    if (options.permanent) return handleDeleteTransaction(id, options);
+    showConfirm('Are you sure you want to delete this transaction?', () => handleDeleteTransaction(id));
   };
 
   // Settlement handler - with INSTANT UPDATES
@@ -747,7 +757,7 @@ const ExpenseManager = () => {
           activeGroupMembers={activeGroupMembers || []}
           currentUserId={currentUser?.uid || currentUser?.user_id}
           onEdit={handleEditTransaction}
-          onDelete={(id) => showConfirm('Are you sure you want to delete this transaction?', () => handleDeleteTransaction(id))}
+          onDelete={requestDeleteTransaction}
           onRestore={handleRestoreTransaction}
           onExportPDF={handleExportPDF}
         /></div>
@@ -764,7 +774,7 @@ const ExpenseManager = () => {
             filter: { ...prev.filter, [filterType]: value }
           }))}
           onEdit={handleEditTransaction}
-          onDelete={(id) => showConfirm('Are you sure you want to delete this transaction?', () => handleDeleteTransaction(id))}
+          onDelete={requestDeleteTransaction}
           onRestore={handleRestoreTransaction}
           currentUserId={currentUser?.uid || currentUser?.user_id}
           currency={personalCurrency || 'USD'}
@@ -807,7 +817,7 @@ const ExpenseManager = () => {
 
       {/* Confirm Modal */}
       {showConfirmModal && (
-        <ExpenseDialog label="Confirm expense deletion" onClose={() => setShowConfirmModal(false)} className="modal modal-small">
+        <ExpenseDialog label="Confirm expense deletion" onClose={() => setShowConfirmModal(false)} className="modal modal-small expense-delete-confirm-dialog">
             <h2>Are you sure?</h2>
             <p>{confirmMessage}</p>
             <div className="modal-actions">

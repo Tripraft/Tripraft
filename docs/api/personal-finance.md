@@ -21,6 +21,8 @@ Paths below are relative to `/api/v1/expenses`.
 | POST | root path | Create an expense; omit `group_id` for personal |
 | PUT, PATCH | `/{id}` | Edit supplied expense fields |
 | DELETE | `/{id}` | Soft-delete expense |
+| POST | `/{id}/restore` | Restore a soft-deleted expense |
+| DELETE | `/{id}?permanent=true` | Permanently remove a soft-deleted expense, splits and history |
 | GET | `/{id}/history` | Expense history, including after deletion |
 | GET | `/personal` | Paginated personal expenses |
 | GET | `/personal/transactions` | Combined active income and personal expense list |
@@ -133,8 +135,14 @@ Financial HTTP responses use `Cache-Control: private, no-store`.
 ## Audit, permissions and migration
 
 Deletion persists who deleted the record and when. History retains before and
-after snapshots and remains visible to its owner after deletion. Deleted records
-cannot be edited or deleted again. Income IDs belonging to another user return
+after snapshots and remains visible to its owner after soft deletion. Deleted
+expenses show icon-only restore and permanent-delete controls. POST
+`/{id}/restore` restores a soft-deleted expense. DELETE `/{id}?permanent=true`
+permanently removes a soft-deleted expense together with its splits and history;
+it returns 409 for an active expense. The UI asks for confirmation first and
+shows “Transaction permanently deleted.” after success. Repeating a regular
+DELETE keeps the expense recoverable. Deleted expenses cannot be edited.
+Deleted incomes cannot be edited or deleted again. Income IDs belonging to another user return
 404; existing expense permission errors return 403. Malformed IDs and filters
 return 400, with expense schema failures retaining the existing 422 convention.
 Row locks serialize concurrent money edits and deletions on SQLite and PostgreSQL.

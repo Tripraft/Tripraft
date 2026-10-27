@@ -65,14 +65,62 @@ it.each(['personal', 'group'])('keeps deleted %s rows gray and permits a retryab
   fireEvent.click(screen.getByRole('button', { name: 'Revert deletion of Dinner' }));
   await waitFor(() => expect(restore).toHaveBeenCalledTimes(2));
   expect(restore).toHaveBeenLastCalledWith('deleted');
+  expect(screen.getByRole('button', { name: 'Revert deletion of Dinner' }).textContent).toBe('');
   expect(screen.queryByTitle('Edit transaction')).toBeNull();
   expect(screen.queryByTitle('Delete transaction')).toBeNull();
 });
 
 it('hides revert from an unrelated group member', () => {
   render(<TransactionList transactions={[{ id: 'deleted', is_deleted: true, created_by: 'creator' }]} filter={{}}
-    mode="group" activeGroup={{ created_by: 'owner' }} currentUserId="bystander" members={[]} onRestore={jest.fn()} />);
+    mode="group" activeGroup={{ created_by: 'owner' }} currentUserId="bystander" members={[]} onRestore={jest.fn()} onDelete={jest.fn()} />);
   expect(screen.queryByRole('button', { name: /Revert deletion/ })).toBeNull();
+  expect(screen.queryByRole('button', { name: /Permanently delete/ })).toBeNull();
+});
+
+it.each(['personal', 'group'])('confirms permanent deletion of a deleted %s expense and allows failure retry', async mode => {
+  const remove = jest.fn().mockRejectedValueOnce(new Error('Please retry')).mockResolvedValueOnce({});
+  const expense = { id: 'deleted', description: 'Dinner', amount: 10, is_deleted: true, created_by: 'me' };
+  render(<TransactionList transactions={[expense]} filter={{}} mode={mode}
+    activeGroup={{ created_by: 'owner' }} members={[]} currentUserId="me" onRestore={jest.fn()} onDelete={remove} />);
+  const restore = screen.getByRole('button', { name: 'Revert deletion of Dinner' });
+  const trash = screen.getByRole('button', { name: 'Permanently delete Dinner' });
+  expect(restore.textContent).toBe('');
+  expect(trash.textContent).toBe('');
+  fireEvent.click(trash);
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(remove).not.toHaveBeenCalled();
+  fireEvent.click(trash);
+  const dialog = screen.getByRole('dialog', { name: 'Permanently delete transaction' });
+  expect(dialog).toHaveTextContent('You cannot restore it afterward');
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Delete permanently' }));
+  expect(await within(dialog).findByRole('alert')).toHaveTextContent('Please retry');
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Delete permanently' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  expect(remove).toHaveBeenCalledTimes(2);
+  expect(remove).toHaveBeenLastCalledWith('deleted', { permanent: true });
+});
+
+it.each(['personal', 'group'])('keeps permanent deletion hidden on active %s expenses', mode => {
+  render(<TransactionList transactions={[{ id: 'active', description: 'Dinner', created_by: 'me' }]} filter={{}}
+    mode={mode} activeGroup={{ created_by: 'owner' }} currentUserId="me" members={[]} onDelete={jest.fn()} />);
+  expect(screen.queryByRole('button', { name: /Permanently delete/ })).toBeNull();
+});
+
+it.each(['personal', 'group'])('disables both deleted %s expense actions during restoration', async mode => {
+  let finish;
+  const restore = jest.fn(() => new Promise(resolve => { finish = resolve; }));
+  render(<TransactionList transactions={[{ id: 'deleted', description: 'Dinner', is_deleted: true, created_by: 'me' }]}
+    filter={{}} mode={mode} activeGroup={{ created_by: 'owner' }} currentUserId="me" members={[]}
+    onRestore={restore} onDelete={jest.fn()} />);
+  const revert = screen.getByRole('button', { name: 'Revert deletion of Dinner' });
+  const trash = screen.getByRole('button', { name: 'Permanently delete Dinner' });
+  fireEvent.click(revert);
+  expect(revert).toBeDisabled();
+  expect(trash).toBeDisabled();
+  fireEvent.click(trash);
+  expect(screen.queryByRole('dialog')).toBeNull();
+  finish({});
+  await waitFor(() => expect(trash).toBeEnabled());
 });
 
 it('keeps the add amount editable beside a three-letter currency label', async () => {

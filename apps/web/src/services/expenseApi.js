@@ -200,8 +200,8 @@ class ExpenseApiService {
     return apiClient.put(`${BASE}/${expenseId}`, updates);
   }
 
-  async deleteExpense(expenseId) {
-    return apiClient.delete(`${BASE}/${expenseId}`);
+  async deleteExpense(expenseId, { permanent = false } = {}) {
+    return apiClient.delete(`${BASE}/${expenseId}${permanent ? '?permanent=true' : ''}`);
   }
 
   async restoreExpense(expenseId) {
