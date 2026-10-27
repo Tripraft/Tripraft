@@ -60,3 +60,44 @@ it('falls back to the server message when validation details are absent',async()
  fetch.mockResolvedValue(response(422,JSON.stringify({error:{message:'Invalid request body'}})));
  await expect(client.post('/v1/expenses/groups',{})).rejects.toMatchObject({status:422,message:'Invalid request body'});
 });
+
+it('shares one pending GET and releases it after success or failure', async () => {
+ let finish;
+ fetch.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+ const first = client.get('/v1/expenses/invitations');
+ const second = client.get('/v1/expenses/invitations');
+ expect(first).toBe(second);
+ await Promise.resolve();
+ expect(fetch).toHaveBeenCalledTimes(1);
+ finish(response(200, '{"data":{"invitations":[]}}'));
+ await expect(first).resolves.toEqual({data:{invitations:[]}});
+ expect(client.inflightGets.size).toBe(0);
+ fetch.mockResolvedValue(response(403, '{}'));
+ await expect(client.get('/v1/expenses/invitations')).rejects.toMatchObject({status:403});
+ expect(client.inflightGets.size).toBe(0);
+});
+
+it('keeps different pages, headers and independently cancelled reads separate', async () => {
+ fetch.mockResolvedValue(response(200, '{}'));
+ await Promise.all([
+  client.get('/v1/expenses?offset=0'), client.get('/v1/expenses?offset=100'),
+  client.get('/v1/expenses?offset=0', {headers:{Accept:'text/plain'}}),
+  client.get('/v1/expenses?offset=0', {signal:new AbortController().signal}),
+ ]);
+ expect(fetch).toHaveBeenCalledTimes(4);
+});
+
+it('does not join a pre-mutation or previous-account read', async () => {
+ let finish;
+ fetch.mockImplementationOnce(() => new Promise(resolve => {finish = resolve;}))
+  .mockResolvedValue(response(200, '{}'));
+ const stale = client.get('/v1/expenses/groups');
+ await Promise.resolve();
+ await client.post('/v1/expenses', {amount:10});
+ await client.get('/v1/expenses/groups');
+ auth._authVersion = 2;
+ await client.get('/v1/expenses/groups');
+ finish(response(200, '{}')); await stale;
+ expect(fetch).toHaveBeenCalledTimes(4);
+ delete auth._authVersion;
+});

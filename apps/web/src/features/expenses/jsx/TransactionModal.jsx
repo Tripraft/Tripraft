@@ -3,6 +3,10 @@ import ExpenseDialog from './ExpenseDialog';
 import CurrencySelect from '../../../components/common/jsx/CurrencySelect';
 import React, { useState, useEffect, useRef } from 'react';
 import { X, LoaderCircle } from 'lucide-react';
+import ExpenseSplitEditor from './ExpenseSplitEditor';
+import { buildSplit } from '../utils/splitMethods';
+import useExchangeRate from '../../../hooks/useExchangeRate';
+import {formatMoney} from '../../../utils/money';
 
 const TransactionModal = ({ 
   mode, 
@@ -18,17 +22,20 @@ const TransactionModal = ({
   const [saving, setSaving] = useState(false);
   const savingRef = useRef(false);
   const initializedForm = useRef(null);
-  const customSplit = mode === 'group' && editingTransaction && String(editingTransaction.split_type || 'equal').toLowerCase() !== 'equal';
+  const [splitError, setSplitError] = useState('');
   const [formData, setFormData] = useState({
     type: 'expense',
-    currency: currency || 'USD',
+    currency: (mode === 'group' && activeGroup?.display_currency) || currency || 'USD',
     description: '',
     amount: '',
     category: 'Food',
     date: new Date().toISOString().split('T')[0],
     paidBy: '',
-    splitWith: []
+    splitWith: [],
+    splitType: 'equal', splitValues: {}, bill: { items: [], tax: '', tip: '', discount: '' },
   });
+  const ledgerCurrency = activeGroup?.currency || currency || 'USD';
+  const exchange = useExchangeRate(formData.currency, ledgerCurrency, 0, mode === 'group');
 
   // Helper function to get member display name
   const getMemberName = (member) => {
@@ -53,8 +60,11 @@ const TransactionModal = ({
     // A live refetch replaces member/expense objects; it must not overwrite a draft.
     initializedForm.current = formKey;
     if (editingTransaction) {
+      const rawSplitType = String(editingTransaction.split_type || 'equal').toLowerCase();
+      const editingSplitType = rawSplitType === 'custom'
+        ? (editingTransaction.splits?.some(split => split.shares != null) ? 'shares' : 'exact') : rawSplitType;
       // Determine type based on category
-      const isIncome = editingTransaction.category && editingTransaction.category.toLowerCase() === 'salary';
+      const isIncome = editingTransaction.type === 'income' || editingTransaction.category?.toLowerCase() === 'salary';
       
       // ≡ƒöº CRITICAL FIX: Backend uses snake_case (paid_by), frontend uses camelCase (paidBy)
       const paidByValue = editingTransaction.paidBy || editingTransaction.paid_by || '';
@@ -87,19 +97,23 @@ const TransactionModal = ({
         type: isIncome ? 'income' : 'expense',
         description: editingTransaction.description || '',
         currency: editingTransaction.currency || currency || 'USD',
-        amount: editingTransaction.amount || '',
+        amount: Math.abs(Number(editingTransaction.amount)) || '',
         category: editingTransaction.category || 'Food',
         date: dateValue,
         paidBy: paidByValue,
-        splitWith: splitWithValue
+        splitWith: splitWithValue.map(String),
+        splitType: editingSplitType,
+        splitValues: Object.fromEntries((editingTransaction.splits || []).map(s => [String(s.user_id),
+          editingSplitType === 'percentage' ? s.percentage : editingSplitType === 'shares' ? s.shares : editingSplitType === 'adjustment' ? editingTransaction.split_details?.adjustments?.[s.user_id] || 0 : Math.abs(Number(s.amount))])),
+        bill: { items: [], tax: '', tip: '', discount: '', ...(editingSplitType === 'itemized' ? editingTransaction.split_details : {}) },
       });
     } else if (mode === 'group' && members && members.length > 0) {
       const firstMemberId = getMemberId(members[0]);
-      const allMemberIds = members.map(m => getMemberId(m));
+      const allMemberIds = members.map(m => String(getMemberId(m)));
       setFormData(prev => ({
         ...prev,
         type: 'expense',
-        paidBy: currentUser?.uid || firstMemberId,
+        paidBy: currentUser?.uid || currentUser?.user_id || currentUser?.id || firstMemberId,
         splitWith: allMemberIds
       }));
     }
@@ -117,10 +131,11 @@ const TransactionModal = ({
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (savingRef.current || editingTransaction?.is_deleted) return;
-    
-    if (mode === 'group' && formData.splitWith.length === 0) {
-      onAlert('You must split the expense with at least one person.');
-      return;
+    setSplitError('');
+    let split;
+    if (mode === 'group') {
+      try { split = buildSplit(formData); }
+      catch (error) { setSplitError(error.message); return; }
     }
 
     const transactionData = {
@@ -129,27 +144,21 @@ const TransactionModal = ({
       amount: parseFloat(formData.amount),
       category: formData.category,
       expense_date: formData.date,
-      ...(mode === 'personal' && !editingTransaction && {currency: formData.currency}),
+      ...((mode === 'group' || !editingTransaction) && {currency: formData.currency}),
       ...(mode === 'group' && {
         paidBy: formData.paidBy,
         splitWith: formData.splitWith,
+        split_type: split?.split_type,
+        splits: split?.splits,
+        split_details: split?.split_details,
       })
     };
 
     savingRef.current = true;
     setSaving(true);
     try { await onSave(transactionData); }
-    catch (error) { onAlert(error.message || 'Unable to save transaction'); }
+    catch (error) { setSplitError(error.message || 'Unable to save transaction'); onAlert?.(error.message || 'Unable to save transaction'); }
     finally { savingRef.current = false; setSaving(false); }
-  };
-
-  const handleSplitToggle = (memberId) => {
-    setFormData(prev => ({
-      ...prev,
-      splitWith: prev.splitWith.includes(memberId)
-        ? prev.splitWith.filter(id => id !== memberId)
-        : [...prev.splitWith, memberId]
-    }));
   };
 
   // Use members prop directly instead of activeGroup.members
@@ -193,11 +202,14 @@ const TransactionModal = ({
             </div>
           )}
 
-          {mode === 'personal' && <div className="form-group">
+          <div className="form-group">
             <label htmlFor="transaction-currency">Currency</label>
-            <CurrencySelect id="transaction-currency" value={formData.currency} disabled={saving || !!editingTransaction}
+            <CurrencySelect id="transaction-currency" value={formData.currency} disabled={saving || (mode === 'personal' && !!editingTransaction)}
               onChange={event => setFormData(prev => ({...prev, currency: event.target.value}))} />
-          </div>}
+            {mode === 'group' && formData.currency !== ledgerCurrency && <p role="status">{exchange.data
+              ? `About ${formatMoney(Number(formData.amount || 0) * exchange.data.rate, ledgerCurrency)} in the group ledger. Original ${formData.currency} is saved with the receipt.`
+              : exchange.error || 'Loading the conversion rate...'}</p>}
+          </div>
           <div className="form-group">
             <label htmlFor="description">Description</label>
             <input 
@@ -213,12 +225,11 @@ const TransactionModal = ({
           <div className="form-group">
             <label htmlFor="amount">Amount</label>
             <div className="expense-amount-field">
-              <span className="expense-amount-currency">{mode === 'personal' ? formData.currency : currency || activeGroup?.currency || 'USD'}</span>
+              <span className="expense-amount-currency">{formData.currency}</span>
               <input 
                 type="number" 
                 id="amount"
                 placeholder="0.00"
-                disabled={Boolean(customSplit)}
                 min="0.01"
                 step="0.01"
                 value={formData.amount}
@@ -231,7 +242,7 @@ const TransactionModal = ({
           {mode === 'group' && groupMembers.length > 0 && (
             <>
               <div className="form-group">
-                <label htmlFor="paidBy">Paid By</label>
+                <label htmlFor="paidBy">{formData.splitType === 'reimbursement' ? 'Refund received by' : 'Paid By'}</label>
                 <select 
                   id="paidBy"
                   value={formData.paidBy}
@@ -251,31 +262,9 @@ const TransactionModal = ({
                 </select>
               </div>
 
-              <div className="form-group">
-                <label>Split Between</label>
-                {customSplit && <p role="note">This expense uses a {editingTransaction.split_type} split. Its amount and participants are preserved when you edit other details.</p>}
-                <div className="checkbox-list">
-                  {groupMembers.map(member => {
-                    const memberId = getMemberId(member);
-                    const memberName = getMemberName(member);
-                    return (
-                      <label key={memberId}>
-                        <input 
-                          type="checkbox" 
-                          value={memberId}
-                          disabled={Boolean(customSplit)}
-                          checked={formData.splitWith.includes(memberId)}
-                          onChange={() => handleSplitToggle(memberId)}
-                        />
-                        <span>
-                          {memberName}
-                          {memberId === currentUser?.uid ? ' (You)' : ''}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
+              <ExpenseSplitEditor form={formData} setForm={setFormData} members={groupMembers} currency={formData.currency}
+                previewCurrency={ledgerCurrency} previewRate={exchange.data?.rate} />
+              {splitError && <p role="alert">{splitError}</p>}
             </>
           )}
 

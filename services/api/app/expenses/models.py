@@ -7,6 +7,7 @@ All expense-specific models (Group, Expense, Settlement, etc.) are defined here.
 """
 
 from datetime import date
+import json
 from decimal import Decimal, ROUND_HALF_UP
 
 from app.auth.models import User, UserSession
@@ -14,11 +15,24 @@ from app.auth.models import User, UserSession
 from app.core.db.base import Base
 from app.core.db.uuid7 import CoercingUuid as Uuid
 from app.core.db.uuid7 import uuid7
-from sqlalchemy import (JSON, Boolean, CheckConstraint, Column, Date, DateTime, ForeignKey,
+from sqlalchemy import (JSON, BigInteger, Boolean, CheckConstraint, Column, Date, DateTime, ForeignKey,
                         Index, Integer, Numeric, String, Text,
                         UniqueConstraint)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from sqlalchemy.types import TypeDecorator
+
+
+class SplitDetailsJSON(TypeDecorator):
+    """JSON split inputs stored as portable text, supported by additive dev migrations."""
+    impl = Text
+    cache_ok = True
+
+    def process_bind_param(self, value, dialect):
+        return json.dumps(value) if value is not None else None
+
+    def process_result_value(self, value, dialect):
+        return json.loads(value) if value is not None else None
 
 
 _MONEY_QUANTUM = Decimal('0.01')
@@ -44,6 +58,10 @@ class Group(Base):
     name = Column(String(100), nullable=False)
     description = Column(Text)
     currency = Column(String(3), default='USD')
+    display_currency = Column(String(3))
+    budget_minor = Column(BigInteger)
+    start_date = Column(Date)
+    end_date = Column(Date)
     created_by = Column(Uuid, ForeignKey('users.id'), nullable=False)
     group_code = Column(String(20), unique=True)
     category = Column(String(50))  # trip, home, couple, friends, etc.
@@ -68,6 +86,10 @@ class Group(Base):
             'name': self.name,
             'description': self.description,
             'currency': self.currency,
+            'display_currency': self.display_currency or self.currency,
+            'budget': money_to_json(Decimal(self.budget_minor) / 100) if self.budget_minor is not None else None,
+            'start_date': self.start_date.isoformat() if self.start_date else None,
+            'end_date': self.end_date.isoformat() if self.end_date else None,
             'created_by': str(self.created_by),
             'created_by_name': self.owner.display_name if self.owner else None,  # Include owner name
             'group_code': self.group_code,
@@ -135,6 +157,8 @@ class Expense(Base):
     currency = Column(String(3), default='USD')
     paid_by = Column(Uuid, ForeignKey('users.id'), nullable=False)
     split_type = Column(String(20), default='equal')  # equal, exact, percentage, shares, none
+    split_details = Column(SplitDetailsJSON, nullable=True)
+    original = Column(SplitDetailsJSON, nullable=True)
     category = Column(String(50))
     notes = Column(Text)
     expense_date = Column(Date, default=date.today)
@@ -165,6 +189,8 @@ class Expense(Base):
             'paid_by': str(self.paid_by),
             'paid_by_name': self.payer.display_name if self.payer else None,
             'split_type': self.split_type,
+            'split_details': self.split_details,
+            'original': self.original,
             'category': self.category,
             'notes': self.notes,
             'expense_date': self.expense_date.isoformat() if self.expense_date is not None else None,  # type: ignore

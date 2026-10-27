@@ -21,6 +21,13 @@ SHA = 'a' * 40
 
 
 class DatabaseReleaseTests(unittest.TestCase):
+    def test_production_startup_never_opens_a_migration_connection(self):
+        with mock.patch.dict(requester.os.environ, {}, clear=True), \
+                mock.patch.object(requester, 'dotenv_values', return_value={'FLASK_ENV': 'production'}), \
+                mock.patch.object(requester, 'create_engine') as create:
+            self.assertEqual(requester.main(), 0)
+        create.assert_not_called()
+
     def scripts(self):
         config = Config()
         config.set_main_option('script_location', str(database.API / 'migrations'))
@@ -43,17 +50,47 @@ class DatabaseReleaseTests(unittest.TestCase):
         self.assertTrue(all(statement.lstrip().startswith('SELECT') for statement in statements))
         connection.begin.assert_not_called()
 
+    def test_additive_plan_covers_all_pending_changes_in_order(self):
+        scripts = self.scripts()
+        plan = requester.migration_plan(scripts, schema_status(scripts, ['b825c4202610']))
+        self.assertEqual([step['revision'] for step in plan], ['c62f718293a4', 'd73f8293a5b6', 'e84a93b4c6d7', 'f95ba4c5d6e8'])
+        self.assertEqual(plan[-3]['operations'][0]['table'], 'friend_contacts')
+        self.assertEqual(plan[-2]['operations'], [{'op': 'add_nullable_column', 'table': 'expenses',
+            'column': {'name': 'split_details', 'type': 'text', 'nullable': True}}])
+        self.assertEqual(len(plan[-1]['operations']), 5)
+        self.assertTrue(all(op['op'] == 'add_nullable_column' and op['column']['nullable'] for op in plan[-1]['operations']))
+
+    def test_unsupported_older_migrations_are_not_partly_applied(self):
+        connection = mock.MagicMock()
+        with mock.patch.object(requester.MigrationContext, 'configure') as context:
+            context.return_value.get_current_heads.return_value = ['a74b8293a4b5']
+            with self.assertRaisesRegex(RuntimeError, 'owner release workflow'):
+                requester.request_migration(connection, self.scripts())
+        connection.execute.assert_not_called()
+        connection.begin.assert_not_called()
+
+    def test_manifest_identity_and_operation_are_checked_before_writes(self):
+        scripts = self.scripts()
+        status = schema_status(scripts, ['c62f718293a4'])
+        for content in ('{}', '[]', '{"revision":"wrong","down_revision":"c62f718293a4","operations":[]}',
+                        '{"revision":"d73f8293a5b6","down_revision":"c62f718293a4","operations":[{"op":"drop_table"}]}'):
+            with self.subTest(content=content), mock.patch.object(Path, 'read_text', return_value=content):
+                with self.assertRaisesRegex(RuntimeError, 'invalid or unsupported'):
+                    requester.migration_plan(scripts, status)
+
     def test_graph_reports_real_pending_migration(self):
         config = Config()
         config.set_main_option('script_location', str(database.API / 'migrations'))
         scripts = ScriptDirectory.from_config(config)
         status = schema_status(scripts, ['b825c4202610'])
         self.assertEqual(status.state, 'behind')
-        self.assertEqual([r for r, _ in status.pending], ['c62f718293a4'])
+        self.assertEqual([r for r, _ in status.pending], ['c62f718293a4', 'd73f8293a5b6', 'e84a93b4c6d7', 'f95ba4c5d6e8'])
         self.assertIn('currency', status.message)
         self.assertEqual(schema_status(scripts, ['not-in-this-checkout']).state, 'unknown')
         self.assertEqual(schema_status(scripts, []).state, 'uninitialized')
-        self.assertEqual(schema_status(scripts, ['c62f718293a4']).state, 'current')
+        self.assertEqual(schema_status(scripts, ['c62f718293a4']).state, 'behind')
+        self.assertEqual(schema_status(scripts, ['d73f8293a5b6']).state, 'behind')
+        self.assertEqual(schema_status(scripts, ['f95ba4c5d6e8']).state, 'current')
         # An existing sibling is upgradeable through the merge, regardless of ID ordering.
         for sibling in ('a74b8293a4b5', 'a714c3202601'):
             self.assertEqual(schema_status(scripts, [sibling]).state, 'behind')

@@ -465,3 +465,8 @@
     padding: 3px 6px;
   }
 }
+
+.expense-history-currency-note { margin: 0; padding: 12px 24px; background: #f8fafc; color: #64748b; font-size: 12px; line-height: 1.6; }
+.expense-history-modal .change-values { align-items: start; }
+.expense-history-modal .old-value, .expense-history-modal .new-value { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 480px) { .expense-history-modal .change-values { flex-wrap: wrap; } .expense-history-modal .change-values > .arrow { flex-shrink: 0; } }

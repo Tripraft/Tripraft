@@ -32,6 +32,7 @@ class CreateExpenseSchema(Schema):
         load_default='equal',
     )
     splits = fields.List(fields.Dict(), load_default=None, allow_none=True)
+    split_details = fields.Dict(load_default=None, allow_none=True)
     category = fields.String(
         validate=validate.Length(max=50),
         load_default=None,
@@ -68,6 +69,7 @@ class UpdateExpenseSchema(Schema):
         validate=validate.OneOf(Config.SPLIT_TYPES + [s.upper() for s in Config.SPLIT_TYPES]),
     )
     splits = fields.List(fields.Dict())
+    split_details = fields.Dict(allow_none=True)
     category = fields.String(validate=validate.Length(max=50), allow_none=True)
     expense_date = CalendarDate()
     date = CalendarDate()

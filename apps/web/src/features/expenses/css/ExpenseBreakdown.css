@@ -1,0 +1,31 @@
+/* Purpose: Flowing transaction and member detail layouts without nested scroll areas. */
+.expense-breakdown { min-width: 0; margin-top: 20px; }
+.expense-breakdown h3 { font-size: 14px; font-weight: 650; margin: 0 0 12px; }
+.expense-breakdown > ul { list-style: none; padding: 0; margin: 0; }
+.expense-breakdown li { border-top: 1px solid var(--color-border-light, #e5e7eb); }
+.expense-breakdown summary { display: flex; align-items: start; justify-content: space-between; gap: 16px; cursor: pointer; padding: 16px 0; }
+.expense-breakdown summary:focus-visible, .expense-member-toggle:focus-visible { outline: 2px solid var(--color-primary-600, #7c3aed); outline-offset: 3px; border-radius: 8px; }
+.expense-breakdown-description { min-width: 0; flex: 1; }
+.expense-breakdown strong { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+.expense-breakdown small { display: block; margin-top: 5px; font-size: 12px; color: var(--color-text-secondary, #6b7280); overflow-wrap: anywhere; line-height: 1.5; }
+.expense-breakdown .expense-not-involved { color: var(--color-text-secondary, #6b7280); }
+.expense-breakdown-amount { text-align: right; max-width: 45%; font-variant-numeric: tabular-nums; }
+.expense-breakdown-chevron { flex-shrink: 0; margin-top: 3px; color: var(--color-primary-600, #7c3aed); }
+.expense-breakdown details[open] > summary .expense-breakdown-chevron { transform: rotate(180deg); }
+.expense-breakdown dl { margin: 0 0 16px; padding: 12px; border-radius: 10px; background: var(--color-bg-secondary, #faf8ff); }
+.expense-breakdown dl > div { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; padding: 9px 0; font-size: 13px; }
+.expense-breakdown dt { min-width: 0; overflow-wrap: anywhere; }
+.expense-breakdown dd { text-align: right; margin: 0; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.expense-member-toggle { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; border: 1px solid var(--color-border-light, #e5e7eb); border-radius: 12px; background: var(--color-bg-primary, #fff); color: inherit; text-align: left; cursor: pointer; font: inherit; }
+.expense-member-toggle[aria-expanded="true"] { border-color: var(--color-primary-300, #c4b5fd); background: var(--color-bg-secondary, #faf8ff); }
+.expense-member-toggle > span:first-child { min-width: 0; flex: 1; }
+.expense-member-toggle strong { font-size: 14px; overflow-wrap: anywhere; }
+.expense-member-toggle small { display: block; font-size: 12px; color: var(--color-text-secondary, #6b7280); margin-top: 5px; }
+.expense-member-toggle > span:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.expense-member-spending-list { display: grid; gap: 12px; }
+.expense-member-spending-list > article { min-width: 0; }
+.expense-member-spending-list .expense-breakdown { padding: 0 16px; }
+.expense-member-spending-heading, .expense-member-spending-total { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; margin: 0 0 16px; }
+.expense-member-spending-heading h3 { font-size: 16px; margin: 0; }
+.expense-member-spending-heading p { font-size: 12px; color: var(--color-text-secondary, #6b7280); margin: 8px 0 0; }
+.expense-member-spending-total { border-top: 1px solid var(--color-border-light, #e5e7eb); padding-top: 16px; margin-top: 20px; font-size: 14px; }

@@ -131,7 +131,7 @@ export function useUserQuery() {
 /**
  * Fetches groups. Skips API when mega-bootstrap has hydrated cache.
  */
-export function useGroupsQuery() {
+export function useGroupsQuery(options = {}) {
   const queryClient = useQueryClient();
 
   return useQuery({
@@ -144,7 +144,9 @@ export function useGroupsQuery() {
     refetchOnReconnect: false,
     refetchInterval: false,
     placeholderData: keepPreviousData,
-    enabled: true,
+    enabled: options.enabled !== false,
+    // APIClient already retries GETs; avoid replaying its entire retry loop.
+    retry: false,
   });
 }
 
@@ -159,9 +161,10 @@ export function useGroupQuery(groupId, options = {}) {
     staleTime: 0,
     gcTime: 5 * 60 * 1000,
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
-    retry: (count, error) => ![401, 403, 404].includes(error?.status || error?.statusCode) && count < 2,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    // The expense live-update hook already reconciles on focus/reconnect.
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: false,
   });
 }
 
@@ -185,13 +188,8 @@ export function usePrefetchGroups(groups, prefetchCount = 3) {
   return { prefetchOnHover };
 }
 
-export function useFetchGroups() {
-  return useQuery({
-    queryKey: queryKeys.groups,
-    queryFn: async () => unwrapEnvelope(await expenseApi.getUserGroups()),
-    staleTime: 0,
-    gcTime: 10 * 60 * 1000,
-  });
+export function useFetchGroups(options = {}) {
+  return useGroupsQuery(options);
 }
 
 export function useExpensesQuery(groupId) {
@@ -329,6 +327,8 @@ export function useInvitationsQuery(options = {}) {
     refetchInterval: false,
     placeholderData: keepPreviousData,
     enabled: options.enabled !== false,
+    refetchOnReconnect: false,
+    retry: false,
   });
 }
 
@@ -363,11 +363,11 @@ export function useGroupHistory(groupId) {
 /**
  * Fetches individual expense edit history (for ExpenseHistoryModal).
  */
-export function useExpenseEditHistory(expenseId) {
+export function useExpenseEditHistory(expenseId, income = false) {
   return useQuery({
     queryKey: queryKeys.expenseEditHistory(expenseId),
     queryFn: async () => {
-      const response = await expenseApi.getExpenseHistory(expenseId);
+      const response = await (income ? expenseApi.getIncomeHistory(expenseId) : expenseApi.getExpenseHistory(expenseId));
       if (response && response.success === false) throw new Error(response.error || 'Failed to load history');
       return unwrapEnvelope(response);
     },
@@ -1107,9 +1107,9 @@ export function useAuth() {
  * Groups list with instant-update helpers.
  * Wraps useGroupsQuery() and exposes setQueryData-based update callbacks.
  */
-export function useGroups() {
+export function useGroups(options = {}) {
   const queryClient = useQueryClient();
-  const { data, isLoading, error, refetch } = useFetchGroups();
+  const { data, isLoading, error, refetch } = useFetchGroups(options);
   const groups = data?.groups || [];
 
   const updateGroupsFromResponse = useCallback((responseGroups) => {
@@ -1220,9 +1220,9 @@ export function useGroupDetail(groupId) {
  * Pending invitations with instant-update helpers.
  * Wraps useInvitationsQuery().
  */
-export function useInvitations() {
+export function useInvitations(options = {}) {
   const queryClient = useQueryClient();
-  const { data, isLoading, error, refetch } = useInvitationsQuery();
+  const { data, isLoading, error, refetch } = useInvitationsQuery(options);
   const invitations = data?.invitations || [];
 
   const updateInvitationsFromResponse = useCallback((responseInvitations) => {
@@ -1272,28 +1272,44 @@ export function useInvitations() {
  * Personal expenses with optimistic delete / rollback.
  * Uses a dedicated React Query key since no existing hook covers this.
  */
-export function usePersonalExpenses() {
+export function usePersonalExpenses({enabled = true} = {}) {
   const queryClient = useQueryClient();
   const personalKey = ['personalExpenses'];
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: personalKey,
+    enabled,
+    retry: false,
     queryFn: async () => {
       // Keep soft-deleted rows after reload without letting them displace active pages.
-      const expenses = [];
-      let offset = 0;
-      for (;;) {
-        const page = unwrapEnvelope(await expenseApi.getUserExpenses({ personal_only: true, include_deleted: true, limit: 100, offset }));
-        const rows = page.expenses || [];
-        expenses.push(...rows);
-        offset += rows.length;
-        if (!page.has_more) break;
-        if (!rows.length) throw new Error('Personal history changed while loading. Please refresh.');
-      }
+      const readPages = async (read, field, convert = row => row) => {
+        const result = [];
+        let offset = 0;
+        for (;;) {
+          const page = unwrapEnvelope(await read(offset));
+          const rows = page[field] || [];
+          result.push(...rows.map(convert));
+          offset += rows.length;
+          if (!page.has_more) break;
+          if (!rows.length) throw new Error('Personal history changed while loading. Please refresh.');
+        }
+        return result;
+      };
+      const [expenseRows, incomeRows] = await Promise.all([
+        readPages(offset => expenseApi.getUserExpenses({personal_only: true, include_deleted: true, limit: 100, offset}), 'expenses'),
+        expenseApi.getIncomes ? readPages(offset => expenseApi.getIncomes({limit: 100, offset}), 'incomes',
+          row => ({...row, _income: true, type: 'income', expense_date: row.income_date, created_by: row.user_id})) : [],
+      ]);
+      const expenses = [...expenseRows, ...incomeRows];
       return { expenses: [...new Map(expenses.map(row => [row.id || row.expense_id, row])).values()] };
     },
-    staleTime: 0,
-    gcTime: 5 * 60 * 1000,
+    // Live notifications and reconnect/poll recovery own freshness. Returning
+    // to a tab keeps the cached ledger visible instead of starting a reload.
+    staleTime: Infinity,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
   });
 
   const expenses = data?.expenses || [];

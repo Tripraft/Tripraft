@@ -254,6 +254,7 @@ Each published file appears once below. The index covers strict JSON, SQL, histo
 | [api/app/expenses/routes/expense_groups.py](api/app/expenses/routes/expense_groups.py) | Implements authenticated expense-group creation, details, membership, role, leave and archive operations. |
 | [api/app/expenses/routes/expense_invitations.py](api/app/expenses/routes/expense_invitations.py) | Exposes private expense invitation lookup, creation, acceptance, decline, resend and cancellation with cache refresh. |
 | [api/app/expenses/routes/expenses.py](api/app/expenses/routes/expenses.py) | Exposes expense CRUD, soft delete/restore, personal/group lists and edit history with permission and freshness handling. |
+| [api/app/expenses/routes/friends.py](api/app/expenses/routes/friends.py) | Lists and saves the signed-in user's private contacts for reusable expense invitations. |
 | [api/app/expenses/routes/group_finance.py](api/app/expenses/routes/group_finance.py) | Exposes authorized group analytics, balances, simplified debts and compatibility balance-repair endpoints. |
 | [api/app/expenses/routes/personal_finance.py](api/app/expenses/routes/personal_finance.py) | Exposes private income CRUD/history and currency-separated personal summaries, transactions and analytics. |
 | [api/app/expenses/routes/settlements.py](api/app/expenses/routes/settlements.py) | Exposes authorized payment recording/deletion and group settlement/balance/debt reads. |
@@ -263,6 +264,7 @@ Each published file appears once below. The index covers strict JSON, SQL, histo
 | [api/app/expenses/services/expense_invite_service.py](api/app/expenses/services/expense_invite_service.py) | Implements recipient checks, expiry and membership transitions for expense invitations. |
 | [api/app/expenses/services/expense_service.py](api/app/expenses/services/expense_service.py) | Validates and persists expense/split edits, balance changes, soft deletion/restoration and audit history. |
 | [api/app/expenses/services/group_access.py](api/app/expenses/services/group_access.py) | Centralizes ledger access, ownership/role checks, former-member balance preservation and invitation/member invariants. |
+| [api/app/expenses/services/friend_service.py](api/app/expenses/services/friend_service.py) | Upserts private contacts atomically and resolves registered names, nicknames and literal searches. |
 | [api/app/expenses/services/group_finance_service.py](api/app/expenses/services/group_finance_service.py) | Derives group spending/trends and balance recalculation from persisted financial records. |
 | [api/app/expenses/services/ledger_math.py](api/app/expenses/services/ledger_math.py) | Serializes decimal balances and simplifies debts while retaining single-cent obligations. |
 | [api/app/expenses/services/money_lock.py](api/app/expenses/services/money_lock.py) | Locks financial groups/records so validation and monetary mutation share a serialized transaction. |
@@ -409,6 +411,7 @@ Each published file appears once below. The index covers strict JSON, SQL, histo
 | [api/migrations/versions/c30d4e5f6071_partner_agreement.py](api/migrations/versions/c30d4e5f6071_partner_agreement.py) | Adds demo classification and explicit agreement-reading acknowledgment evidence; reading is separate from signature. |
 | [api/migrations/versions/c4d5e6f7a8b9_add_chat_tables.py](api/migrations/versions/c4d5e6f7a8b9_add_chat_tables.py) | Preserves legacy chat-table creation, tolerating the complete baseline while rejecting partial incompatible chat schemas. |
 | [api/migrations/versions/c62f718293a4_personal_display_currency.py](api/migrations/versions/c62f718293a4_personal_display_currency.py) | Adds a nullable per-user personal dashboard currency preference without choosing a default for existing users. |
+| [api/migrations/versions/d73f8293a5b6_friend_contacts.py](api/migrations/versions/d73f8293a5b6_friend_contacts.py) | Adds private saved friends and backfills the original inviter's historical expense recipients. |
 | [api/migrations/versions/c9d2e4f6a8b0_add_personal_income_ledger.py](api/migrations/versions/c9d2e4f6a8b0_add_personal_income_ledger.py) | Adds personal income records, their audit history and related personal-ledger indexes. |
 | [api/migrations/versions/d41e5f607182_agent_signatures.py](api/migrations/versions/d41e5f607182_agent_signatures.py) | Adds approved-agent signature evidence and receipt fields for the agreement draft workflow. |
 | [api/migrations/versions/d4a1c3e8f9b0_add_settlement_and_verification_audit_columns.py](api/migrations/versions/d4a1c3e8f9b0_add_settlement_and_verification_audit_columns.py) | Adds persisted settlement-deletion and account email-verification audit fields. |
@@ -442,6 +445,7 @@ Each published file appears once below. The index covers strict JSON, SQL, histo
 | [api/tests/test_endpoint_inventory.py](api/tests/test_endpoint_inventory.py) | Exercises previously fragile registered endpoints covering consent, chat read state, expenses, invitations, account operations and malformed inputs. |
 | [api/tests/test_exchange_rates.py](api/tests/test_exchange_rates.py) | Verifies dated read-only rates, supported currency validation, caching, stale fallback and provider-failure behavior. |
 | [api/tests/test_expense_group_lifecycle.py](api/tests/test_expense_group_lifecycle.py) | Verifies group ownership/membership, invitations, whole-ledger summaries and financial lifecycle invariants. |
+| [api/tests/test_expense_friends.py](api/tests/test_expense_friends.py) | Verifies private contacts, invitation atomicity, nickname search and signup name resolution. |
 | [api/tests/test_expense_realtime.py](api/tests/test_expense_realtime.py) | Verifies authenticated devices receive only authorized, committed expense-change notifications and lose access after removal. |
 | [api/tests/test_expense_restore.py](api/tests/test_expense_restore.py) | Verifies soft-deleted expenses restore once with their identifiers, splits, balances, history and permissions preserved. |
 | [api/tests/test_family_treasury_roles.py](api/tests/test_family_treasury_roles.py) | Verifies linked-treasury ownership, independent trip duties, viewer restrictions, date bounds and rollback on incomplete linking. |
@@ -470,3 +474,20 @@ Each published file appears once below. The index covers strict JSON, SQL, histo
 | [api/tests/test_trip_invitation_email_link.py](api/tests/test_trip_invitation_email_link.py) | Verifies trip invitation email points to a registered frontend acceptance route. |
 | [api/tests/test_uuid_ids.py](api/tests/test_uuid_ids.py) | Verifies UUID field handling and UUID-native API/ORM operations while rejecting legacy integer identifiers. |
 | [api/tests/test_websocket_auth.py](api/tests/test_websocket_auth.py) | Verifies Socket.IO authentication, UUID identities, group-room access and presence identifiers. |
+
+## Expense workflow timing tool (2026-10-26)
+
+[api/tests/expense_workflow_benchmark.py](api/tests/expense_workflow_benchmark.py)
+is an opt-in pytest benchmark using the existing migrated temporary SQLite
+fixture. It runs 12 synthetic workflows, disables real mail/provider I/O and
+optionally exports request timing/SQL-count JSON. It does not measure browser
+or remote-database latency. Run from `services/api`:
+
+```powershell
+python -m pytest tests/expense_workflow_benchmark.py -q -s
+```
+
+The [interactive timing report](../docs/operations/expense-latency.html) and
+[measurement notes](../docs/archive/reports/expense-ui-latency-2026-10-26.md)
+document current results and limitations. Invitation create/accept support
+`compact=true` without changing default responses or authorization.

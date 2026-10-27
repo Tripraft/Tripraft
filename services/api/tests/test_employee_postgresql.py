@@ -9,6 +9,7 @@ from alembic import command
 from alembic.autogenerate import compare_metadata
 from alembic.config import Config
 from alembic.migration import MigrationContext
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.exc import DBAPIError
 from sqlalchemy.orm import Session
@@ -30,6 +31,8 @@ def test_employee_postgresql_migration_preserves_existing_data(monkeypatch):
     root = Path(__file__).resolve().parents[1]
     config = Config(str(root / 'alembic.ini'))
     config.set_main_option('script_location', str(root / 'migrations'))
+    expected_head = ScriptDirectory.from_config(config).get_current_head()
+    assert expected_head is not None
     engine = create_engine(url)
     try:
         assert not inspect(engine).get_table_names(), 'Disposable database must be empty'
@@ -45,7 +48,8 @@ def test_employee_postgresql_migration_preserves_existing_data(monkeypatch):
         _import_all_models()
         added = set(inspect(engine).get_table_names()) - original_tables
         assert added == {'employees', 'employee_sessions', 'employee_access_requests',
-                         'employee_access_events', 'employee_provisioning_jobs', 'employee_developer_credentials'}
+                         'employee_access_events', 'employee_provisioning_jobs', 'employee_developer_credentials',
+                         'friend_contacts'}
         with engine.connect() as connection:
             assert connection.execute(text('SELECT email FROM users WHERE id=:id'), {'id': uid}).scalar_one() == 'preserve@example.test'
             assert compare_metadata(MigrationContext.configure(connection, opts={
@@ -143,7 +147,7 @@ def test_employee_postgresql_migration_preserves_existing_data(monkeypatch):
             command.upgrade(config, 'head')
             with engine.connect() as connection:
                 assert connection.execute(text('SELECT email FROM users WHERE id=:id'), {'id': uid}).scalar_one() == 'preserve@example.test'
-                assert connection.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == 'c62f718293a4'
+                assert connection.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == expected_head
                 assert compare_metadata(MigrationContext.configure(connection, opts={
                     'compare_type': True, 'compare_server_default': True}), Base.metadata) == []
     finally:

@@ -1,11 +1,11 @@
 // Purpose: Verifies all personal pages include deleted rows, revoked membership removes cached controls/data and group switches do not leak earlier ledgers.
 import React from 'react';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import expenseApi from '../services/expenseApi';
 import { queryKeys, useGroupDetail, usePersonalExpenses } from '../hooks/useExpenseQuery';
 
-jest.mock('../services/expenseApi', () => ({ __esModule: true, default: { getGroupFull: jest.fn(), getUserExpenses: jest.fn() } }));
+jest.mock('../services/expenseApi', () => ({ __esModule: true, default: { getGroupFull: jest.fn(), getUserExpenses: jest.fn(), getIncomes: jest.fn() } }));
 jest.mock('../services/sqlAuthService', () => ({ __esModule: true, default: {} }));
 
 function setup() {
@@ -13,6 +13,37 @@ function setup() {
   const wrapper = ({ children }) => <QueryClientProvider client={client}>{children}</QueryClientProvider>;
   return { client, wrapper };
 }
+
+beforeEach(() => {
+  jest.resetAllMocks();
+  expenseApi.getIncomes.mockResolvedValue({incomes: []});
+});
+
+it('loads income while expenses are pending and waits for both before publishing totals', async () => {
+  const { client, wrapper } = setup();
+  let finish;
+  expenseApi.getUserExpenses.mockReturnValue(new Promise(resolve => { finish = resolve; }));
+  expenseApi.getIncomes.mockResolvedValue({incomes: [{id: 'salary', amount: 100, income_date: '2026-10-26', user_id: 'me'}]});
+  const { result, unmount } = renderHook(() => usePersonalExpenses(), { wrapper });
+  await waitFor(() => expect(expenseApi.getIncomes).toHaveBeenCalledTimes(1));
+  expect(result.current.loading).toBe(true);
+  expect(result.current.expenses).toEqual([]);
+  await act(async () => finish({expenses: [{id: 'meal', amount: 10}]}));
+  await waitFor(() => expect(result.current.expenses).toHaveLength(2));
+  expect(result.current.expenses[1]).toMatchObject({id: 'salary', type: 'income', _income: true});
+  unmount(); client.clear();
+});
+
+it('does not load the personal ledger until the personal view is enabled', async () => {
+  const { client, wrapper } = setup();
+  expenseApi.getUserExpenses.mockResolvedValue({expenses: []});
+  const { rerender, unmount } = renderHook(({enabled}) => usePersonalExpenses({enabled}), {wrapper, initialProps: {enabled: false}});
+  expect(expenseApi.getUserExpenses).not.toHaveBeenCalled();
+  expect(expenseApi.getIncomes).not.toHaveBeenCalled();
+  rerender({enabled: true});
+  await waitFor(() => expect(expenseApi.getUserExpenses).toHaveBeenCalledTimes(1));
+  unmount(); client.clear();
+});
 
 it('loads all personal pages including deleted rows for a persistent Revert action', async () => {
   const { client, wrapper } = setup();

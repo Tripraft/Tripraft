@@ -5,7 +5,7 @@
 Usage: python start.py [--setup | --check | --check-database | --smoke | --stop] [--no-browser]
 Requires Node >=22 and Python 3.11. Native mode uses personal Supabase dev credentials.
 Starting reuses healthy owned services and refuses unrelated occupied ports.
-Shared startup can request a fixed owner-approved development migration without DDL credentials.
+Shared testing startup can request supported additive migrations without DDL credentials.
 Windows native services also stop when the launcher window closes.
 Existing configuration and data are preserved.
 """

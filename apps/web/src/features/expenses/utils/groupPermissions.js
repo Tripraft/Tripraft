@@ -21,7 +21,9 @@ export function expensePermissions(expense, group, userId, mode = 'group') {
   if (!userId) return { can_edit: false, can_delete: false, can_restore: false };
   if (expense.is_deleted) {
     const own = sameId(expense.created_by, userId) || (mode === 'group' && sameId(group?.created_by, userId));
-    return { can_edit: false, can_delete: false, can_restore: expense.permissions?.can_restore ?? own };
+    return { can_edit: false, can_delete: false,
+      can_restore: expense.permissions?.can_restore ?? own,
+      can_permanently_delete: expense.permissions?.can_permanently_delete ?? expense.permissions?.can_restore ?? own };
   }
   if (mode !== 'group') return { can_edit: true, can_delete: true };
   const own = Boolean(userId) && (sameId(group?.created_by, userId) || sameId(expense.created_by, userId));

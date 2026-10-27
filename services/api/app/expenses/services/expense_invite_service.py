@@ -3,7 +3,7 @@ from app.expenses.services.group_access import require_contributor
 import logging
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import func
+from sqlalchemy import and_, func
 from sqlalchemy.orm import joinedload
 
 from app.core.config import Config
@@ -12,7 +12,8 @@ from app.core.exceptions import AuthorizationError, ConflictError, GoneError, No
 from app.core.schemas.invitations import InviteMemberSchema
 from marshmallow import ValidationError as SchemaError
 from app.expenses.models import Group, GroupMember, Invitation, User
-from app.expenses.services.group_access import access, active_group, admin, identifier, join_member, service_result
+from app.expenses.services.group_access import UNSET, access, active_group, admin, identifier, join_member, service_result
+from app.expenses.services.friend_service import save_contact
 from app.notifications.email.links import expense_invitation_link
 
 logger = logging.getLogger(__name__)
@@ -83,23 +84,29 @@ class InvitationServiceSQL:
             return {'invitation': _invitation_dict(invitation)}
 
     @staticmethod
-    def _send_invitation_email(invitee_email, inviter_name, group_name, invitation_id):
+    def _send_invitation_email(invitee_email, inviter_name, group_name, invitation_id, created_at=None):
         """Email failure does not undo a saved invitation; report its delivery state accurately."""
         from app.notifications.services.email_service import email_service
         if not email_service.enabled:
             return 'disabled'
+        if not Config.CELERY_BROKER_URL:
+            from app.notifications.email.background import submit_auth_email
+            from app.notifications.email.expense_invitations import deliver_pending_invitation_job
+            # Native development has no broker. Bound SMTP work off the request
+            # thread; queued means accepted locally, never confirmed delivery.
+            return 'queued' if submit_auth_email(
+                deliver_pending_invitation_job, str(invitation_id), created_at,
+            ) else 'failed'
         if Config.CELERY_BROKER_URL:
             try:
                 from app.core.workers.tasks.email_tasks import send_invitation_email
-                send_invitation_email.delay(invitee_email, inviter_name, group_name, str(invitation_id))
+                send_invitation_email.delay(invitee_email, inviter_name, group_name, str(invitation_id), created_at)
                 return 'queued'
             except Exception:
                 logger.warning('Invitation email queue unavailable; trying synchronous delivery')
         try:
-            sent = email_service.send_group_invitation(
-                to_email=invitee_email, inviter_name=inviter_name,
-                group_name=group_name, invitation_id=str(invitation_id),
-            )
+            from app.notifications.email.expense_invitations import deliver_pending_invitation
+            sent = deliver_pending_invitation(str(invitation_id), created_at)
             return 'sent' if sent else 'failed'
         except Exception:
             logger.exception('Invitation email delivery failed')
@@ -107,7 +114,7 @@ class InvitationServiceSQL:
 
     @staticmethod
     @service_result
-    def send_invitation(group_id, invitee_email, invited_by_user_id):
+    def send_invitation(group_id, invitee_email, invited_by_user_id, nickname=UNSET):
         try:
             invitee_email = InviteMemberSchema().load({'email': invitee_email})['email']
         except SchemaError:
@@ -137,13 +144,17 @@ class InvitationServiceSQL:
             invitation.expires_at = _now() + timedelta(days=InvitationServiceSQL.INVITATION_EXPIRY_DAYS)
             invitation.responded_at = None
             group.updated_at = datetime.now(timezone.utc)
-            session.commit()
+            # Contact and invitation commit together, even when email delivery
+            # is disabled or later fails. A rejected invitation saves nothing.
+            save_contact(session, member.user_id, invitee_email, nickname)
+            session.flush()
             data = _invitation_dict(invitation)
             invitation_id, group_name = str(invitation.id), group.name
             inviter_name = member.user.display_name or member.user.email.split('@')[0]
+            session.commit()
         # External delivery begins only after the membership/invitation transaction commits.
         email_status = InvitationServiceSQL._send_invitation_email(
-            invitee_email, inviter_name, group_name, invitation_id,
+            invitee_email, inviter_name, group_name, invitation_id, data['created_at'],
         )
         return {'invitation': data, 'email_status': email_status,
                 'invitation_link': expense_invitation_link(invitation_id),
@@ -157,7 +168,9 @@ class InvitationServiceSQL:
             invitation = session.get(Invitation, identifier(invitation_id))
             if invitation is None:
                 raise NotFoundError('Invitation not found')
-            group, member = access(session, invitation.group_id, user_id)
+            group, member = access(session, invitation.group_id, user_id, lock=True)
+            require_contributor(member)
+            session.refresh(invitation)
             if member.user_id != invitation.invited_by and not admin(group, member):
                 raise AuthorizationError('Only the inviter or a group admin can resend this invitation')
             if invitation.status != 'pending':
@@ -167,8 +180,10 @@ class InvitationServiceSQL:
             data = _invitation_dict(invitation)
             inviter_name = invitation.inviter.display_name or invitation.inviter.email.split('@')[0]
             group_name = group.name
+            save_contact(session, member.user_id, invitation.invitee_email)
+            session.commit()
         email_status = InvitationServiceSQL._send_invitation_email(
-            data['invitee_email'], inviter_name, group_name, data['id'],
+            data['invitee_email'], inviter_name, group_name, data['id'], data['created_at'],
         )
         return {'invitation': data, 'email_status': email_status}
 
@@ -191,20 +206,27 @@ class InvitationServiceSQL:
     @service_result
     def get_pending_invitations_for_user(user_id):
         with get_db_session() as session:
-            user = session.get(User, identifier(user_id))
-            if user is None:
-                raise NotFoundError('User not found')
+            uid = identifier(user_id)
             membership = session.query(GroupMember.id).filter(
                 GroupMember.group_id == Invitation.group_id,
-                GroupMember.user_id == user.id, GroupMember.is_active.is_(True),
+                GroupMember.user_id == uid, GroupMember.is_active.is_(True),
             ).exists()
-            rows = session.query(Invitation).join(Group).filter(
-                func.lower(Invitation.invitee_email) == user.email.lower(), Invitation.status == 'pending',
-                Group.is_active.is_(True), ~membership,
-            ).options(joinedload(Invitation.group), joinedload(Invitation.inviter)).order_by(
+            active = session.query(Group.id).filter(
+                Group.id == Invitation.group_id, Group.is_active.is_(True),
+            ).exists()
+            # Keep the user row even with no invitations, retaining the missing-user
+            # error while avoiding a separate user lookup round trip.
+            rows = session.query(User, Invitation).outerjoin(Invitation, and_(
+                func.lower(Invitation.invitee_email) == func.lower(User.email), Invitation.status == 'pending',
+                active, ~membership,
+            )).filter(User.id == uid).options(
+                joinedload(Invitation.group), joinedload(Invitation.inviter),
+            ).order_by(
                 Invitation.created_at.desc(), Invitation.id.desc(),
             ).all()
-            data = [_invitation_dict(row) for row in rows if not _expired(row)]
+            if not rows:
+                raise NotFoundError('User not found')
+            data = [_invitation_dict(row) for _, row in rows if row is not None and not _expired(row)]
             return {'invitations': data, 'count': len(data)}
 
     @staticmethod
@@ -252,6 +274,8 @@ class InvitationServiceSQL:
             session.refresh(invitation)
             if not admin(group, member) and invitation.invited_by != member.user_id:
                 raise AuthorizationError('Only the inviter or a group admin can cancel this invitation')
+            if invitation.status == 'cancelled':
+                return {'invitation': _invitation_dict(invitation), 'message': 'Invitation already cancelled'}
             if invitation.status != 'pending':
                 raise ConflictError('Only pending invitations can be cancelled')
             invitation.status = 'cancelled'

@@ -82,6 +82,7 @@ def inject_request_id():
     g.start_time = time.time()
     g.db_query_count = 0
     g.db_time_ms = 0.0
+    g.db_slowest_ms = 0.0
 
 
 def _valid_correlation_id(value):
@@ -159,6 +160,10 @@ def log_response(response):
     if db_queries:
         entry['db_queries'] = db_queries
         entry['db_time_ms'] = round(getattr(g, 'db_time_ms', 0.0), 1)
+        entry['db_slowest_ms'] = round(getattr(g, 'db_slowest_ms', 0.0), 1)
+        entry['db_slowest_fingerprint'] = getattr(g, 'db_slowest_fingerprint', None)
+
+    response.headers.add('Server-Timing', f'app;dur={duration_ms}, db;dur={getattr(g, "db_time_ms", 0.0):.1f}, sql;desc="{db_queries} queries"')
 
     # Log level based on status code
     if response.status_code >= 500:

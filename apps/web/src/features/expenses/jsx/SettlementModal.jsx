@@ -1,6 +1,7 @@
 // Purpose: Collects payer, recipient, amount and notes, validates against outstanding debt, and closes only after a successful save.
 import ExpenseDialog from './ExpenseDialog';
-import React, { useState, useEffect } from 'react';
+import CurrencyAmount from './CurrencyAmount';
+import React, { useState, useEffect, useRef } from 'react';
 import { formatMoney, settlementCap } from '../../../utils/money';
 import '../css/SettlementModal.css';
 import { canRecordSettlement } from '../utils/groupPermissions';
@@ -13,10 +14,11 @@ const SettlementModal = ({ isOpen, onClose, settlement, groupId, members, balanc
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [suggestedAmount, setSuggestedAmount] = useState(0);
+  const savingRef = useRef(false);
 
   // Reset form when settlement changes
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !savingRef.current) {
       setFromUser(settlement?.from || '');
       setToUser(settlement?.to || '');
       const suggAmount = settlement?.amount || 0;
@@ -32,7 +34,7 @@ const SettlementModal = ({ isOpen, onClose, settlement, groupId, members, balanc
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (loading) return;
+    if (savingRef.current) return;
 
     try {
       const finalFromUser = isManualMode ? fromUser : settlement.from;
@@ -66,6 +68,7 @@ const SettlementModal = ({ isOpen, onClose, settlement, groupId, members, balanc
         notes: notes.trim() || null
       };
 
+      savingRef.current = true;
       setLoading(true);
       if (!onSuccess) throw new Error('Settlement saving is unavailable.');
       await onSuccess(settlementData);
@@ -74,7 +77,7 @@ const SettlementModal = ({ isOpen, onClose, settlement, groupId, members, balanc
 
     } catch (err) {
       setError(err.message || 'Failed to record settlement. Please try again.');
-    } finally { setLoading(false); }
+    } finally { savingRef.current = false; setLoading(false); }
   };
 
   if (!isOpen) return null;
@@ -86,7 +89,8 @@ const SettlementModal = ({ isOpen, onClose, settlement, groupId, members, balanc
             <button className="close-button" onClick={onClose} aria-label="Close settlement" disabled={loading}>&times;</button>
           </div>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} aria-busy={loading}>
+          <fieldset disabled={loading} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
           <div className="modal-body">
             {error && (
               <div className="alert alert-error" style={{ marginBottom: '1rem' }}>
@@ -180,6 +184,8 @@ const SettlementModal = ({ isOpen, onClose, settlement, groupId, members, balanc
                 required
                 placeholder="Enter amount"
               />
+              <p className="expense-settlement-input-currency">Enter the payment in {currency}.</p>
+              {group?.display_currency && group.display_currency !== currency && Number(amount) > 0 && <CurrencyAmount amount={Number(amount)} currency={currency} displayCurrency={group.display_currency} />}
               {!isManualMode && suggestedAmount > 0 && (
                 <div style={{ marginTop: '0.5rem' }}>
                   <small style={{ color: '#666', display: 'block' }}>
@@ -220,9 +226,10 @@ const SettlementModal = ({ isOpen, onClose, settlement, groupId, members, balanc
               className="btn btn-primary"
               disabled={loading || !amount || Number(amount) <= 0 || Number(amount) > maxAmount}
             >
-              Record Payment
+              {loading ? 'Recording payment...' : 'Record Payment'}
             </button>
           </div>
+          </fieldset>
         </form>
     </ExpenseDialog>
   );

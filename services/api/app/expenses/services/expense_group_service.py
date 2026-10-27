@@ -1,9 +1,9 @@
 """Expense groups: explicit roles, serialized membership changes and truthful group snapshots."""
 import secrets
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from marshmallow import ValidationError as SchemaError
-from sqlalchemy import case, func
+from sqlalchemy import Date, case, cast, func, literal, select, union_all
 from sqlalchemy.orm import joinedload, selectinload, object_session
 
 from app.core.config import Config
@@ -25,7 +25,7 @@ def generate_group_code(length=Config.GROUP_CODE_LENGTH):
 
 def _validate(schema, data):
     try:
-        return schema.load(data)
+        return schema.load({key: value.isoformat() if isinstance(value, date) else value for key, value in data.items()})
     except SchemaError as exc:
         raise ValidationError('Invalid group data', payload=exc.messages) from None
 
@@ -46,7 +46,7 @@ def group_dict(group, member, trips=None):
     from app.trips.models import TravelGroup
     session = object_session(group)
     trip = trips.get(group.id) if trips is not None else (session.query(TravelGroup).filter_by(expense_group_id=group.id, is_active=True).first() if session else None)
-    data['display_currency'] = trip.budget_currency if trip else group.currency
+    data['display_currency'] = group.display_currency or (trip.budget_currency if trip else group.currency)
     if trip:
         data['trip_group_id'] = str(trip.id)
         data['trip_start_date'] = trip.start_date.isoformat() if trip.start_date else None
@@ -67,46 +67,59 @@ def group_summaries(session, group_ids, user_id):
     if not group_ids:
         return summaries
     filters = (Expense.group_id.in_(group_ids), Expense.is_deleted.is_(False))
-    for gid, total, paid, count, start, end in session.query(
-        Expense.group_id, func.sum(Expense.amount),
-        func.sum(case((Expense.paid_by == identifier(user_id), Expense.amount), else_=0)),
-        func.count(Expense.id), func.min(Expense.expense_date), func.max(Expense.expense_date),
-    ).filter(*filters).group_by(Expense.group_id):
-        summaries[gid].update(total_spend=money_to_json(total), you_paid=money_to_json(paid),
-                              expense_count=count, start_date=start.isoformat() if start else None,
-                              end_date=end.isoformat() if end else None)
-    for gid, amount in session.query(Expense.group_id, func.sum(ExpenseSplit.amount)).join(
+    # Preserve each aggregate's exact Decimal arithmetic and category tie order,
+    # but send them together: remote PostgreSQL latency applies to every execute.
+    def metric(kind, amount, paid=None, count=None, start=None, end=None, category=None, day=None):
+        return select(Expense.group_id.label('gid'), literal(kind).label('kind'), amount.label('amount'),
+                      (paid if paid is not None else literal(None)).label('paid'),
+                      (count if count is not None else literal(None)).label('count'),
+                      (start if start is not None else literal(None)).label('start'),
+                      (end if end is not None else literal(None)).label('end'),
+                      (category if category is not None else literal(None)).label('category'),
+                      (day if day is not None else cast(literal(None), Date)).label('day')).where(*filters)
+
+    stats = metric('stats', func.sum(Expense.amount),
+                   func.sum(case((Expense.paid_by == identifier(user_id), Expense.amount), else_=0)),
+                   func.count(Expense.id), func.min(Expense.expense_date), func.max(Expense.expense_date)
+                   ).group_by(Expense.group_id)
+    shares = metric('share', func.sum(ExpenseSplit.amount)).join(
         ExpenseSplit, ExpenseSplit.expense_id == Expense.id,
-    ).filter(*filters, ExpenseSplit.user_id == identifier(user_id)).group_by(Expense.group_id):
-        summaries[gid]['your_share'] = money_to_json(amount)
-    for gid, category, amount in session.query(
-        Expense.group_id, Expense.category, func.sum(Expense.amount),
-    ).filter(*filters).group_by(Expense.group_id, Expense.category).order_by(
-        func.sum(Expense.amount).desc(), Expense.category,
-    ):
-        summary = summaries[gid]
-        if summary['top_category'] is None:
-            summary['top_category'] = {'name': category or 'Other',
-                                       'percentage': round(float(amount) / summary['total_spend'] * 100)
+    ).where(ExpenseSplit.user_id == identifier(user_id)).group_by(Expense.group_id)
+    categories = metric('category', func.sum(Expense.amount), category=Expense.category).group_by(
+        Expense.group_id, Expense.category)
+    days = metric('day', func.sum(Expense.amount), day=Expense.expense_date).group_by(
+        Expense.group_id, Expense.expense_date)
+    metrics = union_all(stats, shares, categories, days).subquery()
+    rows = session.execute(select(metrics).order_by(metrics.c.amount.desc(), metrics.c.category)).all()
+    for row in rows:
+        summary = summaries[row.gid]
+        if row.kind == 'stats':
+            summary.update(total_spend=money_to_json(row.amount), you_paid=money_to_json(row.paid),
+                           expense_count=row._mapping['count'], start_date=row.start.isoformat() if row.start else None,
+                           end_date=row.end.isoformat() if row.end else None)
+        elif row.kind == 'share':
+            summary['your_share'] = money_to_json(row.amount)
+        elif row.kind == 'day' and row.day:
+            summary['daily_spend'].append({'date': row.day.isoformat(), 'amount': money_to_json(row.amount)})
+    for row in rows:
+        summary = summaries[row.gid]
+        if row.kind == 'category' and summary['top_category'] is None:
+            summary['top_category'] = {'name': row.category or 'Other',
+                                       'percentage': round(float(row.amount) / summary['total_spend'] * 100)
                                        if summary['total_spend'] else 0}
-    for gid, day, amount in session.query(
-        Expense.group_id, Expense.expense_date, func.sum(Expense.amount),
-    ).filter(*filters).group_by(Expense.group_id, Expense.expense_date).order_by(Expense.expense_date):
-        if day:
-            summaries[gid]['daily_spend'].append({'date': day.isoformat(), 'amount': money_to_json(amount)})
     # Cards only need the most recent trend; totals above always include the whole ledger.
     for summary in summaries.values():
-        summary['daily_spend'] = summary['daily_spend'][-14:]
+        summary['daily_spend'] = sorted(summary['daily_spend'], key=lambda row: row['date'])[-14:]
     return summaries
 
 
 class GroupServiceSQL:
     @staticmethod
     @service_result
-    def create_group(user_id, name, description=None, currency=Config.DEFAULT_CURRENCY, category=None):
+    def create_group(user_id, name, description=None, currency=Config.DEFAULT_CURRENCY, category=None, **preferences):
         user_id = identifier(user_id)
         data = _validate(CreateExpenseGroupSchema(), {
-            'name': name, 'description': description, 'currency': currency, 'category': category,
+            'name': name, 'description': description, 'currency': currency, 'category': category, **preferences,
         })
         with get_db_session() as session:
             if session.get(User, user_id) is None:
@@ -114,18 +127,22 @@ class GroupServiceSQL:
             code = generate_group_code()
             while session.query(Group.id).filter_by(group_code=code).first():
                 code = generate_group_code()
-            group = Group(created_by=user_id, group_code=code, **data)
+            budget = data.pop('budget', None)
+            group = Group(created_by=user_id, group_code=code, **data,
+                          budget_minor=int(budget * 100) if budget is not None else None)
             session.add(group)
             session.flush()
             member = join_member(session, group, user_id)
+            session.flush()
+            result = {'group': group_dict(group, member, trips={})}
             session.commit()
-            return {'group': group_dict(group, member)}
+            return result
 
     @staticmethod
     @service_result
     def get_group(group_id, user_id):
         with get_db_session() as session:
-            group, member = access(session, group_id, user_id)
+            group, member = access(session, group_id, user_id, details=True)
             return {'group': group_dict(group, member)}
 
     @staticmethod
@@ -147,26 +164,38 @@ class GroupServiceSQL:
 
     @staticmethod
     @service_result
-    def update_group(group_id, user_id, name=None, description=UNSET, currency=None, category=UNSET):
+    def update_group(group_id, user_id, name=None, description=UNSET, currency=None, category=UNSET, **preferences):
         data = {key: value for key, value in {'name': name, 'currency': currency}.items() if value is not None}
         if description is not UNSET:
             data['description'] = description
         if category is not UNSET:
             data['category'] = category
+        data.update(preferences)
         data = _validate(UpdateExpenseGroupSchema(), data)
         with get_db_session() as session:
             group, member = access(session, group_id, user_id, lock=True)
             require_admin(group, member)
+            if any(key in data for key in ('display_currency', 'budget', 'start_date', 'end_date')):
+                require_owner(group, member.user_id)
+            start = data.get('start_date', group.start_date)
+            end = data.get('end_date', group.end_date)
+            if start and end and start > end:
+                raise ValidationError('End date must be on or after start date')
             if data.get('currency', group.currency) != group.currency:
                 # A currency rename cannot retroactively convert persisted money or its audit history.
                 if (session.query(Expense.id).filter_by(group_id=group.id).first()
                         or session.query(Settlement.id).filter_by(group_id=group.id).first()):
                     raise ConflictError('Cannot change currency after expenses or settlements have been recorded')
             for key, value in data.items():
-                setattr(group, key, value)
+                if key == 'budget':
+                    group.budget_minor = int(value * 100) if value is not None else None
+                else:
+                    setattr(group, key, value)
             group.updated_at = datetime.now(timezone.utc)
+            session.flush()
+            result = {'group': group_dict(group, member)}
             session.commit()
-            return {'group': group_dict(group, member)}
+            return result
 
     @staticmethod
     @service_result
@@ -181,8 +210,9 @@ class GroupServiceSQL:
             for invitation in session.query(Invitation).filter_by(group_id=group.id, status='pending'):
                 invitation.status = 'cancelled'
                 invitation.responded_at = datetime.now(timezone.utc)
+            result = {'message': 'Group deleted successfully', 'group_id': str(group.id)}
             session.commit()
-            return {'message': 'Group deleted successfully', 'group_id': str(group.id)}
+            return result
 
     @staticmethod
     @service_result
@@ -199,6 +229,8 @@ class GroupServiceSQL:
                 raise NotFoundError('User not found; they must sign up first')
             member = join_member(session, group, user.id, role)
             accept_pending_for_member(session, group, user)
+            from app.expenses.services.friend_service import save_contact
+            save_contact(session, requester.user_id, user.email)
             session.commit()
             return {'member': _member_dict(group, member), 'group': group_dict(group, requester)}
 
@@ -266,8 +298,10 @@ class GroupServiceSQL:
                 raise NotFoundError('User not found')
             member = join_member(session, group, user_id)
             accept_pending_for_member(session, group, user)
+            session.flush()
+            result = {'group': group_dict(group, member)}
             session.commit()
-            return {'group': group_dict(group, member)}
+            return result
 
     @staticmethod
     @service_result
@@ -280,14 +314,14 @@ class GroupServiceSQL:
     @service_result
     def get_group_members(group_id, user_id):
         with get_db_session() as session:
-            group, _ = access(session, group_id, user_id)
+            group, _ = access(session, group_id, user_id, details=True)
             return {'members': [_member_dict(group, row) for row in group.members if row.is_active]}
 
     @staticmethod
     @service_result
     def get_group_full(group_id, user_id, expense_limit=50, expense_offset=0, settlement_limit=50, settlement_offset=0, include_deleted=False):
         with get_db_session() as session:
-            group, member = access(session, group_id, user_id)
+            group, member = access(session, group_id, user_id, details=True)
             return {'group': GroupServiceSQL._full_group_data(
                 session, group, member, expense_limit, expense_offset, settlement_limit, settlement_offset, include_deleted,
             )}
@@ -303,29 +337,34 @@ class GroupServiceSQL:
         query = session.query(Expense).filter_by(group_id=group.id)
         if not include_deleted:
             query = query.filter_by(is_deleted=False)
-        total = query.count()
-        expenses = query.options(joinedload(Expense.payer),
-                                 selectinload(Expense.splits).joinedload(ExpenseSplit.user)).order_by(
+        # Window counts keep pagination totals exact without a separate remote
+        # COUNT round trip. An empty nonzero offset still needs its total.
+        page = query.add_columns(func.count().over()).options(joinedload(Expense.payer),
+                                 joinedload(Expense.splits).joinedload(ExpenseSplit.user)).order_by(
             Expense.expense_date.desc(), Expense.created_at.desc(), Expense.id.desc(),
         ).offset(expense_offset).limit(expense_limit).all()
+        expenses = [row for row, _ in page]
+        total = page[0][1] if page else (query.count() if expense_offset else 0)
         data['expenses'] = [ExpenseServiceSQL._get_expense_dict(session, row) for row in expenses]
         for row in data['expenses']:
-            authorized = owner(group, user_id) or row['created_by'] == str(identifier(user_id))
+            authorized = member.role != 'viewer' and (owner(group, user_id) or row['created_by'] == str(identifier(user_id)))
             row['permissions'] = {'can_edit': authorized and not row['is_deleted'],
                                   'can_delete': authorized and not row['is_deleted'],
+                                  'can_permanently_delete': authorized and row['is_deleted'],
                                   'can_restore': authorized and row['is_deleted']}
         data['expense_pagination'] = {'total': total, 'limit': expense_limit, 'offset': expense_offset,
                                       'has_more': expense_offset + len(expenses) < total}
         data['total_expenses'] = data['summary']['total_spend']
         query = session.query(Settlement).filter_by(group_id=group.id, is_deleted=False)
-        total = query.count()
-        settlements = query.options(joinedload(Settlement.from_user), joinedload(Settlement.to_user)).order_by(
+        page = query.add_columns(func.count().over()).options(joinedload(Settlement.from_user), joinedload(Settlement.to_user)).order_by(
             Settlement.settlement_date.desc(), Settlement.created_at.desc(), Settlement.id.desc(),
         ).offset(settlement_offset).limit(settlement_limit).all()
+        settlements = [row for row, _ in page]
+        total = page[0][1] if page else (query.count() if settlement_offset else 0)
         data['settlements'] = [SettlementServiceSQL._get_settlement_dict(session, row, group, member) for row in settlements]
         data['settlement_pagination'] = {'total': total, 'limit': settlement_limit, 'offset': settlement_offset,
                                          'has_more': settlement_offset + len(settlements) < total}
-        data['balances'] = member_balances(session, group)
+        data['balances'] = member_balances(session, group, loaded=True)
         data['simplified_debts'] = simplified_debts(data['balances'])
         data['invitations'] = [row.to_dict() for row in session.query(Invitation).filter_by(group_id=group.id)
                                 .order_by(Invitation.created_at.desc(), Invitation.id.desc())]

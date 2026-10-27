@@ -1,5 +1,6 @@
 // Purpose: Displays settlement records and payment status; confirms authorized deletions and keeps failures retryable.
 import ExpenseDialog from './ExpenseDialog';
+import CurrencyAmount from './CurrencyAmount';
 import React, { useState } from 'react';
 import { X, CheckCircle, Clock, AlertCircle, ArrowRight, Calendar, DollarSign } from 'lucide-react';
 import { formatDateLocal } from '../../../utils/timezoneUtils';
@@ -30,13 +31,6 @@ const SettlementHistoryModal = ({ isOpen, onClose, settlements = [], currency = 
     }
   };
   if (!isOpen) return null;
-
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', { 
-      style: 'currency', 
-      currency: currency 
-    }).format(Math.abs(amount || 0));
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -128,7 +122,7 @@ const SettlementHistoryModal = ({ isOpen, onClose, settlements = [], currency = 
         {/* Summary Stats */}
         <div className="shm-summary">
           <div className="shm-stat">
-            <span className="shm-stat-value">{formatCurrency(totalSettled)}</span>
+            <span className="shm-stat-value"><CurrencyAmount amount={totalSettled} currency={currency} displayCurrency={group?.display_currency || currency} /></span>
             <span className="shm-stat-label">Total Settled</span>
           </div>
           <div className="shm-stat-divider" />
@@ -142,7 +136,7 @@ const SettlementHistoryModal = ({ isOpen, onClose, settlements = [], currency = 
         <div className="shm-body">
           {confirming && (
             <div role="alertdialog" aria-label="Delete settlement" className="shm-delete-confirm">
-              <p>Delete this {formatCurrency(confirming.amount)} settlement record? This restores the outstanding balances. It does not refund or transfer money. To correct a payment, delete the record and add its replacement.</p>
+              <p>Delete this <CurrencyAmount amount={confirming.amount} currency={currency} displayCurrency={group?.display_currency || currency} /> settlement record? This restores the outstanding balances. It does not refund or transfer money. To correct a payment, delete the record and add its replacement.</p>
               {error && <p role="alert">{error}</p>}
               <button type="button" disabled={deleting} onClick={deleteSettlement}>{deleting ? 'Deleting...' : 'Confirm deletion'}</button>
               <button type="button" disabled={deleting} onClick={() => { setConfirming(null); setError(''); }}>Cancel</button>
@@ -178,7 +172,7 @@ const SettlementHistoryModal = ({ isOpen, onClose, settlements = [], currency = 
                       <div className="shm-item-meta">
                         <span className="shm-date">
                           <Calendar size={12} />
-                          {formatDate(settlement.created_at || settlement.date)}
+                          {formatDate(settlement.settlement_date || settlement.created_at || settlement.date)}
                         </span>
                         {settlement.notes && (
                           <span className="shm-notes">{settlement.notes}</span>
@@ -186,7 +180,7 @@ const SettlementHistoryModal = ({ isOpen, onClose, settlements = [], currency = 
                       </div>
                     </div>
                     <div className="shm-item-right">
-                      <span className="shm-amount">{formatCurrency(settlement.amount)}</span>
+                      <span className="shm-amount"><CurrencyAmount amount={settlement.amount} currency={currency} displayCurrency={group?.display_currency || currency} /></span>
                       {onDelete && canDeleteSettlement(settlement, group, currentUserId) && (
                         <button type="button" disabled={deleting} onClick={() => { setConfirming(settlement); setError(''); }}>
                           Delete settlement
