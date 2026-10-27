@@ -118,7 +118,7 @@ def test_release_lock_and_upgrade_on_postgresql(monkeypatch, tmp_path, apply_met
             with engine.connect() as connection:
                 for api_role in ('anon', 'authenticated'):
                     assert not connection.execute(text("SELECT has_table_privilege(:role,'public.friend_contacts','SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')"), {'role': api_role}).scalar_one()
-            exercise_additive_bridge(engine, requester, tmp_path)
+            exercise_additive_bridge(engine, requester, tmp_path, ScriptDirectory.from_config(runner.migration_config()))
     finally:
         engine.dispose()
         with admin.connect() as connection:
@@ -126,10 +126,18 @@ def test_release_lock_and_upgrade_on_postgresql(monkeypatch, tmp_path, apply_met
         admin.dispose()
 
 
-def exercise_additive_bridge(engine, requester, tmp_path):
+def exercise_additive_bridge(engine, requester, tmp_path, scripts):
     """An unseen future revision works; unsupported input cannot stamp or partly apply."""
     from alembic.config import Config
     from alembic.script import ScriptDirectory
+
+    current_revision = scripts.get_current_head()
+    assert current_revision is not None
+    future_revision = uuid4().hex[:12]
+    expected_migrations = len(list(scripts.iterate_revisions(current_revision, 'b825c4202610')))
+    with engine.connect() as connection:
+        assert connection.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == current_revision
+        assert connection.execute(text('SELECT count(*) FROM tripraft_dev_ops.migration_runs')).scalar_one() == expected_migrations
 
     good = {'op': 'add_nullable_column', 'table': 'users',
             'column': {'name': 'future_test_note', 'type': 'text', 'nullable': True}}
@@ -154,11 +162,11 @@ def exercise_additive_bridge(engine, requester, tmp_path):
         with employee_connection(engine) as restricted:
             # The good operation preceding the bad one must roll back too.
             with pytest.raises(DBAPIError):
-                restricted.execute(call, {'previous': 'd73f8293a5b6', 'target': 'e84a9304b6c7',
+                restricted.execute(call, {'previous': current_revision, 'target': future_revision,
                                           'operations': json.dumps([good, bad])})
             restricted.rollback()
         with engine.connect() as connection:
-            assert connection.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == 'd73f8293a5b6'
+            assert connection.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == current_revision
             assert not connection.execute(text("SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='future_test_note'")).scalar()
     with employee_connection(engine) as restricted:
         for statement in ('SELECT * FROM tripraft_dev_ops.migration_runs',
@@ -179,10 +187,10 @@ def exercise_additive_bridge(engine, requester, tmp_path):
 
     versions = tmp_path / 'versions'
     versions.mkdir()
-    (versions / 'base.py').write_text("revision='d73f8293a5b6'\ndown_revision=None\n")
-    (versions / 'future.py').write_text("revision='e84a9304b6c7'\ndown_revision='d73f8293a5b6'\n")
+    (versions / 'base.py').write_text(f"revision={current_revision!r}\ndown_revision=None\n")
+    (versions / 'future.py').write_text(f"revision={future_revision!r}\ndown_revision={current_revision!r}\n")
     (versions / 'future.development.json').write_text(json.dumps({
-        'revision': 'e84a9304b6c7', 'down_revision': 'd73f8293a5b6', 'operations': [good, future_table]}))
+        'revision': future_revision, 'down_revision': current_revision, 'operations': [good, future_table]}))
     config = Config()
     config.set_main_option('script_location', str(tmp_path))
     with employee_connection(engine) as restricted:
@@ -190,13 +198,13 @@ def exercise_additive_bridge(engine, requester, tmp_path):
         assert requester.request_migration(restricted, ScriptDirectory.from_config(config))
         restricted.rollback()
         # Exact repeat is idempotent, a different payload for that version is rejected.
-        assert restricted.execute(call, {'previous': 'd73f8293a5b6', 'target': 'e84a9304b6c7',
-                                         'operations': json.dumps([good, future_table])}).scalar_one() == 'e84a9304b6c7'
+        assert restricted.execute(call, {'previous': current_revision, 'target': future_revision,
+                                         'operations': json.dumps([good, future_table])}).scalar_one() == future_revision
         restricted.commit()
         with pytest.raises(DBAPIError):
-            restricted.execute(call, {'previous': 'd73f8293a5b6', 'target': 'e84a9304b6c7',
+            restricted.execute(call, {'previous': current_revision, 'target': future_revision,
                                       'operations': json.dumps([rejected[0]])})
         restricted.rollback()
     with engine.connect() as connection:
-        assert connection.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == 'e84a9304b6c7'
-        assert connection.execute(text("SELECT count(*) FROM tripraft_dev_ops.migration_runs")).scalar_one() == 3
+        assert connection.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == future_revision
+        assert connection.execute(text("SELECT count(*) FROM tripraft_dev_ops.migration_runs")).scalar_one() == expected_migrations + 1
