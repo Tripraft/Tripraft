@@ -24,7 +24,7 @@
 .expense-manager .expense-position svg { flex-shrink: 0; }
 .expense-manager .expense-group-members { flex-wrap: wrap; }
 .expense-manager .expense-group-tablist > button { min-height: 48px; }
-.expense-manager .expense-group-tablist { scrollbar-width: thin; scroll-padding-inline: 12px; }
+.expense-manager .expense-group-tablist { flex-wrap: wrap; overflow: visible; }
 .expense-manager .expense-group-tabpanel { min-width: 0; }
 .expense-section-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin: 0 0 18px; }
 .expense-section-toolbar h3, .expense-section-toolbar h2 { font-size: 16px; font-weight: 650; letter-spacing: -.02em; margin: 0; }
@@ -137,7 +137,7 @@
 .expense-members-switch { display: flex; gap: 8px; margin-bottom: 18px; }
 .expense-friend-picker {margin:16px 0; padding:12px; border:1px solid #e5e7eb; border-radius:12px; background:#fafafa;}
 .expense-friend-picker h4 {display:flex; align-items:center; gap:8px; margin:0 0 10px; font-size:14px;}
-.expense-friend-picker ul {list-style:none; padding:0; margin:10px 0 0; max-height:240px; overflow:auto; display:grid; gap:6px;}
+.expense-friend-picker ul {list-style:none; padding:0; margin:10px 0 0; display:grid; gap:6px;}
 .expense-friend-picker li button {display:flex; flex-direction:column; align-items:flex-start; gap:4px; width:100%; text-align:left; padding:10px; border:1px solid #e5e7eb; border-radius:8px; background:white; cursor:pointer; overflow-wrap:anywhere;}
 .expense-friend-picker li button:hover {border-color:#a78bfa; background:#f5f3ff;}
 .expense-friend-picker li span, .expense-friend-picker li small {font-size:11px; color:#64748b;}

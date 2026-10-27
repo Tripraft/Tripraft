@@ -28,13 +28,17 @@ function setup() {
     members={[]} currentUser={{uid: 'owner'}} pendingInvitationsFromParent={[]} showAlert={jest.fn()} usingMegaBootstrap compact />, {wrapper});
 }
 
-it('shows registered friends by full name and unregistered contacts by email', async () => {
+it('shows contact matches only after searching, then hides them after selection', async () => {
   setup();
   const list = await screen.findByRole('region', {name: 'Saved friends'});
+  expect(within(list).queryByRole('list')).toBeNull();
+  expect(expenseApi.getFriends).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByLabelText('Find a friend'), {target: {value: 'Jane'}});
   expect(await within(list).findByText('Jane Patel')).toBeInTheDocument();
   expect(within(list).queryByText(jane.email)).toBeNull();
   expect(within(list).getByText(newcomer.email)).toBeInTheDocument();
   fireEvent.click(within(list).getByRole('button', {name: /Jane Patel/}));
+  expect(within(list).queryByRole('list')).toBeNull();
   expect(screen.getByText('Inviting Jane Patel')).toBeInTheDocument();
   expect(screen.queryByLabelText('Email address')).toBeNull();
   fireEvent.click(screen.getByRole('button', {name: 'Invite Member'}));
@@ -46,7 +50,6 @@ it('keeps the entered address and nickname while inviting, prevents duplicates a
   let resolve;
   expenseApi.sendInvitation.mockReturnValueOnce(new Promise(done => {resolve = done;}));
   setup();
-  await screen.findByText('Jane Patel');
   fireEvent.change(screen.getByLabelText('Email address'), {target: {value: 'friend@example.test'}});
   fireEvent.change(screen.getByLabelText('Nickname (optional)'), {target: {value: 'Hiking buddy'}});
   const form = screen.getByLabelText('Email address').closest('form');
@@ -66,7 +69,6 @@ it('keeps the entered address and nickname while inviting, prevents duplicates a
 it('retains the invitation draft after a failed request', async () => {
   expenseApi.sendInvitation.mockRejectedValueOnce(new Error('Connection failed'));
   setup();
-  await screen.findByText('Jane Patel');
   fireEvent.change(screen.getByLabelText('Email address'), {target: {value: 'retry@example.test'}});
   fireEvent.click(screen.getByRole('button', {name: 'Invite Member'}));
   await waitFor(() => expect(screen.getByRole('button', {name: 'Invite Member'})).toBeEnabled());
@@ -75,7 +77,6 @@ it('retains the invitation draft after a failed request', async () => {
 
 it('saves a private nickname without sending an invitation', async () => {
   setup();
-  await screen.findByText('Jane Patel');
   fireEvent.change(screen.getByLabelText('Email address'), {target: {value: jane.email}});
   fireEvent.change(screen.getByLabelText('Nickname (optional)'), {target: {value: 'JP'}});
   fireEvent.click(screen.getByRole('button', {name: 'Save friend without inviting'}));
@@ -87,15 +88,19 @@ it('saves a private nickname without sending an invitation', async () => {
 
 it('searches saved contacts by nickname and can load another page', async () => {
   expenseApi.getFriends.mockImplementation(async ({search, offset}) => ({data: {
-    friends: search ? [{...jane, nickname: 'JP', label: 'JP'}] : offset ? [newcomer] : [jane],
-    offset, has_more: !search && !offset,
+    friends: search === 'JP' ? [{...jane, nickname: 'JP', label: 'JP'}] : offset ? [newcomer] : [jane],
+    offset, has_more: search !== 'JP' && !offset,
   }}));
   setup();
+  fireEvent.change(screen.getByLabelText('Find a friend'), {target: {value: 'Jane'}});
   await screen.findByText('Jane Patel');
   fireEvent.click(screen.getByRole('button', {name: 'More friends'}));
   await screen.findByText(newcomer.email);
-  expect(expenseApi.getFriends).toHaveBeenCalledWith({search: '', offset: 1, limit: 50});
+  expect(expenseApi.getFriends).toHaveBeenCalledWith({search: 'Jane', offset: 1, limit: 50});
   fireEvent.change(screen.getByLabelText('Find a friend'), {target: {value: 'JP'}});
   await screen.findByText('JP');
   expect(expenseApi.getFriends).toHaveBeenCalledWith({search: 'JP', offset: 0, limit: 50});
+  fireEvent.change(screen.getByLabelText('Find a friend'), {target: {value: ''}});
+  expect(screen.queryByRole('list', {name: 'Contact matches'})).toBeNull();
+  expect(screen.queryByText('JP')).toBeNull();
 });

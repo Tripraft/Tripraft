@@ -78,6 +78,8 @@ it('opens the exact invitation group without selecting the first group or person
   expect(screen.queryByText('Personal expenses')).toBeNull();
   expect(screen.getByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
   expect(useGroupDetail.mock.calls.every(([id]) => id === 'joined-group')).toBe(true);
+  expect(screen.queryByText('Choose another currency to compare.')).toBeNull();
+  expect(screen.queryByText('Calculator')).toBeNull();
 });
 
 it('opens, focuses and scrolls to settlements from the summary card', () => {
