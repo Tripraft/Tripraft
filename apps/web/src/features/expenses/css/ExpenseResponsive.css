@@ -2,6 +2,8 @@
 .expense-page .expense-container { width: 100%; min-width: 0; padding: clamp(20px, 3vw, 44px) clamp(12px, 3vw, 32px); }
 .expense-manager, .expense-manager :is(section, article, aside, .card, .transactions-card, .summary-card) { min-width: 0; }
 .expense-manager .expense-header { flex-wrap: wrap; gap: 20px; }
+.expense-manager .expense-header { min-block-size: 64px; }
+@media (max-width: 639px) { .expense-manager .expense-header { min-block-size: 120px; } }
 .expense-manager .expense-header h1 { font-size: clamp(23px, 3vw, 30px); letter-spacing: -.035em; line-height: 1.25; }
 .expense-manager .expense-header p { font-size: 13px; line-height: 1.6; }
 .expense-manager .header-actions { flex-wrap: wrap; gap: 14px; }
@@ -15,6 +17,14 @@
 .expense-manager .summary-card { padding: clamp(16px, 2.5vw, 24px); border-radius: 18px; }
 .expense-manager .summary-card h2 { font-size: 13px; }
 .expense-manager .summary-card .amount { font-size: clamp(21px, 3vw, 32px); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.expense-manager .summary-card .amount { min-block-size: 2.5em; line-height: 1.25; }
+.expense-dashboard-currency { min-block-size: 110px; }
+.expense-personal-tabs { min-block-size: 480px; }
+.expense-manager .expense-hero-stats { min-block-size: 288px; }
+.expense-manager .expense-hero-position h3 { min-block-size: 2.4em; }
+.expense-manager .expense-hero-position > .expense-position { min-block-size: 44px; }
+.expense-manager .expense-detail-summary-card > strong { min-block-size: 2.5em; }
+.expense-manager .expense-detail-summary-card > small { min-block-size: 3.2em; }
 .expense-manager .card-header { gap: 12px; }
 .expense-manager .card-header svg { flex-shrink: 0; }
 .expense-manager .expense-detail-summary-card small { flex-wrap: wrap; line-height: 1.6; }

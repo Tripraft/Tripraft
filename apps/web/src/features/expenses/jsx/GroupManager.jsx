@@ -424,7 +424,7 @@ const GroupManager = ({
   return <div className="group-section expense-members-view">
     {!compact && <section className="expense-members-selector"><h2><Users size={20} />Manage Groups</h2><select className="group-select" value={activeGroupId || ''} onChange={handleGroupSelect} aria-label="Select a group"><option value="">Select a group</option>{groups.map(group => <option key={group.id || group.group_id} value={group.id || group.group_id}>{group.name} ({group.currency || 'USD'})</option>)}</select></section>}
     {activeGroupId && activeGroup && <>
-      <CurrencyChangeStatus key={activeGroupId} currency={displayCurrency} targetCurrency={currencyTarget || displayCurrency}
+      <CurrencyChangeStatus key={activeGroupId} currency={displayCurrency} targetCurrency={currencyTarget || displayCurrency} reserveSpace
         saving={actionBusy && Boolean(currencyTarget)} pending={(actionBusy && Boolean(currencyTarget)) || conversion.loading}
         error={(currencyTarget ? actionError : '') || conversion.error} onRetry={conversion.error ? () => setRateRefresh(value => value + 1) : undefined} />
       <div className="expense-members-grid"><section className="expense-members-panel"><div className="expense-section-toolbar"><h2>Group Members &amp; Invitations</h2><span className="expense-member-count">{members.length} members</span></div>

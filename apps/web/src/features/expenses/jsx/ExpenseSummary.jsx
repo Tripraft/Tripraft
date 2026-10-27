@@ -4,7 +4,7 @@ import { Wallet, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import {formatMoney} from '../../../utils/money';
 import { isPersonalIncome } from '../utils/personalTransactions';
 
-const ExpenseSummary = ({ transactions, mode = 'personal', currency = 'USD' }) => {
+const ExpenseSummary = ({ transactions, mode = 'personal', currency = 'USD', pending = false }) => {
   const formatCurrency = amount => formatMoney(amount, currency);
 
   // Filter out deleted transactions for calculations
@@ -42,27 +42,27 @@ const ExpenseSummary = ({ transactions, mode = 'personal', currency = 'USD' }) =
   const balance = income - expense;
 
   return (
-    <div className="summary-cards">
+    <div className="summary-cards" aria-busy={pending}>
       <div className="summary-card">
         <div className="card-header">
           <h2>Total Balance</h2>
           <Wallet className="icon-green" size={24} />
         </div>
-        <p className="amount">{formatCurrency(balance)}</p>
+        <p className="amount">{pending ? '—' : formatCurrency(balance)}</p>
       </div>
       <div className="summary-card">
         <div className="card-header">
           <h2>Total Income</h2>
           <ArrowUpCircle className="icon-blue" size={24} />
         </div>
-        <p className="amount income-green">{formatCurrency(income)}</p>
+        <p className="amount income-green">{pending ? '—' : formatCurrency(income)}</p>
       </div>
       <div className="summary-card">
         <div className="card-header">
           <h2>Total Expenses</h2>
           <ArrowDownCircle className="icon-red" size={24} />
         </div>
-        <p className="amount expense-red">{formatCurrency(expense)}</p>
+        <p className="amount expense-red">{pending ? '—' : formatCurrency(expense)}</p>
       </div>
     </div>
   );

@@ -2,6 +2,9 @@
 
 Date: October 26, 2026 (America/Los_Angeles).
 
+Latest follow-up: [live development reloader and layout stability](expense-reloader-and-layout-fix-2026-10-26.md)
+identifies the multi-second event-loop stalls reproduced in the new recordings.
+
 Follow-up: [groups-page load profiling and fixes](groups-page-load-fix-2026-10-26.md)
 adds live PostgreSQL/curl before-and-after measurements, exact query plans,
 pending-GET deduplication and earlier summary-heading rendering. The findings

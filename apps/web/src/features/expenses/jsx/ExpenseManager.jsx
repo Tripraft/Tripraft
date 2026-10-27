@@ -698,52 +698,48 @@ const ExpenseManager = () => {
         loading={groupsLoading} error={groupsError}
         onSelect={handleGroupChange} onCreate={() => setShowNewGroup(true)} onRetry={refetchGroups}
       />}
-      {mode === 'group' && activeGroupId && !headerGroup && !groupDetailError && <section aria-busy="true" aria-label="Group overview">
-        <h2>Group overview</h2><p role="status">Loading group…</p>
-      </section>}
-      {mode === 'group' && activeGroupId && headerGroup && !activeGroupData && <>
-        <GroupDetailHeader group={headerGroup} members={headerGroup.members || []}
-          overview={groupOverview(headerGroup, currentUser?.uid || currentUser?.user_id || currentUser?.id)}
-          busy onBack={() => setExpenseView('group')} onCreate={() => setShowNewGroup(true)}
+      {mode === 'group' && activeGroupId && !groupDetailError && <div ref={addTransactionRef}>
+        <GroupDetailHeader group={headerGroup || {name:'Group overview', currency:'USD'}} members={activeGroupData ? activeGroupMembers || [] : headerGroup?.members || []}
+          overview={groupOverview(headerGroup, currentUser?.uid || currentUser?.user_id || currentUser?.id,
+            activeGroupData ? getCurrentTransactions() : undefined, activeGroupData ? getCurrentBalances() : undefined)}
+          loading={!headerGroup} busy={mutationLoading || groupDetailLoading || !activeGroupData}
+          onBack={() => {setExpenseView('group'); refetchGroups();}} onCreate={() => setShowNewGroup(true)}
           onAdd={handleOpenModal} onSettle={() => openGroupTab('settleup')} />
-        <p role="status">Loading group transactions and settlements…</p>
-      </>}
+      </div>}
+      {mode === 'group' && activeGroupId && !activeGroupData && !groupDetailError && <GroupSummaryCards pending
+        currency={headerGroup?.currency || 'USD'} displayCurrency={headerGroup?.display_currency || headerGroup?.currency || 'USD'} />}
       {invitationsError && <div role="alert">Unable to load invitations: {invitationsError} <button onClick={refetchInvitations}>Retry invitations</button></div>}
       {mode === 'group' && activeGroupId && groupsError && <div role="alert">Unable to load the group list: {groupsError} <button onClick={refetchGroups}>Retry group list</button></div>}
 
       {mode === 'personal' && <section className="expense-dashboard-currency" aria-label="Dashboard currency preference">
-        {currencyPreference.loading ? <p role="status">Loading your currency preference...</p> : currencyPreference.loadError ? <div role="alert">Unable to load your currency preference. <button onClick={currencyPreference.retry}>Retry</button></div> : <>
-          {!personalCurrency && <h2>Choose your dashboard currency</h2>}
+          <h2>{!currencyPreference.loading && !personalCurrency ? 'Choose your dashboard currency' : 'Dashboard currency'}</h2>
           <label htmlFor="personal-display-currency">Show all transactions in</label>
-          <CurrencySelect id="personal-display-currency" value={personalCurrency || ''} placeholder="Choose your currency"
-            disabled={currencyPreference.saving || mutationLoading} onChange={event => currencyPreference.choose(event.target.value)} />
-          <p>{personalCurrency ? 'All your transactions are converted automatically. Change this anytime.' : 'Choose once and we will remember it. You can change it anytime.'}</p>
+          <CurrencySelect id="personal-display-currency" value={personalCurrency || ''} placeholder={currencyPreference.loading ? 'Loading your currency…' : 'Choose your currency'}
+            disabled={currencyPreference.loading || currencyPreference.saving || mutationLoading || Boolean(currencyPreference.loadError)} onChange={event => currencyPreference.choose(event.target.value)} />
+          <p>{currencyPreference.loading ? 'Loading your currency preference...' : personalCurrency ? 'All your transactions are converted automatically. Change this anytime.' : 'Choose once and we will remember it. You can change it anytime.'}</p>
+          {currencyPreference.loadError && <div role="alert">Unable to load your currency preference. <button onClick={currencyPreference.retry}>Retry</button></div>}
           {currencyPreference.saveError && <p role="alert">{currencyPreference.saveError}</p>}
-        </>}
       </section>}
       {mode === 'personal' && <CurrencyChangeStatus currency={personalCurrency} targetCurrency={currencyPreference.targetCurrency || personalCurrency}
-        saving={currencyPreference.saving} pending={currencyPreference.saving || personalDashboard.loading} error={currencyPreference.saveError || personalDashboard.error} />}
+        saving={currencyPreference.saving} pending={currencyPreference.saving || personalDashboard.loading} error={currencyPreference.saveError || personalDashboard.error} reserveSpace />}
       {mode === 'personal' && personalError && <div role="alert">Unable to load the complete personal ledger. <button onClick={refetchPersonalExpenses}>Retry transactions</button></div>}
       {mode === 'personal' && personalDashboard.error && <div role="alert">Unable to convert all transactions. Totals and analytics will be available when exchange rates return. Original amounts are shown below. <button onClick={personalDashboard.retry}>Retry conversion</button></div>}
       {mode === 'personal' && personalDashboard.stale && <p role="status">Using the last available exchange rates for this session.</p>}
       {/* Personal Expense Summary */}
-      {mode === 'personal' && !personalConversionPending && !personalError && (
+      {mode === 'personal' && (
         <ExpenseSummary 
           transactions={getCurrentTransactions()}
           mode={mode}
           currency={personalCurrency}
+          pending={personalLoading || personalConversionPending || Boolean(personalError)}
         />
       )}
 
       {mode === 'group' && activeGroupId && activeGroupData && (() => {
         const transactions = getCurrentTransactions();
         const balances = getCurrentBalances() || [];
-        const overview = groupOverview(activeGroupData, currentUser?.uid || currentUser?.user_id || currentUser?.id, transactions, balances);
         const remainingBalance = balances.reduce((sum, balance) => sum + Math.max(0, Number(balance.net_balance ?? balance.balance) || 0), 0);
         return <>
-          <div ref={mode === 'group' ? addTransactionRef : undefined}><GroupDetailHeader group={activeGroupData} members={activeGroupMembers || []} overview={overview}
-            busy={mutationLoading || groupDetailLoading} onBack={() => { setExpenseView('group'); refetchGroups(); }}
-            onCreate={() => setShowNewGroup(true)} onAdd={handleOpenModal} onSettle={() => openGroupTab('settleup')} /></div>
           <GroupSummaryCards remainingBalance={remainingBalance}
             totalSettlements={(activeGroupSettlements || []).reduce((sum, settlement) => sum + (Number(settlement.amount) || 0), 0)}
             settlementCount={(activeGroupSettlements || []).length}

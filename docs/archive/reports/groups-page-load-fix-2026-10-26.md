@@ -2,6 +2,10 @@
 
 October 26, 2026 (America/Los_Angeles). Baseline: `c00e267`.
 
+Superseding investigation: [development reloader stalls and layout shifts](expense-reloader-and-layout-fix-2026-10-26.md)
+reproduces the previously unexplained live-worker delay, fixes the blocking
+filesystem scan and records same-worker before/after curl measurements.
+
 The supplied browser evidence is valid: a text balance heading took 10.56s to
 become LCP, with groups/invitations/full reads taking 9.48s/4.34s/14.05s.
 Existing backend logs independently recorded successful requests taking
