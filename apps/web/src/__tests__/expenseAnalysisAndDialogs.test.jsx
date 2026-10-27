@@ -91,3 +91,14 @@ it('retains former members in spending totals after their membership ends', () =
   expect(screen.getByText('Former friend')).toBeInTheDocument();
   expect(screen.getAllByText('$100.00')).toHaveLength(2);
 });
+
+it('shows readable item assignments and adjustments in expense history', () => {
+  useExpenseEditHistory.mockReturnValue({ data: { history: [{ id: 'bill-edit', action: 'updated', changes: [
+    { field: 'split_details', old: { adjustments: { me: '10' } }, new: { items: [{ name: 'Dinner', amount: '20', user_ids: ['me'] }], tax: '2' } },
+  ] }] }, isLoading: false });
+  render(<History expense={expenses[0]} members={[{ user_id: 'me', display_name: 'Deep' }]} onClose={jest.fn()} />);
+  expect(screen.getByText('Bill and adjustments')).toBeInTheDocument();
+  expect(screen.getByText('Deep: $10.00')).toBeInTheDocument();
+  expect(screen.getByText('Dinner: $20.00 (Deep); tax: $2.00')).toBeInTheDocument();
+  expect(screen.queryByText('[object Object]')).toBeNull();
+});

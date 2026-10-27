@@ -595,7 +595,7 @@ const TransactionList = ({
               <div className="receipt-divider"></div>
               
               <div className="receipt-item">
-                <span className="receipt-label">PAID BY</span>
+                <span className="receipt-label">{selectedTransaction.split_type === 'reimbursement' ? 'REFUND RECEIVED BY' : 'PAID BY'}</span>
                 <span className="receipt-value">{selectedTransaction.paid_by_name || getMemberName(selectedTransaction.paid_by)}</span>
               </div>
               
@@ -609,6 +609,13 @@ const TransactionList = ({
               <div className="receipt-divider"></div>
               
               <div className="receipt-breakdown">
+                {selectedTransaction.split_type === 'itemized' && selectedTransaction.split_details?.items?.map((item, index) => <div key={`item-${index}`} className="receipt-split-item">
+                  <span className="split-name">{item.name}<small style={{ display: 'block' }}>{item.user_ids.map(id => getMemberName(id)).join(', ')}</small></span>
+                  <span className="split-amt">{formatCurrency(item.amount)}</span>
+                </div>)}
+                {selectedTransaction.split_type === 'itemized' && ['tax', 'tip', 'discount'].filter(key => Number(selectedTransaction.split_details?.[key])).map(key => <div key={key} className="receipt-split-item">
+                  <span className="split-name">{key[0].toUpperCase() + key.slice(1)}</span><span className="split-amt">{formatCurrency((key === 'discount' ? -1 : 1) * Number(selectedTransaction.split_details[key]))}</span>
+                </div>)}
                 <div className="receipt-label">SPLIT BREAKDOWN</div>
                 {selectedTransaction.splits && Array.isArray(selectedTransaction.splits) && selectedTransaction.splits.map((split, idx) => (
                   <div key={idx} className="receipt-split-item">

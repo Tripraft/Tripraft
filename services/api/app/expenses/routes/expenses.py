@@ -146,8 +146,6 @@ def create_expense():
     
     # Normalize split_type to lowercase
     split_type = (validated.get('split_type') or 'equal').lower()
-    if split_type not in ('equal', 'exact', 'percentage', 'shares', 'none'):
-        split_type = 'equal'
     
     success, result = expense_service_sql.create_expense(
         user_id=user_id,
@@ -157,6 +155,7 @@ def create_expense():
         paid_by=paid_by,
         split_type=split_type,
         splits=validated.get('splits'),
+        split_details=validated.get('split_details'),
         category=validated.get('category'),
         expense_date=expense_date,
         notes=validated.get('notes'),
@@ -260,7 +259,7 @@ def update_expense(expense_id):
         split_type=data.get('split_type'),
         splits=data.get('splits'),
         expense_date=data.get('expense_date') or data.get('date'),
-        **{key: data[key] for key in ('category', 'notes', 'receipt_url', 'currency') if key in data},
+        **{key: data[key] for key in ('category', 'notes', 'receipt_url', 'currency', 'split_details') if key in data},
     )
     
     if success:

@@ -31,15 +31,16 @@ export function analyzeExpenses(expenses, { range = 'all', scope = 'group', mode
     day: expenseDay(expense),
     value: scope === 'share' ? (expense.splits || []).reduce((sum, split) =>
       sum + (String(split.user_id) === String(userId) ? Number(split.amount) || 0 : 0), 0) : Number(expense.amount) || 0,
-  })).filter(expense => expense.value > 0);
+  })).filter(expense => expense.value !== 0);
   const categories = {}, dayTotals = {};
   entries.forEach(expense => {
     categories[expense.category || 'Other'] = (categories[expense.category || 'Other'] || 0) + expense.value;
     if (expense.day) dayTotals[expense.day] = (dayTotals[expense.day] || 0) + expense.value;
   });
   const total = entries.reduce((sum, expense) => sum + expense.value, 0);
+  const positiveCategoryTotal = Object.values(categories).reduce((sum, value) => sum + Math.max(0, value), 0);
   const categoryData = Object.entries(categories).sort((a, b) => b[1] - a[1]).map(([name, value], index) =>
-    ({ name, value, percent: total ? value / total * 100 : 0, color: ANALYSIS_COLORS[index % ANALYSIS_COLORS.length] }));
+    ({ name, value, percent: positiveCategoryTotal ? Math.max(0, value) / positiveCategoryTotal * 100 : 0, color: ANALYSIS_COLORS[index % ANALYSIS_COLORS.length] }));
   const dates = Object.keys(dayTotals).sort();
   const end = dates[dates.length - 1] || today;
   const endDate = new Date(`${end}T12:00:00`);
@@ -53,6 +54,6 @@ export function analyzeExpenses(expenses, { range = 'all', scope = 'group', mode
   const paid = active.filter(expense => String(expense.paid_by) === String(userId)).reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
   return { entries, total, incomeTotal, incomeCount: income.length, netBalance: incomeTotal - total,
     categoryData, daily, dailyAverage: total / duration,
-    topExpenses: [...entries].sort((a, b) => b.value - a.value).slice(0, 5),
+    topExpenses: entries.filter(expense => expense.value > 0).sort((a, b) => b.value - a.value).slice(0, 5),
     paid, footprint: groupTotal ? Math.round(paid / groupTotal * 100) : 0 };
 }
