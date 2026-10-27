@@ -105,6 +105,7 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [apps/web/src/__tests__/currencyConversion.test.jsx](../apps/web/src/__tests__/currencyConversion.test.jsx) | Verifies original versus converted totals, currency-pair races, stale/unavailable rates, fixed saved currencies and independent calculator pairs. |
 | [apps/web/src/__tests__/expenseAnalysisAndDialogs.test.jsx](../apps/web/src/__tests__/expenseAnalysisAndDialogs.test.jsx) | Verifies stored-share analysis, calendar/deleted-row handling, history data, dialog focus/scroll behavior, creation retries and former-member attribution. |
 | [apps/web/src/__tests__/expenseFollowupFixes.test.jsx](../apps/web/src/__tests__/expenseFollowupFixes.test.jsx) | Verifies personal history and income classification, deleted-row restore permissions, currency/amount layout, live edit-draft retention and split receipts. |
+| [apps/web/src/__tests__/expenseFriends.test.jsx](../apps/web/src/__tests__/expenseFriends.test.jsx) | Verifies friend selection, nickname search, invitation draft retention and loading states. |
 | [apps/web/src/__tests__/expenseGroupCreation.test.jsx](../apps/web/src/__tests__/expenseGroupCreation.test.jsx) | Verifies API-compatible group creation fields and preserving the entered name after validation failure. |
 | [apps/web/src/__tests__/expenseGroupNavigation.test.jsx](../apps/web/src/__tests__/expenseGroupNavigation.test.jsx) | Verifies exact group URLs, browser back, selected-group restoration, dashboard/empty states and navigation after group creation or invitation acceptance. |
 | [apps/web/src/__tests__/expenseGroupOverview.test.jsx](../apps/web/src/__tests__/expenseGroupOverview.test.jsx) | Verifies paid/share/net distinctions, full-ledger summaries, custom splits, deleted expenses and searchable dashboard/error states. |
@@ -125,6 +126,8 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [apps/web/src/__tests__/openFreeMap.test.js](../apps/web/src/__tests__/openFreeMap.test.js) | Verifies safe provider style expressions, key-free OpenFreeMap attribution, zero/missing coordinates and date-line marker wrapping. |
 | [apps/web/src/__tests__/ownerAndInactivity.test.jsx](../apps/web/src/__tests__/ownerAndInactivity.test.jsx) | Verifies UUID owner controls and actual personal share, and tests the optional idle tracker's warning/activity reset in isolation. |
 | [apps/web/src/__tests__/p3Behavior.test.jsx](../apps/web/src/__tests__/p3Behavior.test.jsx) | Verifies safe date/file formatting, Crew question transitions, long-trip day lists and map viewport, theme and calendar-day behavior. |
+| [apps/web/src/__tests__/personalCurrency.test.jsx](../apps/web/src/__tests__/personalCurrency.test.jsx) | Verifies account-backed currency persistence, save failures and user isolation. |
+| [apps/web/src/__tests__/personalDashboard.test.jsx](../apps/web/src/__tests__/personalDashboard.test.jsx) | Verifies mixed-currency personal totals, original records, failed rates and stale response isolation. |
 | [apps/web/src/__tests__/plannerHeader.test.jsx](../apps/web/src/__tests__/plannerHeader.test.jsx) | Verifies group count and plain current title, with a return-to-cards group-selection action. |
 | [apps/web/src/__tests__/pollFeed.test.jsx](../apps/web/src/__tests__/pollFeed.test.jsx) | Verifies unique voters, option-index vote payloads, creator-only deletion and member-name resolution from UUIDs. |
 | [apps/web/src/__tests__/routes.test.jsx](../apps/web/src/__tests__/routes.test.jsx) | Verifies invitation route dispatch and administrator access/unavailable analytics behavior without absent-endpoint calls. |
@@ -196,6 +199,7 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [apps/web/src/features/expenses/jsx/ExpenseAnalysisView.jsx](../apps/web/src/features/expenses/jsx/ExpenseAnalysisView.jsx) | Renders spending insights, category and daily charts, date-range filters and group-total versus saved-share analysis. |
 | [apps/web/src/features/expenses/jsx/ExpenseAnalytics.jsx](../apps/web/src/features/expenses/jsx/ExpenseAnalytics.jsx) | Re-exports ExpenseAnalysisView as a compatibility entry for existing expense imports. |
 | [apps/web/src/features/expenses/jsx/ExpenseDialog.jsx](../apps/web/src/features/expenses/jsx/ExpenseDialog.jsx) | Provides a portalled expense dialog with focus containment, Escape handling, scroll locking and focus restoration. |
+| [apps/web/src/features/expenses/jsx/ExpenseFriendPicker.jsx](../apps/web/src/features/expenses/jsx/ExpenseFriendPicker.jsx) | Searches private saved expense contacts and selects recipients by name or nickname. |
 | [apps/web/src/features/expenses/jsx/ExpenseHistoryModal.jsx](../apps/web/src/features/expenses/jsx/ExpenseHistoryModal.jsx) | Fetches an expense's edit history and shows a timeline of field, payer and split changes with member names and currency formatting. |
 | [apps/web/src/features/expenses/jsx/ExpenseManager.jsx](../apps/web/src/features/expenses/jsx/ExpenseManager.jsx) | Coordinates personal/group expense data, group selection, transaction editing, invitations, settlements, history, PDF export and live refresh. |
 | [apps/web/src/features/expenses/jsx/ExpenseSummary.jsx](../apps/web/src/features/expenses/jsx/ExpenseSummary.jsx) | Calculates visible personal balance/income/spending or group expense totals while excluding deleted transactions. |
@@ -292,6 +296,8 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [apps/web/src/hooks/useGroupPlannerQuery.js](../apps/web/src/hooks/useGroupPlannerQuery.js) | Defines planner query keys and hooks for groups, destination viewports, places, polls, members, expenses, checklists, vault files and activities. |
 | [apps/web/src/hooks/useGroupSocket.js](../apps/web/src/hooks/useGroupSocket.js) | Subscribes to authenticated group collaboration/presence events and forwards handlers for places, polls, checklists, itineraries and membership. |
 | [apps/web/src/hooks/useMoneyDisplay.js](../apps/web/src/hooks/useMoneyDisplay.js) | Formats amounts in a chosen display currency using the exchange-rate hook while leaving stored amounts and calculation units unchanged. |
+| [apps/web/src/hooks/usePersonalCurrency.js](../apps/web/src/hooks/usePersonalCurrency.js) | Caches the account's chosen dashboard currency across tabs and saves explicit changes. |
+| [apps/web/src/hooks/usePersonalDashboard.js](../apps/web/src/hooks/usePersonalDashboard.js) | Converts personal transactions into one dashboard currency without changing saved records. |
 | [apps/web/src/hooks/useNotesAutoSave.js](../apps/web/src/hooks/useNotesAutoSave.js) | Saves and clears a group-scoped notes draft in localStorage; it does not send notes to the server. |
 | [apps/web/src/hooks/usePlaceSearchQuery.js](../apps/web/src/hooks/usePlaceSearchQuery.js) | Provides cached React Query reads for place search, details and catalog statistics. |
 | [apps/web/src/hooks/useTripPlannerQuery.js](../apps/web/src/hooks/useTripPlannerQuery.js) | Provides city-search/list and pacing queries plus the generated-trip mutation through tripPlannerService. |
@@ -351,6 +357,7 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [docs/api/README.md](../docs/api/README.md) | Documents API conventions, client contract generation and endpoint integration. |
 | [docs/api/group-finance.md](../docs/api/group-finance.md) | Documents collaborative expense/ledger endpoint behavior and permissions. |
 | [docs/api/personal-finance.md](../docs/api/personal-finance.md) | Documents personal finance API operations and monetary data conventions. |
+| [docs/api/expense-friends.md](../docs/api/expense-friends.md) | Documents saved contacts, nickname/name display, invitation behavior and migration requirements. |
 | [docs/architecture/overview.md](../docs/architecture/overview.md) | Explains frontend/backend boundaries, persistence, authentication, workflow ownership and launcher behavior. |
 | [docs/archive/README.md](../docs/archive/README.md) | Indexes retained dated Markdown reports and explains the removal of raw exports and machine-specific recovery notes. |
 | [docs/archive/reports/agent-signature-and-live-reload-2026-10-19.md](../docs/archive/reports/agent-signature-and-live-reload-2026-10-19.md) | Archived dated report: Agent-only signing after approval and local server recovery. Historical evidence; use current guides for setup and behavior. |
@@ -382,6 +389,8 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [docs/guides/partner-agreement.md](../docs/guides/partner-agreement.md) | Explains current agreement versions, agent signature evidence, protected runtime attachments and commercial boundaries. |
 | [docs/guides/staff-console.md](../docs/guides/staff-console.md) | Explains generic staff configuration, business/package review, self-review restrictions and connection recovery. |
 | [docs/operations/runbook.md](../docs/operations/runbook.md) | Provides maintenance, deployment/recovery and operational troubleshooting procedures. |
+| [docs/operations/database-releases.md](../docs/operations/database-releases.md) | Shared employee test data, environment setup, migration deployment, production approval and recovery guide. |
+| [docs/operations/database-release-checklist.html](../docs/operations/database-release-checklist.html) | Local interactive release checklist with no network access or deployment authority. |
 | [docs/plans/README.md](../docs/plans/README.md) | Indexes the enterprise and tour-package proposals and separates delivered private supplier review from proposed public/commerce phases. |
 | [docs/plans/enterprise-platform-implementation-plan.md](../docs/plans/enterprise-platform-implementation-plan.md) | Proposes enterprise platform work in stages against the locally retained blueprint; not an implementation guarantee. |
 | [docs/plans/places-search-tour-packages/README.md](../docs/plans/places-search-tour-packages/README.md) | Introduces the proposed places-search and tour-package implementation plan and its source context. |
@@ -401,10 +410,17 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [infra/docker/.env.example](../infra/docker/.env.example) | Documents local Compose PostgreSQL/password, application-secret and staff-email settings; the sample values are development placeholders. |
 | [infra/docker/docker-compose.yml](../infra/docker/docker-compose.yml) | Runs local PostgreSQL, Redis and the Flask API with loopback ports and persistent data volumes; an optional workers profile starts Celery after API readiness. |
 | [infra/github/workflows/ci.yml](../infra/github/workflows/ci.yml) | Defines canonical CI dependency installation, workspace checks, generated API-contract verification and frontend artifact upload; sync its discovery copy with sync-workflows.mjs. |
-| [infra/github/workflows/deploy.yml](../infra/github/workflows/deploy.yml) | Defines canonical release verification and opt-in staging/production deploy-hook calls; release-verify gates deployment and tags select production. |
+| [infra/github/workflows/deploy.yml](../infra/github/workflows/deploy.yml) | Centralized development/staging migrations and production releases gated by exact-commit staging evidence and administrator environment approval. |
+| [infra/tools/check_release_gate.py](../infra/tools/check_release_gate.py) | Rejects production releases without the exact successful staging commit, acceptance, backup evidence and reviewer protections. |
+| [infra/tools/deploy_application.py](../infra/tools/deploy_application.py) | Deploys a selected application SHA through a hosting adapter and verifies matching readiness. |
+| [infra/tools/deploy_database.py](../infra/tools/deploy_database.py) | Plans or explicitly applies migrations with separate pinned credentials, PostgreSQL session locking and schema verification. |
+| [infra/tools/request_development_migration.py](../infra/tools/request_development_migration.py) | Lets restricted startup request only a fixed owner-approved development migration without migration credentials. |
+| [infra/sql/development/enable_approved_startup_migrations.sql](../infra/sql/development/enable_approved_startup_migrations.sql) | One-time owner setup for narrowly scoped automatic shared-development migrations; no caller SQL or direct DDL grants. |
+| [infra/sql/development/friend_contacts_runtime_grant.sql](../infra/sql/development/friend_contacts_runtime_grant.sql) | Proposes an owner-run development CRUD grant for the new private-contact table after migration. |
 | [infra/terraform/README.md](../infra/terraform/README.md) | Explains that Terraform provisioning is a placeholder, lists the hosting decisions needed before implementation, and links deployment guidance. |
 | [infra/tests/test_catalog_supabase_import.py](../infra/tests/test_catalog_supabase_import.py) | Tests PostgreSQL COPY escaping, supported canonical SQLite DDL conversion and stable export ordering with temporary or in-memory data; no remote database is contacted. |
 | [infra/tests/test_launcher.py](../infra/tests/test_launcher.py) | Tests start.py setup preservation, random secrets, process identity and owned-child cleanup, port/session reuse, child environments and reload recovery using mocks and temporary files. |
+| [infra/tests/test_database_releases.py](../infra/tests/test_database_releases.py) | Verifies release target pins, staging evidence, production protections and exact application commit checks. |
 | [infra/tests/test_supabase_setup.py](../infra/tests/test_supabase_setup.py) | Tests password-safe database URL construction and useful SQLSTATE diagnostics with raw/encoded credential redaction; no Supabase connection is made. |
 | [infra/tools/audit_supabase_security.py](../infra/tools/audit_supabase_security.py) | Reads public-schema RLS flags, Data API role privileges, duplicate index definitions, default ACLs and migration metadata, optionally writing a JSON report without reading application rows. |
 | [infra/tools/check_python.py](../infra/tools/check_python.py) | Parses services/api Python files using the Python 3.11 grammar to catch syntax incompatible with CI and Docker; it does not import or execute those modules. |
@@ -533,6 +549,7 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [services/api/app/expenses/routes/expense_groups.py](../services/api/app/expenses/routes/expense_groups.py) | Implements authenticated expense-group creation, details, membership, role, leave and archive operations. |
 | [services/api/app/expenses/routes/expense_invitations.py](../services/api/app/expenses/routes/expense_invitations.py) | Exposes private expense invitation lookup, creation, acceptance, decline, resend and cancellation with cache refresh. |
 | [services/api/app/expenses/routes/expenses.py](../services/api/app/expenses/routes/expenses.py) | Exposes expense CRUD, soft delete/restore, personal/group lists and edit history with permission and freshness handling. |
+| [services/api/app/expenses/routes/friends.py](../services/api/app/expenses/routes/friends.py) | Lists and saves the signed-in user's private contacts for reusable expense invitations. |
 | [services/api/app/expenses/routes/group_finance.py](../services/api/app/expenses/routes/group_finance.py) | Exposes authorized group analytics, balances, simplified debts and compatibility balance-repair endpoints. |
 | [services/api/app/expenses/routes/personal_finance.py](../services/api/app/expenses/routes/personal_finance.py) | Exposes private income CRUD/history and currency-separated personal summaries, transactions and analytics. |
 | [services/api/app/expenses/routes/settlements.py](../services/api/app/expenses/routes/settlements.py) | Exposes authorized payment recording/deletion and group settlement/balance/debt reads. |
@@ -542,6 +559,7 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [services/api/app/expenses/services/expense_invite_service.py](../services/api/app/expenses/services/expense_invite_service.py) | Implements recipient checks, expiry and membership transitions for expense invitations. |
 | [services/api/app/expenses/services/expense_service.py](../services/api/app/expenses/services/expense_service.py) | Validates and persists expense/split edits, balance changes, soft deletion/restoration and audit history. |
 | [services/api/app/expenses/services/group_access.py](../services/api/app/expenses/services/group_access.py) | Centralizes ledger access, ownership/role checks, former-member balance preservation and invitation/member invariants. |
+| [services/api/app/expenses/services/friend_service.py](../services/api/app/expenses/services/friend_service.py) | Upserts private contacts atomically and resolves registered names, nicknames and literal searches. |
 | [services/api/app/expenses/services/group_finance_service.py](../services/api/app/expenses/services/group_finance_service.py) | Derives group spending/trends and balance recalculation from persisted financial records. |
 | [services/api/app/expenses/services/ledger_math.py](../services/api/app/expenses/services/ledger_math.py) | Serializes decimal balances and simplifies debts while retaining single-cent obligations. |
 | [services/api/app/expenses/services/money_lock.py](../services/api/app/expenses/services/money_lock.py) | Locks financial groups/records so validation and monetary mutation share a serialized transaction. |
@@ -637,7 +655,7 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [services/api/app/trips/services/treasury_service.py](../services/api/app/trips/services/treasury_service.py) | Applies trip-level authorization/responsibility policy when linking and synchronizing an expense treasury. |
 | [services/api/app/trips/services/trip_invite_service.py](../services/api/app/trips/services/trip_invite_service.py) | Applies trip invitation recipient/expiry checks and group membership transitions. |
 | [services/api/app/trips/services/vault_service.py](../services/api/app/trips/services/vault_service.py) | Validates stored vault uploads and controls disk-backed file retrieval/deletion under the configured upload directory. |
-| [services/api/docker-entrypoint.sh](../services/api/docker-entrypoint.sh) | Initializes the reference catalog, applies application migrations for a Gunicorn start, then replaces the shell with the requested server/worker command. |
+| [services/api/docker-entrypoint.sh](../services/api/docker-entrypoint.sh) | Initializes the reference catalog and starts the requested command against a separately migrated application schema. |
 | [services/api/gunicorn.conf.py](../services/api/gunicorn.conf.py) | Defines production binding, gevent workers, timeouts, recycling and logging; disables application preload so workers create their own connections. |
 | [services/api/init_travel_db.py](../services/api/init_travel_db.py) | Initializes the maintained reference-catalog schema and validates existing catalog structure, integrity, foreign keys and optional emptiness without loading seed rows. |
 | [services/api/migrations/README](../services/api/migrations/README) | Retains the Alembic template's short single-database configuration note. |
@@ -655,6 +673,8 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [services/api/migrations/versions/b7c8d9e0f1a2_complete_vault_and_place_time_schema.py](../services/api/migrations/versions/b7c8d9e0f1a2_complete_vault_and_place_time_schema.py) | Completes supported vault/place-time schema coverage and validates UUID-native storage. |
 | [services/api/migrations/versions/c30d4e5f6071_partner_agreement.py](../services/api/migrations/versions/c30d4e5f6071_partner_agreement.py) | Adds demo classification and explicit agreement-reading acknowledgment evidence; reading is separate from signature. |
 | [services/api/migrations/versions/c4d5e6f7a8b9_add_chat_tables.py](../services/api/migrations/versions/c4d5e6f7a8b9_add_chat_tables.py) | Preserves legacy chat-table creation, tolerating the complete baseline while rejecting partial incompatible chat schemas. |
+| [services/api/migrations/versions/c62f718293a4_personal_display_currency.py](../services/api/migrations/versions/c62f718293a4_personal_display_currency.py) | Adds a nullable per-user personal dashboard currency preference without choosing a default for existing users. |
+| [services/api/migrations/versions/d73f8293a5b6_friend_contacts.py](../services/api/migrations/versions/d73f8293a5b6_friend_contacts.py) | Adds private saved friends and backfills the original inviter's historical expense recipients. |
 | [services/api/migrations/versions/c9d2e4f6a8b0_add_personal_income_ledger.py](../services/api/migrations/versions/c9d2e4f6a8b0_add_personal_income_ledger.py) | Adds personal income records, their audit history and related personal-ledger indexes. |
 | [services/api/migrations/versions/d41e5f607182_agent_signatures.py](../services/api/migrations/versions/d41e5f607182_agent_signatures.py) | Adds approved-agent signature evidence and receipt fields for the agreement draft workflow. |
 | [services/api/migrations/versions/d4a1c3e8f9b0_add_settlement_and_verification_audit_columns.py](../services/api/migrations/versions/d4a1c3e8f9b0_add_settlement_and_verification_audit_columns.py) | Adds persisted settlement-deletion and account email-verification audit fields. |
@@ -670,6 +690,7 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [services/api/requirements.txt](../services/api/requirements.txt) | Pins the Python API runtime dependencies for Flask, databases, authentication, validation, sockets, workers and external integrations. |
 | [services/api/ruff.toml](../services/api/ruff.toml) | Selects the Python 3.11 syntax/error lint baseline and excludes migration files from ordinary lint checks. |
 | [services/api/run.py](../services/api/run.py) | Starts the native Flask/Socket.IO development server, applies gevent patching before imports, and prepares explicitly enabled source reload behavior. |
+| [services/api/schema_status.py](../services/api/schema_status.py) | Read-only migration graph status and pending change descriptions shared by startup and release tools. |
 | [services/api/schema/tripraft-canonical-schema.sql](../services/api/schema/tripraft-canonical-schema.sql) | Preserves the older seed/reference schema and proposed extensions; it is not the initializer's selected runtime schema. |
 | [services/api/schema/tripraft-global-schema-v2.1.sql](../services/api/schema/tripraft-global-schema-v2.1.sql) | Defines the maintained empty SQLite travel/reference catalog initialized by init_travel_db.py, including geography, place data and full-text structures. |
 | [services/api/tests/conftest.py](../services/api/tests/conftest.py) | Configures a throwaway application database before app imports and provides migrated Flask, CSRF-aware clients, users and trip/expense fixtures. |
@@ -685,6 +706,7 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [services/api/tests/test_endpoint_inventory.py](../services/api/tests/test_endpoint_inventory.py) | Exercises previously fragile registered endpoints covering consent, chat read state, expenses, invitations, account operations and malformed inputs. |
 | [services/api/tests/test_exchange_rates.py](../services/api/tests/test_exchange_rates.py) | Verifies dated read-only rates, supported currency validation, caching, stale fallback and provider-failure behavior. |
 | [services/api/tests/test_expense_group_lifecycle.py](../services/api/tests/test_expense_group_lifecycle.py) | Verifies group ownership/membership, invitations, whole-ledger summaries and financial lifecycle invariants. |
+| [services/api/tests/test_expense_friends.py](../services/api/tests/test_expense_friends.py) | Verifies private contacts, invitation atomicity, nickname search and signup name resolution. |
 | [services/api/tests/test_expense_realtime.py](../services/api/tests/test_expense_realtime.py) | Verifies authenticated devices receive only authorized, committed expense-change notifications and lose access after removal. |
 | [services/api/tests/test_expense_restore.py](../services/api/tests/test_expense_restore.py) | Verifies soft-deleted expenses restore once with their identifiers, splits, balances, history and permissions preserved. |
 | [services/api/tests/test_family_treasury_roles.py](../services/api/tests/test_family_treasury_roles.py) | Verifies linked-treasury ownership, independent trip duties, viewer restrictions, date bounds and rollback on incomplete linking. |
@@ -694,6 +716,8 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [services/api/tests/test_group_planner_tabs.py](../services/api/tests/test_group_planner_tabs.py) | Verifies checklist metadata/assignment and group membership actions for viewer, member and owner roles. |
 | [services/api/tests/test_idempotency.py](../services/api/tests/test_idempotency.py) | Verifies request-key caller/method/path scoping, atomic reservations, replay and duplicate-request handling with an in-memory Redis substitute. |
 | [services/api/tests/test_migration_contract.py](../services/api/tests/test_migration_contract.py) | Verifies fresh schema parity, reversible/data-preserving upgrades, frozen baseline behavior and rejection of unsupported legacy/drifted identifier storage. |
+| [services/api/tests/test_database_release.py](../services/api/tests/test_database_release.py) | Verifies read-only planning, data-preserving upgrades, unknown-history rejection and deployed-commit readiness. |
+| [services/api/tests/test_database_release_postgresql.py](../services/api/tests/test_database_release_postgresql.py) | Tests the real advisory lock and idempotent release runner in a disposable loopback PostgreSQL database. |
 | [services/api/tests/test_money_concurrency.py](../services/api/tests/test_money_concurrency.py) | Verifies concurrent settlements, deletion and edits serialize financial validation and balance changes correctly. |
 | [services/api/tests/test_money_integrity.py](../services/api/tests/test_money_integrity.py) | Verifies split totals, participant/payer rules, edits and ledger/balance reversals retain exact monetary invariants. |
 | [services/api/tests/test_p3_contracts.py](../services/api/tests/test_p3_contracts.py) | Verifies deprecated route forwarding/method rules, configured health versions and JSON-safe activity/notification values. |
@@ -713,3 +737,29 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [services/api/tests/test_trip_invitation_email_link.py](../services/api/tests/test_trip_invitation_email_link.py) | Verifies trip invitation email points to a registered frontend acceptance route. |
 | [services/api/tests/test_uuid_ids.py](../services/api/tests/test_uuid_ids.py) | Verifies UUID field handling and UUID-native API/ORM operations while rejecting legacy integer identifiers. |
 | [services/api/tests/test_websocket_auth.py](../services/api/tests/test_websocket_auth.py) | Verifies Socket.IO authentication, UUID identities, group-room access and presence identifiers. |
+
+## Expense UI and latency additions (2026-10-26)
+
+These entries extend the dated inventory above; existing file descriptions
+remain a record of that earlier review.
+
+| File | Responsibility |
+|---|---|
+| `apps/web/src/features/expenses/jsx/CurrencyAmount.jsx` | Paired converted/source amount presentation with pinned-rate support. |
+| `apps/web/src/features/expenses/css/CurrencyAmount.css` | Responsive paired-money layout. |
+| `apps/web/src/features/expenses/jsx/CurrencyChangeStatus.jsx` | Accessible currency save/conversion feedback. |
+| `apps/web/src/features/expenses/css/CurrencyChangeStatus.css` | Currency animations and reduced-motion styles. |
+| `apps/web/src/__tests__/currencyChangeStatus.test.jsx` | Currency progress/error/completion regressions. |
+| `apps/web/src/__tests__/expenseCurrencyLayout.test.jsx` | Paired currencies and source-unit regressions across the expense views. |
+| `services/api/tests/expense_workflow_benchmark.py` | Opt-in isolated local API timing/SQL-count benchmark. |
+| `infra/tools/render_expense_latency_report.py` | Generates the interactive timing table from benchmark JSON. |
+| `docs/operations/expense-latency.html` | Self-contained filterable local workflow timing evidence. |
+| `docs/archive/reports/expense-ui-latency-2026-10-26.md` | UI changes, performance measurements, verification and limits. |
+| `docs/plans/expenses/README.md` | Index and status of the proposed expense feature backlog. |
+| `docs/plans/expenses/ranked-feature-backlog.md` | Combined ranked 60-item proposed backlog. |
+| `docs/plans/expenses/advanced-concepts.md` | Advanced expense/travel concepts with examples and possible first versions. |
+| `apps/web/src/__tests__/expenseReadLatency.test.jsx` | Verifies single-layer expense retries, deferred group reads and live-owned focus refresh. |
+| `apps/web/src/__tests__/groupCurrencyProgress.test.jsx` | Verifies currency saving, pending conversion, failure and retry in group settings. |
+| `services/api/app/core/db/cooperative.py` | Enables cooperative psycopg2 waits in gevent workers before PostgreSQL connections open. |
+| `services/api/tests/test_cooperative_database.py` | Verifies concurrent work during database waits and callback setup and preservation. |
+| `docs/archive/reports/expense-browser-delay-fix-2026-10-26.md` | Records browser HAR findings, expense delay fixes and scoped timing evidence. |

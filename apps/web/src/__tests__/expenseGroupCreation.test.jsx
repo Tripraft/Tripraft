@@ -3,6 +3,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import GroupManager from '../features/expenses/jsx/GroupManager';
 import expenseApi from '../services/expenseApi';
+jest.mock('../features/expenses/jsx/ExpenseFriendPicker', () => () => null);
 
 jest.mock('../services/sqlAuthService', () => ({
   __esModule: true,
@@ -36,7 +37,7 @@ it('submits only group fields accepted by the authenticated API', async () => {
   submit();
   await waitFor(() => expect(showAlert).toHaveBeenCalledWith('Group created successfully!'));
   expect(fetch).toHaveBeenCalledTimes(1);
-  expect(fetch.mock.calls[0][0]).toMatch(/\/expenses\/groups$/);
+  expect(fetch.mock.calls[0][0]).toMatch(/\/expenses\/groups\?compact=true$/);
   expect(fetch.mock.calls[0][1]).toMatchObject({ method: 'POST', credentials: 'include' });
   expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
     name: 'Weekend trip', description: 'Created by Owner', currency: 'USD',

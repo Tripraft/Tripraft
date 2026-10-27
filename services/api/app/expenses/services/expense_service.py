@@ -22,6 +22,7 @@ from app.core.config import Config
 from app.core.exceptions import AppError
 from app.expenses.services.group_access import access, preserve_former_member_balances
 from app.expenses.services.money_lock import lock_group, lock_money_record
+from app.expenses.services.ledger_math import member_balances
 from sqlalchemy import update
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -37,6 +38,7 @@ class SplitValidationError(ValueError):
 
 class ExpenseServiceSQL:
     """Service for expense operations using SQL database"""
+    error_type = SplitValidationError
     
     @staticmethod
     def create_expense(
@@ -51,7 +53,8 @@ class ExpenseServiceSQL:
         expense_date: Optional[str] = None,
         notes: Optional[str] = None,
         receipt_url: Optional[str] = None,
-        currency: str = 'USD'
+        currency: Optional[str] = None,
+        split_details: Optional[Dict] = None,
     ) -> Tuple[bool, Dict[str, Any]]:
         """
         Create a new expense (personal or group)
@@ -80,13 +83,13 @@ class ExpenseServiceSQL:
                 group_id = ExpenseServiceSQL._identifier(group_id)
             amount = ExpenseServiceSQL._positive_money(amount)
             ExpenseServiceSQL._validate_text(description, category, notes)
-            currency = ExpenseServiceSQL._currency(currency)
+            currency = ExpenseServiceSQL._currency(currency) if currency else None
             with get_db_session() as session:
                 # For personal expenses (no group)
                 if group_id is None:
                     return ExpenseServiceSQL._create_personal_expense(
                         session, user_id, description, amount, paid_by,
-                        category, expense_date, notes, receipt_url, currency
+                        category, expense_date, notes, receipt_url, currency or 'USD'
                     )
                 
                 # For group expenses
@@ -120,6 +123,9 @@ class ExpenseServiceSQL:
                 # Get group currency
                 exp_date = ExpenseServiceSQL._parse_expense_date(expense_date)
                 
+                # Refunds are negative ledger entries, reducing spend and reversing debts.
+                if split_type.lower() == 'reimbursement':
+                    amount = -amount
                 # Create expense
                 expense = Expense(
                     group_id=group_id,
@@ -139,11 +145,18 @@ class ExpenseServiceSQL:
                 
                 # Calculate and create splits
                 expense_splits = ExpenseServiceSQL._calculate_splits(
-                    session, group_id, expense.id, amount, paid_by, split_type, splits
+                    session, group_id, expense.id, amount, paid_by, split_type, splits, split_details
                 )
+                from app.expenses.services.expense_conversion import convert_allocations
+                expense.amount, expense.original = convert_allocations(
+                    ExpenseServiceSQL, expense_splits, amount, currency or group.currency,
+                    group.currency, split_type.lower(), ExpenseServiceSQL._split_details(split_type, splits, split_details),
+                )
+                amount = expense.amount
                 
                 if not expense_splits:
                     return False, {'error': 'Failed to calculate splits'}
+                expense.split_details = ExpenseServiceSQL._split_details(split_type, splits, split_details)
                 
                 for split in expense_splits:
                     session.add(split)
@@ -171,21 +184,11 @@ class ExpenseServiceSQL:
                 # Update group timestamp
                 group.updated_at = datetime.now(timezone.utc)
                 
+                session.flush()
+                result = {'expense': ExpenseServiceSQL._get_expense_dict(session, expense),
+                          'balances': member_balances(session, group)}
                 session.commit()
-                session.refresh(expense)
-                
-                logger.info(f"Expense created: {expense.id} in group {group_id}")
-                
-                # Get updated balances for instant UI update
-                from app.expenses.services.settlement_service import \
-                    settlement_service_sql
-                balances_success, balances_result = settlement_service_sql.get_group_balances(group_id, user_id)
-                
-                # Return full expense data with balances
-                result = {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
-                if balances_success:
-                    result['balances'] = balances_result.get('balances', [])
-                
+                logger.info('Expense created: %s in group %s', result['expense']['id'], group_id)
                 return True, result
                 
         except SplitValidationError as exc:
@@ -256,12 +259,10 @@ class ExpenseServiceSQL:
             )
             session.add(history)
             
+            result = {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
             session.commit()
-            session.refresh(expense)
-            
-            logger.info(f"Personal expense created: {expense.id}")
-            
-            return True, {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
+            logger.info('Personal expense created: %s', result['expense']['id'])
+            return True, result
             
         except SplitValidationError as exc:
             logger.info('Rejected invalid personal expense: %s', exc)
@@ -280,7 +281,8 @@ class ExpenseServiceSQL:
         amount: Decimal,
         paid_by: str,
         split_type: str,
-        splits: Optional[List[Dict]]
+        splits: Optional[List[Dict]],
+        split_details: Optional[Dict] = None,
     ) -> List[ExpenseSplit]:
         """Calculate a valid, zero-sum set of cent-accurate expense splits.
 
@@ -297,6 +299,8 @@ class ExpenseServiceSQL:
         member_ids = {str(member.user_id): member.user_id for member in members}
         split_type_lower = (split_type or '').lower()
         total = ExpenseServiceSQL._money(amount, 'Expense amount')
+        if split_type_lower == 'reimbursement':
+            total = abs(total)
 
         if total <= 0:
             raise SplitValidationError('Expense amount must be positive')
@@ -325,6 +329,11 @@ class ExpenseServiceSQL:
             return result_splits
 
         entries = ExpenseServiceSQL._validated_split_entries(splits, member_ids)
+        if split_type_lower in {'adjustment', 'reimbursement', 'itemized'}:
+            from app.expenses.services.split_methods import advanced_split
+            amounts = advanced_split(ExpenseServiceSQL, split_type_lower, total, entries, split_details)
+            return [ExpenseSplit(expense_id=expense_id, user_id=entry['user_id'], amount=value)
+                    for entry, value in zip(entries, amounts)]
         if split_type_lower == 'exact':
             amounts = [ExpenseServiceSQL._money(entry.get('amount'), 'Split amount')
                        for entry in entries]
@@ -395,6 +404,21 @@ class ExpenseServiceSQL:
         for index in order[:remaining]:
             amounts[index] += _CENT
         return amounts
+
+    @staticmethod
+    def _split_details(kind, splits, details):
+        if kind.lower() == 'adjustment':
+            return {'adjustments': {str(e['user_id']): str(e.get('adjustment', 0)) for e in (splits or [])}}
+        if kind.lower() == 'itemized':
+            # Persist JSON-safe data only, with a bounded document size.
+            try:
+                encoded = json.dumps(details)
+            except (TypeError, ValueError):
+                raise SplitValidationError('Bill details must be JSON data') from None
+            if len(encoded) > 100000:
+                raise SplitValidationError('Bill details are too large')
+            return json.loads(encoded)
+        return None
 
     @staticmethod
     def _validated_split_entries(splits, active_members):
@@ -716,6 +740,7 @@ class ExpenseServiceSQL:
         notes: Optional[str] = _UNSET,
         receipt_url: Optional[str] = _UNSET,
         currency: Optional[str] = _UNSET,
+        split_details: Optional[Dict] = _UNSET,
     ) -> Tuple[bool, Dict[str, Any]]:
         """
         Update an expense (personal or group)
@@ -790,8 +815,9 @@ class ExpenseServiceSQL:
                             changed_by=user_id, changes_json=changes,
                             before_snapshot=before, after_snapshot=expense.to_dict(),
                         ))
-                        session.commit()
-                    return True, {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
+                    result = {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
+                    session.commit()
+                    return True, result
 
                 # Always reauthorize against the active group, including former members.
                 group, member = access(session, expense.group_id, user_id)
@@ -803,9 +829,6 @@ class ExpenseServiceSQL:
                 if not is_group_owner and not is_expense_creator:
                     return False, {'error': 'You can only edit expenses you created', 'status_code': 403}
                 
-                if currency is not _UNSET and currency != expense.currency:
-                    raise SplitValidationError('Group expense currency must match the group currency')
-
                 # Capture the complete old ledger before validating the
                 # replacement.  Validation happens before reversal, so an
                 # invalid edit never leaves a partially-mutated balance.
@@ -839,8 +862,28 @@ class ExpenseServiceSQL:
                 )
                 desired_payer = paid_by if paid_by is not None else old_paid_by
                 desired_split_type = (split_type or old_split_type).lower()
-                if desired_split_type not in {'equal', 'exact', 'percentage', 'shares'}:
+                desired_amount = abs(desired_amount) * (-1 if desired_split_type == 'reimbursement' else 1)
+                if desired_split_type not in {'equal', 'exact', 'percentage', 'shares', 'adjustment', 'reimbursement', 'itemized'}:
                     raise SplitValidationError('Unsupported split type')
+
+                converted_splits = None
+                next_original = expense.original
+                if currency is not _UNSET and currency != group.currency:
+                    if amount is None:
+                        raise SplitValidationError('Source amount is required with a different currency')
+                    converted_splits = ExpenseServiceSQL._calculate_splits(
+                        session, expense.group_id, expense_id, desired_amount,
+                        desired_payer, desired_split_type, splits,
+                        expense.split_details if split_details is _UNSET else split_details,
+                    )
+                    from app.expenses.services.expense_conversion import convert_allocations
+                    desired_amount, next_original = convert_allocations(
+                        ExpenseServiceSQL, converted_splits, desired_amount, currency, group.currency,
+                        desired_split_type, ExpenseServiceSQL._split_details(desired_split_type, splits,
+                            expense.split_details if split_details is _UNSET else split_details),
+                    )
+                elif amount is not None or splits is not None:
+                    next_original = None
 
                 payer_member = session.query(GroupMember).filter(
                     GroupMember.group_id == expense.group_id,
@@ -856,10 +899,15 @@ class ExpenseServiceSQL:
                 amount_changed = desired_amount != old_amount
                 split_type_changed = desired_split_type != old_split_type
                 replace_splits = splits is not None or split_type_changed or amount_changed
-                if splits is not None:
+                if split_details is not _UNSET and splits is None:
+                    raise SplitValidationError('Splits are required when changing bill details')
+                if converted_splits is not None:
+                    new_splits = converted_splits
+                elif splits is not None:
                     new_splits = ExpenseServiceSQL._calculate_splits(
                         session, expense.group_id, expense_id, desired_amount,
                         desired_payer, desired_split_type, splits,
+                        expense.split_details if split_details is _UNSET else split_details,
                     )
                 elif desired_split_type == 'equal' and replace_splits:
                     # An equal split can safely recalculate its existing
@@ -882,6 +930,15 @@ class ExpenseServiceSQL:
                     new_splits = old_splits
 
                 changes = []
+                if next_original != expense.original:
+                    changes.append({'field': 'original', 'old': expense.original, 'new': next_original})
+                    expense.original = next_original
+                if replace_splits:
+                    details = ExpenseServiceSQL._split_details(desired_split_type, splits,
+                        expense.split_details if split_details is _UNSET else split_details)
+                    if details != expense.split_details:
+                        changes.append({'field': 'split_details', 'old': expense.split_details, 'new': details})
+                    expense.split_details = details
                 if description is not None:
                     new_desc = description.strip()
                     if new_desc != old_description:
@@ -968,21 +1025,10 @@ class ExpenseServiceSQL:
                 )
                 session.add(history)
                 
+                session.flush()
+                result = {'expense': ExpenseServiceSQL._get_expense_dict(session, expense),
+                          'balances': member_balances(session, group)}
                 session.commit()
-                session.refresh(expense)
-                
-                # Get updated balances for instant UI update
-                from app.expenses.services.settlement_service import \
-                    settlement_service_sql
-                balances_success, balances_result = settlement_service_sql.get_group_balances(expense.group_id, user_id)
-                
-                logger.info(f"Update expense {expense.id}: balances_success={balances_success}, balances_count={len(balances_result.get('balances', [])) if balances_success else 0}")
-                
-                result = {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
-                if balances_success:
-                    result['balances'] = balances_result.get('balances', [])
-                    logger.info(f"Returning balances: {result['balances']}")
-                
                 return True, result
                 
         except SplitValidationError as exc:
@@ -1024,14 +1070,16 @@ class ExpenseServiceSQL:
     @staticmethod
     def delete_expense(
         expense_id: str, user_id: str, expected_group_id: Optional[str] = None,
+        *, permanent: bool = False,
     ) -> Tuple[bool, Dict[str, Any]]:
         """
-        Delete an expense (soft delete) - personal or group
+        Soft-delete an expense, or explicitly remove a previously deleted one.
         
         Args:
             expense_id: Expense ID
             user_id: Requesting user ID
             expected_group_id: Optional ledger scope for a linked-trip action
+            permanent: Remove the deleted expense, splits and history permanently
             
         Returns:
             Tuple of (success, message/error)
@@ -1042,8 +1090,8 @@ class ExpenseServiceSQL:
             with get_db_session() as session:
                 expense = lock_money_record(session, Expense, expense_id)
                 
-                if not expense or expense.is_deleted:
-                    return False, {'error': 'Expense not found'}
+                if not expense:
+                    return False, {'error': 'Expense not found', 'status_code': 404}
 
                 # Validate the confirmed ledger scope while holding the money
                 # lock, before permissions, balances or deletion are changed.
@@ -1054,7 +1102,7 @@ class ExpenseServiceSQL:
                 if expense.group_id is None:
                     # Personal expense - only creator can delete
                     if expense.created_by != user_id:
-                        return False, {'error': 'You can only delete your own personal expenses'}
+                        return False, {'error': 'You can only delete your own personal expenses', 'status_code': 403}
                 else:
                     group, member = access(session, expense.group_id, user_id)
                     require_contributor(member)
@@ -1064,6 +1112,19 @@ class ExpenseServiceSQL:
                     
                     if not is_group_owner and not is_expense_creator:
                         return False, {'error': 'You can only delete expenses you created', 'status_code': 403}
+
+                # Permanent removal is explicit: retrying a soft delete must
+                # never erase a recoverable transaction or reverse money twice.
+                if permanent:
+                    if not expense.is_deleted:
+                        return False, {'error': 'Delete the expense before permanently removing it', 'status_code': 409}
+                    session.delete(expense)
+                    session.commit()
+                    return True, {'message': 'Transaction permanently deleted', 'permanently_deleted': True}
+                if expense.is_deleted:
+                    return True, {'message': 'Expense already deleted'}
+
+                if expense.group_id is not None:
                     
                     # Reverse balances for group expenses
                     old_splits = session.query(ExpenseSplit).filter(
@@ -1100,19 +1161,12 @@ class ExpenseServiceSQL:
                 )
                 session.add(history)
                 
-                session.commit()
-                
-                logger.info(f"Expense deleted: {expense_id}")
-                
-                # Get updated balances for instant UI update if group expense
+                session.flush()
                 result = {'message': 'Expense deleted successfully'}
                 if group_id_for_balances:
-                    from app.expenses.services.settlement_service import \
-                        settlement_service_sql
-                    balances_success, balances_result = settlement_service_sql.get_group_balances(group_id_for_balances, user_id)
-                    if balances_success:
-                        result['balances'] = balances_result.get('balances', [])
-                
+                    result['balances'] = member_balances(session, group)
+                session.commit()
+                logger.info('Expense deleted: %s', expense_id)
                 return True, result
                 
         except AppError as exc:

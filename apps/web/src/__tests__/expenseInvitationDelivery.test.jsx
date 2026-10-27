@@ -3,6 +3,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import GroupManager from '../features/expenses/jsx/GroupManager';
 import expenseApi from '../services/expenseApi';
+jest.mock('../features/expenses/jsx/ExpenseFriendPicker', () => () => null);
 
 jest.mock('../services/expenseApi', () => ({
   __esModule: true,
@@ -17,10 +18,10 @@ const invitation = {
   invited_by: 'owner-uuid',
 };
 
-function setup(pendingInvitations = []) {
+function setup(pendingInvitations = [], role = 'member') {
   const showAlert = jest.fn();
   render(<GroupManager groups={[]} activeGroupId="group-uuid" members={[]}
-    activeGroup={{ id: 'group-uuid', name: 'Trip', created_by: 'actual-owner', my_role: 'member' }}
+    activeGroup={{ id: 'group-uuid', name: 'Trip', created_by: 'actual-owner', my_role: role }}
     currentUser={{ uid: 'owner-uuid' }} showAlert={showAlert}
     pendingInvitationsFromParent={pendingInvitations} usingMegaBootstrap />);
   return showAlert;
@@ -40,9 +41,9 @@ it('honors the backend expiry flag instead of exposing an invalid copy link', ()
 });
 
 it.each([
-  ['disabled', 'Invitation created.'],
-  ['failed', 'Invitation created.'],
-  ['queued', 'Invitation created.'],
+  ['disabled', 'Email delivery is unavailable. You can copy the invite link.'],
+  ['failed', 'Email could not be sent. Try again shortly or copy the invite link.'],
+  ['queued', 'Invitation email queued.'],
   ['sent', 'Invitation email sent.'],
 ])('offers copying after %s delivery without a persistent delivery message or URL box', async (email_status, text) => {
   expenseApi.sendInvitation.mockResolvedValue({ success: true, data: { invitation, email_status, invitation_link: link } });
@@ -54,8 +55,19 @@ it.each([
   expect(screen.queryByLabelText('Invitation link')).toBeNull();
   expect(screen.queryByText(/Email was not sent/)).toBeNull();
   expect(showAlert).toHaveBeenCalledWith(text);
-  expect(expenseApi.getGroupInvitations).toHaveBeenCalledWith('group-uuid', expect.any(Number));
+  expect(expenseApi.getGroupInvitations).not.toHaveBeenCalled();
   if (email_status !== 'sent') expect(showAlert).not.toHaveBeenCalledWith(expect.stringContaining('Invitation email sent'));
+});
+
+it('reuses a pending invitation when the same email is submitted again', async () => {
+  expenseApi.resendInvitation.mockResolvedValue({ success: true, data: { invitation, email_status: 'queued' } });
+  const showAlert = setup([invitation]);
+  fireEvent.change(screen.getByPlaceholderText('Email address to invite...'), { target: { value: 'FRIEND@example.test' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Invite Member' }));
+  await waitFor(() => expect(showAlert).toHaveBeenCalledWith('Invitation email queued.'));
+  expect(expenseApi.resendInvitation).toHaveBeenCalledWith('invite-uuid');
+  expect(expenseApi.sendInvitation).not.toHaveBeenCalled();
+  expect(expenseApi.getGroupInvitations).not.toHaveBeenCalled();
 });
 
 it('can copy an existing pending invitation without creating or sending another', async () => {
@@ -111,4 +123,41 @@ it('lets the inviter cancel with confirmation and removes the unusable link', as
   fireEvent.click(screen.getByText('Confirm'));
   await waitFor(() => expect(screen.queryByRole('button', { name: 'Copy invite link' })).toBeNull());
   expect(expenseApi.cancelInvitation).toHaveBeenCalledWith('invite-uuid');
+});
+
+it('keeps an invitation visible when cancellation fails, then allows retry', async () => {
+  expenseApi.cancelInvitation.mockRejectedValueOnce(new Error('Unable to connect')).mockResolvedValueOnce({ success: true });
+  setup([invitation]);
+  fireEvent.click(screen.getByRole('button', { name: /Pending/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel invitation' }));
+  fireEvent.click(screen.getByText('Confirm'));
+  expect(await screen.findByRole('alert')).toHaveTextContent('Unable to connect');
+  expect(screen.getByRole('button', { name: 'Copy invite link' })).toBeInTheDocument();
+  fireEvent.click(screen.getByText('Confirm'));
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Copy invite link' })).toBeNull());
+  expect(expenseApi.cancelInvitation).toHaveBeenCalledTimes(2);
+});
+
+it('issues an invitation again to the same recipient after cancellation', async () => {
+  expenseApi.cancelInvitation.mockResolvedValue({ success: true });
+  expenseApi.sendInvitation.mockResolvedValue({ data: { invitation, email_status: 'queued' } });
+  const showAlert = setup([invitation]);
+  fireEvent.click(screen.getByRole('button', { name: /Pending/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel invitation' }));
+  fireEvent.click(screen.getByText('Confirm'));
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Copy invite link' })).toBeNull());
+  fireEvent.change(screen.getByPlaceholderText('Email address to invite...'), { target: { value: 'friend@example.test' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Invite Member' }));
+  await waitFor(() => expect(showAlert).toHaveBeenCalledWith('Invitation email queued.'));
+  expect(expenseApi.sendInvitation).toHaveBeenCalledTimes(1);
+  expect(expenseApi.resendInvitation).not.toHaveBeenCalled();
+  expect(screen.getByRole('button', { name: 'Copy invite link' })).toBeInTheDocument();
+});
+
+it('hides invite, resend and cancellation actions after the inviter becomes a viewer', () => {
+  setup([invitation], 'viewer');
+  fireEvent.click(screen.getByRole('button', { name: /Pending/ }));
+  expect(screen.queryByRole('button', { name: 'Invite Member' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Resend email' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Cancel invitation' })).toBeNull();
 });

@@ -231,6 +231,8 @@ def _register_blueprints(app):
     app.register_blueprint(employees_bp)
     from app.expenses.routes.currencies import currencies_bp
     app.register_blueprint(currencies_bp)
+    from app.expenses.routes.friends import friends_bp
+    app.register_blueprint(friends_bp)
     api_prefix = app.config.get("API_PREFIX", "/api/v1")
 
     # --- Health ---

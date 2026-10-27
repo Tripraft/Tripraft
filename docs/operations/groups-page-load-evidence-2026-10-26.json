@@ -1,0 +1,1068 @@
+{
+  "environment": "Local gevent server, configured remote development PostgreSQL, same account/group; no browser metrics",
+  "baseline_ref": "c00e267",
+  "http_serial": {
+    "before": {
+      "groups": [
+        {
+          "status": 200,
+          "total_ms": 1339.568,
+          "ttfb_ms": 1339.454,
+          "download_ms": 0.114,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        },
+        {
+          "status": 200,
+          "total_ms": 1299.052,
+          "ttfb_ms": 1298.936,
+          "download_ms": 0.116,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        },
+        {
+          "status": 200,
+          "total_ms": 1315.099,
+          "ttfb_ms": 1315.031,
+          "download_ms": 0.068,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        }
+      ],
+      "invitations": [
+        {
+          "status": 200,
+          "total_ms": 771.233,
+          "ttfb_ms": 771.168,
+          "download_ms": 0.065,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        },
+        {
+          "status": 200,
+          "total_ms": 807.338,
+          "ttfb_ms": 807.251,
+          "download_ms": 0.087,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        },
+        {
+          "status": 200,
+          "total_ms": 866.005,
+          "ttfb_ms": 865.823,
+          "download_ms": 0.182,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        }
+      ],
+      "full": [
+        {
+          "status": 200,
+          "total_ms": 2314.737,
+          "ttfb_ms": 2314.293,
+          "download_ms": 0.444,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        },
+        {
+          "status": 200,
+          "total_ms": 2307.774,
+          "ttfb_ms": 2307.25,
+          "download_ms": 0.524,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        },
+        {
+          "status": 200,
+          "total_ms": 2247.902,
+          "ttfb_ms": 2247.517,
+          "download_ms": 0.385,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        }
+      ]
+    },
+    "after": {
+      "groups": [
+        {
+          "status": 200,
+          "total_ms": 1346.835,
+          "ttfb_ms": 1346.769,
+          "download_ms": 0.066,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        },
+        {
+          "status": 200,
+          "total_ms": 1304.36,
+          "ttfb_ms": 1304.258,
+          "download_ms": 0.102,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        },
+        {
+          "status": 200,
+          "total_ms": 1204.26,
+          "ttfb_ms": 1204.11,
+          "download_ms": 0.15,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        }
+      ],
+      "invitations": [
+        {
+          "status": 200,
+          "total_ms": 786.333,
+          "ttfb_ms": 786.18,
+          "download_ms": 0.153,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        },
+        {
+          "status": 200,
+          "total_ms": 812.957,
+          "ttfb_ms": 812.865,
+          "download_ms": 0.092,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        },
+        {
+          "status": 200,
+          "total_ms": 676.521,
+          "ttfb_ms": 676.44,
+          "download_ms": 0.081,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        }
+      ],
+      "full": [
+        {
+          "status": 200,
+          "total_ms": 1593.769,
+          "ttfb_ms": 1593.205,
+          "download_ms": 0.564,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        },
+        {
+          "status": 200,
+          "total_ms": 2214.795,
+          "ttfb_ms": 2214.351,
+          "download_ms": 0.444,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        },
+        {
+          "status": 200,
+          "total_ms": 1223.923,
+          "ttfb_ms": 1222.519,
+          "download_ms": 1.404,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        }
+      ]
+    }
+  },
+  "http_parallel": {
+    "before": {
+      "invitations": [
+        {
+          "status": 200,
+          "total_ms": 2440.108,
+          "ttfb_ms": 2439.972,
+          "download_ms": 0.136,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        },
+        {
+          "status": 200,
+          "total_ms": 816.153,
+          "ttfb_ms": 816.055,
+          "download_ms": 0.098,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        },
+        {
+          "status": 200,
+          "total_ms": 768.265,
+          "ttfb_ms": 768.206,
+          "download_ms": 0.059,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        }
+      ],
+      "groups": [
+        {
+          "status": 200,
+          "total_ms": 2942.75,
+          "ttfb_ms": 2942.588,
+          "download_ms": 0.162,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        },
+        {
+          "status": 200,
+          "total_ms": 1410.502,
+          "ttfb_ms": 1410.03,
+          "download_ms": 0.472,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        },
+        {
+          "status": 200,
+          "total_ms": 1344.834,
+          "ttfb_ms": 1344.747,
+          "download_ms": 0.087,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        }
+      ],
+      "full": [
+        {
+          "status": 200,
+          "total_ms": 3646.528,
+          "ttfb_ms": 3645.59,
+          "download_ms": 0.938,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        },
+        {
+          "status": 200,
+          "total_ms": 1875.906,
+          "ttfb_ms": 1875.373,
+          "download_ms": 0.533,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        },
+        {
+          "status": 200,
+          "total_ms": 1962.779,
+          "ttfb_ms": 1962.16,
+          "download_ms": 0.619,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        }
+      ]
+    },
+    "after": {
+      "invitations": [
+        {
+          "status": 200,
+          "total_ms": 729.705,
+          "ttfb_ms": 729.585,
+          "download_ms": 0.12,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        },
+        {
+          "status": 200,
+          "total_ms": 747.206,
+          "ttfb_ms": 747.117,
+          "download_ms": 0.089,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        },
+        {
+          "status": 200,
+          "total_ms": 879.893,
+          "ttfb_ms": 879.809,
+          "download_ms": 0.084,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        }
+      ],
+      "groups": [
+        {
+          "status": 200,
+          "total_ms": 1036.944,
+          "ttfb_ms": 1036.795,
+          "download_ms": 0.149,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        },
+        {
+          "status": 200,
+          "total_ms": 1355.751,
+          "ttfb_ms": 1355.588,
+          "download_ms": 0.163,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        },
+        {
+          "status": 200,
+          "total_ms": 1200.161,
+          "ttfb_ms": 1200.073,
+          "download_ms": 0.088,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        }
+      ],
+      "full": [
+        {
+          "status": 200,
+          "total_ms": 1412.118,
+          "ttfb_ms": 1411.524,
+          "download_ms": 0.594,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        },
+        {
+          "status": 200,
+          "total_ms": 1355.766,
+          "ttfb_ms": 1355.407,
+          "download_ms": 0.359,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        },
+        {
+          "status": 200,
+          "total_ms": 1379.177,
+          "ttfb_ms": 1378.834,
+          "download_ms": 0.343,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        }
+      ]
+    }
+  },
+  "services": {
+    "groups": {
+      "before": [
+        {
+          "service_ms": 3676.537,
+          "sql_count": 8,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        },
+        {
+          "service_ms": 1044.488,
+          "sql_count": 8,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        },
+        {
+          "service_ms": 2009.218,
+          "sql_count": 8,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        }
+      ],
+      "after": [
+        {
+          "service_ms": 2327.528,
+          "sql_count": 5,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        },
+        {
+          "service_ms": 1291.138,
+          "sql_count": 5,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        },
+        {
+          "service_ms": 1502.459,
+          "sql_count": 5,
+          "sha256": "6f81f37a787dc5dac3f5f7ab4c8ca7180c0fd2d58c47a8c98ee486032a4d7def"
+        }
+      ]
+    },
+    "invitations": {
+      "before": [
+        {
+          "service_ms": 701.694,
+          "sql_count": 2,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        },
+        {
+          "service_ms": 407.14,
+          "sql_count": 2,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        },
+        {
+          "service_ms": 432.189,
+          "sql_count": 2,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        }
+      ],
+      "after": [
+        {
+          "service_ms": 369.289,
+          "sql_count": 1,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        },
+        {
+          "service_ms": 355.743,
+          "sql_count": 1,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        },
+        {
+          "service_ms": 381.73,
+          "sql_count": 1,
+          "sha256": "2c1b924bf14f60e0125a6eafb18bbbf7d43248870983efa2e35580f7f243b199"
+        }
+      ]
+    },
+    "full": {
+      "before": [
+        {
+          "service_ms": 1559.517,
+          "sql_count": 14,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        },
+        {
+          "service_ms": 1947.182,
+          "sql_count": 14,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        },
+        {
+          "service_ms": 2269.385,
+          "sql_count": 14,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        }
+      ],
+      "after": [
+        {
+          "service_ms": 1680.483,
+          "sql_count": 7,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        },
+        {
+          "service_ms": 1068.299,
+          "sql_count": 7,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        },
+        {
+          "service_ms": 1038.553,
+          "sql_count": 7,
+          "sha256": "2d29362e6e087e3ff37ceb829037b20b95ca474bd75d633f1c080bf2e3f27704"
+        }
+      ]
+    }
+  },
+  "plans": {
+    "groups": {
+      "slowest_query": "SELECT groups.id AS groups_id, groups.name AS groups_name, groups.description AS groups_description, groups.currency AS groups_currency, groups.display_currency AS groups_display_currency, groups.budget_minor AS groups_budget_minor, groups.start_date AS groups_start_date, groups.end_date AS groups_end_date, groups.created_by AS groups_created_by, groups.group_code AS groups_group_code, groups.category AS groups_category, groups.image_url AS groups_image_url, groups.is_active AS groups_is_active, groups.created_at AS groups_created_at, groups.updated_at AS groups_updated_at, group_members.id AS group_members_id, group_members.group_id AS group_members_group_id, group_members.user_id AS group_members_user_id, group_members.role AS group_members_role, group_members.is_active AS group_members_is_active, group_members.joined_at AS group_members_joined_at, group_members.removed_at AS group_members_removed_at, group_members.removed_by AS group_members_removed_by, users_1.id AS users_1_id, users_1.email AS users_1_email, users_1.password_hash AS users_1_password_hash, users_1.password_reset_version AS users_1_password_reset_version, users_1.display_name AS users_1_display_name, users_1.photo_url AS users_1_photo_url, users_1.phone AS users_1_phone, users_1.default_currency AS users_1_default_currency, users_1.personal_display_currency AS users_1_personal_display_currency, users_1.is_active AS users_1_is_active, users_1.email_verified AS users_1_email_verified, users_1.portal_kind AS users_1_portal_kind, users_1.email_verified_at AS users_1_email_verified_at, users_1.created_at AS users_1_created_at, users_1.updated_at AS users_1_updated_at, users_1.last_login AS users_1_last_login \nFROM groups JOIN group_members ON group_members.group_id = groups.id LEFT OUTER JOIN users AS users_1 ON users_1.id = groups.created_by \nWHERE group_members.user_id = %(user_id_1)s::UUID AND group_members.is_active IS true AND groups.is_active IS true ORDER BY groups.updated_at DESC, groups.id DESC",
+      "explain": [
+        {
+          "Plan": {
+            "Node Type": "Sort",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 5.16,
+            "Total Cost": 5.16,
+            "Plan Rows": 1,
+            "Plan Width": 2312,
+            "Actual Startup Time": 0.041,
+            "Actual Total Time": 0.042,
+            "Actual Rows": 1,
+            "Actual Loops": 1,
+            "Sort Key": [
+              "groups.updated_at DESC",
+              "groups.id DESC"
+            ],
+            "Sort Method": "quicksort",
+            "Sort Space Used": 25,
+            "Sort Space Type": "Memory",
+            "Shared Hit Blocks": 6,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Nested Loop",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Join Type": "Left",
+                "Startup Cost": 0.43,
+                "Total Cost": 5.15,
+                "Plan Rows": 1,
+                "Plan Width": 2312,
+                "Actual Startup Time": 0.029,
+                "Actual Total Time": 0.031,
+                "Actual Rows": 1,
+                "Actual Loops": 1,
+                "Inner Unique": true,
+                "Shared Hit Blocks": 6,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Nested Loop",
+                    "Parent Relationship": "Outer",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Join Type": "Inner",
+                    "Startup Cost": 0.29,
+                    "Total Cost": 4.79,
+                    "Plan Rows": 1,
+                    "Plan Width": 694,
+                    "Actual Startup Time": 0.022,
+                    "Actual Total Time": 0.023,
+                    "Actual Rows": 1,
+                    "Actual Loops": 1,
+                    "Inner Unique": true,
+                    "Shared Hit Blocks": 4,
+                    "Shared Read Blocks": 0,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0,
+                    "Plans": [
+                      {
+                        "Node Type": "Index Scan",
+                        "Parent Relationship": "Outer",
+                        "Parallel Aware": false,
+                        "Async Capable": false,
+                        "Scan Direction": "Forward",
+                        "Index Name": "idx_group_members_user",
+                        "Relation Name": "group_members",
+                        "Alias": "group_members",
+                        "Startup Cost": 0.15,
+                        "Total Cost": 2.37,
+                        "Plan Rows": 1,
+                        "Plan Width": 139,
+                        "Actual Startup Time": 0.009,
+                        "Actual Total Time": 0.009,
+                        "Actual Rows": 1,
+                        "Actual Loops": 1,
+                        "Index Cond": "((user_id = '<uuid>'::uuid) AND (is_active = true))",
+                        "Rows Removed by Index Recheck": 0,
+                        "Shared Hit Blocks": 2,
+                        "Shared Read Blocks": 0,
+                        "Shared Dirtied Blocks": 0,
+                        "Shared Written Blocks": 0,
+                        "Local Hit Blocks": 0,
+                        "Local Read Blocks": 0,
+                        "Local Dirtied Blocks": 0,
+                        "Local Written Blocks": 0,
+                        "Temp Read Blocks": 0,
+                        "Temp Written Blocks": 0
+                      },
+                      {
+                        "Node Type": "Index Scan",
+                        "Parent Relationship": "Inner",
+                        "Parallel Aware": false,
+                        "Async Capable": false,
+                        "Scan Direction": "Forward",
+                        "Index Name": "groups_pkey",
+                        "Relation Name": "groups",
+                        "Alias": "groups",
+                        "Startup Cost": 0.14,
+                        "Total Cost": 2.36,
+                        "Plan Rows": 1,
+                        "Plan Width": 555,
+                        "Actual Startup Time": 0.008,
+                        "Actual Total Time": 0.008,
+                        "Actual Rows": 1,
+                        "Actual Loops": 1,
+                        "Index Cond": "(id = group_members.group_id)",
+                        "Rows Removed by Index Recheck": 0,
+                        "Filter": "(is_active IS TRUE)",
+                        "Rows Removed by Filter": 0,
+                        "Shared Hit Blocks": 2,
+                        "Shared Read Blocks": 0,
+                        "Shared Dirtied Blocks": 0,
+                        "Shared Written Blocks": 0,
+                        "Local Hit Blocks": 0,
+                        "Local Read Blocks": 0,
+                        "Local Dirtied Blocks": 0,
+                        "Local Written Blocks": 0,
+                        "Temp Read Blocks": 0,
+                        "Temp Written Blocks": 0
+                      }
+                    ]
+                  },
+                  {
+                    "Node Type": "Index Scan",
+                    "Parent Relationship": "Inner",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Scan Direction": "Forward",
+                    "Index Name": "users_pkey",
+                    "Relation Name": "users",
+                    "Alias": "users_1",
+                    "Startup Cost": 0.14,
+                    "Total Cost": 0.35,
+                    "Plan Rows": 1,
+                    "Plan Width": 1618,
+                    "Actual Startup Time": 0.006,
+                    "Actual Total Time": 0.006,
+                    "Actual Rows": 1,
+                    "Actual Loops": 1,
+                    "Index Cond": "(id = groups.created_by)",
+                    "Rows Removed by Index Recheck": 0,
+                    "Shared Hit Blocks": 2,
+                    "Shared Read Blocks": 0,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "Planning": {
+            "Shared Hit Blocks": 0,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 0.295,
+          "Triggers": [],
+          "Execution Time": 0.102
+        }
+      ],
+      "client_slowest_ms": 385.634
+    },
+    "invitations": {
+      "slowest_query": "SELECT users.id AS users_id, users.email AS users_email, users.password_hash AS users_password_hash, users.password_reset_version AS users_password_reset_version, users.display_name AS users_display_name, users.photo_url AS users_photo_url, users.phone AS users_phone, users.default_currency AS users_default_currency, users.personal_display_currency AS users_personal_display_currency, users.is_active AS users_is_active, users.email_verified AS users_email_verified, users.portal_kind AS users_portal_kind, users.email_verified_at AS users_email_verified_at, users.created_at AS users_created_at, users.updated_at AS users_updated_at, users.last_login AS users_last_login, invitations.id AS invitations_id, invitations.group_id AS invitations_group_id, invitations.invitee_email AS invitations_invitee_email, invitations.invitee_user_id AS invitations_invitee_user_id, invitations.invited_by AS invitations_invited_by, invitations.status AS invitations_status, invitations.expires_at AS invitations_expires_at, invitations.created_at AS invitations_created_at, invitations.responded_at AS invitations_responded_at, groups_1.id AS groups_1_id, groups_1.name AS groups_1_name, groups_1.description AS groups_1_description, groups_1.currency AS groups_1_currency, groups_1.display_currency AS groups_1_display_currency, groups_1.budget_minor AS groups_1_budget_minor, groups_1.start_date AS groups_1_start_date, groups_1.end_date AS groups_1_end_date, groups_1.created_by AS groups_1_created_by, groups_1.group_code AS groups_1_group_code, groups_1.category AS groups_1_category, groups_1.image_url AS groups_1_image_url, groups_1.is_active AS groups_1_is_active, groups_1.created_at AS groups_1_created_at, groups_1.updated_at AS groups_1_updated_at, users_1.id AS users_1_id, users_1.email AS users_1_email, users_1.password_hash AS users_1_password_hash, users_1.password_reset_version AS users_1_password_reset_version, users_1.display_name AS users_1_display_name, users_1.photo_url AS users_1_photo_url, users_1.phone AS users_1_phone, users_1.default_currency AS users_1_default_currency, users_1.personal_display_currency AS users_1_personal_display_currency, users_1.is_active AS users_1_is_active, users_1.email_verified AS users_1_email_verified, users_1.portal_kind AS users_1_portal_kind, users_1.email_verified_at AS users_1_email_verified_at, users_1.created_at AS users_1_created_at, users_1.updated_at AS users_1_updated_at, users_1.last_login AS users_1_last_login \nFROM users LEFT OUTER JOIN invitations ON lower(invitations.invitee_email) = lower(users.email) AND invitations.status = %(status_1)s AND (EXISTS (SELECT 1 \nFROM groups \nWHERE groups.id = invitations.group_id AND groups.is_active IS true)) AND NOT (EXISTS (SELECT 1 \nFROM group_members \nWHERE group_members.group_id = invitations.group_id AND group_members.user_id = %(user_id_1)s::UUID AND group_members.is_active IS true)) LEFT OUTER JOIN groups AS groups_1 ON groups_1.id = invitations.group_id LEFT OUTER JOIN users AS users_1 ON users_1.id = invitations.invited_by \nWHERE users.id = %(id_1)s::UUID ORDER BY invitations.created_at DESC, invitations.id DESC",
+      "explain": [
+        {
+          "Plan": {
+            "Node Type": "Sort",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 16.33,
+            "Total Cost": 16.33,
+            "Plan Rows": 1,
+            "Plan Width": 4453,
+            "Actual Startup Time": 0.042,
+            "Actual Total Time": 0.06,
+            "Actual Rows": 1,
+            "Actual Loops": 1,
+            "Sort Key": [
+              "invitations.created_at DESC",
+              "invitations.id DESC"
+            ],
+            "Sort Method": "quicksort",
+            "Sort Space Used": 25,
+            "Sort Space Type": "Memory",
+            "Shared Hit Blocks": 3,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Nested Loop",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Join Type": "Left",
+                "Startup Cost": 0.86,
+                "Total Cost": 16.32,
+                "Plan Rows": 1,
+                "Plan Width": 4453,
+                "Actual Startup Time": 0.034,
+                "Actual Total Time": 0.036,
+                "Actual Rows": 1,
+                "Actual Loops": 1,
+                "Inner Unique": true,
+                "Shared Hit Blocks": 3,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Nested Loop",
+                    "Parent Relationship": "Outer",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Join Type": "Left",
+                    "Startup Cost": 0.72,
+                    "Total Cost": 13.85,
+                    "Plan Rows": 1,
+                    "Plan Width": 2835,
+                    "Actual Startup Time": 0.032,
+                    "Actual Total Time": 0.034,
+                    "Actual Rows": 1,
+                    "Actual Loops": 1,
+                    "Inner Unique": true,
+                    "Shared Hit Blocks": 3,
+                    "Shared Read Blocks": 0,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0,
+                    "Plans": [
+                      {
+                        "Node Type": "Nested Loop",
+                        "Parent Relationship": "Outer",
+                        "Parallel Aware": false,
+                        "Async Capable": false,
+                        "Join Type": "Left",
+                        "Startup Cost": 0.57,
+                        "Total Cost": 11.46,
+                        "Plan Rows": 1,
+                        "Plan Width": 2280,
+                        "Actual Startup Time": 0.026,
+                        "Actual Total Time": 0.027,
+                        "Actual Rows": 1,
+                        "Actual Loops": 1,
+                        "Inner Unique": false,
+                        "Join Filter": "(lower((invitations.invitee_email)::text) = lower((users.email)::text))",
+                        "Rows Removed by Join Filter": 0,
+                        "Shared Hit Blocks": 3,
+                        "Shared Read Blocks": 0,
+                        "Shared Dirtied Blocks": 0,
+                        "Shared Written Blocks": 0,
+                        "Local Hit Blocks": 0,
+                        "Local Read Blocks": 0,
+                        "Local Dirtied Blocks": 0,
+                        "Local Written Blocks": 0,
+                        "Temp Read Blocks": 0,
+                        "Temp Written Blocks": 0,
+                        "Plans": [
+                          {
+                            "Node Type": "Index Scan",
+                            "Parent Relationship": "Outer",
+                            "Parallel Aware": false,
+                            "Async Capable": false,
+                            "Scan Direction": "Forward",
+                            "Index Name": "users_pkey",
+                            "Relation Name": "users",
+                            "Alias": "users",
+                            "Startup Cost": 0.14,
+                            "Total Cost": 2.36,
+                            "Plan Rows": 1,
+                            "Plan Width": 1618,
+                            "Actual Startup Time": 0.013,
+                            "Actual Total Time": 0.014,
+                            "Actual Rows": 1,
+                            "Actual Loops": 1,
+                            "Index Cond": "(id = '<uuid>'::uuid)",
+                            "Rows Removed by Index Recheck": 0,
+                            "Shared Hit Blocks": 2,
+                            "Shared Read Blocks": 0,
+                            "Shared Dirtied Blocks": 0,
+                            "Shared Written Blocks": 0,
+                            "Local Hit Blocks": 0,
+                            "Local Read Blocks": 0,
+                            "Local Dirtied Blocks": 0,
+                            "Local Written Blocks": 0,
+                            "Temp Read Blocks": 0,
+                            "Temp Written Blocks": 0
+                          },
+                          {
+                            "Node Type": "Nested Loop",
+                            "Parent Relationship": "Inner",
+                            "Parallel Aware": false,
+                            "Async Capable": false,
+                            "Join Type": "Anti",
+                            "Startup Cost": 0.43,
+                            "Total Cost": 9.08,
+                            "Plan Rows": 1,
+                            "Plan Width": 662,
+                            "Actual Startup Time": 0.01,
+                            "Actual Total Time": 0.01,
+                            "Actual Rows": 0,
+                            "Actual Loops": 1,
+                            "Inner Unique": false,
+                            "Join Filter": "(group_members.group_id = invitations.group_id)",
+                            "Rows Removed by Join Filter": 0,
+                            "Shared Hit Blocks": 1,
+                            "Shared Read Blocks": 0,
+                            "Shared Dirtied Blocks": 0,
+                            "Shared Written Blocks": 0,
+                            "Local Hit Blocks": 0,
+                            "Local Read Blocks": 0,
+                            "Local Dirtied Blocks": 0,
+                            "Local Written Blocks": 0,
+                            "Temp Read Blocks": 0,
+                            "Temp Written Blocks": 0,
+                            "Plans": [
+                              {
+                                "Node Type": "Nested Loop",
+                                "Parent Relationship": "Outer",
+                                "Parallel Aware": false,
+                                "Async Capable": false,
+                                "Join Type": "Inner",
+                                "Startup Cost": 0.29,
+                                "Total Cost": 6.7,
+                                "Plan Rows": 1,
+                                "Plan Width": 662,
+                                "Actual Startup Time": 0.01,
+                                "Actual Total Time": 0.01,
+                                "Actual Rows": 0,
+                                "Actual Loops": 1,
+                                "Inner Unique": true,
+                                "Shared Hit Blocks": 1,
+                                "Shared Read Blocks": 0,
+                                "Shared Dirtied Blocks": 0,
+                                "Shared Written Blocks": 0,
+                                "Local Hit Blocks": 0,
+                                "Local Read Blocks": 0,
+                                "Local Dirtied Blocks": 0,
+                                "Local Written Blocks": 0,
+                                "Temp Read Blocks": 0,
+                                "Temp Written Blocks": 0,
+                                "Plans": [
+                                  {
+                                    "Node Type": "Index Scan",
+                                    "Parent Relationship": "Outer",
+                                    "Parallel Aware": false,
+                                    "Async Capable": false,
+                                    "Scan Direction": "Forward",
+                                    "Index Name": "idx_invitations_group",
+                                    "Relation Name": "invitations",
+                                    "Alias": "invitations",
+                                    "Startup Cost": 0.14,
+                                    "Total Cost": 4.28,
+                                    "Plan Rows": 1,
+                                    "Plan Width": 662,
+                                    "Actual Startup Time": 0.01,
+                                    "Actual Total Time": 0.01,
+                                    "Actual Rows": 0,
+                                    "Actual Loops": 1,
+                                    "Index Cond": "((status)::text = 'pending'::text)",
+                                    "Rows Removed by Index Recheck": 0,
+                                    "Shared Hit Blocks": 1,
+                                    "Shared Read Blocks": 0,
+                                    "Shared Dirtied Blocks": 0,
+                                    "Shared Written Blocks": 0,
+                                    "Local Hit Blocks": 0,
+                                    "Local Read Blocks": 0,
+                                    "Local Dirtied Blocks": 0,
+                                    "Local Written Blocks": 0,
+                                    "Temp Read Blocks": 0,
+                                    "Temp Written Blocks": 0
+                                  },
+                                  {
+                                    "Node Type": "Index Scan",
+                                    "Parent Relationship": "Inner",
+                                    "Parallel Aware": false,
+                                    "Async Capable": false,
+                                    "Scan Direction": "Forward",
+                                    "Index Name": "groups_pkey",
+                                    "Relation Name": "groups",
+                                    "Alias": "groups",
+                                    "Startup Cost": 0.14,
+                                    "Total Cost": 2.36,
+                                    "Plan Rows": 1,
+                                    "Plan Width": 16,
+                                    "Actual Startup Time": 0.0,
+                                    "Actual Total Time": 0.0,
+                                    "Actual Rows": 0,
+                                    "Actual Loops": 0,
+                                    "Index Cond": "(id = invitations.group_id)",
+                                    "Rows Removed by Index Recheck": 0,
+                                    "Filter": "(is_active IS TRUE)",
+                                    "Rows Removed by Filter": 0,
+                                    "Shared Hit Blocks": 0,
+                                    "Shared Read Blocks": 0,
+                                    "Shared Dirtied Blocks": 0,
+                                    "Shared Written Blocks": 0,
+                                    "Local Hit Blocks": 0,
+                                    "Local Read Blocks": 0,
+                                    "Local Dirtied Blocks": 0,
+                                    "Local Written Blocks": 0,
+                                    "Temp Read Blocks": 0,
+                                    "Temp Written Blocks": 0
+                                  }
+                                ]
+                              },
+                              {
+                                "Node Type": "Index Scan",
+                                "Parent Relationship": "Inner",
+                                "Parallel Aware": false,
+                                "Async Capable": false,
+                                "Scan Direction": "Forward",
+                                "Index Name": "idx_group_members_user",
+                                "Relation Name": "group_members",
+                                "Alias": "group_members",
+                                "Startup Cost": 0.15,
+                                "Total Cost": 2.37,
+                                "Plan Rows": 1,
+                                "Plan Width": 16,
+                                "Actual Startup Time": 0.0,
+                                "Actual Total Time": 0.0,
+                                "Actual Rows": 0,
+                                "Actual Loops": 0,
+                                "Index Cond": "((user_id = '<uuid>'::uuid) AND (is_active = true))",
+                                "Rows Removed by Index Recheck": 0,
+                                "Shared Hit Blocks": 0,
+                                "Shared Read Blocks": 0,
+                                "Shared Dirtied Blocks": 0,
+                                "Shared Written Blocks": 0,
+                                "Local Hit Blocks": 0,
+                                "Local Read Blocks": 0,
+                                "Local Dirtied Blocks": 0,
+                                "Local Written Blocks": 0,
+                                "Temp Read Blocks": 0,
+                                "Temp Written Blocks": 0
+                              }
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "Node Type": "Index Scan",
+                        "Parent Relationship": "Inner",
+                        "Parallel Aware": false,
+                        "Async Capable": false,
+                        "Scan Direction": "Forward",
+                        "Index Name": "groups_pkey",
+                        "Relation Name": "groups",
+                        "Alias": "groups_1",
+                        "Startup Cost": 0.14,
+                        "Total Cost": 2.36,
+                        "Plan Rows": 1,
+                        "Plan Width": 555,
+                        "Actual Startup Time": 0.004,
+                        "Actual Total Time": 0.004,
+                        "Actual Rows": 0,
+                        "Actual Loops": 1,
+                        "Index Cond": "(id = invitations.group_id)",
+                        "Rows Removed by Index Recheck": 0,
+                        "Shared Hit Blocks": 0,
+                        "Shared Read Blocks": 0,
+                        "Shared Dirtied Blocks": 0,
+                        "Shared Written Blocks": 0,
+                        "Local Hit Blocks": 0,
+                        "Local Read Blocks": 0,
+                        "Local Dirtied Blocks": 0,
+                        "Local Written Blocks": 0,
+                        "Temp Read Blocks": 0,
+                        "Temp Written Blocks": 0
+                      }
+                    ]
+                  },
+                  {
+                    "Node Type": "Index Scan",
+                    "Parent Relationship": "Inner",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Scan Direction": "Forward",
+                    "Index Name": "users_pkey",
+                    "Relation Name": "users",
+                    "Alias": "users_1",
+                    "Startup Cost": 0.14,
+                    "Total Cost": 2.36,
+                    "Plan Rows": 1,
+                    "Plan Width": 1618,
+                    "Actual Startup Time": 0.001,
+                    "Actual Total Time": 0.001,
+                    "Actual Rows": 0,
+                    "Actual Loops": 1,
+                    "Index Cond": "(id = invitations.invited_by)",
+                    "Rows Removed by Index Recheck": 0,
+                    "Shared Hit Blocks": 0,
+                    "Shared Read Blocks": 0,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "Planning": {
+            "Shared Hit Blocks": 0,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 0.599,
+          "Triggers": [],
+          "Execution Time": 0.149
+        }
+      ],
+      "client_slowest_ms": 213.734
+    },
+    "full": {
+      "slowest_query": "SELECT group_balances.group_id AS group_balances_group_id, group_balances.id AS group_balances_id, group_balances.user_id AS group_balances_user_id, group_balances.balance AS group_balances_balance, group_balances.updated_at AS group_balances_updated_at \nFROM group_balances \nWHERE group_balances.group_id IN (%(primary_keys_1)s::UUID)",
+      "explain": [
+        {
+          "Plan": {
+            "Node Type": "Bitmap Heap Scan",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Relation Name": "group_balances",
+            "Alias": "group_balances",
+            "Startup Cost": 1.28,
+            "Total Cost": 5.48,
+            "Plan Rows": 4,
+            "Plan Width": 72,
+            "Actual Startup Time": 0.018,
+            "Actual Total Time": 0.019,
+            "Actual Rows": 2,
+            "Actual Loops": 1,
+            "Recheck Cond": "(group_id = '<uuid>'::uuid)",
+            "Rows Removed by Index Recheck": 0,
+            "Exact Heap Blocks": 1,
+            "Lossy Heap Blocks": 0,
+            "Shared Hit Blocks": 2,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Bitmap Index Scan",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Index Name": "idx_balances_group",
+                "Startup Cost": 0.0,
+                "Total Cost": 1.28,
+                "Plan Rows": 4,
+                "Plan Width": 0,
+                "Actual Startup Time": 0.006,
+                "Actual Total Time": 0.006,
+                "Actual Rows": 2,
+                "Actual Loops": 1,
+                "Index Cond": "(group_id = '<uuid>'::uuid)",
+                "Shared Hit Blocks": 1,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0
+              }
+            ]
+          },
+          "Planning": {
+            "Shared Hit Blocks": 0,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 0.075,
+          "Triggers": [],
+          "Execution Time": 0.054
+        }
+      ],
+      "client_slowest_ms": 403.826
+    }
+  }
+}

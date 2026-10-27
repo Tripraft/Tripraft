@@ -2,6 +2,8 @@
 .expense-page .expense-container { width: 100%; min-width: 0; padding: clamp(20px, 3vw, 44px) clamp(12px, 3vw, 32px); }
 .expense-manager, .expense-manager :is(section, article, aside, .card, .transactions-card, .summary-card) { min-width: 0; }
 .expense-manager .expense-header { flex-wrap: wrap; gap: 20px; }
+.expense-manager .expense-header { min-block-size: 64px; }
+@media (max-width: 639px) { .expense-manager .expense-header { min-block-size: 120px; } }
 .expense-manager .expense-header h1 { font-size: clamp(23px, 3vw, 30px); letter-spacing: -.035em; line-height: 1.25; }
 .expense-manager .expense-header p { font-size: 13px; line-height: 1.6; }
 .expense-manager .header-actions { flex-wrap: wrap; gap: 14px; }
@@ -15,6 +17,14 @@
 .expense-manager .summary-card { padding: clamp(16px, 2.5vw, 24px); border-radius: 18px; }
 .expense-manager .summary-card h2 { font-size: 13px; }
 .expense-manager .summary-card .amount { font-size: clamp(21px, 3vw, 32px); overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.expense-manager .summary-card .amount { min-block-size: 2.5em; line-height: 1.25; }
+.expense-dashboard-currency { min-block-size: 110px; }
+.expense-personal-tabs { min-block-size: 480px; }
+.expense-manager .expense-hero-stats { min-block-size: 288px; }
+.expense-manager .expense-hero-position h3 { min-block-size: 2.4em; }
+.expense-manager .expense-hero-position > .expense-position { min-block-size: 44px; }
+.expense-manager .expense-detail-summary-card > strong { min-block-size: 2.5em; }
+.expense-manager .expense-detail-summary-card > small { min-block-size: 3.2em; }
 .expense-manager .card-header { gap: 12px; }
 .expense-manager .card-header svg { flex-shrink: 0; }
 .expense-manager .expense-detail-summary-card small { flex-wrap: wrap; line-height: 1.6; }
@@ -24,7 +34,7 @@
 .expense-manager .expense-position svg { flex-shrink: 0; }
 .expense-manager .expense-group-members { flex-wrap: wrap; }
 .expense-manager .expense-group-tablist > button { min-height: 48px; }
-.expense-manager .expense-group-tablist { scrollbar-width: thin; scroll-padding-inline: 12px; }
+.expense-manager .expense-group-tablist { flex-wrap: wrap; overflow: visible; }
 .expense-manager .expense-group-tabpanel { min-width: 0; }
 .expense-section-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin: 0 0 18px; }
 .expense-section-toolbar h3, .expense-section-toolbar h2 { font-size: 16px; font-weight: 650; letter-spacing: -.02em; margin: 0; }
@@ -69,8 +79,10 @@
 .expense-activity-item.is-deleted .expense-activity-title h3 { text-decoration: line-through; color: #9ca3af; }
 .expense-activity-item.is-deleted { background: #f3f4f6; box-shadow: inset 0 0 0 1px #e5e7eb; border-radius: 12px; padding-inline: 12px; margin-block: 6px; }
 .expense-activity-item.is-deleted .expense-activity-title strong { text-decoration: line-through; color: #9ca3af; }
-.expense-revert-button { display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 4px; padding: 6px 8px; min-height: 34px; border: 1px solid #c4b5fd; border-radius: 8px; background: #fff; color: #7c3aed; font: inherit; font-size: 11px; cursor: pointer; }
+.expense-revert-button { display: inline-flex; align-items: center; justify-content: center; padding: .25rem; min-width: 22px; min-height: 22px; border: 1px solid #c4b5fd; border-radius: 4px; background: #fff; color: #7c3aed; font: inherit; font-size: 11px; cursor: pointer; }
 .expense-revert-button:disabled { opacity: .6; cursor: wait; }
+.expense-deleted-actions { display: inline-flex; align-items: center; gap: 6px; }
+.expense-deleted-actions > button:disabled { opacity: .6; cursor: wait; }
 .expense-manager .transaction-deleted { opacity: 1; background: #f3f4f6 !important; box-shadow: inset 0 0 0 1px #e5e7eb; }
 .expense-manager .transaction-deleted:hover { background: #e5e7eb !important; }
 .expense-manager .transaction-deleted .deleted-badge, .expense-activity-item.is-deleted .deleted-badge { background: #e5e7eb; color: #6b7280; }
@@ -133,6 +145,18 @@
 .expense-group-confirm [role="alert"] { color: #be123c; }
 .expense-group-confirm [role="alertdialog"] > div { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
 .expense-members-switch { display: flex; gap: 8px; margin-bottom: 18px; }
+.expense-friend-picker {margin:16px 0; padding:12px; border:1px solid #e5e7eb; border-radius:12px; background:#fafafa;}
+.expense-friend-picker h4 {display:flex; align-items:center; gap:8px; margin:0 0 10px; font-size:14px;}
+.expense-friend-picker ul {list-style:none; padding:0; margin:10px 0 0; display:grid; gap:6px;}
+.expense-friend-picker li button {display:flex; flex-direction:column; align-items:flex-start; gap:4px; width:100%; text-align:left; padding:10px; border:1px solid #e5e7eb; border-radius:8px; background:white; cursor:pointer; overflow-wrap:anywhere;}
+.expense-friend-picker li button:hover {border-color:#a78bfa; background:#f5f3ff;}
+.expense-friend-picker li span, .expense-friend-picker li small {font-size:11px; color:#64748b;}
+.expense-friend-picker input {width:100%;}
+.expense-selected-friend {display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 0; overflow-wrap:anywhere;}
+.expense-selected-friend button {border:0; background:none; color:#7c3aed; cursor:pointer; font-size:12px;}
+.expense-member-invite .expense-invite-help {font-size:12px; line-height:1.6; color:#64748b;}
+.expense-member-invite .spinning {animation:spin 1s linear infinite;}
+@media (prefers-reduced-motion:reduce) { .expense-member-invite .spinning {animation:none;} }
 .expense-members-switch button { padding: 9px 12px; border: 1px solid #e5e7eb; border-radius: 9px; font: inherit; font-size: 12px; background: #fff; cursor: pointer; }
 .expense-members-switch button[aria-pressed="true"] { background: #f5f3ff; color: #7c3aed; border-color: #ddd6fe; }
 .expense-legacy-create { display: grid; gap: 10px; margin-top: 20px; }
@@ -197,3 +221,26 @@
 @media (prefers-reduced-motion: reduce) {
   .expense-manager *, .expense-dialog-surface * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* Settings use a clear summary and a responsive preferences form. */
+.expense-member-settings { background: #fff; border-color: #e2e8f0; border-radius: 18px; }
+.expense-member-settings > summary { padding: 20px 24px; color: #1e293b; gap: 12px; }
+.expense-member-settings > summary > svg { padding: 10px; box-sizing: content-box; background: #f5f3ff; color: #7c3aed; border-radius: 12px; }
+.expense-member-settings > summary small { display: block; margin-top: 4px; font-size: 12px; font-weight: 400; color: #64748b; }
+.expense-member-settings[open] > summary { border-bottom: 1px solid #f1f5f9; margin-bottom: 20px; }
+.expense-member-settings-content { padding: 0 24px 24px; }
+.expense-member-settings-info > strong { font-size: 18px; }
+.expense-member-settings-info p { margin: 5px 0 14px; color: #64748b; line-height: 1.6; }
+.expense-settings-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0 0 20px; }
+.expense-settings-facts > div { padding: 16px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; min-width: 0; }
+.expense-settings-facts dt { color: #64748b; font-size: 12px; margin-bottom: 8px; }
+.expense-settings-facts dd { margin: 0; color: #1e293b; font-size: 14px; font-weight: 600; overflow-wrap: anywhere; }
+.expense-member-edit fieldset { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; border: 0; border-top: 1px solid #e2e8f0; margin: 6px 0 0; padding: 20px 0 0; min-width: 0; }
+.expense-member-edit legend { padding: 0 10px 0 0; font-weight: 600; color: #334155; font-size: 14px; }
+.expense-member-edit label { align-content: start; color: #334155; }
+.expense-member-edit label:first-of-type, .expense-settings-wide, .expense-member-edit fieldset > p, .expense-settings-form-actions { grid-column: 1 / -1; }
+.expense-member-edit fieldset > p { color: #64748b; font-size: 12px; line-height: 1.6; padding: 14px; background: #f5f3ff; border-radius: 10px; margin: 0; }
+.expense-member-edit select { width: 100%; padding: 11px; border: 1px solid #e5e7eb; border-radius: 9px; background: #fff; color: #111827; font: inherit; }
+.expense-settings-form-actions { display: flex; gap: 10px; flex-wrap: wrap; padding-top: 8px; }
+@media (max-width: 760px) { .expense-settings-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 480px) { .expense-member-settings-content { padding: 0 16px 20px; } .expense-member-edit fieldset, .expense-settings-facts { grid-template-columns: minmax(0, 1fr); } }

@@ -3,7 +3,10 @@ import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 // Purpose: Renders the Transaction List interface within apps\web\src\features\expenses\jsx.
 import ExpenseDialog from './ExpenseDialog';
 import TransactionActivity from './TransactionActivity';
-import React, { useState, useEffect, useMemo } from 'react';
+import CurrencyAmount from './CurrencyAmount';
+import {formatMoney} from '../../../utils/money';
+import DeletedTransactionActions from './DeletedTransactionActions';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Edit2, Trash2, FolderOpen, Info, ChevronLeft, ChevronRight, History, RefreshCw, Utensils, Car, Home, ShoppingBag, Plane, Heart, Zap, Film, Gift, Coffee, Hotel, Gamepad2, Shirt, Pill, Briefcase, Music, Dumbbell, Banknote, CircleDollarSign, HelpCircle } from 'lucide-react';
 import { formatDateLocal } from '../../../utils/timezoneUtils';
 import ExpenseHistoryModal from './ExpenseHistoryModal';
@@ -85,14 +88,38 @@ const TransactionList = ({
   const [historyTransaction, setHistoryTransaction] = useState(null);
   const [restoringId, setRestoringId] = useState(null);
   const [restoreError, setRestoreError] = useState('');
+  const [confirmingDelete, setConfirmingDelete] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [deleteError, setDeleteError] = useState('');
+  const actionPending = useRef(false);
+  const busy = Boolean(restoringId || deletingId);
+
+  const handlePermanentDelete = async () => {
+    if (actionPending.current || !confirmingDelete) return;
+    const id = confirmingDelete.id || confirmingDelete.expense_id;
+    actionPending.current = true;
+    setDeletingId(id);
+    setDeleteError('');
+    try {
+      await onDelete(id, { permanent: true });
+      setConfirmingDelete(null);
+    } catch (error) { setDeleteError(error.message || 'Unable to permanently delete transaction'); }
+    finally { actionPending.current = false; setDeletingId(null); }
+  };
+
+  const confirmPermanentDelete = expense => {
+    setDeleteError('');
+    setConfirmingDelete(expense);
+  };
 
   const handleRestore = async id => {
-    if (restoringId) return;
+    if (actionPending.current) return;
+    actionPending.current = true;
     setRestoringId(id);
     setRestoreError('');
     try { await onRestore(id); }
     catch (error) { setRestoreError(error.message || 'Unable to restore expense'); }
-    finally { setRestoringId(null); }
+    finally { actionPending.current = false; setRestoringId(null); }
   };
   
   // Pagination state
@@ -326,7 +353,8 @@ const TransactionList = ({
           {mode === 'group' ? <TransactionActivity transactions={paginatedTransactions} group={activeGroup}
             currentUserId={currentUserId} getMemberName={getMemberName} formatDate={formatDate} wasEdited={wasEdited}
             onSplit={handleViewDetails} onHistory={handleViewHistory} onEdit={onEdit} onDelete={onDelete}
-            onRestore={onRestore ? handleRestore : undefined} restoringId={restoringId} currency={currency} /> : <div className="table-container">
+            onRestore={onRestore ? handleRestore : undefined} restoringId={restoringId} busy={busy}
+            onPermanentDelete={onDelete ? confirmPermanentDelete : undefined} currency={currency} /> : <div className="table-container">
             <table>
               <thead>
                 <tr>
@@ -439,7 +467,10 @@ const TransactionList = ({
                     )}
                     <td className={`${isIncomeTransaction ? 'amount-green' : 'amount-red'} ${isDeleted ? 'deleted-amount' : ''}`}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span className={isDeleted ? 'deleted-text' : ''}>{formatCurrency(t.amount)}</span>
+                        <span className={isDeleted ? 'deleted-text' : ''}>{mode === 'group' ? <CurrencyAmount amount={t.amount} currency={t.currency || currency} displayCurrency={activeGroup?.display_currency || currency} /> : formatCurrency(t.amount, t.currency || currency)}
+                          {t.original_currency && t.original_currency !== currency && <small className="expense-original-amount">{formatMoney(t.original_amount, t.original_currency)} original</small>}
+                          {t.original && <small className="expense-original-amount">{formatMoney(t.original.amount, t.original.currency)} original receipt</small>}
+                        </span>
                         {isEdited && !isDeleted && (
                           <button 
                             className="btn-icon"
@@ -460,11 +491,10 @@ const TransactionList = ({
                         aria-label={`View split details for ${t.description || 'expense'}`}
                       ><Info size={15} /></button>}
                       {isDeleted ? (
-                        permissions.can_restore && onRestore ? <button className="expense-revert-button"
-                          disabled={Boolean(restoringId)} onClick={() => handleRestore(t.id || t.expense_id)}
-                          aria-label={`Revert deletion of ${t.description || 'expense'}`}>
-                          <RefreshCw size={14} />{restoringId === (t.id || t.expense_id) ? 'Restoring...' : 'Revert'}
-                        </button> : <span className="deleted-indicator"><Trash2 size={14} /></span>
+                        <DeletedTransactionActions expense={t} permissions={permissions}
+                          onRestore={onRestore ? handleRestore : undefined}
+                          onPermanentDelete={onDelete ? confirmPermanentDelete : undefined}
+                          busy={busy} restoring={restoringId === (t.id || t.expense_id)} />
                       ) : permissions.can_edit || permissions.can_delete ? (
                         <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', alignItems: 'center' }}>
                           {permissions.can_edit && <button
@@ -566,9 +596,10 @@ const TransactionList = ({
               </div>
               
               <div className="receipt-divider"></div>
+              {selectedTransaction.original && <div className="receipt-item"><span className="receipt-label">ORIGINAL RECEIPT</span><span className="receipt-value">{formatCurrency(selectedTransaction.original.amount, selectedTransaction.original.currency)} · rate {selectedTransaction.original.rate} on {selectedTransaction.original.rate_date}</span></div>}
               
               <div className="receipt-item">
-                <span className="receipt-label">PAID BY</span>
+                <span className="receipt-label">{selectedTransaction.split_type === 'reimbursement' ? 'REFUND RECEIVED BY' : 'PAID BY'}</span>
                 <span className="receipt-value">{selectedTransaction.paid_by_name || getMemberName(selectedTransaction.paid_by)}</span>
               </div>
               
@@ -582,6 +613,13 @@ const TransactionList = ({
               <div className="receipt-divider"></div>
               
               <div className="receipt-breakdown">
+                {selectedTransaction.split_type === 'itemized' && selectedTransaction.split_details?.items?.map((item, index) => <div key={`item-${index}`} className="receipt-split-item">
+                  <span className="split-name">{item.name}<small style={{ display: 'block' }}>{item.user_ids.map(id => getMemberName(id)).join(', ')}</small></span>
+                  <span className="split-amt">{formatCurrency(item.amount, selectedTransaction.original?.currency || selectedTransaction.currency || currency)}</span>
+                </div>)}
+                {selectedTransaction.split_type === 'itemized' && ['tax', 'tip', 'discount'].filter(key => Number(selectedTransaction.split_details?.[key])).map(key => <div key={key} className="receipt-split-item">
+                  <span className="split-name">{key[0].toUpperCase() + key.slice(1)}</span><span className="split-amt">{formatCurrency((key === 'discount' ? -1 : 1) * Number(selectedTransaction.split_details[key]), selectedTransaction.original?.currency || selectedTransaction.currency || currency)}</span>
+                </div>)}
                 <div className="receipt-label">SPLIT BREAKDOWN</div>
                 {selectedTransaction.splits && Array.isArray(selectedTransaction.splits) && selectedTransaction.splits.map((split, idx) => (
                   <div key={idx} className="receipt-split-item">
@@ -613,8 +651,20 @@ const TransactionList = ({
 
       {/* Phase 12: Expense History Modal */}
       {restoreError && <p role="alert">{restoreError}</p>}
+      {confirmingDelete && <ExpenseDialog label="Permanently delete transaction" busy={Boolean(deletingId)} className="expense-permanent-delete-dialog"
+        onClose={() => setConfirmingDelete(null)}>
+        <h2>Permanently delete transaction?</h2>
+        <p>Delete “{confirmingDelete.description || 'this transaction'}” permanently? You cannot restore it afterward.</p>
+        {deleteError && <p role="alert">{deleteError}</p>}
+        <div className="expense-delete-confirm-actions">
+          <button type="button" disabled={Boolean(deletingId)} onClick={() => setConfirmingDelete(null)}>Cancel</button>
+          <button type="button" disabled={Boolean(deletingId)} onClick={handlePermanentDelete}>
+            {deletingId ? 'Deleting...' : 'Delete permanently'}
+          </button>
+        </div>
+      </ExpenseDialog>}
       {showHistoryModal && historyTransaction && (
-        <ExpenseHistoryModal currency={currency}
+        <ExpenseHistoryModal currency={historyTransaction?.original_currency || historyTransaction?.currency || currency} displayCurrency={activeGroup?.display_currency || currency}
           expense={transactions.find(transaction => (transaction.id || transaction.expense_id) === (historyTransaction.id || historyTransaction.expense_id)) || historyTransaction}
           members={members}
           mode={mode}

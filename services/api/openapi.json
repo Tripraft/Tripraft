@@ -520,6 +520,64 @@
         ],
         "type": "object"
       },
+      "CreateExpenseGroup": {
+        "additionalProperties": false,
+        "properties": {
+          "budget": {
+            "description": "Nonnegative amount in the group ledger currency, up to 9999999999.99; null clears the budget.",
+            "type": [
+              "number",
+              "string",
+              "null"
+            ]
+          },
+          "category": {
+            "maxLength": 50,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "currency": {
+            "pattern": "^[A-Z]{3}$",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 1000,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "display_currency": {
+            "pattern": "^[A-Z]{3}$",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
       "CreateTourDraft": {
         "additionalProperties": false,
         "properties": {},
@@ -1119,6 +1177,144 @@
           "created_at"
         ],
         "title": "EmployeeRecord",
+        "type": "object"
+      },
+      "ExpenseFriend": {
+        "properties": {
+          "display_name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "is_registered": {
+            "type": "boolean"
+          },
+          "is_saved": {
+            "type": "boolean"
+          },
+          "label": {
+            "type": "string"
+          },
+          "nickname": {
+            "maxLength": 100,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "shared_groups": {
+            "items": {
+              "properties": {
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          },
+          "user_id": {
+            "format": "uuid",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "label",
+          "is_registered"
+        ],
+        "type": "object"
+      },
+      "ExpenseFriendResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "friend": {
+                "$ref": "#/components/schemas/ExpenseFriend"
+              }
+            },
+            "required": [
+              "friend"
+            ],
+            "type": "object"
+          },
+          "message": {
+            "type": "string"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ],
+        "type": "object"
+      },
+      "ExpenseFriendsResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "friends": {
+                "items": {
+                  "$ref": "#/components/schemas/ExpenseFriend"
+                },
+                "type": "array"
+              },
+              "has_more": {
+                "type": "boolean"
+              },
+              "limit": {
+                "type": "integer"
+              },
+              "offset": {
+                "type": "integer"
+              },
+              "total": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "friends",
+              "total",
+              "has_more",
+              "limit",
+              "offset"
+            ],
+            "type": "object"
+          },
+          "message": {
+            "type": "string"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ],
         "type": "object"
       },
       "Health": {
@@ -2304,6 +2500,26 @@
         "title": "ReviewDecision",
         "type": "object"
       },
+      "SaveExpenseFriend": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "format": "email",
+            "type": "string"
+          },
+          "nickname": {
+            "maxLength": 100,
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "type": "object"
+      },
       "SaveTourDraft": {
         "additionalProperties": false,
         "properties": {
@@ -2508,6 +2724,62 @@
         "title": "TourDraftContent",
         "type": "object"
       },
+      "UpdateExpenseGroup": {
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "budget": {
+            "description": "Nonnegative amount in the group ledger currency, up to 9999999999.99; null clears the budget.",
+            "type": [
+              "number",
+              "string",
+              "null"
+            ]
+          },
+          "category": {
+            "maxLength": 50,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "currency": {
+            "pattern": "^[A-Z]{3}$",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 1000,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "display_currency": {
+            "pattern": "^[A-Z]{3}$",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "type": "object"
+      },
       "UploadPackageImage": {
         "additionalProperties": false,
         "properties": {
@@ -2554,6 +2826,13 @@
           },
           "is_admin": {
             "type": "boolean"
+          },
+          "personal_display_currency": {
+            "pattern": "^[A-Z]{3}$",
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -5808,6 +6087,17 @@
       "post": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
         "operationId": "expenses_sql_create_expense_post_api_v1_expenses",
+        "parameters": [
+          {
+            "description": "Return the mutation result and group balances without an account ledger page or personal summary.",
+            "in": "query",
+            "name": "compact",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "default": {
             "content": {
@@ -6036,6 +6326,103 @@
         }
       }
     },
+    "/api/v1/expenses/friends": {
+      "get": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "expense_friends_list_friends_get_api_v1_expenses_friends",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "maxLength": 255,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseFriendsResponse"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      },
+      "post": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "expense_friends_save_friend_post_api_v1_expenses_friends",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveExpenseFriend"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseFriendResponse"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    },
     "/api/v1/expenses/group/{group_id}": {
       "get": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
@@ -6078,8 +6465,29 @@
         }
       },
       "post": {
-        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "description": "Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger.",
         "operationId": "groups_sql_create_group_post_api_v1_expenses_groups",
+        "parameters": [
+          {
+            "description": "Return the created group without reloading all account groups and their summaries.",
+            "in": "query",
+            "name": "compact",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExpenseGroup"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "default": {
             "content": {
@@ -6089,7 +6497,12 @@
             },
             "description": "Response"
           }
-        }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/v1/expenses/groups/join": {
@@ -6158,7 +6571,7 @@
         }
       },
       "patch": {
-        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "description": "Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger.",
         "operationId": "groups_sql_update_group_patch_api_v1_expenses_groups_group_id",
         "parameters": [
           {
@@ -6170,6 +6583,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExpenseGroup"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "default": {
             "content": {
@@ -6179,10 +6602,15 @@
             },
             "description": "Response"
           }
-        }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
       },
       "put": {
-        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "description": "Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger.",
         "operationId": "groups_sql_update_group_put_api_v1_expenses_groups_group_id",
         "parameters": [
           {
@@ -6194,6 +6622,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExpenseGroup"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "default": {
             "content": {
@@ -6203,7 +6641,12 @@
             },
             "description": "Response"
           }
-        }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/v1/expenses/groups/{group_id}/full": {
@@ -6546,6 +6989,17 @@
       "post": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
         "operationId": "invitations_sql_send_invitation_post_api_v1_expenses_invitations",
+        "parameters": [
+          {
+            "description": "Return the saved invitation or joined group without reloading the invitation/account group list.",
+            "in": "query",
+            "name": "compact",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "default": {
             "content": {
@@ -6621,6 +7075,15 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "description": "Return the saved invitation or joined group without reloading the invitation/account group list.",
+            "in": "query",
+            "name": "compact",
+            "schema": {
+              "default": false,
+              "type": "boolean"
             }
           }
         ],
@@ -7008,6 +7471,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Return the mutation result and group balances without an account ledger page or personal summary.",
+            "in": "query",
+            "name": "compact",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -7056,6 +7528,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Return the mutation result and group balances without an account ledger page or personal summary.",
+            "in": "query",
+            "name": "compact",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -7079,6 +7560,15 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "description": "Return the mutation result and group balances without an account ledger page or personal summary.",
+            "in": "query",
+            "name": "compact",
+            "schema": {
+              "default": false,
+              "type": "boolean"
             }
           }
         ],

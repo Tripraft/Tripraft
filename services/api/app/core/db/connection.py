@@ -25,6 +25,7 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from .base import Base
+from .timing import track_query_timing
 from app.core.config import Config
 
 logger = logging.getLogger(__name__)
@@ -86,6 +87,11 @@ def _create_sqlite_engine(url: str, pool_size_hint: int = 0):
 
 def _create_pg_engine(url: str, pool_size: int = 20, max_overflow: int = 10):
     """Create a PostgreSQL engine with production-grade pool settings."""
+    if make_url(url).get_driver_name() == 'psycopg2':
+        # gevent's stdlib patch cannot patch libpq's C-level blocking I/O.
+        # Install before any engine opens a connection, including travel reads.
+        from .cooperative import configure_psycopg_wait
+        configure_psycopg_wait()
     return create_engine(
         url,
         pool_size=pool_size,
@@ -124,6 +130,9 @@ logger.info(
     'SQLite' if _IS_SQLITE else 'PostgreSQL',
     'SQLite' if TRAVEL_DATA_URL.startswith('sqlite') else 'PostgreSQL',
 )
+
+for _timed_engine in (engine, travel_engine):
+    track_query_timing(_timed_engine)
 
 
 # ---------------------------------------------------------------------------
@@ -182,27 +191,30 @@ def init_db(app: Optional[Flask] = None) -> None:
     from alembic.config import Config as AlembicConfig
     from alembic.migration import MigrationContext
     from alembic.script import ScriptDirectory
+    from schema_status import schema_status
 
     _import_all_models()
     backend_root = Path(__file__).resolve().parents[3]
     migration_config = AlembicConfig(str(backend_root / 'alembic.ini'))
     migration_config.set_main_option('script_location', str(backend_root / 'migrations'))
-    expected_heads = set(ScriptDirectory.from_config(migration_config).get_heads())
+    scripts = ScriptDirectory.from_config(migration_config)
     with engine.connect() as connection:
         migration_context = MigrationContext.configure(connection, opts={
             'compare_type': True,
             'compare_server_default': True,
         })
-        if set(migration_context.get_current_heads()) != expected_heads:
+        status = schema_status(scripts, migration_context.get_current_heads())
+        if status.state != 'current':
             raise RuntimeError(
-                'Database migrations are not current. Run alembic upgrade head '
-                'from services/api before starting the application.'
+                'Database migrations are not current. ' + status.message
+                + ' See docs/operations/database-releases.md.'
             )
         differences = compare_metadata(migration_context, Base.metadata)
         if differences:
             raise RuntimeError(
-                'Database schema drift detected. Run alembic check and repair '
-                'the schema with an explicit migration before starting the application.'
+                'Database schema drift detected. Ask the release administrator to review '
+                'the schema and repair it with an explicit migration. '
+                'See docs/operations/database-releases.md.'
             )
 
     db_label = 'PostgreSQL' if not _IS_SQLITE else 'SQLite'

@@ -87,3 +87,34 @@ def test_initial_outage_is_503_and_identity_needs_no_pair_lookup(app, provider):
     client = app.test_client()
     assert client.get('/api/v1/exchange-rates?base=USD&quote=USD').get_json()['data']['rate'] == 1
     assert client.get('/api/v1/exchange-rates?base=USD&quote=INR').status_code == 503
+
+
+def test_slow_pair_does_not_block_cached_or_independent_currency_reads(provider):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event
+
+    fx.currencies()
+    started, release = Event(), Event()
+
+    def respond(url, **kwargs):
+        if url.endswith('/usd/inr'):
+            started.set()
+            assert release.wait(5), 'Test did not release the slow provider'
+            return rate_response()
+        return rate_response(quote='AED', rate=3.67)
+
+    provider.side_effect = respond
+    with ThreadPoolExecutor(max_workers=4) as workers:
+        slow = workers.submit(fx.latest_rate, 'USD', 'INR')
+        try:
+            assert started.wait(2)
+            duplicate = workers.submit(fx.latest_rate, 'USD', 'INR')
+            cached = workers.submit(fx.currencies)
+            other = workers.submit(fx.latest_rate, 'USD', 'AED')
+            assert cached.result(timeout=2)['currencies']
+            assert other.result(timeout=2)['rate'] == 3.67
+            assert not slow.done()
+        finally:
+            release.set()
+        assert slow.result(timeout=2) == duplicate.result(timeout=2)
+    assert sum(call.args[0].endswith('/usd/inr') for call in provider.call_args_list) == 1

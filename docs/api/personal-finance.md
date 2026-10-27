@@ -21,6 +21,8 @@ Paths below are relative to `/api/v1/expenses`.
 | POST | root path | Create an expense; omit `group_id` for personal |
 | PUT, PATCH | `/{id}` | Edit supplied expense fields |
 | DELETE | `/{id}` | Soft-delete expense |
+| POST | `/{id}/restore` | Restore a soft-deleted expense |
+| DELETE | `/{id}?permanent=true` | Permanently remove a soft-deleted expense, splits and history |
 | GET | `/{id}/history` | Expense history, including after deletion |
 | GET | `/personal` | Paginated personal expenses |
 | GET | `/personal/transactions` | Combined active income and personal expense list |
@@ -78,6 +80,52 @@ reports always exclude them. The transaction list accepts `type=income` or
 
 ## Balance and analysis rules
 
+The [PDF statement guide](expense-statements.md) covers money-in/out columns,
+net activity, original receipts and the bank-style export layout.
+
+The web history loads every page of personal expenses and the actual personal
+income ledger. Income creation, editing, deletion and history use `/incomes`
+routes. If either ledger cannot load, the dashboard reports the error rather
+than presenting incomplete totals as zero.
+
+Personal and group analysis use inclusive calendar periods: today and the
+preceding 6, 29, 89 or 364 days, plus all-time and custom date bounds. Explicit
+transaction dates retain their calendar day; timestamp-only legacy records use
+the viewer's local day. Presets exclude future and deleted transactions. Income
+uses the same period as spending. Charts include zero-spend days and averages
+divide by the complete calendar interval. All-time includes undated legacy
+amounts in totals, though these cannot be plotted on a particular day. Group
+settlement counts use the selected interval too. Group card sparklines fill
+14 days through the latest expense so a single expense has a visible trend.
+
+The personal web dashboard asks users to choose a display currency on their first
+visit. It saves `personal_display_currency` on their account through
+`PUT /api/v1/auth/user/profile`; `GET` of the same endpoint returns the saved
+choice (or null before the first choice). A dropdown lets users change it anytime.
+The nullable column is introduced by migration `c62f718293a4`; existing accounts
+are prompted instead of silently receiving a default.
+
+The dashboard combines all transactions in the selected currency. Entry currency
+applies to the new transaction only: changing it does not switch dashboards or
+hide previous transactions. The web client converts each original amount using
+the exchange-rate API and rounds it to the selected currency's precision for summary cards, history,
+analytics and PDF exports. History also shows the original amount for converted
+rows, and editing always uses the saved original currency and amount. The selected
+currency and loaded exchange-rate pairs stay cached during the session. Switching
+dashboard tabs, changing modes, returning to the browser tab or live transaction
+updates do not reload those pairs. A new transaction currency fetches only its
+missing pair; an explicit display-currency change uses the selected target's
+pairs. Failed requests can be retried. Saved records are not rewritten.
+When a required rate is unavailable, original history remains accessible while
+totals, analytics and export wait for a successful conversion. Cached rates are
+identified. API reports below continue to expose original currency totals.
+
+Committed personal transaction changes send private Socket.IO invalidations to
+the owner's devices. The client updates the ledger in the background, preserving
+the selected currency and loaded rates. Reconnect, visibility recovery and
+polling catch missed transaction changes. Explicit currency-preference changes
+also notify the owner's other devices. Rollbacks do not broadcast changes.
+
 `/personal/summary` accepts currency and date bounds. Every currency has its own
 row in `data.balances`; currencies are never added together or converted.
 
@@ -105,8 +153,14 @@ Financial HTTP responses use `Cache-Control: private, no-store`.
 ## Audit, permissions and migration
 
 Deletion persists who deleted the record and when. History retains before and
-after snapshots and remains visible to its owner after deletion. Deleted records
-cannot be edited or deleted again. Income IDs belonging to another user return
+after snapshots and remains visible to its owner after soft deletion. Deleted
+expenses show icon-only restore and permanent-delete controls. POST
+`/{id}/restore` restores a soft-deleted expense. DELETE `/{id}?permanent=true`
+permanently removes a soft-deleted expense together with its splits and history;
+it returns 409 for an active expense. The UI asks for confirmation first and
+shows “Transaction permanently deleted.” after success. Repeating a regular
+DELETE keeps the expense recoverable. Deleted expenses cannot be edited.
+Deleted incomes cannot be edited or deleted again. Income IDs belonging to another user return
 404; existing expense permission errors return 403. Malformed IDs and filters
 return 400, with expense schema failures retaining the existing 422 convention.
 Row locks serialize concurrent money edits and deletions on SQLite and PostgreSQL.

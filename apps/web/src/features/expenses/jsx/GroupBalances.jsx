@@ -1,5 +1,5 @@
 // Purpose: Displays member balances, suggests payments, and opens settlement entry with currency conversion for display.
-import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
+import CurrencyAmount from './CurrencyAmount';
 // Purpose: Renders the Group Balances interface within apps\web\src\features\expenses\jsx.
 import React, { useState } from 'react';
 import SettlementModal from './SettlementModal';
@@ -40,8 +40,7 @@ const GroupBalances = ({
       await onSettlementSuccess(settlementData);
     }
   };
-  const displayMoney = useMoneyDisplay(group?.currency || 'USD', group?.display_currency || group?.currency || 'USD');
-  const formatCurrency = (amount, currency) => displayMoney(Math.abs(amount), currency);
+
 
   // Helper function to get member display name
   // Phase 17 Bug Fix: Also check allMembersMap for removed members
@@ -215,9 +214,7 @@ const GroupBalances = ({
                   color: isSettled ? '#666' : (netBalance >= 0 ? '#27ae60' : '#e74c3c'),
                   fontWeight: isSettled ? '400' : '600'
                 }}>
-                  {isSettled ? formatCurrency(0, currency) : (
-                    `${netBalance >= 0 ? '+' : '-'}${formatCurrency(netBalance, currency)}`
-                  )}
+                  <CurrencyAmount amount={isSettled ? 0 : netBalance} currency={currency} displayCurrency={group?.display_currency || currency} signed />
                 </span>
               </div>
             );

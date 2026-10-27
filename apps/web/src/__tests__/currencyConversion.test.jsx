@@ -5,10 +5,12 @@ import CurrencyConversion from '../components/common/jsx/CurrencyConversion';
 import TransactionModal from '../features/expenses/jsx/TransactionModal';
 import ExpenseSummary from '../features/expenses/jsx/ExpenseSummary';
 import {getCurrencies, getExchangeRate} from '../services/currencyApi';
+import {clearExchangeRateCache} from '../hooks/useExchangeRate';
 jest.mock('../services/currencyApi', () => ({getCurrencies: jest.fn(), getExchangeRate: jest.fn()}));
 const amounts = [{label: 'Total Trip Spend', amount: 100}, {label: 'Trip budget', amount: 1000}, {label: 'Per person', amount: 50}];
 const rate = {base: 'USD', quote: 'INR', rate: 96, date: '2026-10-15', fetched_at: '2026-10-16T10:00:00Z'};
 beforeEach(() => {
+  clearExchangeRateCache();
   jest.clearAllMocks();
   getCurrencies.mockResolvedValue({currencies: [{code: 'USD', name: 'US Dollar'}, {code: 'INR', name: 'Indian Rupee'}, {code: 'AED', name: 'UAE Dirham'}]});
   getExchangeRate.mockResolvedValue(rate);
@@ -68,6 +70,30 @@ it('keeps an existing personal expense currency fixed when editing', async () =>
   await act(async () => {});
   expect(screen.getByLabelText('Currency')).toBeDisabled();
   expect(screen.getByLabelText('Currency')).toHaveValue('INR');
+});
+
+it.each(['expense', 'income'])('locks the form, animates saving and prevents duplicate %s submissions', async type => {
+  let reject;
+  const save = jest.fn().mockReturnValue(new Promise((resolve, fail) => {reject = fail;}));
+  const alert = jest.fn(), close = jest.fn();
+  render(<TransactionModal mode="personal" currency="USD" currentUser={{uid:'user'}} onSave={save} onClose={close} onAlert={alert}/>);
+  if (type === 'income') fireEvent.click(screen.getByRole('radio', {name: 'Income'}));
+  fireEvent.change(screen.getByLabelText('Description'), {target: {value: 'Payment'}});
+  fireEvent.change(screen.getByLabelText('Amount'), {target: {value: '100'}});
+  const form = screen.getByLabelText('Amount').closest('form');
+  fireEvent.submit(form);
+  fireEvent.submit(form);
+  expect(save).toHaveBeenCalledTimes(1);
+  expect(form).toHaveAttribute('aria-busy', 'true');
+  expect(screen.getByRole('status')).toHaveTextContent('Saving...');
+  expect(form.querySelector('.spinning')).toBeInTheDocument();
+  for (const field of form.querySelectorAll('input, select, button')) expect(field).toBeDisabled();
+  fireEvent.keyDown(document, {key: 'Escape'});
+  expect(close).not.toHaveBeenCalled();
+  await act(async () => reject(new Error('Please retry')));
+  expect(alert).toHaveBeenCalledWith('Please retry');
+  expect(screen.getByLabelText('Description')).toBeEnabled();
+  expect(screen.getByLabelText('Amount')).toHaveValue(100);
 });
 
 it('lets the user swap the calculator pair while keeping group totals in their saved currency', async () => {

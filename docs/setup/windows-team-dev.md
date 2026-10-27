@@ -158,13 +158,13 @@ Employee Portal. Local settings, databases and logs remain on disk.
 | Install failed / dependencies changed | Read the terminal error, check network access and run `py -3.11 start.py --setup` again. Do not delete the lockfile. |
 | Missing/unsafe DB role or host | Obtain your personal development credentials from the CTO. Do not substitute an owner password or bypass the check. |
 | DB timeout, TLS or password error | Confirm VPN/network, exact endpoint, URL encoding, TLS and personal login with the CTO. Connection details are withheld from preflight errors. |
-| Schema revision/drift error | Stop and send the sanitized error to the CTO. Startup never fixes schema. Only the designated owner may review and apply migrations separately. Do not stamp, reset, seed or run Supabase setup tools. |
+| Schema revision/drift error | Startup requests only fixed owner-approved development migrations. If unavailable, the owner installs `infra/sql/development/enable_approved_startup_migrations.sql` once in the testing project's SQL Editor. See [database releases](../operations/database-releases.md). Do not stamp, reset or seed. |
 | Port 5000, 5173 or 5174 busy | Stop your previous session in its own checkout. To identify a listener, use `Get-NetTCPConnection -LocalPort 5000,5173,5174 -State Listen`. Ask its owner before stopping anything. |
 | Admin login denied | The frontend can run without staff authorization. Request approved test access from the CTO; do not change `ADMIN_EMAILS` to grant yourself access. |
 | API unavailable / proxy 503 | Read `.tripraft/logs/api.log`, `web.log` and `admin.log`. Wait for reload or restart your launcher. Refresh before retrying writes. Redact secrets before sharing logs. |
 | Catalog-backed pages empty | Obtain a compatible approved catalog snapshot/path from the CTO. No catalog download, initialization or seed import happens at startup. |
 | Redis, email, AI or external API unavailable | These are optional integrations with separate approved dev credentials. Do not reuse production keys. |
-| `--docker` or `--migrate-native` rejected | Intentional. The Docker entrypoint applies migrations and is excluded from engineer startup; the old native migration switch was removed. |
+| `--docker` or `--migrate-native` rejected | Intentional. Shared engineer startup uses restricted personal native credentials. The container entrypoint no longer migrates; provisioning and schema releases happen separately. |
 
 For development checks without virtualenv activation:
 

@@ -78,6 +78,11 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Run migrations against a live database."""
+    supplied_connection = config.attributes.get('connection')
+    if supplied_connection is not None:
+        run_with_connection(supplied_connection)
+        return
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix='sqlalchemy.',
@@ -85,16 +90,21 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection,
-            target_metadata=target_metadata,
-            compare_type=True,
-            compare_server_default=True,
-            render_as_batch=True,  # Required for SQLite ALTER TABLE support
-        )
+        run_with_connection(connection)
 
-        with context.begin_transaction():
-            context.run_migrations()
+
+def run_with_connection(connection) -> None:
+    """Use the release runner's connection so its advisory lock covers all DDL."""
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        compare_type=True,
+        compare_server_default=True,
+        render_as_batch=True,
+    )
+
+    with context.begin_transaction():
+        context.run_migrations()
 
 
 if context.is_offline_mode():

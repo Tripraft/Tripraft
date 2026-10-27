@@ -1,0 +1,22 @@
+{
+  "revision": "d73f8293a5b6",
+  "down_revision": "c62f718293a4",
+  "operations": [
+    {
+      "op": "create_table",
+      "table": "friend_contacts",
+      "columns": [
+        {"name": "id", "type": "uuid", "nullable": false},
+        {"name": "owner_id", "type": "uuid", "nullable": false},
+        {"name": "email", "type": "varchar(255)", "nullable": false},
+        {"name": "nickname", "type": "varchar(100)", "nullable": true},
+        {"name": "created_at", "type": "timestamp", "nullable": false},
+        {"name": "updated_at", "type": "timestamp", "nullable": false}
+      ],
+      "primary_key": ["id"],
+      "foreign_keys": [{"columns": ["owner_id"], "table": "users", "references": ["id"], "on_delete": "CASCADE"}],
+      "unique": [{"name": "uq_friend_contacts_owner_email", "columns": ["owner_id", "email"]}]
+    },
+    {"op": "backfill_friend_contacts"}
+  ]
+}

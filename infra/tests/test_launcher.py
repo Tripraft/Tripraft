@@ -203,11 +203,26 @@ class LauncherTests(unittest.TestCase):
                 start.main()
         launch.assert_not_called()
 
+    def test_shared_start_requests_only_approved_migration_before_schema_check(self):
+        checker = self.root / 'infra/tools/team_sync/check-team-preview-schema.py'
+        checker.parent.mkdir(parents=True)
+        checker.touch()
+        with mock.patch.object(sys, 'argv', ['start.py', '--smoke', '--no-browser']), \
+                mock.patch.object(start, 'node_runtime', return_value='node'), \
+                mock.patch.object(start, 'setup'), mock.patch.object(start, 'run') as run, \
+                mock.patch.object(start, 'start') as launch:
+            start.main()
+        commands = [call.args[0] for call in run.call_args_list]
+        self.assertEqual(commands[0][-1], '--check-database')
+        self.assertEqual(Path(commands[1][1]).name, 'request_development_migration.py')
+        self.assertEqual(Path(commands[2][1]).name, 'check-team-preview-schema.py')
+        launch.assert_called_once_with('node', False, True, True)
+
     def test_docker_is_rejected_before_setup_or_services(self):
         with mock.patch.object(sys, 'argv', ['start.py', '--docker']), \
                 mock.patch.object(start, 'setup') as setup, \
                 mock.patch.object(start, 'run') as run:
-            with self.assertRaisesRegex(RuntimeError, 'entrypoint runs migrations'):
+            with self.assertRaisesRegex(RuntimeError, 'Docker mode is disabled'):
                 start.main()
         setup.assert_not_called()
         run.assert_not_called()

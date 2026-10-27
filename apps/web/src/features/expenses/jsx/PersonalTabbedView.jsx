@@ -18,6 +18,7 @@ const PersonalTabbedView = ({
   onRestore,
   currentUserId,
   currency = 'USD',
+  conversionPending = false,
   onExportPDF
 }) => {
   const [activeTab, setActiveTab] = useState('transactions');
@@ -155,7 +156,8 @@ const PersonalTabbedView = ({
         )}
 
         {/* Analytics Tab */}
-        {activeTab === 'analytics' && (
+        {activeTab === 'analytics' && conversionPending && <p role="status">Analytics will be available after currency conversion completes.</p>}
+        {activeTab === 'analytics' && !conversionPending && (
           <div style={{ animation: 'fadeIn 0.3s ease' }}>
             <ExpenseAnalytics
               expenses={transactions || []}

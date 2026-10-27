@@ -9,7 +9,7 @@ from app.core.db.base import Base
 from app.core.db.uuid7 import CoercingUuid as Uuid
 from app.core.db.uuid7 import uuid7
 from sqlalchemy import (JSON, Boolean, Column, DateTime, ForeignKey, Index,
-                        Integer, String, Text)
+                        Integer, String, Text, UniqueConstraint)
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
@@ -30,6 +30,8 @@ class User(Base):
     photo_url = Column(Text)
     phone = Column(String(20))
     default_currency = Column(String(3), default='USD')
+    # Null means the user has not chosen a personal dashboard currency yet.
+    personal_display_currency = Column(String(3), nullable=True)
     is_active = Column(Boolean, default=True)
     email_verified = Column(Boolean, default=False)
     portal_kind = Column(String(16), nullable=False, default='traveler', server_default='traveler')
@@ -84,6 +86,7 @@ class User(Base):
             'photo_url': self.photo_url,
             'phone': self.phone,
             'default_currency': self.default_currency,
+            'personal_display_currency': self.personal_display_currency,
             'is_active': self.is_active,
             # Derived server-side from ADMIN_EMAILS. The client needs it to
             # decide what to show; it is not the gate. Admin routes are
@@ -101,6 +104,19 @@ class User(Base):
 
     def __repr__(self) -> str:
         return f'<User {self.email}>'
+
+
+class FriendContact(Base):
+    """An owner's private reusable contact, independent of group membership."""
+    __tablename__ = 'friend_contacts'
+    __table_args__ = (UniqueConstraint('owner_id', 'email', name='uq_friend_contacts_owner_email'),)
+
+    id = Column(Uuid, primary_key=True, default=uuid7)
+    owner_id = Column(Uuid, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    email = Column(String(255), nullable=False)
+    nickname = Column(String(100), nullable=True)
+    created_at = Column(DateTime, nullable=False, default=func.now())
+    updated_at = Column(DateTime, nullable=False, default=func.now(), onupdate=func.now())
 
 
 class UserSession(Base):

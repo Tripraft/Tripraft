@@ -19,16 +19,13 @@ logger = logging.getLogger(__name__)
     retry_backoff=True,
     retry_backoff_max=600,
 )
-def send_invitation_email(self, to_email, inviter_name, group_name, invitation_id):
+def send_invitation_email(self, to_email, inviter_name, group_name, invitation_id, created_at=None):
     """Send a group invitation email asynchronously."""
-    from app.notifications.services.email_service import email_service
+    from app.notifications.email.expense_invitations import deliver_pending_invitation
 
-    success = email_service.send_group_invitation(
-        to_email=to_email,
-        inviter_name=inviter_name,
-        group_name=group_name,
-        invitation_id=str(invitation_id),
-    )
+    success = deliver_pending_invitation(invitation_id, created_at)
+    if success is None:
+        return {'skipped': True, 'type': 'invitation'}
     if not success:
         raise self.retry(exc=Exception('Email delivery failed'))
     logger.info('Invitation email sent to %s for group %s', to_email, group_name)

@@ -997,6 +997,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/expenses/friends": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        get: operations["expense_friends_list_friends_get_api_v1_expenses_friends"];
+        put?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        post: operations["expense_friends_save_friend_post_api_v1_expenses_friends"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/expenses/group/{group_id}": {
         parameters: {
             query?: never;
@@ -1024,7 +1042,7 @@ export interface paths {
         /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
         get: operations["groups_sql_get_my_groups_get_api_v1_expenses_groups"];
         put?: never;
-        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        /** @description Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger. */
         post: operations["groups_sql_create_group_post_api_v1_expenses_groups"];
         delete?: never;
         options?: never;
@@ -1058,14 +1076,14 @@ export interface paths {
         };
         /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
         get: operations["groups_sql_get_group_get_api_v1_expenses_groups_group_id"];
-        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        /** @description Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger. */
         put: operations["groups_sql_update_group_put_api_v1_expenses_groups_group_id"];
         post?: never;
         /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
         delete: operations["groups_sql_delete_group_delete_api_v1_expenses_groups_group_id"];
         options?: never;
         head?: never;
-        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        /** @description Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger. */
         patch: operations["groups_sql_update_group_patch_api_v1_expenses_groups_group_id"];
         trace?: never;
     };
@@ -3801,6 +3819,19 @@ export interface components {
             message?: string;
             success: boolean;
         };
+        CreateExpenseGroup: {
+            /** @description Nonnegative amount in the group ledger currency, up to 9999999999.99; null clears the budget. */
+            budget?: number | string | null;
+            category?: string | null;
+            currency?: string;
+            description?: string | null;
+            display_currency?: string;
+            /** Format: date */
+            end_date?: string | null;
+            name: string;
+            /** Format: date */
+            start_date?: string | null;
+        };
         /** CreateTourDraft */
         CreateTourDraft: Record<string, never>;
         /** DepartureProposal */
@@ -4025,6 +4056,42 @@ export interface components {
             user_id: string | null;
             /** Version */
             version: number;
+        };
+        ExpenseFriend: {
+            display_name?: string | null;
+            /** Format: email */
+            email: string;
+            /** Format: uuid */
+            id: string;
+            is_registered: boolean;
+            is_saved?: boolean;
+            label: string;
+            nickname?: string | null;
+            shared_groups?: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            }[];
+            /** Format: uuid */
+            user_id?: string | null;
+        };
+        ExpenseFriendResponse: {
+            data: {
+                friend: components["schemas"]["ExpenseFriend"];
+            };
+            message?: string;
+            success: boolean;
+        };
+        ExpenseFriendsResponse: {
+            data: {
+                friends: components["schemas"]["ExpenseFriend"][];
+                has_more: boolean;
+                limit: number;
+                offset: number;
+                total: number;
+            };
+            message?: string;
+            success: boolean;
         };
         Health: {
             checks?: {
@@ -4423,6 +4490,11 @@ export interface components {
             /** Version */
             version: number;
         };
+        SaveExpenseFriend: {
+            /** Format: email */
+            email: string;
+            nickname?: string | null;
+        };
         /** SaveTourDraft */
         SaveTourDraft: {
             content: components["schemas"]["TourDraftContent"];
@@ -4534,6 +4606,19 @@ export interface components {
              */
             transport_details: string;
         };
+        UpdateExpenseGroup: {
+            /** @description Nonnegative amount in the group ledger currency, up to 9999999999.99; null clears the budget. */
+            budget?: number | string | null;
+            category?: string | null;
+            currency?: string;
+            description?: string | null;
+            display_currency?: string;
+            /** Format: date */
+            end_date?: string | null;
+            name?: string;
+            /** Format: date */
+            start_date?: string | null;
+        };
         /** UploadPackageImage */
         UploadPackageImage: {
             /** Caption */
@@ -4549,6 +4634,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             is_admin: boolean;
+            personal_display_currency?: string | null;
         };
     };
     responses: never;
@@ -7057,7 +7143,10 @@ export interface operations {
     };
     expenses_sql_create_expense_post_api_v1_expenses: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the mutation result and group balances without an account ledger page or personal summary. */
+                compact?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -7252,6 +7341,72 @@ export interface operations {
             };
         };
     };
+    expense_friends_list_friends_get_api_v1_expenses_friends: {
+        parameters: {
+            query?: {
+                search?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseFriendsResponse"];
+                };
+            };
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    expense_friends_save_friend_post_api_v1_expenses_friends: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SaveExpenseFriend"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseFriendResponse"];
+                };
+            };
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
     expenses_sql_get_group_expenses_get_api_v1_expenses_group_group_id: {
         parameters: {
             query?: never;
@@ -7296,12 +7451,19 @@ export interface operations {
     };
     groups_sql_create_group_post_api_v1_expenses_groups: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the created group without reloading all account groups and their summaries. */
+                compact?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateExpenseGroup"];
+            };
+        };
         responses: {
             /** @description Response */
             default: {
@@ -7365,7 +7527,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateExpenseGroup"];
+            };
+        };
         responses: {
             /** @description Response */
             default: {
@@ -7409,7 +7575,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateExpenseGroup"];
+            };
+        };
         responses: {
             /** @description Response */
             default: {
@@ -7728,7 +7898,10 @@ export interface operations {
     };
     invitations_sql_send_invitation_post_api_v1_expenses_invitations: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the saved invitation or joined group without reloading the invitation/account group list. */
+                compact?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -7792,7 +7965,10 @@ export interface operations {
     };
     invitations_sql_accept_invitation_post_api_v1_expenses_invitations_invitation_id_accept: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the saved invitation or joined group without reloading the invitation/account group list. */
+                compact?: boolean;
+            };
             header?: never;
             path: {
                 invitation_id: string;
@@ -8194,7 +8370,10 @@ export interface operations {
     };
     expenses_sql_update_expense_put_api_v1_expenses_expense_id: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the mutation result and group balances without an account ledger page or personal summary. */
+                compact?: boolean;
+            };
             header?: never;
             path: {
                 expense_id: string;
@@ -8216,7 +8395,10 @@ export interface operations {
     };
     expenses_sql_delete_expense_delete_api_v1_expenses_expense_id: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the mutation result and group balances without an account ledger page or personal summary. */
+                compact?: boolean;
+            };
             header?: never;
             path: {
                 expense_id: string;
@@ -8238,7 +8420,10 @@ export interface operations {
     };
     expenses_sql_update_expense_patch_api_v1_expenses_expense_id: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the mutation result and group balances without an account ledger page or personal summary. */
+                compact?: boolean;
+            };
             header?: never;
             path: {
                 expense_id: string;

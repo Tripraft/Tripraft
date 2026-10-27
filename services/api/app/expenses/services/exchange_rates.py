@@ -4,12 +4,13 @@ import re
 import time
 from collections import OrderedDict
 from datetime import date, datetime, timezone
-from threading import RLock
+from threading import Event, RLock
 
 import requests
 
 _cache = OrderedDict()
 _lock = RLock()
+_pending = {}
 _PROVIDER = 'https://api.frankfurter.dev/v2'
 _MAX_STALE = 7 * 86400
 
@@ -21,31 +22,44 @@ class RateUnavailable(Exception):
 def _cached(key, ttl, load, refresh=False):
     # Bounded worker-local cache also works in development without Redis.
     # Keep a last-known observation for a short, explicitly labelled fallback.
-    with _lock:
-        now = time.time()
-        previous = _cache.get(key)
-        if previous and now < previous[2]:
-            if previous[1] and now - previous[0] <= _MAX_STALE:
-                return {**previous[1], 'stale': True}
-            raise RateUnavailable('Currency data is temporarily unavailable. Please try again.')
-        if previous and previous[1] and now - previous[0] < (60 if refresh else ttl):
-            _cache.move_to_end(key)
-            return {**previous[1], 'stale': False}
+    while True:
+        with _lock:
+            now = time.time()
+            previous = _cache.get(key)
+            if previous and now < previous[2]:
+                if previous[1] and now - previous[0] <= _MAX_STALE:
+                    return {**previous[1], 'stale': True}
+                raise RateUnavailable('Currency data is temporarily unavailable. Please try again.')
+            if previous and previous[1] and now - previous[0] < (60 if refresh else ttl):
+                _cache.move_to_end(key)
+                return {**previous[1], 'stale': False}
+            pending = _pending.get(key)
+            if pending is None:
+                _pending[key] = Event()
+                break
+        # Only identical observations wait for each other. A slow provider
+        # must not block cached reads or independent currency pairs.
+        pending.wait()
+    try:
         try:
             data = load()
         except (requests.RequestException, ValueError, TypeError, KeyError) as exc:
-            _cache[key] = (previous[0], previous[1], now + 60) if previous else (now, None, now + 60)
-            while len(_cache) > 512:
-                _cache.popitem(last=False)
+            now = time.time()
+            with _lock:
+                _cache[key] = (previous[0], previous[1], now + 60) if previous else (now, None, now + 60)
             if previous and previous[1] and now - previous[0] <= _MAX_STALE:
                 return {**previous[1], 'stale': True}
             raise RateUnavailable('Currency data is temporarily unavailable. Please try again.') from exc
         result = {**data, 'source': 'Frankfurter', 'fetched_at': datetime.now(timezone.utc).isoformat()}
-        _cache[key] = (now, result, 0)
-        _cache.move_to_end(key)
-        while len(_cache) > 512:
-            _cache.popitem(last=False)
+        with _lock:
+            _cache[key] = (time.time(), result, 0)
+            _cache.move_to_end(key)
         return {**result, 'stale': False}
+    finally:
+        with _lock:
+            while len(_cache) > 512:
+                _cache.popitem(last=False)
+            _pending.pop(key).set()
 
 
 def _get(path):
