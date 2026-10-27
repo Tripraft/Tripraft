@@ -158,7 +158,7 @@ class ExpenseApiService {
 
   async sendInvitation(invitationData) {
     try {
-      return await apiClient.post(`${BASE}/invitations`, invitationData);
+      return await apiClient.post(`${BASE}/invitations?compact=true`, invitationData);
     } catch (error) {
       // Another tab or a previous timed-out request may already have saved it.
       // Only the pending-duplicate conflict is retryable as a delivery attempt.
@@ -179,7 +179,7 @@ class ExpenseApiService {
   }
 
   async acceptInvitation(invitationId) {
-    return apiClient.post(`${BASE}/invitations/${invitationId}/accept`);
+    return apiClient.post(`${BASE}/invitations/${invitationId}/accept?compact=true`);
   }
 
   async resendInvitation(invitationId) {

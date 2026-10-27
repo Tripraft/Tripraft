@@ -8,13 +8,13 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import ExpenseSummary from './ExpenseSummary';
 import CurrencySelect from '../../../components/common/jsx/CurrencySelect';
+import CurrencyChangeStatus from './CurrencyChangeStatus';
 import usePersonalDashboard from '../../../hooks/usePersonalDashboard';
 import usePersonalCurrency from '../../../hooks/usePersonalCurrency';
 
 import TransactionModal from './TransactionModal';
 import GroupManager from './GroupManager';
 import GroupDashboard from './GroupDashboard';
-import ExpenseConnections from './ExpenseConnections';
 import ExpenseDialog from './ExpenseDialog';
 import GroupDetailHeader from './GroupDetailHeader';
 import NewExpenseGroupModal from './NewExpenseGroupModal';
@@ -33,7 +33,6 @@ import ErrorBoundary from '../../../components/common/jsx/ErrorBoundary';
 import { PlusCircle, RefreshCw, HandCoins } from 'lucide-react';
 import expenseApi from '../../../services/expenseApi';
 import useExpenseLiveUpdates from '../../../hooks/useExpenseLiveUpdates';
-import { generateExpensePDF } from '../../../services/pdfExportService';
 import {
   useAuth,
   useGroups,
@@ -129,6 +128,7 @@ const ExpenseManager = () => {
   const toastIdRef = useRef(0);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [mutationLoading, setMutationLoading] = useState(false);
+  const exportBusy = useRef(false);
   const [showNewGroup, setShowNewGroup] = useState(false);
   const [groupTab, setGroupTab] = useState('balances');
   const groupTabsRef = useRef(null);
@@ -584,15 +584,14 @@ const ExpenseManager = () => {
     : null;
 
   // PDF Export handler
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
+    if (exportBusy.current) return;
     if (mode === 'personal' && (personalConversionPending || personalError)) {
       showAlert('Wait for currency conversion to finish before exporting. Retry if rates are unavailable.');
       return;
     }
-    try {
-      showToast('Generating PDF report...', 'info');
-      
-      generateExpensePDF({
+    // Snapshot the selected ledger before loading the export-only libraries.
+    const options = {
         mode,
         groupName: mode === 'group' ? (activeGroupData?.name || 'Group') : 'Personal',
         expenses: getCurrentTransactions().filter(t => !t.is_deleted),
@@ -601,12 +600,16 @@ const ExpenseManager = () => {
         balances: getCurrentBalances() || [],
         currency: mode === 'group' ? (activeGroupData?.currency || 'USD') : personalCurrency,
         userName: currentUser?.display_name || currentUser?.email || 'User'
-      });
-      
+      };
+    exportBusy.current = true;
+    try {
+      showToast('Generating PDF report...', 'info');
+      const {generateExpensePDF} = await import('../../../services/pdfExportService');
+      generateExpensePDF(options);
       showToast('PDF downloaded successfully!', 'success');
     } catch (error) {
       showToast('Failed to generate PDF', 'error');
-    }
+    } finally { exportBusy.current = false; }
   };
 
   // Loading state
@@ -669,7 +672,12 @@ const ExpenseManager = () => {
         onInvitationAccepted={async (response) => {
           const result = unwrapEnvelope(response);
           if (Array.isArray(result?.groups)) updateGroupsFromResponse(result.groups);
-          else await refetchGroups();
+          else if (result?.group) {
+            const joined = result.group;
+            setGroups(previous => [joined, ...previous.filter(group => String(group.id || group.group_id) !== String(joined.id || joined.group_id))]);
+            refreshAfterSave(refetchGroups);
+          }
+          else refreshAfterSave(refetchGroups);
           const groupId = result?.group?.id || result?.group?.group_id;
           setExpenseView('group', groupId);
           showToast('Welcome to the group!', 'success');
@@ -677,7 +685,6 @@ const ExpenseManager = () => {
         currentUser={currentUser}
       />
 
-      {mode === 'group' && <ExpenseConnections userId={currentUser?.uid || currentUser?.user_id || currentUser?.id} />}
       {mode === 'group' && !activeGroupId && <GroupDashboard
         groups={(groups || []).filter(group => group && (group.id || group.group_id))}
         currentUserId={currentUser?.uid || currentUser?.user_id || currentUser?.id}
@@ -693,11 +700,11 @@ const ExpenseManager = () => {
           <CurrencySelect id="personal-display-currency" value={personalCurrency || ''} placeholder="Choose your currency"
             disabled={currencyPreference.saving || mutationLoading} onChange={event => currencyPreference.choose(event.target.value)} />
           <p>{personalCurrency ? 'All your transactions are converted automatically. Change this anytime.' : 'Choose once and we will remember it. You can change it anytime.'}</p>
-          {currencyPreference.saving && <span role="status">Saving currency preference...</span>}
           {currencyPreference.saveError && <p role="alert">{currencyPreference.saveError}</p>}
         </>}
       </section>}
-      {mode === 'personal' && personalDashboard.loading && <p role="status">Converting transactions to {personalCurrency}...</p>}
+      {mode === 'personal' && <CurrencyChangeStatus currency={personalCurrency} targetCurrency={currencyPreference.targetCurrency || personalCurrency}
+        pending={currencyPreference.saving || personalDashboard.loading} error={currencyPreference.saveError || personalDashboard.error} />}
       {mode === 'personal' && personalError && <div role="alert">Unable to load the complete personal ledger. <button onClick={refetchPersonalExpenses}>Retry transactions</button></div>}
       {mode === 'personal' && personalDashboard.error && <div role="alert">Unable to convert all transactions. Totals and analytics will be available when exchange rates return. Original amounts are shown below. <button onClick={personalDashboard.retry}>Retry conversion</button></div>}
       {mode === 'personal' && personalDashboard.stale && <p role="status">Using the last available exchange rates for this session.</p>}
@@ -749,7 +756,13 @@ const ExpenseManager = () => {
             onGroupChange={handleGroupChange}
             onGroupCreate={handleCreateGroup}
             onGroupDelete={handleDeleteGroup}
-            onGroupUpdated={() => refreshAfterSave(refetchGroupDetail, refetchGroups)}
+            onGroupUpdated={savedGroup => {
+              if (savedGroup && String(savedGroup.id || savedGroup.group_id) === String(activeGroupId)) {
+                updateGroupDetailFromResponse({group: {...activeGroupData, ...savedGroup}});
+                setGroups(previous => previous.map(group => String(group.id || group.group_id) === String(activeGroupId) ? {...group, ...savedGroup} : group));
+              }
+              refreshAfterSave(refetchGroupDetail, refetchGroups);
+            }}
             onGroupLeave={async () => { setExpenseView('group'); await refetchGroups(); }}
             onMemberAdd={async () => await refetchGroupDetail()}
             onMemberRemove={async () => await refetchGroupDetail()}
@@ -807,17 +820,17 @@ const ExpenseManager = () => {
 
       {mode === 'personal' && showFloatingAdd && !showTransactionModal && <button
         className="btn-add-transaction expense-floating-add" onClick={handleOpenModal} disabled={mutationLoading}>
-        <PlusCircle size={20} aria-hidden="true" /><span>Add Transaction</span>
+        <PlusCircle size={20} aria-hidden="true" /><span className="sr-only">Add Transaction</span>
       </button>}
 
       {mode === 'group' && activeGroupId && activeGroupData && !groupDetailError && showFloatingAdd
         && !showTransactionModal && !showNewGroup && !isHistoryModalOpen && !showAlertModal && !showConfirmModal &&
         <div className="expense-floating-actions" role="group" aria-label="Group quick actions">
-          <button className="btn-add-transaction" onClick={handleOpenModal} disabled={mutationLoading || groupDetailLoading}>
-            <PlusCircle size={20} aria-hidden="true" /><span>Add expense</span>
+          <button className="btn-add-transaction" title="Add expense" onClick={handleOpenModal} disabled={mutationLoading || groupDetailLoading}>
+            <PlusCircle size={20} aria-hidden="true" /><span className="sr-only">Add expense</span>
           </button>
-          <button className="btn-add-transaction" onClick={() => openGroupTab('settleup')} disabled={mutationLoading || groupDetailLoading}>
-            <HandCoins size={20} aria-hidden="true" /><span>Settle up</span>
+          <button className="btn-add-transaction" title="Settle up" onClick={() => openGroupTab('settleup')} disabled={mutationLoading || groupDetailLoading}>
+            <HandCoins size={20} aria-hidden="true" /><span className="sr-only">Settle up</span>
           </button>
         </div>}
 

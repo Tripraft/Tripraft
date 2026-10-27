@@ -285,8 +285,10 @@ class GroupServiceSQL:
                 raise NotFoundError('User not found')
             member = join_member(session, group, user_id)
             accept_pending_for_member(session, group, user)
+            session.flush()
+            result = {'group': group_dict(group, member)}
             session.commit()
-            return {'group': group_dict(group, member)}
+            return result
 
     @staticmethod
     @service_result

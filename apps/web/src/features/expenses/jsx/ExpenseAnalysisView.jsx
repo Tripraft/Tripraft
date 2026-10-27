@@ -10,7 +10,7 @@ import { expensePeople } from '../utils/expensePeople';
 const dayLabel = date => new Date(`${date}T12:00:00`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 export function SpendAreaChart({ daily, currency = 'USD', displayCurrency = currency }) {
-  const formatMoney = useMoneyDisplay(currency, displayCurrency);
+  const formatMoney = useMoneyDisplay(currency, displayCurrency, {includeOriginal: false});
   const id = `spend-${useId().replace(/:/g, '')}`;
   const max = Math.max(...daily.map(day => Number(day.amount) || 0), 1);
   const min = Math.min(...daily.map(day => Number(day.amount) || 0), 0);
@@ -46,13 +46,14 @@ export default function ExpenseAnalysisView({ mode = 'personal', expenses = [], 
   const shareLabel = ownShare ? 'Your share' : `${selectedName}'s share`;
   const analysis = useMemo(() => analyzeExpenses(expenses, { range, scope, mode, userId: selectedUserId, startDate, endDate }), [expenses, range, scope, mode, selectedUserId, startDate, endDate]);
   const periodSettlements = settlements.filter(row => {const day = expenseDay({...row, date: row.settlement_date}); return day && (range === 'all' || day >= analysis.startDay) && day <= analysis.endDay;});
-  const money = useMoneyDisplay(currency, displayCurrency);
+  const money = useMoneyDisplay(currency, displayCurrency, {includeOriginal: false});
+  const compactMoney = useMoneyDisplay(currency, displayCurrency, {includeOriginal: false, compact: true});
   const topCategory = analysis.categoryData.find(category => category.value > 0), largest = analysis.topExpenses[0];
   const insights = [
-    { Icon: Flame, title: 'Top category', value: topCategory?.name || 'No spending yet', description: topCategory ? `${Math.round(topCategory.percent)}% of ${scope === 'share' ? shareLabel.toLowerCase() : 'spending'} Â· ${money(topCategory.value)}` : 'Your categories will appear here.' },
+    { Icon: Flame, title: 'Top category', value: topCategory?.name || 'No spending yet', description: topCategory ? `${Math.round(topCategory.percent)}% of ${scope === 'share' ? shareLabel.toLowerCase() : 'spending'}  /  ${money(topCategory.value)}` : 'Your categories will appear here.' },
     { Icon: Receipt, title: 'Biggest expense', value: largest ? money(largest.value) : money(0), description: largest?.description || 'Add your first expense to get started.' },
     { Icon: TrendingUp, title: 'Daily average', value: `${money(analysis.dailyAverage)} / day`, description: 'Across the days in your spending period.' },
-    mode === 'group' ? { Icon: Users, title: ownShare ? 'Your footprint' : `${selectedName}'s contribution`, value: `${analysis.footprint}% covered by ${ownShare ? 'you' : selectedName}`, description: `${money(analysis.paid)} paid Â· ${people.length} members Â· ${periodSettlements.length} settlements in this period` }
+    mode === 'group' ? { Icon: Users, title: ownShare ? 'Your footprint' : `${selectedName}'s contribution`, value: `${analysis.footprint}% covered by ${ownShare ? 'you' : selectedName}`, description: `${money(analysis.paid)} paid  /  ${people.length} members  /  ${periodSettlements.length} settlements in this period` }
       : { Icon: ChartNoAxesCombined, title: 'Your activity', value: `${analysis.entries.length} transactions`, description: `${money(analysis.entries.length ? analysis.total / analysis.entries.length : 0)} average per transaction` },
   ];
   let offset = 0;
@@ -84,7 +85,8 @@ export default function ExpenseAnalysisView({ mode = 'personal', expenses = [], 
               const circumference = Math.PI * 152, arc = category.percent / 100 * circumference;
               const start = offset; offset += arc;
               return <circle key={category.name} cx="100" cy="100" r="76" fill="none" stroke={category.color} strokeWidth="24" strokeDasharray={`${Math.max(arc - 3, 0)} ${circumference}`} strokeDashoffset={-start} transform="rotate(-90 100 100)"><title>{category.name}: {money(category.value)} ({Math.round(category.percent)}%)</title></circle>;
-            })}</svg><div className="expense-analysis-donut-center"><strong>{money(analysis.total)}</strong><span>{scope === 'share' ? shareLabel.toLowerCase() : mode === 'group' ? 'group total' : 'total spend'}</span></div>
+            })}</svg><div className="expense-analysis-donut-center"><strong title={money(analysis.total)}>{compactMoney(analysis.total)}</strong><span>{scope === 'share' ? shareLabel.toLowerCase() : mode === 'group' ? 'group total' : 'total spend'}</span></div>
+          {compactMoney(analysis.total) !== money(analysis.total) && <p className="expense-analysis-exact-total">{money(analysis.total)}</p>}
         </div><ul className="expense-analysis-legend">{analysis.categoryData.map(category => <li key={category.name}><i style={{ background: category.color }} /><span>{category.name}</span><strong>{Math.round(category.percent)}%</strong></li>)}</ul></article>
         <article className="expense-analysis-panel"><h3>Spend by category</h3><p className="expense-analysis-panel-caption">{scope === 'share' ? 'Your recorded split of each category.' : 'The things that made the journey.'}</p>
           <div className="expense-analysis-bars">{analysis.categoryData.map(category => <div className="expense-analysis-bar" key={category.name}><span>{category.name}</span><strong>{money(category.value)}</strong><span className="expense-analysis-bar-track"><i style={{ background: category.color, width: `${topCategory?.value > 0 ? Math.max(0, category.value) / topCategory.value * 100 : 0}%` }} /></span>{scope === 'share' && !category.involved && <small className="expense-analysis-zero-category">{ownShare ? "You weren't involved in this category." : `${selectedName} wasn't involved in this category.`}</small>}</div>)}</div>
@@ -92,7 +94,7 @@ export default function ExpenseAnalysisView({ mode = 'personal', expenses = [], 
       </div>
       <article className="expense-analysis-panel expense-analysis-daily"><div className="expense-analysis-panel-heading"><h3>Daily spending</h3><span>{analysis.daily.length} days ending {dayLabel(analysis.endDay)}</span></div><SpendAreaChart daily={analysis.daily} currency={currency} displayCurrency={displayCurrency} /></article>
       <article className="expense-analysis-panel"><div className="expense-analysis-panel-heading"><h3>Top expenses</h3><span>{scope === 'share' ? shareLabel : 'Largest first'}</span></div>
-        <ol className="expense-analysis-top-list">{analysis.topExpenses.map((expense, index) => <li key={expense.id || expense.expense_id || index}><span className="expense-analysis-rank">{index + 1}</span><div><strong>{expense.description || 'Expense'}</strong><small>{expense.category || 'Other'}{expense.day ? ` Â· ${dayLabel(expense.day)}` : ''}</small></div><b>{money(expense.value)}</b><ArrowUpRight size={16} /></li>)}</ol>
+        <ol className="expense-analysis-top-list">{analysis.topExpenses.map((expense, index) => <li key={expense.id || expense.expense_id || index}><span className="expense-analysis-rank">{index + 1}</span><div><strong>{expense.description || 'Expense'}</strong><small>{expense.category || 'Other'}{expense.day ? `  /  ${dayLabel(expense.day)}` : ''}</small></div><b>{money(expense.value)}</b><ArrowUpRight size={16} /></li>)}</ol>
       </article>
     </>}
     {mode === 'group' && analysis.entries.length > 0 && <article className="expense-analysis-panel"><ExpenseBreakdown expenses={analysis.entries} members={members} currentUserId={currentUserId}

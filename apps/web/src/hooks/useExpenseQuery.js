@@ -159,7 +159,8 @@ export function useGroupQuery(groupId, options = {}) {
     staleTime: 0,
     gcTime: 5 * 60 * 1000,
     refetchOnMount: true,
-    refetchOnWindowFocus: true,
+    // The expense live-update hook already reconciles on focus/reconnect.
+    refetchOnWindowFocus: false,
     retry: (count, error) => ![401, 403, 404].includes(error?.status || error?.statusCode) && count < 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });

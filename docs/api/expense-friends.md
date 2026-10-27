@@ -29,9 +29,9 @@ notifications refresh affected users' lists when contacts, names or group
 membership change. Each viewer sees only their own saved nickname, otherwise
 the account display name or email. Another user's nickname is never copied.
 
-The existing expenses screen includes a collapsible friends/shared-groups
-graph and paginated friend list. Settlement suggestions include a directional
-payment graph. Neither graph expands into private groups or transitive contacts.
+The group expenses screen omits the friends/shared-groups graph. Saved friends
+remain available in invitation pickers. Settlement suggestions include a directional
+payment graph, limited to the current group.
 
 Expense invitations accept an optional `nickname`. Successful invitation
 creation/resending and direct member addition save the contact for the actor.

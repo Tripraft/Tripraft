@@ -111,9 +111,12 @@ and USD 5.26 for two equal participants, never USD 500 each. Exact/itemized inpu
 fields remain in the selected source currency, labelled separately from estimates.
 
 Display quotes are shared and pinned for the browser session. Changing tabs,
-window focus or remounting does not fetch them again. The group header provides
-an explicit **Refresh conversion** button and quote date. Failed conversions
-show original units instead of a fabricated 1:1 conversion.
+window focus or remounting does not fetch them again. The display-rate row and
+refresh button are omitted. Currency changes show progress through saving and
+conversion, followed by a brief completion message. Failed conversions retain
+original units. Settlement, member spending, activity and history amounts show
+the chosen currency first and the original currency underneath, without extra
+wording in the amount labels. Payment entry remains explicitly in ledger units.
 
 Migration `f95ba4c5d6e8` adds five nullable columns: the four group preferences
 and expense source metadata. Its additive development manifest is supported by
@@ -141,6 +144,14 @@ mutations. Archival preserves stored history.
 | POST | `/invitations/{id}/resend` | Inviter or group admin retries email delivery for an unexpired pending invitation |
 | POST | `/invitations/{id}/decline` | Recipient declines a pending invitation |
 | POST | `/invitations/{id}/cancel` | Inviter or group admin cancels a pending invitation |
+
+`POST /invitations?compact=true` omits the group invitation list, and
+`POST /invitations/{id}/accept?compact=true` omits the account group list.
+Both retain the saved invitation; acceptance retains the complete first group
+page with balances, permissions and pagination. Default responses are unchanged.
+The web updates its invitation/group cache from the committed response and
+reconciles lists in the background. Copied-link acceptance opens the group
+immediately after success, without a fixed two-second redirect delay.
 
 Email aliases `email`, `invitee_email` and `invited_email` are trimmed and
 normalized; simultaneous aliases must agree. Accounts need not exist when

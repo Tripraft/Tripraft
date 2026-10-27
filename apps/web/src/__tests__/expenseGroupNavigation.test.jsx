@@ -174,7 +174,7 @@ it('keeps old and new currencies together after saving, exports converted values
   expect(screen.getByRole('button', {name: 'USD dinner: 100 USD'})).toBeInTheDocument();
   expect(expenseApi.createExpense).toHaveBeenCalledWith(expect.objectContaining({amount: 8000, currency: 'INR'}));
   fireEvent.click(screen.getByRole('button', {name: 'Export personal PDF'}));
-  expect(generateExpensePDF).toHaveBeenCalledWith(expect.objectContaining({currency: 'USD', expenses: [expect.objectContaining({id: 'usd', amount: 100}), expect.objectContaining({id: 'inr', amount: 100})]}));
+  await waitFor(() => expect(generateExpensePDF).toHaveBeenCalledWith(expect.objectContaining({currency: 'USD', expenses: [expect.objectContaining({id: 'usd', amount: 100}), expect.objectContaining({id: 'inr', amount: 100})]})));
   fireEvent.click(screen.getByRole('button', {name: 'INR dinner: 100 USD'}));
   expect(screen.getByText('Editing original: 8000 INR')).toBeInTheDocument();
 });

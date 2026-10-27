@@ -474,3 +474,20 @@ Each published file appears once below. The index covers strict JSON, SQL, histo
 | [api/tests/test_trip_invitation_email_link.py](api/tests/test_trip_invitation_email_link.py) | Verifies trip invitation email points to a registered frontend acceptance route. |
 | [api/tests/test_uuid_ids.py](api/tests/test_uuid_ids.py) | Verifies UUID field handling and UUID-native API/ORM operations while rejecting legacy integer identifiers. |
 | [api/tests/test_websocket_auth.py](api/tests/test_websocket_auth.py) | Verifies Socket.IO authentication, UUID identities, group-room access and presence identifiers. |
+
+## Expense workflow timing tool (2026-10-26)
+
+[api/tests/expense_workflow_benchmark.py](api/tests/expense_workflow_benchmark.py)
+is an opt-in pytest benchmark using the existing migrated temporary SQLite
+fixture. It runs 12 synthetic workflows, disables real mail/provider I/O and
+optionally exports request timing/SQL-count JSON. It does not measure browser
+or remote-database latency. Run from `services/api`:
+
+```powershell
+python -m pytest tests/expense_workflow_benchmark.py -q -s
+```
+
+The [interactive timing report](../docs/operations/expense-latency.html) and
+[measurement notes](../docs/archive/reports/expense-ui-latency-2026-10-26.md)
+document current results and limitations. Invitation create/accept support
+`compact=true` without changing default responses or authorization.

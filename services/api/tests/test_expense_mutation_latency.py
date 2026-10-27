@@ -22,6 +22,32 @@ def test_compact_group_creation_skips_account_listing(alice, monkeypatch):
     assert 'groups' not in data
 
 
+def test_compact_invitations_skip_unrelated_lists(expense_group, bob, monkeypatch):
+    from app.expenses.services.expense_group_service import GroupServiceSQL
+    from app.expenses.services.expense_invite_service import InvitationServiceSQL
+    api, _, gid = expense_group
+    recipient, uid, email = bob
+    monkeypatch.setattr(InvitationServiceSQL, '_send_invitation_email', lambda *args: 'disabled')
+
+    def unexpected(*args, **kwargs):
+        raise AssertionError('Compact invitation writes must not reload account or invitation lists')
+
+    monkeypatch.setattr(InvitationServiceSQL, 'get_group_invitations', unexpected)
+    monkeypatch.setattr(GroupServiceSQL, 'get_user_groups', unexpected)
+    response = api.post('/api/v1/expenses/invitations?compact=true', json={'group_id': gid, 'email': email})
+    assert response.status_code == 201, response.get_json()
+    invitation = payload(response)['invitation']
+    assert 'invitations' not in payload(response)
+    response = recipient.post('/api/v1/expenses/invitations/' + invitation['id'] + '/accept?compact=true')
+    assert response.status_code == 200, response.get_json()
+    data = payload(response)
+    assert 'groups' not in data
+    assert data['group']['id'] == gid
+    assert uid in [row['user_id'] for row in data['group']['members']]
+    assert data['group']['expense_pagination']['total'] == 0
+    assert data['group']['permissions']['can_add_expense']
+
+
 def test_settlement_writes_return_balances_without_reopening_services(group_of_two, monkeypatch):
     from app.expenses.services.settlement_service import SettlementServiceSQL
     from app.expenses.services.ledger_math import simplified_debts

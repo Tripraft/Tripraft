@@ -1,5 +1,6 @@
 // Purpose: Collects payer, recipient, amount and notes, validates against outstanding debt, and closes only after a successful save.
 import ExpenseDialog from './ExpenseDialog';
+import CurrencyAmount from './CurrencyAmount';
 import React, { useState, useEffect, useRef } from 'react';
 import { formatMoney, settlementCap } from '../../../utils/money';
 import '../css/SettlementModal.css';
@@ -183,6 +184,8 @@ const SettlementModal = ({ isOpen, onClose, settlement, groupId, members, balanc
                 required
                 placeholder="Enter amount"
               />
+              <p className="expense-settlement-input-currency">Enter the payment in {currency}.</p>
+              {group?.display_currency && group.display_currency !== currency && Number(amount) > 0 && <CurrencyAmount amount={Number(amount)} currency={currency} displayCurrency={group.display_currency} />}
               {!isManualMode && suggestedAmount > 0 && (
                 <div style={{ marginTop: '0.5rem' }}>
                   <small style={{ color: '#666', display: 'block' }}>

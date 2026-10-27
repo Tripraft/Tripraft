@@ -25,6 +25,7 @@ Start with the guide for your task. Commands in these guides run from the reposi
 - [Repository review](repository-review.md) explains what stays published and what was removed.
 - [Plans](plans/README.md) describe proposed architecture and release gates.
 - [Expense management planning](plans/expenses/README.md) ranks all 60 personal and group travel expense feature ideas.
+- [Expense latency table](operations/expense-latency.html) compares measured local API workflow timings; [UI and performance evidence](archive/reports/expense-ui-latency-2026-10-26.md) explains scope and checks.
 - [Historical reports](archive/README.md) retain dated implementation and audit evidence.
 
 ## Folder conventions

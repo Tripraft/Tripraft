@@ -62,6 +62,9 @@ export function buildExpensePDF({mode, groupName = 'Personal', expenses = [], se
       footStyles: {fillColor: [235, 239, 248], textColor: INK, fontStyle: 'bold'},
       alternateRowStyles: {fillColor: [246, 248, 251]}, columnStyles: columns,
       didParseCell: data => {
+        // AutoTable applies head/foot defaults after columnStyles. Explicitly
+        // align every section to the same column edge, including its heading.
+        data.cell.styles.halign = rightColumns.includes(data.column.index) ? 'right' : 'left';
         // Keep large monetary values intact instead of wrapping digits or clipping.
         if (data.section !== 'head' && rightColumns.includes(data.column.index)) {
           const value = String(data.cell.raw ?? '');

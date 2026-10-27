@@ -1,16 +1,16 @@
 // Purpose: Renders the selected group's members, overview figures, navigation and permission-aware add/settle actions.
-import React, {useState} from 'react';
+import React from 'react';
 import { ArrowLeft, Plus, Handshake } from 'lucide-react';
 import useExchangeRate from '../../../hooks/useExchangeRate';
 import { formatMoney } from '../../../utils/money';
 import { groupDateRange } from '../utils/groupOverview';
 import { GroupPosition, MemberAvatars } from './GroupDashboard';
+import CurrencyChangeStatus from './CurrencyChangeStatus';
 
 export default function GroupDetailHeader({ group, members, overview, busy, onBack, onCreate, onAdd, onSettle }) {
   const currency = group.currency || 'USD';
   const displayCurrency = group.display_currency || currency;
-  const [rateRefresh, setRateRefresh] = useState(0);
-  const exchange = useExchangeRate(currency, displayCurrency, rateRefresh);
+  const exchange = useExchangeRate(currency, displayCurrency);
   const display = amount => exchange.data && currency !== displayCurrency
     ? <span className="currency-paired-money"><span>{formatMoney(amount * exchange.data.rate, displayCurrency)}</span><small>{formatMoney(amount, currency, {currencyDisplay: 'code'})}</small></span>
     : formatMoney(amount, currency);
@@ -33,9 +33,6 @@ export default function GroupDetailHeader({ group, members, overview, busy, onBa
         {[['Total group spend', display(overview.total)], ['You paid', display(overview.paid)], ['Your share', display(overview.share)], ['Transactions', overview.count]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
       </dl>
     </section>
-    {currency !== displayCurrency && <p className="expense-analysis-panel-caption">{exchange.data
-      ? `Display rate: 1 ${currency} = ${exchange.data.rate} ${displayCurrency} · ${exchange.data.date}.`
-      : exchange.error ? `Conversion unavailable. Showing original ${currency} amounts.` : 'Loading display conversion...'}
-      <button className="expense-secondary-button" disabled={exchange.loading} onClick={() => setRateRefresh(value => value + 1)}>Refresh conversion</button></p>}
+    <CurrencyChangeStatus currency={displayCurrency} pending={exchange.loading} error={exchange.error} />
   </>;
 }

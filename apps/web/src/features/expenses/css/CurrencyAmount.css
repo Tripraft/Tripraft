@@ -1,0 +1,21 @@
+/* Purpose: Aligns paired currency amounts without merging digits or wrapping within numbers. */
+.expense-money-pair { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 4px; max-width: 100%; vertical-align: top; font-variant-numeric: tabular-nums; line-height: 1.4; }
+.expense-money-primary { display: block; font-weight: inherit; overflow-wrap: normal; word-break: normal; }
+.expense-money-pair > .expense-money-original { display: block; margin: 0; color: #64748b; font-size: 11px; font-weight: 400; letter-spacing: normal; line-height: 1.5; overflow-wrap: normal; }
+.expense-history-modal .expense-money-pair { align-items: flex-start; }
+.expense-history-money-rows { display: grid; gap: 9px; }
+.expense-history-money-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.expense-activity-title > strong, .expense-member-toggle > span:nth-child(2), .expense-member-spending-total > strong { text-align: right; }
+.expense-activity-title { align-items: start; }
+.expense-activity-title h3 { min-width: 0; overflow-wrap: anywhere; }
+.expense-activity-title > strong { flex-shrink: 0; max-width: 55%; }
+.expense-settlement-row > strong { text-align: right; }
+.expense-member-toggle > span:nth-child(2) { min-width: 0; max-width: 55%; }
+.expense-breakdown dd { min-width: 0; max-width: 60%; flex-shrink: 1; }
+.expense-settlement-input-currency { font-size: 12px; color: #64748b; margin: 8px 0; }
+@media (max-width: 480px) {
+  .expense-activity-title { flex-wrap: wrap; gap: 8px; }
+  .expense-activity-title > strong { margin-left: auto; max-width: 100%; }
+  .expense-member-toggle { flex-wrap: wrap; gap: 10px; }
+  .expense-member-toggle > span:nth-child(2) { max-width: 65%; }
+}
