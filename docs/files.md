@@ -294,7 +294,7 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [apps/web/src/hooks/useGroupPlannerQuery.js](../apps/web/src/hooks/useGroupPlannerQuery.js) | Defines planner query keys and hooks for groups, destination viewports, places, polls, members, expenses, checklists, vault files and activities. |
 | [apps/web/src/hooks/useGroupSocket.js](../apps/web/src/hooks/useGroupSocket.js) | Subscribes to authenticated group collaboration/presence events and forwards handlers for places, polls, checklists, itineraries and membership. |
 | [apps/web/src/hooks/useMoneyDisplay.js](../apps/web/src/hooks/useMoneyDisplay.js) | Formats amounts in a chosen display currency using the exchange-rate hook while leaving stored amounts and calculation units unchanged. |
-| [apps/web/src/hooks/usePersonalCurrency.js](../apps/web/src/hooks/usePersonalCurrency.js) | Loads and saves the user's explicit dashboard currency choice on their account. |
+| [apps/web/src/hooks/usePersonalCurrency.js](../apps/web/src/hooks/usePersonalCurrency.js) | Caches the account's chosen dashboard currency across tabs and saves explicit changes. |
 | [apps/web/src/hooks/usePersonalDashboard.js](../apps/web/src/hooks/usePersonalDashboard.js) | Converts personal transactions into one dashboard currency without changing saved records. |
 | [apps/web/src/hooks/useNotesAutoSave.js](../apps/web/src/hooks/useNotesAutoSave.js) | Saves and clears a group-scoped notes draft in localStorage; it does not send notes to the server. |
 | [apps/web/src/hooks/usePlaceSearchQuery.js](../apps/web/src/hooks/usePlaceSearchQuery.js) | Provides cached React Query reads for place search, details and catalog statistics. |

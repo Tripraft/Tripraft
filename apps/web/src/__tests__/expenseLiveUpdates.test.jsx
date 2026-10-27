@@ -5,8 +5,13 @@ import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-quer
 import { io } from 'socket.io-client';
 import authService from '../services/sqlAuthService';
 import useExpenseLiveUpdates from '../hooks/useExpenseLiveUpdates';
+import usePersonalDashboard from '../hooks/usePersonalDashboard';
+import usePersonalCurrency from '../hooks/usePersonalCurrency';
+import {getExchangeRate} from '../services/currencyApi';
 
 jest.mock('socket.io-client', () => ({ io: jest.fn() }));
+jest.mock('../services/currencyApi', () => ({getExchangeRate: jest.fn()}));
+jest.mock('../services/expenseApi', () => ({__esModule: true, default: {getUser: jest.fn(), updateUser: jest.fn()}}));
 jest.mock('../config/globalConfig', () => ({ __esModule: true, default: { API_BASE_URL: 'http://localhost:5000/api' } }));
 jest.mock('../services/sqlAuthService', () => ({ __esModule: true, default: { getIdToken: jest.fn().mockResolvedValue(null), refreshAccessToken: jest.fn().mockResolvedValue({success:false}) } }));
 
@@ -19,6 +24,7 @@ beforeEach(() => {
   socket = { io: {opts:{reconnection:true}}, connected: true, on: jest.fn((name, handler) => { events[name] = handler; }), connect: jest.fn(), disconnect: jest.fn() };
   io.mockReset().mockReturnValue(socket);
   authService.getIdToken.mockReset().mockResolvedValue(null);
+  getExchangeRate.mockReset().mockImplementation(async (base, quote) => ({base, quote, rate: 0.0125}));
 });
 afterEach(() => { client.clear(); jest.useRealTimers(); });
 
@@ -114,4 +120,37 @@ it('renews a rejected session once before reconnecting', async () => {
  expect(socket.auth).toEqual({});
  await act(async()=>events.connect_error(new Error('Authentication required')));
  expect(socket.disconnect).toHaveBeenCalled();
+});
+
+it('updates personal transactions live while retaining the selected currency and loaded rate', async () => {
+  let ledger = [{id: 'expense', amount: 8000, currency: 'INR'}];
+  const read = jest.fn(async () => ledger);
+  client.setQueryData(['user', 'personal-currency', 'member'], 'USD');
+  const {result} = renderHook(() => {
+    useExpenseLiveUpdates('member', null);
+    const preference = usePersonalCurrency('member');
+    const query = useQuery({queryKey: ['personalExpenses'], queryFn: read});
+    return {preference, dashboard: usePersonalDashboard(query.data || [], preference.currency)};
+  }, {wrapper});
+  await waitFor(() => expect(result.current.dashboard.transactions[0]?.amount).toBe(100));
+  ledger = [{id: 'expense', amount: 16000, currency: 'INR'}];
+  act(() => {
+    events['expenses:changed']({personal: true, expense_ids: ['expense']});
+    jest.advanceTimersByTime(150);
+  });
+  await waitFor(() => expect(result.current.dashboard.transactions[0]?.amount).toBe(200));
+  expect(result.current.preference.currency).toBe('USD');
+  expect(result.current.preference.loading).toBe(false);
+  expect(getExchangeRate).toHaveBeenCalledTimes(1);
+});
+
+it('invalidates the saved preference only when a currency change is announced', async () => {
+  const invalidate = jest.spyOn(client, 'invalidateQueries');
+  renderHook(() => useExpenseLiveUpdates('member', null), {wrapper});
+  await waitFor(() => expect(io).toHaveBeenCalled());
+  act(() => events['expenses:changed']({personal: true, expense_ids: ['expense']}));
+  expect(invalidate).not.toHaveBeenCalledWith({queryKey: ['user', 'personal-currency', 'member'], refetchType: 'active'});
+  act(() => events['expenses:changed']({personal: true, currency_changed: true}));
+  expect(invalidate).toHaveBeenCalledWith({queryKey: ['user', 'personal-currency', 'member'], refetchType: 'active'});
+  expect(invalidate).not.toHaveBeenCalledWith(expect.objectContaining({queryKey: ['personal-dashboard-rate']}));
 });

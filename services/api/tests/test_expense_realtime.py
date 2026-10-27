@@ -5,7 +5,7 @@ import pytest
 
 from conftest import payload
 from app.core.db.connection import get_db_session
-from app.expenses.models import Group
+from app.expenses.models import Expense, Group
 from app.expenses.services.expense_invite_service import InvitationServiceSQL
 from app.trips.realtime.socketio_ext import socketio
 
@@ -165,3 +165,60 @@ def test_savepoint_does_not_publish_before_outer_commit(group_of_two, watch):
         assert changes(observer) == []
         session.commit()
     assert len(changes(observer)) == 1
+
+
+def test_personal_changes_reach_only_the_owners_devices(alice, bob, watch):
+    owner, owner_id, _ = alice
+    other, _, _ = bob
+    first, second, outsider = watch(owner), watch(owner), watch(other)
+    eid = create(owner, owner_id, None)
+    for observer in (first, second):
+        assert changes(observer) == [{'personal': True, 'expense_ids': [eid], 'currency_changed': False}]
+    assert changes(outsider) == []
+    for method, path, kwargs in (
+        (owner.patch, '/api/v1/expenses/%s' % eid, {'json': {'amount': '120'}}),
+        (owner.delete, '/api/v1/expenses/%s' % eid, {}),
+        (owner.post, '/api/v1/expenses/%s/restore' % eid, {}),
+    ):
+        assert method(path, **kwargs).status_code == 200
+        assert changes(second) == [{'personal': True, 'expense_ids': [eid], 'currency_changed': False}]
+        assert changes(outsider) == []
+
+
+def test_personal_currency_changes_notify_only_the_owner(alice, bob, watch):
+    owner, _, _ = alice
+    other, _, _ = bob
+    observer, outsider = watch(owner), watch(other)
+    response = owner.put('/api/v1/auth/user/profile', json={'personal_display_currency': 'INR'})
+    assert response.status_code == 200
+    assert changes(observer) == [{'personal': True, 'expense_ids': [], 'currency_changed': True}]
+    assert changes(outsider) == []
+    assert owner.put('/api/v1/auth/user/profile', json={'display_name': 'New name'}).status_code == 200
+    assert changes(observer) == []
+
+
+def test_personal_income_changes_are_private_and_committed(alice, bob, watch):
+    owner, _, _ = alice
+    other, _, _ = bob
+    observer, outsider = watch(owner), watch(other)
+    response = owner.post('/api/v1/expenses/incomes', json={'description': 'Salary', 'amount': 100, 'currency': 'USD'})
+    assert response.status_code == 201
+    income_id = payload(response)['income']['id']
+    assert changes(observer) == [{'personal': True, 'expense_ids': [], 'currency_changed': False}]
+    for method, fields in ((owner.patch, {'amount': 200}), (owner.delete, None)):
+        assert method('/api/v1/expenses/incomes/' + income_id, **({'json': fields} if fields else {})).status_code == 200
+        assert changes(observer) == [{'personal': True, 'expense_ids': [], 'currency_changed': False}]
+    assert changes(outsider) == []
+
+
+def test_rolled_back_personal_changes_are_not_delivered(alice, watch):
+    owner, owner_id, _ = alice
+    eid = create(owner, owner_id, None)
+    observer = watch(owner)
+    with get_db_session() as session:
+        row = session.get(Expense, UUID(eid))
+        row.amount = 999
+        session.flush()
+        assert changes(observer) == []
+        session.rollback()
+    assert changes(observer) == []

@@ -1,12 +1,14 @@
 // Purpose: Verifies exact group URLs, browser back, selected-group restoration, dashboard/empty states and navigation after group creation or invitation acceptance.
 jest.mock('../services/currencyApi', () => ({getCurrencies: jest.fn().mockResolvedValue({currencies: [{code: 'USD', name: 'US Dollar'}, {code: 'INR', name: 'Indian Rupee'}]}), getExchangeRate: jest.fn(async (base, quote) => ({base, quote, rate: base === 'USD' ? 80 : 0.0125}))}));
 import React from 'react';
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import ExpenseManager from '../features/expenses/jsx/ExpenseManager';
 jest.mock('../hooks/useExpenseLiveUpdates', () => ({ __esModule: true, default: jest.fn() }));
 import expenseApi from '../services/expenseApi';
 import {generateExpensePDF} from '../services/pdfExportService';
+import {getExchangeRate} from '../services/currencyApi';
 import { useAuth, useGroups, useGroupDetail, useInvitations, usePersonalExpenses } from '../hooks/useExpenseQuery';
 
 jest.mock('../hooks/useExpenseQuery', () => ({
@@ -41,19 +43,20 @@ jest.mock('../features/expenses/jsx/TransactionModal', () => function Modal(prop
 });
 
 const groups = [{ id: 'first-group', name: 'First trip' }, { id: 'joined-group', name: 'Joined trip' }];
-let auth;
+let auth, client;
 function Location() {
   const location = useLocation();
   const navigate = useNavigate();
   return <><p>{location.pathname}{location.search}</p><button onClick={() => navigate(-1)}>Back</button></>;
 }
 function Page({ entry = '/expenses/friend-uuid/group?groupId=joined-group' }) {
-  return <MemoryRouter initialEntries={[entry]}><Location /><Routes>
+  return <QueryClientProvider client={client}><MemoryRouter initialEntries={[entry]}><Location /><Routes>
     <Route path="/expenses/:userId?/:mode?" element={<ExpenseManager />} />
-  </Routes></MemoryRouter>;
+  </Routes></MemoryRouter></QueryClientProvider>;
 }
 
 beforeEach(() => {
+  client = new QueryClient({defaultOptions: {queries: {retry: false}}});
   auth = { isAuthenticated: true, currentUser: { uid: 'friend-uuid' }, loading: false };
   useAuth.mockImplementation(() => auth);
   useGroups.mockReturnValue({ groups, refetch: jest.fn(), updateGroupsFromResponse: jest.fn() });
@@ -67,6 +70,7 @@ beforeEach(() => {
   expenseApi.getUser.mockResolvedValue({success: true, data: {user: {personal_display_currency: 'USD'}}});
   expenseApi.updateUser.mockImplementation(async updates => ({success: true, data: {user: updates}}));
 });
+afterEach(() => client.clear());
 
 it('opens the exact invitation group without selecting the first group or personal expenses', () => {
   render(<Page />);
@@ -189,6 +193,21 @@ it('asks for a first currency choice and converts the same history after subsequ
   expect(await screen.findByRole('button', {name: 'INR dinner: 100 USD'})).toBeInTheDocument();
   expect(screen.getByRole('button', {name: 'USD dinner: 100 USD'})).toBeInTheDocument();
   expect(expenseApi.updateUser).toHaveBeenLastCalledWith({personal_display_currency: 'USD'});
+});
+
+it('keeps the currency and conversions ready after switching modes and returning', async () => {
+  usePersonalExpenses.mockReturnValue({expenses: [{id: 'inr', description: 'INR dinner', amount: 8000, currency: 'INR'}]});
+  render(<Page entry="/expenses/friend-uuid/personal" />);
+  expect(await screen.findByRole('button', {name: 'INR dinner: 100 USD'})).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', {name: 'Mode: personal'}));
+  expect(screen.getByRole('heading', {name: 'Your groups'})).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', {name: 'Mode: group'}));
+  expect(screen.getByLabelText('Show all transactions in')).toHaveValue('USD');
+  expect(screen.getByRole('button', {name: 'INR dinner: 100 USD'})).toBeInTheDocument();
+  expect(screen.queryByText('Loading your currency preference...')).toBeNull();
+  expect(screen.queryByText('Converting transactions to USD...')).toBeNull();
+  expect(expenseApi.getUser).toHaveBeenCalledTimes(1);
+  expect(getExchangeRate).toHaveBeenCalledTimes(1);
 });
 
 it('shows a floating add action only after scrolling above the original CTA, and opens its form', () => {
