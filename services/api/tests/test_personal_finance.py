@@ -160,7 +160,10 @@ def test_lists_filters_literal_search_and_stable_pagination(alice):
     assert filtered['total'] == 3 and len(filtered['incomes']) == 1 and filtered['has_more']
     pages = [payload(api.get(BASE + '/incomes?currency=USD&limit=1&offset=' + str(i)))['incomes'][0]['id']
              for i in range(3)]
-    assert pages == [row['id'] for row in reversed(created)]
+    # Equal timestamps use the UUID tie-breaker; UUIDv7 random bits need not
+    # increase when multiple records are created in the same millisecond.
+    expected = sorted(created, key=lambda row: (row['created_at'], UUID(row['id']).int), reverse=True)
+    assert pages == [row['id'] for row in expected]
     assert payload(api.get(BASE + '/incomes?search=%25_'))['total'] == 1
     create(api, 'expense', 4, date='2026-10-02', category='food')
     assert payload(api.get(BASE + '/personal/transactions?type=expense'))['total'] == 1

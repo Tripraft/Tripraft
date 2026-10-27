@@ -5,9 +5,9 @@
 Usage: python start.py [--setup | --check | --check-database | --smoke | --stop] [--no-browser]
 Requires Node >=22 and Python 3.11. Native mode uses personal Supabase dev credentials.
 Starting reuses healthy owned services and refuses unrelated occupied ports.
-Setup, startup, smoke checks and source reloads never run database migrations.
+Shared startup can request a fixed owner-approved development migration without DDL credentials.
 Windows native services also stop when the launcher window closes.
-Existing configuration and data are preserved; no additional launcher module is required.
+Existing configuration and data are preserved.
 """
 import argparse
 import ctypes
@@ -578,7 +578,8 @@ def start(node, docker, smoke, no_browser):
         process = subprocess.Popen(command, cwd=cwd, env=env, stdout=log, stderr=subprocess.STDOUT, **options)
         process.tripraft_service = name
         processes.append(process)
-        save_running_pids([p.pid for p in processes if getattr(p, 'pid', None) and isinstance(p.pid, int)], ports=managed_ports, docker=docker)
+        save_running_pids([p.pid for p in processes if getattr(p, 'pid', None) and isinstance(p.pid, int)],
+                          ports=managed_ports, docker=docker)
         return process
 
     previous_signals = {}
@@ -687,7 +688,7 @@ def main():
     parser.add_argument('--no-browser', action='store_true', help='Keep the browser closed')
     args = parser.parse_args()
     if args.docker:
-        raise RuntimeError('Docker mode is disabled for the shared-development workflow: its existing entrypoint runs migrations. Use native startup. Ask the CTO about separate Docker maintenance.')
+        raise RuntimeError('Docker mode is disabled for the shared-development workflow. Use native startup with restricted personal credentials. Database provisioning and migrations use the separate release process.')
     if args.stop:
         stop_existing(args.docker)
         return
@@ -733,6 +734,10 @@ def main():
     if not args.setup:
         # Verify the personal development connection.
         run([str(venv_python()), str(ROOT / 'start.py'), '--check-database'], env=child_env())
+
+        # Employees may invoke a narrowly scoped function installed once by the
+        # shared-development owner. It cannot execute arbitrary migration code.
+        run([str(venv_python()), str(ROOT / 'infra/tools/request_development_migration.py')], env=child_env())
 
         # Check this checkout's schema version before starting.
         checker = ROOT / 'infra/tools/team_sync/check-team-preview-schema.py'

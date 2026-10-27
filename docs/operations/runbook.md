@@ -8,7 +8,17 @@ the JavaScript workspace. Create an isolated Python environment and install
 The root `start.py` automates one-time setup and starts the whole project; see
 [startup](../setup/startup.md). The optional backend-only PowerShell helper creates `.venv`.
 
-From `services/api`, run `alembic upgrade head`, then `python run.py`.
+For shared development, use `python start.py` with personal restricted credentials.
+The separate [database release process](database-releases.md) applies shared
+migrations after approved merges to `develop`. Employees use the same development
+database for group/invitation tests; production is a separate target.
+
+For automatic shared startup, the owner can install the reviewed development-only
+function described in the release guide. `python start.py` then invokes only its
+fixed approved migration; employees never receive general DDL privileges.
+
+For an explicitly owned local database, authorized developers can run
+`alembic upgrade head` from `services/api`, then `python run.py`.
 From the repository root, `pnpm dev` starts web (5173) and admin (5174); their
 development proxies forward `/api` to localhost:5000. A local SQLite database is
 used by default. Set `REDIS_URL` to a running instance, or empty it for development
@@ -22,8 +32,9 @@ docker compose -f infra/docker/docker-compose.yml up --build
 docker compose -f infra/docker/docker-compose.yml --profile workers up --build
 ```
 
-The API waits for healthy PostgreSQL and Redis, applies migrations, then starts
-Gunicorn. One local Gunicorn worker supports Socket.IO; multiple workers require
+The API waits for healthy PostgreSQL and Redis, then starts Gunicorn against an
+already migrated schema. Initial provisioning and subsequent migrations are
+separate owner operations. One local Gunicorn worker supports Socket.IO; multiple workers require
 deployment routing/sticky-session validation. Development secrets in Compose are
 for local use. Configure real secrets and production settings before deployment.
 
@@ -35,15 +46,14 @@ strict TypeScript checks for entry points/shared packages/admin, tests, and buil
 modules have syntax lint and regression coverage; they are not fully typechecked.
 
 Update canonical CI/deployment workflows under `infra/github/workflows`, then
-`pnpm workflows:sync`. Set the GitHub repository variable `DEPLOY_HOOKS_ENABLED=true` to enable
-deployment after configuring staging/production environments and their
-`STAGING_DEPLOY_HOOK`/`PRODUCTION_DEPLOY_HOOK` secrets. Main pushes trigger staging;
-`v*` tags trigger production after verification. Configure production environment
-reviewers if approval is required. Hooks must deploy the selected revision from the
-connected repository; no provider is provisioned here. Missing hooks fail clearly.
-The workflow was checked locally, but hosted CI and real deployments require the
-repository's remote setup. Docker was unavailable during the reorganization, so
-the Compose topology was validated statically rather than run locally.
+`pnpm workflows:sync`. Follow [database releases](database-releases.md) to configure
+the environment-scoped migration credentials, independent target pins and
+production reviewer/branch protections before enabling `DATABASE_RELEASES_ENABLED`.
+`develop` updates the common development schema. `main` stages a release;
+production requires manual dispatch, exact-commit staging evidence, acceptance,
+a backup reference and administrator environment approval. Staging/production
+application hooks must deploy the requested SHA and readiness must report that
+same SHA. The previous tag-based production hook and flag are superseded.
 
 ## Back up and restore
 

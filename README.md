@@ -70,5 +70,6 @@ Backend tests use temporary databases and synthetic inputs. Canonical CI/deploym
 - [Service file guide](services/README.md), [apps](apps/README.md), [packages](packages/README.md), [infrastructure](infra/README.md)
 - [Published file inventory](docs/files.md) and [repository usefulness review](docs/repository-review.md)
 - [Operator agreements](docs/guides/partner-agreement.md), [map setup](docs/setup/maps.md) and [operations runbook](docs/operations/runbook.md)
+- [Shared development and database releases](docs/operations/database-releases.md) · [Interactive release checklist](docs/operations/database-release-checklist.html)
 
 Planning documents describe proposed work; historical reports record results at their stated dates. Neither implies that every planned capability or external deployment is currently enabled.

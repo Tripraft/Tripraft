@@ -16,6 +16,7 @@ Start with the guide for your task. Commands in these guides run from the reposi
 | Guides | [Staff console](guides/staff-console.md) | Configure staff access and review supplier applications/packages. |
 | Guides | [Partner agreement](guides/partner-agreement.md) | Agreement versions, agent signatures, protected downloads and evidence. |
 | Operations | [Runbook](operations/runbook.md) | Verification, deployment hooks, backup and recovery responsibilities. |
+| Operations | [Database releases](operations/database-releases.md) · [Interactive checklist](operations/database-release-checklist.html) | Employee CRUD, automatic development/staging migrations and administrator-approved production releases. |
 
 ## Source and design references
 

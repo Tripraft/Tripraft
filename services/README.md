@@ -135,7 +135,7 @@ Each published file appears once below. The index covers strict JSON, SQL, histo
 | [api/Dockerfile](api/Dockerfile) | Builds the Python API image from the repository root, installs runtime dependencies, copies service code and starts it as a non-root user. |
 | [api/Dockerfile.dockerignore](api/Dockerfile.dockerignore) | Restricts the repository-root API build context to service code/schema and excludes secrets, runtime data, tests and Office/PDF artifacts. |
 | [api/alembic.ini](api/alembic.ini) | Configures the application's Alembic migration directory, logging and database connection defaults. |
-| [api/docker-entrypoint.sh](api/docker-entrypoint.sh) | Initializes the reference catalog, applies application migrations for a Gunicorn start, then replaces the shell with the requested server/worker command. |
+| [api/docker-entrypoint.sh](api/docker-entrypoint.sh) | Initializes the reference catalog and starts the server/worker against a separately migrated schema; startup never applies application migrations. |
 | [api/gunicorn.conf.py](api/gunicorn.conf.py) | Defines production binding, gevent workers, timeouts, recycling and logging; disables application preload so workers create their own connections. |
 | [api/init_travel_db.py](api/init_travel_db.py) | Initializes the maintained reference-catalog schema and validates existing catalog structure, integrity, foreign keys and optional emptiness without loading seed rows. |
 | [api/openapi.json](api/openapi.json) | Contains exported API routes and explicit request/response schemas used to generate the shared TypeScript API client. |
@@ -145,6 +145,7 @@ Each published file appears once below. The index covers strict JSON, SQL, histo
 | [api/requirements.txt](api/requirements.txt) | Pins the Python API runtime dependencies for Flask, databases, authentication, validation, sockets, workers and external integrations. |
 | [api/ruff.toml](api/ruff.toml) | Selects the Python 3.11 syntax/error lint baseline and excludes migration files from ordinary lint checks. |
 | [api/run.py](api/run.py) | Starts the native Flask/Socket.IO development server, applies gevent patching before imports, and prepares explicitly enabled source reload behavior. |
+| [api/schema_status.py](api/schema_status.py) | Explains migration graph differences and pending revisions without importing application settings or writing to a database. |
 
 ### Application package entry (1 file)
 

@@ -5,6 +5,7 @@ Health Check Endpoint
 Liveness and readiness probes for Kubernetes / load balancers.
 """
 import logging
+import os
 from datetime import datetime, timezone
 
 from app.core.config import Config
@@ -42,6 +43,7 @@ def readiness():
     
     return jsonify({
         'status': 'healthy' if all_healthy else 'degraded',
+        'release_sha': os.getenv('RELEASE_SHA', ''),
         'checks': checks,
         'timestamp': datetime.now(timezone.utc).isoformat(),
     }), status_code
