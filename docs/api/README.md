@@ -65,6 +65,11 @@ Approved verified suppliers can create/read/save/copy private drafts through
 `/api/v1/partners/packages`. These endpoints do not publish tours or configure
 customer prices. See the [staff and draft contracts](../archive/reports/staff-console-package-drafts-2026-10-19.md).
 
+## Saved friends for expense invitations
+
+`/api/v1/expenses/friends` saves private reusable recipients and searches their
+names, nicknames or email addresses. See [the saved-friends contract](expense-friends.md).
+
 ## Partner agreement and post-approval agent signature
 
 Applications submit before agreement signing. `GET /api/v1/partners/agreement` and `/agreement/download` provide the complete supplied draft and exact original Word file after staff approval/email verification. Staff equivalents remain `/api/v1/admin/partners/agreement` and `/agreement/download`. All are private and never cached.

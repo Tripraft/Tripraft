@@ -1,0 +1,7 @@
+{
+  "revision": "e84a93b4c6d7",
+  "down_revision": "d73f8293a5b6",
+  "operations": [
+    {"op": "add_nullable_column", "table": "expenses", "column": {"name": "split_details", "type": "text", "nullable": true}}
+  ]
+}

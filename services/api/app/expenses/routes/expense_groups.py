@@ -49,11 +49,13 @@ def _response(success, result, *, created=False, mutated=False):
 @validate_schema(CreateExpenseGroupSchema)
 def create_group():
     """Create a group and its owner membership/balance in one transaction."""
+    compact = parse_boolean('compact')
     user_id = get_current_user_id()
     success, result = group_service_sql.create_group(user_id=user_id, **g.validated_data)
     if success:
-        groups_success, groups = group_service_sql.get_user_groups(user_id)
-        result['groups'] = groups.get('groups', []) if groups_success else []
+        if not compact:
+            groups_success, groups = group_service_sql.get_user_groups(user_id)
+            result['groups'] = groups.get('groups', []) if groups_success else []
         result['group_id'] = result['group']['id']
     return _response(success, result, created=True, mutated=True)
 

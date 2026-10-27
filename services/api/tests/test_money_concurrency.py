@@ -8,7 +8,7 @@ from uuid import UUID
 import pytest
 
 from conftest import payload
-from app.expenses.models import Expense, ExpenseSplit, GroupBalance, Settlement
+from app.expenses.models import Expense, ExpenseHistory, ExpenseSplit, GroupBalance, Settlement
 from app.core.db.connection import get_db
 from app.expenses.services import money_lock
 from app.expenses.services.expense_service import ExpenseServiceSQL
@@ -84,7 +84,15 @@ def test_concurrent_delete_reverses_money_once(group_of_two, monkeypatch, kind):
         expected = {alice: Decimal('0'), bob: Decimal('0')}
     _synchronize_lock(monkeypatch, money_lock)
     results = _race(delete, delete)
-    assert sorted(success for success, _ in results) == [False, True], results
+    if kind == 'expense':
+        # Expense deletion is idempotent: both requests succeed, but only one
+        # reverses money and writes an audit event.
+        assert all(success for success, _ in results), results
+        assert sum(result.get('message') == 'Expense already deleted' for _, result in results) == 1
+        with get_db() as session:
+            assert session.query(ExpenseHistory).filter_by(expense_id=expense_id, action='deleted').count() == 1
+    else:
+        assert sorted(success for success, _ in results) == [False, True], results
     assert _balances(group) == expected
 
 

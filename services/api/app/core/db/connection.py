@@ -25,6 +25,7 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from .base import Base
+from .timing import track_query_timing
 from app.core.config import Config
 
 logger = logging.getLogger(__name__)
@@ -86,6 +87,11 @@ def _create_sqlite_engine(url: str, pool_size_hint: int = 0):
 
 def _create_pg_engine(url: str, pool_size: int = 20, max_overflow: int = 10):
     """Create a PostgreSQL engine with production-grade pool settings."""
+    if make_url(url).get_driver_name() == 'psycopg2':
+        # gevent's stdlib patch cannot patch libpq's C-level blocking I/O.
+        # Install before any engine opens a connection, including travel reads.
+        from .cooperative import configure_psycopg_wait
+        configure_psycopg_wait()
     return create_engine(
         url,
         pool_size=pool_size,
@@ -124,6 +130,9 @@ logger.info(
     'SQLite' if _IS_SQLITE else 'PostgreSQL',
     'SQLite' if TRAVEL_DATA_URL.startswith('sqlite') else 'PostgreSQL',
 )
+
+for _timed_engine in (engine, travel_engine):
+    track_query_timing(_timed_engine)
 
 
 # ---------------------------------------------------------------------------

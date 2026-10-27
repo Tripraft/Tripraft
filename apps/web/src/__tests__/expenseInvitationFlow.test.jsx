@@ -56,11 +56,10 @@ it('resumes the same invitation after sign-in and accepts only once', async () =
   await screen.findByRole('button', { name: 'Sign In' });
   auth = { ...auth, currentUser: { uid: 'friend-uuid', email: 'friend@example.test' } };
   view.rerender(<Flow />);
-  expect(await screen.findByText('You\'ve successfully joined the group "Weekend"!')).toBeInTheDocument();
+  expect(await screen.findByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
   expect(expenseApi.acceptInvitation).toHaveBeenCalledTimes(1);
   expect(expenseApi.acceptInvitation).toHaveBeenCalledWith('invite-uuid');
   expect(expenseApi.getInvitationDetails).not.toHaveBeenCalled();
-  act(() => jest.advanceTimersByTime(2000));
   expect(screen.getByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
 });
 
@@ -74,9 +73,8 @@ it.each(['/login', '/signup'])('keeps %s usable for an invitation without browse
     expect(screen.queryByRole('alert')).toBeNull();
     auth = { ...auth, currentUser: { uid: 'friend-uuid' } };
     view.rerender(<Flow entry={entry} />);
-    expect(await screen.findByText('You\'ve successfully joined the group "Weekend"!')).toBeInTheDocument();
+    expect(await screen.findByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
     expect(expenseApi.getInvitationDetails).not.toHaveBeenCalled();
-    act(() => jest.advanceTimersByTime(2000));
     expect(screen.getByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
   } finally { storage.mockRestore(); write.mockRestore(); }
 });
@@ -90,7 +88,7 @@ it('uses the copied expense invitation instead of a stale invitation from anothe
   expect(screen.getByLabelText('Email Address')).toHaveValue('');
   auth = { ...auth, currentUser: { uid: 'friend-uuid' } };
   view.rerender(<Flow />);
-  await screen.findByText('You\'ve successfully joined the group "Weekend"!');
+  await screen.findByText('/expenses/friend-uuid/group?groupId=joined-group');
   expect(expenseApi.acceptInvitation).toHaveBeenCalledWith('invite-uuid');
 });
 
@@ -120,7 +118,20 @@ it('reopens an already accepted invitation at the same group', async () => {
   expenseApi.acceptInvitation.mockRejectedValue(Object.assign(new Error('Invitation is already accepted'), { status: 409 }));
   expenseApi.getInvitationDetails.mockResolvedValue({ success: true, data: { invitation: { group_id: 'joined-group' } } });
   render(<Flow />);
-  await screen.findByText('You have already accepted this invitation. Opening your group...');
-  act(() => jest.advanceTimersByTime(2000));
+  await screen.findByText('/expenses/friend-uuid/group?groupId=joined-group');
   expect(screen.getByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
+});
+
+it.each(['cancelled', 'declined'])('shows a %s invitation as unavailable and clears login continuation', async state => {
+  auth.currentUser = { uid: 'friend-uuid' };
+  localStorage.setItem('pendingInvitation', 'invite-uuid');
+  localStorage.setItem('invitationEmail', 'friend@example.test');
+  expenseApi.acceptInvitation.mockRejectedValue(Object.assign(new Error(`Invitation is already ${state}`), { status: 409 }));
+  render(<Flow />);
+  await screen.findByText(`This invitation was ${state}. Ask the inviter to send a new invitation.`);
+  act(() => jest.advanceTimersByTime(3000));
+  expect(expenseApi.getInvitationDetails).not.toHaveBeenCalled();
+  expect(screen.queryByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeNull();
+  expect(localStorage.getItem('pendingInvitation')).toBeNull();
+  expect(localStorage.getItem('invitationEmail')).toBeNull();
 });

@@ -7,6 +7,7 @@ import Settlement from '../features/expenses/jsx/SettlementModal';
 import GroupManager from '../features/expenses/jsx/GroupManager';
 import Tabs from '../features/expenses/jsx/TabbedGroupView';
 import expenseApi from '../services/expenseApi';
+jest.mock('../features/expenses/jsx/ExpenseFriendPicker', () => () => null);
 
 jest.mock('../services/expenseApi', () => ({ __esModule: true, default: {
   deleteGroup: jest.fn(), removeGroupMember: jest.fn(), updateGroupMemberRole: jest.fn(),

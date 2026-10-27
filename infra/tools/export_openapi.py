@@ -57,8 +57,39 @@ def build(application):
             'total': {'type': 'integer'}, 'logs': {'type': 'array', 'items': ref('AuditRecord')},
         }},
         'MeResponse': envelope({'type': 'object', 'required': ['user'], 'properties': {'user': ref('User')}}),
+        'ExpenseFriend': {'type': 'object', 'required': ['id', 'email', 'label', 'is_registered'], 'properties': {
+            'id': {'type': 'string', 'format': 'uuid'}, 'email': {'type': 'string', 'format': 'email'},
+            'nickname': {'type': ['string', 'null'], 'maxLength': 100},
+            'display_name': {'type': ['string', 'null']}, 'label': {'type': 'string'},
+            'is_registered': {'type': 'boolean'}, 'user_id': {'type': ['string', 'null'], 'format': 'uuid'},
+            'is_saved': {'type': 'boolean'},
+            'shared_groups': {'type': 'array', 'items': {'type': 'object', 'required': ['id', 'name'], 'properties': {
+                'id': {'type': 'string', 'format': 'uuid'}, 'name': {'type': 'string'},
+            }}},
+        }},
+        'SaveExpenseFriend': {'type': 'object', 'required': ['email'], 'additionalProperties': False, 'properties': {
+            'email': {'type': 'string', 'format': 'email'},
+            'nickname': {'type': ['string', 'null'], 'maxLength': 100},
+        }},
+        'ExpenseFriendsResponse': envelope({'type': 'object', 'required': ['friends', 'total', 'has_more', 'limit', 'offset'], 'properties': {
+            'friends': {'type': 'array', 'items': ref('ExpenseFriend')}, 'total': {'type': 'integer'},
+            'has_more': {'type': 'boolean'}, 'limit': {'type': 'integer'}, 'offset': {'type': 'integer'},
+        }}),
+        'ExpenseFriendResponse': envelope({'type': 'object', 'required': ['friend'], 'properties': {'friend': ref('ExpenseFriend')}}),
         'AuditResponse': envelope(ref('AuditData')),
     }
+    group_fields = {
+        'name': {'type': 'string', 'minLength': 1, 'maxLength': 100},
+        'description': {'type': ['string', 'null'], 'maxLength': 1000},
+        'category': {'type': ['string', 'null'], 'maxLength': 50},
+        'currency': {'type': 'string', 'pattern': '^[A-Z]{3}$'},
+        'display_currency': {'type': 'string', 'pattern': '^[A-Z]{3}$'},
+        'budget': {'type': ['number', 'string', 'null'], 'description': 'Nonnegative amount in the group ledger currency, up to 9999999999.99; null clears the budget.'},
+        'start_date': {'type': ['string', 'null'], 'format': 'date'},
+        'end_date': {'type': ['string', 'null'], 'format': 'date'},
+    }
+    schemas['CreateExpenseGroup'] = {'type': 'object', 'required': ['name'], 'additionalProperties': False, 'properties': group_fields}
+    schemas['UpdateExpenseGroup'] = {'type': 'object', 'minProperties': 1, 'additionalProperties': False, 'properties': group_fields}
     for model in (PartnerRegister, PartnerLogin, ApplicationUpdate, ApplicationSubmit, ReviewDecision,
                   AgreementAcknowledgment, PartnerAgreementDocument, PartnerAgreementStatus,
                   AgentAgreementSign, AgentSignatureReceipt,
@@ -126,9 +157,42 @@ def build(application):
                 operation['parameters'] = [{'name': name, 'in': 'path', 'required': True, 'schema': {
                     'type': 'integer' if rule._converters[name].__class__.__name__ == 'IntegerConverter' else 'string',
                 }} for name in sorted(rule.arguments)]
+            if ((route == '/api/v1/expenses' and method == 'POST') or
+                    (route == '/api/v1/expenses/{expense_id}' and method in {'PUT', 'PATCH', 'DELETE'})):
+                operation.setdefault('parameters', []).append({
+                    'name': 'compact', 'in': 'query', 'schema': {'type': 'boolean', 'default': False},
+                    'description': 'Return the mutation result and group balances without an account ledger page or personal summary.',
+                })
+            if method == 'POST' and route in {'/api/v1/expenses/invitations', '/api/v1/expenses/invitations/{invitation_id}/accept'}:
+                operation.setdefault('parameters', []).append({
+                    'name': 'compact', 'in': 'query', 'schema': {'type': 'boolean', 'default': False},
+                    'description': 'Return the saved invitation or joined group without reloading the invitation/account group list.',
+                })
             if route == '/api/v1/auth/me' and method == 'GET':
                 operation['responses']['200'] = response(ref('MeResponse'))
                 operation['security'] = [{'cookieAuth': []}]
+            elif ((route == '/api/v1/expenses/groups' and method == 'POST') or
+                  (route == '/api/v1/expenses/groups/{group_id}' and method in {'PUT', 'PATCH'})):
+                operation['security'] = [{'cookieAuth': []}]
+                operation['requestBody'] = {'required': True, 'content': {'application/json': {
+                    'schema': ref('CreateExpenseGroup' if method == 'POST' else 'UpdateExpenseGroup')}}}
+                operation['description'] = 'Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger.'
+                if method == 'POST':
+                    operation.setdefault('parameters', []).append({
+                        'name': 'compact', 'in': 'query', 'schema': {'type': 'boolean', 'default': False},
+                        'description': 'Return the created group without reloading all account groups and their summaries.',
+                    })
+            elif route == '/api/v1/expenses/friends':
+                operation['security'] = [{'cookieAuth': []}]
+                operation['responses']['200'] = response(ref('ExpenseFriendsResponse' if method == 'GET' else 'ExpenseFriendResponse'))
+                if method == 'POST':
+                    operation['requestBody'] = {'required': True, 'content': {'application/json': {'schema': ref('SaveExpenseFriend')}}}
+                else:
+                    operation['parameters'] = [
+                        {'name': 'search', 'in': 'query', 'schema': {'type': 'string', 'maxLength': 255}},
+                        {'name': 'limit', 'in': 'query', 'schema': {'type': 'integer', 'minimum': 1, 'maximum': 100}},
+                        {'name': 'offset', 'in': 'query', 'schema': {'type': 'integer', 'minimum': 0}},
+                    ]
             elif route in {'/api/health/live', '/api/health/ready', '/api/health/'}:
                 operation['responses']['200'] = response(ref('Health'))
                 if route.endswith('/ready'):

@@ -65,7 +65,7 @@ class SettlementServiceSQL:
                     str(member.user_id): member for member in session.query(GroupMember).filter(
                         GroupMember.group_id == group_id,
                         GroupMember.is_active == True,
-                    ).all()
+                    ).options(joinedload(GroupMember.user)).all()
                 }
                 for uid in (user_id, from_user_id, to_user_id):
                     if str(uid) not in memberships:
@@ -138,12 +138,21 @@ class SettlementServiceSQL:
                 # Update group timestamp
                 group.updated_at = datetime.now(timezone.utc)
                 
+                session.flush()
+                balances = member_balances(session, group)
+                settlements = session.query(Settlement).options(
+                    joinedload(Settlement.from_user), joinedload(Settlement.to_user),
+                ).filter_by(group_id=group_id, is_deleted=False).order_by(
+                    Settlement.settlement_date.desc(), Settlement.created_at.desc(), Settlement.id.desc(),
+                ).limit(Config.EXPENSE_DEFAULT_LIMIT).all()
+                result = {
+                    'settlement': SettlementServiceSQL._get_settlement_dict(session, settlement, group, requester),
+                    'settlements': [SettlementServiceSQL._get_settlement_dict(session, row, group, requester) for row in settlements],
+                    'balances': balances, 'debts': simplified_debts(balances),
+                }
                 session.commit()
-                session.refresh(settlement)
-                
-                logger.info(f"Settlement created: {settlement.id} in group {group_id}")
-                
-                return True, {'settlement': SettlementServiceSQL._get_settlement_dict(session, settlement, group, requester)}
+                logger.info('Settlement created: %s in group %s', result['settlement']['id'], group_id)
+                return True, result
                 
         except AppError as exc:
             return False, {'error': exc.message, 'status_code': exc.status_code}
@@ -239,16 +248,6 @@ class SettlementServiceSQL:
         try:
             with get_db_session() as session:
                 group, member = access(session, group_id, user_id)
-                # Verify membership
-                member = session.query(GroupMember).filter(
-                    GroupMember.group_id == group_id,
-                    GroupMember.user_id == user_id,
-                    GroupMember.is_active == True
-                ).first()
-                
-                if not member:
-                    return False, {'error': 'Not a member of this group'}
-                
                 settlements = session.query(Settlement).options(
                     joinedload(Settlement.from_user),
                     joinedload(Settlement.to_user),
@@ -303,17 +302,7 @@ class SettlementServiceSQL:
                 
                 group, requester = access(session, settlement.group_id, user_id)
                 require_contributor(requester)
-                # Verify membership
-                member = session.query(GroupMember).filter(
-                    GroupMember.group_id == settlement.group_id,
-                    GroupMember.user_id == user_id,
-                    GroupMember.is_active == True
-                ).first()
-                
-                if not member:
-                    return False, {'error': 'Not a member of this group'}
-
-                if not can_delete_settlement(group, member, settlement):
+                if not can_delete_settlement(group, requester, settlement):
                     return False, {
                         'error': 'Only a settlement party, recorder, or group admin may delete it',
                         'status_code': 403,
@@ -344,13 +333,16 @@ class SettlementServiceSQL:
                 settlement.deleted_at = datetime.now(timezone.utc)
                 group.updated_at = datetime.now(timezone.utc)
                 
-                session.commit()
-                
-                logger.info(f"Settlement deleted: {settlement_id}")
-                return True, {
+                session.flush()
+                balances = member_balances(session, group)
+                result = {
                     'message': 'Settlement deleted successfully',
                     'group_id': group_id,
+                    'balances': balances, 'debts': simplified_debts(balances),
                 }
+                session.commit()
+                logger.info(f"Settlement deleted: {settlement_id}")
+                return True, result
                 
         except AppError as exc:
             return False, {'error': exc.message, 'status_code': exc.status_code}

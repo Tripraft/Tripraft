@@ -13,6 +13,11 @@ const BASE = GlobalConfig.ENDPOINTS.EXPENSE;
 const AUTH_BASE = GlobalConfig.ENDPOINTS.AUTH;
 
 class ExpenseApiService {
+  async getIncomes(params = {}) { return apiClient.get(`${BASE}/incomes?${new URLSearchParams(params)}`); }
+  async createIncome(data) { return apiClient.post(`${BASE}/incomes`, data); }
+  async updateIncome(id, data) { return apiClient.put(`${BASE}/incomes/${id}`, data); }
+  async deleteIncome(id) { return apiClient.delete(`${BASE}/incomes/${id}`); }
+  async getIncomeHistory(id) { return apiClient.get(`${BASE}/incomes/${id}/history`); }
   // No-ops kept for backward compatibility with AuthContext / useExpenseQuery
   setAuthToken() {}
   setCurrentUser() {}
@@ -46,6 +51,15 @@ class ExpenseApiService {
     return apiClient.put(`${AUTH_BASE}/user/profile`, updates);
   }
 
+  /** Private contacts are reusable across expense groups, without sending mail. */
+  async getFriends({search = '', limit = 50, offset = 0} = {}) {
+    return apiClient.get(`${BASE}/friends?${new URLSearchParams({search, limit, offset})}`);
+  }
+
+  async saveFriend({email, nickname}) {
+    return apiClient.post(`${BASE}/friends`, {email, ...(nickname !== undefined && {nickname})});
+  }
+
   /**
    * Get user's groups
    */
@@ -68,7 +82,7 @@ class ExpenseApiService {
   // =========================================================================
 
   async createGroup(groupData) {
-    return apiClient.post(`${BASE}/groups`, groupData);
+    return apiClient.post(`${BASE}/groups?compact=true`, groupData);
   }
 
   async getGroup(groupId) {
@@ -143,7 +157,21 @@ class ExpenseApiService {
   // =========================================================================
 
   async sendInvitation(invitationData) {
-    return apiClient.post(`${BASE}/invitations`, invitationData);
+    try {
+      return await apiClient.post(`${BASE}/invitations?compact=true`, invitationData);
+    } catch (error) {
+      // Another tab or a previous timed-out request may already have saved it.
+      // Only the pending-duplicate conflict is retryable as a delivery attempt.
+      if (error.status !== 409 || !/invitation already sent and is pending/i.test(error.message)) throw error;
+      const response = await this.getGroupInvitations(invitationData.group_id);
+      const email = (invitationData.invitee_email || invitationData.invited_email || invitationData.email || '').trim().toLowerCase();
+      const existing = (response?.data?.invitations || response?.invitations || []).find(invitation =>
+        (invitation.invitee_email || invitation.invited_email || '').toLowerCase() === email &&
+        invitation.status === 'pending' && !invitation.is_expired);
+      if (!existing) throw error;
+      // The resend endpoint enforces inviter/admin permissions and expiry.
+      return this.resendInvitation(existing.id || existing.invitation_id);
+    }
   }
 
   async getInvitationDetails(invitationId) {
@@ -151,7 +179,7 @@ class ExpenseApiService {
   }
 
   async acceptInvitation(invitationId) {
-    return apiClient.post(`${BASE}/invitations/${invitationId}/accept`);
+    return apiClient.post(`${BASE}/invitations/${invitationId}/accept?compact=true`);
   }
 
   async resendInvitation(invitationId) {
@@ -180,7 +208,7 @@ class ExpenseApiService {
   // =========================================================================
 
   async createExpense(expenseData) {
-    return apiClient.post(`${BASE}`, expenseData);
+    return apiClient.post(`${BASE}?compact=true`, expenseData);
   }
 
   async getExpense(expenseId) {
@@ -188,11 +216,11 @@ class ExpenseApiService {
   }
 
   async updateExpense(expenseId, updates) {
-    return apiClient.put(`${BASE}/${expenseId}`, updates);
+    return apiClient.put(`${BASE}/${expenseId}?compact=true`, updates);
   }
 
-  async deleteExpense(expenseId) {
-    return apiClient.delete(`${BASE}/${expenseId}`);
+  async deleteExpense(expenseId, { permanent = false } = {}) {
+    return apiClient.delete(`${BASE}/${expenseId}?compact=true${permanent ? '&permanent=true' : ''}`);
   }
 
   async restoreExpense(expenseId) {

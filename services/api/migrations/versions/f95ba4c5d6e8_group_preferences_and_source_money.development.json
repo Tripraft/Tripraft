@@ -1,0 +1,11 @@
+{
+  "revision": "f95ba4c5d6e8",
+  "down_revision": "e84a93b4c6d7",
+  "operations": [
+    {"op":"add_nullable_column","table":"groups","column":{"name":"display_currency","type":"varchar(3)","nullable":true}},
+    {"op":"add_nullable_column","table":"groups","column":{"name":"budget_minor","type":"bigint","nullable":true}},
+    {"op":"add_nullable_column","table":"groups","column":{"name":"start_date","type":"date","nullable":true}},
+    {"op":"add_nullable_column","table":"groups","column":{"name":"end_date","type":"date","nullable":true}},
+    {"op":"add_nullable_column","table":"expenses","column":{"name":"original","type":"text","nullable":true}}
+  ]
+}

@@ -84,7 +84,8 @@ def test_personal_lifecycle_edits_and_deletions_recompute_balances(alice):
     deleted = payload(api.get(BASE + '/personal?include_deleted=true'))['expenses'][0]
     assert deleted['is_deleted'] and deleted['deleted_by'] == uid and deleted['deleted_at']
     assert api.put(BASE + '/' + expense['id'], json={'amount': 1}).status_code == 404
-    assert api.delete(BASE + '/' + expense['id']).status_code == 404
+    # Repeating a soft deletion succeeds without applying its money reversal twice.
+    assert api.delete(BASE + '/' + expense['id']).status_code == 200
 
     assert api.delete(BASE + '/incomes/' + income['id']).status_code == 200
     assert balances(api)['USD']['closing_balance'] == 0

@@ -13,27 +13,54 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
   useEffect(() => {
     if (!userId) return;
     let cancelled = false, connecting = false, socket, timer, authRecoveryUsed = false;
+    let personalChanged = false;
     const groups = new Set(), expenses = new Set();
-    const invalidate = key => queryClient.invalidateQueries({ queryKey: key, refetchType: 'active' });
-    const refresh = () => {
+    // Joining the socket or returning focus must not restart a slow read that
+    // is already in flight. Its authenticated response still reconciles data.
+    const invalidate = (key, preserve = false) => {
+      if (preserve) {
+        const state = queryClient.getQueryState(key);
+        // Initial socket join, focus and visibility often happen together.
+        // A recent successful read already reconciled this page. Actual ledger
+        // events below always invalidate, regardless of this recovery window.
+        if (state?.fetchStatus === 'fetching' || (state?.dataUpdatedAt && !state.isInvalidated &&
+            !state.error && Date.now() - state.dataUpdatedAt < 10_000)) return;
+      }
+      return queryClient.invalidateQueries({ queryKey: key, refetchType: 'active' }, {cancelRefetch: !preserve});
+    };
+    const refresh = (full = true) => {
       if (cancelled || document.hidden || navigator.onLine === false) return;
-      invalidate(['groups']);
-      invalidate(['invitations']);
-      if (activeGroupRef.current) groups.add(activeGroupRef.current);
+      const preserve = full && !personalChanged && !groups.size && !expenses.size;
+      const reconcile = key => invalidate(key, preserve);
+      if (full || personalChanged) reconcile(['personalExpenses']);
+      if (full || groups.size) {
+        reconcile(['user', 'expense-friends', userId]);
+        reconcile(['groups']);
+        reconcile(['invitations']);
+      }
+      if (full && activeGroupRef.current) groups.add(activeGroupRef.current);
       for (const id of groups) {
-        for (const prefix of ['group', 'expenses', 'settlements', 'recent-history', 'mega-bootstrap']) invalidate([prefix, id]);
+        for (const prefix of ['group', 'expenses', 'settlements', 'recent-history', 'mega-bootstrap']) reconcile([prefix, id]);
       }
       if (expenses.size) {
-        for (const id of expenses) invalidate(['expense-edit-history', id]);
-      } else invalidate(['expense-edit-history']); // Also recover an already-open history after missed events.
-      groups.clear(); expenses.clear();
+        for (const id of expenses) reconcile(['expense-edit-history', id]);
+      } else if (full) reconcile(['expense-edit-history']); // Recover history after missed events.
+      groups.clear(); expenses.clear(); personalChanged = false;
     };
     const schedule = () => {
       if (timer) return;
-      timer = setTimeout(() => { timer = null; refresh(); }, 150);
+      timer = setTimeout(() => { timer = null; refresh(false); }, 150);
     };
     const onChange = data => {
-      if (cancelled || !data?.group_id) return;
+      if (cancelled) return;
+      if (data?.personal) {
+        personalChanged = true;
+        if (data.currency_changed) invalidate(['user', 'personal-currency', userId]);
+        for (const id of data.expense_ids || []) expenses.add(id);
+        schedule();
+        return;
+      }
+      if (!data?.group_id) return;
       groups.add(data.group_id);
       for (const id of data.expense_ids || []) expenses.add(id);
       if (data.access_revoked) {
@@ -60,6 +87,9 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
           ...(token ? { auth: { token } } : {}),
         });
         socket.on('expenses:changed', onChange);
+        socket.on('expenses:friends-changed', () => {
+          if (!cancelled) invalidate(['user', 'expense-friends', userId]);
+        });
         socket.on('connect', () => {authRecoveryUsed = false; refresh();}); // Initial join and every reconnect catch up.
         socket.on('connect_error', async error => {
           const message = error.message || '';
@@ -87,16 +117,22 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
       finally { connecting = false; }
     };
     connect();
-    const recover = () => { refresh(); if (!socket) connect(); else if (!socket.connected && !authRecoveryUsed) socket.connect(); };
+    const recover = () => {
+      // A healthy socket already records changes while hidden. Flush those
+      // events on return; reconnects still perform full reconciliation.
+      refresh(!socket?.connected);
+      if (!socket) connect(); else if (!socket.connected && !authRecoveryUsed) socket.connect();
+    };
     window.addEventListener('online', recover);
     window.addEventListener('focus', recover);
     document.addEventListener('visibilitychange', recover);
-    // Safety net for disabled WebSockets, missed messages and temporary outages.
+    // Safety net for disabled WebSockets and temporary outages.
     // Hidden/offline tabs do no polling work and catch up when they return.
     let elapsed = 0;
     const fallback = setInterval(() => {
+      if (socket?.connected) { elapsed = 0; return; }
       elapsed += 10000;
-      if (elapsed >= (socket?.connected ? 60000 : 20000)) { elapsed = 0; refresh(); }
+      if (elapsed >= 20000) { elapsed = 0; refresh(); }
     }, 10000);
     return () => {
       cancelled = true;

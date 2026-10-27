@@ -1433,20 +1433,33 @@ button.btn-icon.btn-delete:active {
 .expense-dashboard-currency label {color:#334155; margin-right:12px;}
 .expense-dashboard-currency select {max-width:100%; padding:10px 12px; border:1px solid #cbd5e1; border-radius:10px; background:white; color:#1e293b;}
 .expense-dashboard-currency p {margin:8px 0;}
-.expense-manager .expense-floating-add {
+.expense-manager .expense-floating-add,
+.expense-manager .expense-floating-actions {
   position:fixed;
   right:max(24px, env(safe-area-inset-right));
   bottom:calc(24px + env(safe-area-inset-bottom));
   z-index:90;
   box-shadow:0 8px 24px rgb(37 99 235 / 30%);
 }
+.expense-floating-actions {display:flex; flex-direction:column; gap:10px;}
+.expense-floating-actions .btn-add-transaction {justify-content:center; box-shadow:0 4px 12px rgb(37 99 235 / 15%);}
 .expense-transaction-fields {border:0; padding:0; margin:0; min-width:0;}
 .expense-transaction-fields:disabled {opacity:0.75;}
 .expense-transaction-fields .btn-save {display:inline-flex; align-items:center; justify-content:center; gap:8px;}
+.expense-transaction-fields .spinning {animation:spin 1s linear infinite;}
 .expense-original-amount {display:block; color:#64748b; font-size:12px; margin-top:4px;}
 @media (max-width:640px) {
-  .expense-manager .expense-floating-add {right:16px; bottom:calc(80px + env(safe-area-inset-bottom));}
+  .expense-manager .expense-floating-add,
+  .expense-manager .expense-floating-actions {right:16px; bottom:calc(80px + env(safe-area-inset-bottom));}
 }
 @media (prefers-reduced-motion:reduce) {
   .expense-transaction-fields .spinning {animation:none;}
 }
+
+/* Compact translucent quick actions leave transaction amounts readable. */
+.expense-manager .expense-floating-actions { flex-direction: row; gap: 8px; padding: 6px; border-radius: 30px; background: rgb(255 255 255 / 76%); border: 1px solid rgb(203 213 225 / 70%); backdrop-filter: blur(8px); box-shadow: 0 3px 14px rgb(15 23 42 / 10%); }
+.expense-manager .expense-floating-actions .btn-add-transaction, .expense-manager .btn-add-transaction.expense-floating-add { width: 44px; height: 44px; min-width: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: #6d28d9; background: rgb(245 243 255 / 88%); border: 1px solid #ddd6fe; box-shadow: none; }
+.expense-manager .expense-floating-actions .btn-add-transaction:hover, .expense-manager .btn-add-transaction.expense-floating-add:hover { background: #7c3aed; color: #fff; }
+.expense-manager .expense-floating-actions .btn-add-transaction:focus-visible, .expense-manager .btn-add-transaction.expense-floating-add:focus-visible { outline: 3px solid #a78bfa; outline-offset: 3px; }
+.expense-manager .expense-floating-actions .sr-only, .expense-manager .expense-floating-add .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+.expense-manager { padding-bottom: 110px; }

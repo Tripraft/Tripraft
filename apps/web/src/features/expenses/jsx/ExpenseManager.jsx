@@ -8,7 +8,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import ExpenseSummary from './ExpenseSummary';
 import CurrencySelect from '../../../components/common/jsx/CurrencySelect';
-import CurrencyConversion from '../../../components/common/jsx/CurrencyConversion';
+import CurrencyChangeStatus from './CurrencyChangeStatus';
 import usePersonalDashboard from '../../../hooks/usePersonalDashboard';
 import usePersonalCurrency from '../../../hooks/usePersonalCurrency';
 
@@ -30,10 +30,9 @@ import PendingInvitations from './PendingInvitations';
 
 import Toast from '@tripraft/ui/Toast';
 import ErrorBoundary from '../../../components/common/jsx/ErrorBoundary';
-import { PlusCircle, RefreshCw } from 'lucide-react';
+import { PlusCircle, RefreshCw, HandCoins } from 'lucide-react';
 import expenseApi from '../../../services/expenseApi';
 import useExpenseLiveUpdates from '../../../hooks/useExpenseLiveUpdates';
-import { generateExpensePDF } from '../../../services/pdfExportService';
 import {
   useAuth,
   useGroups,
@@ -44,7 +43,7 @@ import {
 import '../css/ExpenseManager.css';
 import '../css/ExpenseGroups.css';
 import '../css/ExpenseResponsive.css';
-import { expensePayload } from '../../../utils/money';
+import { expensePayload, expenseInput } from '../../../utils/money';
 
 /** Unwrap backend response envelope { success, data, meta } -> inner data */
 const unwrapEnvelope = (r) => (r && typeof r === 'object' && 'success' in r && 'data' in r) ? r.data : r;
@@ -70,7 +69,7 @@ const ExpenseManager = () => {
     refetch: refetchGroups,
     updateGroupsFromResponse,  // INSTANT UPDATE helper
     setGroups
-  } = useGroups();
+  } = useGroups({enabled: mode === 'group' && isAuthenticated});
   
   const [state, setState] = useState({
     editingTransactionId: null,
@@ -98,19 +97,27 @@ const ExpenseManager = () => {
   const {
     invitations,
     loading: invitationsLoading,
+    error: invitationsError,
     refetch: refetchInvitations,
     updateInvitationsFromResponse,  // INSTANT UPDATE helper
     removeInvitation  // INSTANT UPDATE helper
-  } = useInvitations();
+  } = useInvitations({enabled: isAuthenticated});
+  // Cards carry the heading, member list and exact summary. Detail loading must
+  // not hold these behind the expense/settlement pages or pending invitations.
+  const summaryGroup = !groupDetailError && (groups || []).find(group =>
+    String(group.id || group.group_id) === String(activeGroupId));
+  const headerGroup = activeGroupData || summaryGroup;
   
   // Personal expenses
   const {
     expenses: personalExpenses,
     loading: personalLoading,
+    error: personalError,
     refetch: refetchPersonalExpenses,
+    setExpenses: setPersonalExpenses,
     markAsDeleted: markPersonalAsDeleted,
     rollbackDelete: rollbackPersonalDelete
-  } = usePersonalExpenses();
+  } = usePersonalExpenses({enabled: mode === 'personal' && isAuthenticated});
 
   const personalDashboard = usePersonalDashboard(personalExpenses || [], personalCurrency || 'USD', mode === 'personal' && Boolean(personalCurrency));
   const personalConversionPending = !personalCurrency || personalDashboard.loading || Boolean(personalDashboard.error);
@@ -124,8 +131,10 @@ const ExpenseManager = () => {
   const [confirmCallback, setConfirmCallback] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const toastIdRef = useRef(0);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [mutationLoading, setMutationLoading] = useState(false);
+  const exportBusy = useRef(false);
   const [showNewGroup, setShowNewGroup] = useState(false);
   const [groupTab, setGroupTab] = useState('balances');
   const groupTabsRef = useRef(null);
@@ -133,7 +142,8 @@ const ExpenseManager = () => {
   const [showFloatingAdd, setShowFloatingAdd] = useState(false);
   useEffect(() => {
     const button = addTransactionRef.current;
-    if (mode !== 'personal' || !button) return;
+    setShowFloatingAdd(false);
+    if (!button) return;
     const update = () => {
       const rect = button.getBoundingClientRect();
       setShowFloatingAdd(rect.top < 0 && rect.bottom <= 0);
@@ -147,7 +157,7 @@ const ExpenseManager = () => {
     window.addEventListener('scroll', update, true);
     window.addEventListener('resize', update);
     return () => { window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update); };
-  }, [mode, authLoading, isAuthenticated]);
+  }, [mode, activeGroupId, Boolean(activeGroupData), authLoading, isAuthenticated]);
   const openGroupTab = tab => {
     setGroupTab(tab);
     // The cards sit above the tab content, often outside the current viewport.
@@ -196,8 +206,18 @@ const ExpenseManager = () => {
   };
   
   const showToast = (message, type = 'success') => {
-    const id = Date.now();
+    const id = ++toastIdRef.current;
     setToasts(prev => [...prev, { id, message, type }]);
+  };
+
+  // The write has succeeded. Keep reconciliation outside the saving state,
+  // and distinguish a failed refresh from a failed financial transaction.
+  const refreshAfterSave = (...refreshers) => {
+    Promise.all(refreshers.map(refresh => Promise.resolve().then(refresh)))
+      .then(results => {
+        if (results.some(result => result?.isError)) throw new Error('Refresh failed');
+      })
+      .catch(() => showToast('Saved, but the latest details could not load. Please refresh.', 'info'));
   };
   
   const hideToast = (id) => {
@@ -304,13 +324,10 @@ const ExpenseManager = () => {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      if (mode === 'personal') {
-        await refetchPersonalExpenses();
-      } else if (activeGroupId) {
-        await refetchGroupDetail();
-      }
-      await refetchGroups();
-      await refetchInvitations();
+      await Promise.all([
+        ...(mode === 'personal' ? [refetchPersonalExpenses()] : activeGroupId ? [refetchGroupDetail()] : []),
+        refetchGroups(), refetchInvitations(),
+      ]);
     } catch (error) {
       showAlert(`Failed to refresh: ${error.message}`);
     } finally {
@@ -331,8 +348,8 @@ const ExpenseManager = () => {
       if (result?.groups && Array.isArray(result.groups)) {
         updateGroupsFromResponse(result.groups);
       } else {
-        // Fallback: Refetch groups if not returned
-        await refetchGroups();
+        if (result?.group) setGroups(previous => [result.group, ...previous.filter(group => String(group.id || group.group_id) !== String(result.group.id))]);
+        refreshAfterSave(refetchGroups);
       }
       
       // Switch to the newly created group
@@ -369,8 +386,8 @@ const ExpenseManager = () => {
         setExpenseView('group');
       }
       
-      // Refetch groups
-      await refetchGroups();
+      setGroups(previous => previous.filter(group => (group.id || group.group_id) !== groupId));
+      refreshAfterSave(refetchGroups);
     } catch (error) {
       // Only show error toast, don't redirect
       showToast(error.message || 'Cannot delete group', 'error');
@@ -389,11 +406,20 @@ const ExpenseManager = () => {
       
       if (mode === 'personal') {
         let result;
-        if (state.editingTransactionId) {
-          result = await expenseApi.updateExpense(state.editingTransactionId, transactionData);
+        const existing = personalExpenses.find(row => (row.id || row.expense_id) === state.editingTransactionId);
+        if (existing?._income || (!state.editingTransactionId && transactionData.type === 'income')) {
+          const incomeData = {description: transactionData.description, amount: transactionData.amount,
+            category: transactionData.category, income_date: transactionData.expense_date,
+            ...(transactionData.currency && {currency: transactionData.currency})};
+          result = unwrapEnvelope(await (existing ? expenseApi.updateIncome(existing.id, incomeData) : expenseApi.createIncome(incomeData)));
+          const income = result.income;
+          result = {expense: {...income, _income: true, type: 'income', expense_date: income.income_date, created_by: income.user_id}};
+          showToast(existing ? 'Income updated!' : 'Income recorded!', 'success');
+        } else if (state.editingTransactionId) {
+          result = unwrapEnvelope(await expenseApi.updateExpense(state.editingTransactionId, transactionData));
           showToast('Transaction updated!', 'success');
         } else {
-          result = await expenseApi.createExpense({
+          result = unwrapEnvelope(await expenseApi.createExpense({
             group_id: null,
             description: transactionData.description,
             amount: transactionData.amount,
@@ -403,10 +429,13 @@ const ExpenseManager = () => {
             paid_by: currentUser.uid || currentUser.user_id,
             split_type: 'equal',
             splits: [{ user_id: currentUser.uid || currentUser.user_id, amount: transactionData.amount }]
-          });
+          }));
           showToast('Transaction created!', 'success');
         }
-        await refetchPersonalExpenses();
+        if (result?.expense) setPersonalExpenses(previous => [
+          result.expense, ...previous.filter(row => (row.id || row.expense_id) !== (result.expense.id || result.expense.expense_id)),
+        ]);
+        refreshAfterSave(refetchPersonalExpenses);
       } else {
         // Group expense
         const editingExpense = state.editingTransactionId
@@ -434,18 +463,9 @@ const ExpenseManager = () => {
             ? activeGroupExpenses.map(e => (e.id === state.editingTransactionId || e.expense_id === state.editingTransactionId) ? newExpense : e)
             : [newExpense, ...(activeGroupExpenses || [])];
           
-          // Use new balances if returned, otherwise refetch to get accurate balances
-          if (result.group_balances && result.group_balances.length > 0) {
-            updateExpensesAndBalances(updatedExpenses, result.group_balances);
-            await refetchGroupDetail();
-          } else {
-            // Balances not returned - refetch to ensure accurate calculation
-            await refetchGroupDetail();
-          }
-        } else {
-          // Fallback: Refetch group data
-          await refetchGroupDetail();
+          updateExpensesAndBalances(updatedExpenses, result.group_balances);
         }
+        refreshAfterSave(refetchGroupDetail, refetchGroups);
       }
       
       setShowTransactionModal(false);
@@ -468,36 +488,42 @@ const ExpenseManager = () => {
     setShowTransactionModal(true);
   };
 
-  const handleDeleteTransaction = async (id) => {
+  const handleDeleteTransaction = async (id, { permanent = false } = {}) => {
     try {
       if (id && id.toString().startsWith('temp-')) return;
       
       setMutationLoading(true);
       showToast('Deleting transaction...', 'info');
       
-      if (mode === 'personal') {
+      if (mode === 'personal' && !permanent) {
         markPersonalAsDeleted(id);
       }
       
-      const result = unwrapEnvelope(await expenseApi.deleteExpense(id));
+      const income = mode === 'personal' && personalExpenses.find(row => (row.id || row.expense_id) === id)?._income;
+      const result = unwrapEnvelope(await (income ? expenseApi.deleteIncome(id) : expenseApi.deleteExpense(id, { permanent })));
       
       // INSTANT UPDATE: Use returned data if available
-      if (mode === 'group' && (result?.expenses || result?.group_balances)) {
-        updateExpensesAndBalances(activeGroupExpenses.map(item => (item.id || item.expense_id) === id
-          ? { ...item, is_deleted: true } : item), result.group_balances);
-        await refetchGroupDetail();
+      if (mode === 'group') {
+        const expenses = permanent
+          ? activeGroupExpenses.filter(item => (item.id || item.expense_id) !== id)
+          : activeGroupExpenses.map(item => (item.id || item.expense_id) === id ? {
+            ...item, is_deleted: true,
+            permissions: { ...item.permissions, can_edit: false, can_delete: false, can_restore: true, can_permanently_delete: true },
+          } : item);
+        updateExpensesAndBalances(expenses, result?.group_balances);
+        refreshAfterSave(refetchGroupDetail, refetchGroups);
       } else if (mode === 'personal') {
-        await refetchPersonalExpenses();
-      } else {
-        await refetchGroupDetail();
+        if (permanent || income) setPersonalExpenses(previous => previous.filter(row => (row.id || row.expense_id) !== id));
+        refreshAfterSave(refetchPersonalExpenses);
       }
       
-      showToast('Transaction deleted!', 'success');
+      showToast(permanent ? 'Transaction permanently deleted.' : 'Transaction deleted!', 'success');
     } catch (error) {
-      if (mode === 'personal') {
+      if (mode === 'personal' && !permanent) {
         rollbackPersonalDelete(id);
       }
       showToast(`Failed to delete: ${error.message}`, 'error');
+      if (permanent) throw error;
     } finally {
       setMutationLoading(false);
     }
@@ -506,14 +532,26 @@ const ExpenseManager = () => {
   const handleRestoreTransaction = async id => {
     setMutationLoading(true);
     try {
-      await expenseApi.restoreExpense(id);
-      if (mode === 'personal') await refetchPersonalExpenses();
-      else { await refetchGroupDetail(); await refetchGroups(); }
+      const result = unwrapEnvelope(await expenseApi.restoreExpense(id));
+      if (mode === 'personal') {
+        if (result?.expense) setPersonalExpenses(previous => previous.map(row => (row.id || row.expense_id) === id ? result.expense : row));
+        refreshAfterSave(refetchPersonalExpenses);
+      } else {
+        if (result?.expense) updateExpensesAndBalances(activeGroupExpenses.map(row => (row.id || row.expense_id) === id ? result.expense : row), result.group_balances);
+        refreshAfterSave(refetchGroupDetail, refetchGroups);
+      }
       showToast('Transaction restored!', 'success');
     } catch (error) {
       showToast(`Failed to restore: ${error.message}`, 'error');
       throw error;
     } finally { setMutationLoading(false); }
+  };
+
+  const requestDeleteTransaction = (id, options = {}) => {
+    // TransactionList already confirms permanent deletion. Preserve its options
+    // and promise so it can wait for the actual API result and show failures.
+    if (options.permanent) return handleDeleteTransaction(id, options);
+    showConfirm('Are you sure you want to delete this transaction?', () => handleDeleteTransaction(id));
   };
 
   // Settlement handler - with INSTANT UPDATES
@@ -522,9 +560,11 @@ const ExpenseManager = () => {
       setMutationLoading(true);
       showToast('Creating settlement...', 'info');
       
-      await expenseApi.createSettlement(settlementData);
-      // Mutation responses may contain only the default first page of history.
-      await refetchGroupDetail();
+      const result = unwrapEnvelope(await expenseApi.createSettlement(settlementData));
+      if (result?.settlement) updateSettlementsAndBalances([
+        result.settlement, ...activeGroupSettlements.filter(row => (row.id || row.settlement_id) !== (result.settlement.id || result.settlement.settlement_id)),
+      ], result.balances);
+      refreshAfterSave(refetchGroupDetail, refetchGroups);
       showToast('Settlement recorded successfully', 'success');
     } catch (error) {
       showToast(error.message || 'Failed to record settlement', 'error');
@@ -540,7 +580,7 @@ const ExpenseManager = () => {
       activeGroupSettlements.filter(item => (item.id || item.settlement_id) !== settlementId),
       result.balances,
     );
-    await refetchGroupDetail();
+    refreshAfterSave(refetchGroupDetail, refetchGroups);
     showToast('Settlement deleted. Outstanding balances restored.', 'success');
   };
 
@@ -550,15 +590,14 @@ const ExpenseManager = () => {
     : null;
 
   // PDF Export handler
-  const handleExportPDF = () => {
-    if (mode === 'personal' && personalConversionPending) {
+  const handleExportPDF = async () => {
+    if (exportBusy.current) return;
+    if (mode === 'personal' && (personalConversionPending || personalError)) {
       showAlert('Wait for currency conversion to finish before exporting. Retry if rates are unavailable.');
       return;
     }
-    try {
-      showToast('Generating PDF report...', 'info');
-      
-      generateExpensePDF({
+    // Snapshot the selected ledger before loading the export-only libraries.
+    const options = {
         mode,
         groupName: mode === 'group' ? (activeGroupData?.name || 'Group') : 'Personal',
         expenses: getCurrentTransactions().filter(t => !t.is_deleted),
@@ -567,18 +606,23 @@ const ExpenseManager = () => {
         balances: getCurrentBalances() || [],
         currency: mode === 'group' ? (activeGroupData?.currency || 'USD') : personalCurrency,
         userName: currentUser?.display_name || currentUser?.email || 'User'
-      });
-      
+      };
+    exportBusy.current = true;
+    try {
+      showToast('Generating PDF report...', 'info');
+      const {generateExpensePDF} = await import('../../../services/pdfExportService');
+      generateExpensePDF(options);
       showToast('PDF downloaded successfully!', 'success');
     } catch (error) {
       showToast('Failed to generate PDF', 'error');
-    }
+    } finally { exportBusy.current = false; }
   };
 
   // Loading state
   if (authLoading) {
     return (
       <div className="expense-manager">
+        <header className="expense-header"><h1>{mode === 'group' ? 'Group expenses' : 'Expense Dashboard'}</h1></header>
         <div style={{ textAlign: 'center', padding: '4rem' }}>
           <RefreshCw className="spinning" size={48} />
           <p>Loading...</p>
@@ -635,7 +679,12 @@ const ExpenseManager = () => {
         onInvitationAccepted={async (response) => {
           const result = unwrapEnvelope(response);
           if (Array.isArray(result?.groups)) updateGroupsFromResponse(result.groups);
-          else await refetchGroups();
+          else if (result?.group) {
+            const joined = result.group;
+            setGroups(previous => [joined, ...previous.filter(group => String(group.id || group.group_id) !== String(joined.id || joined.group_id))]);
+            refreshAfterSave(refetchGroups);
+          }
+          else refreshAfterSave(refetchGroups);
           const groupId = result?.group?.id || result?.group?.group_id;
           setExpenseView('group', groupId);
           showToast('Welcome to the group!', 'success');
@@ -649,45 +698,48 @@ const ExpenseManager = () => {
         loading={groupsLoading} error={groupsError}
         onSelect={handleGroupChange} onCreate={() => setShowNewGroup(true)} onRetry={refetchGroups}
       />}
-      {mode === 'group' && activeGroupId && groupDetailLoading && !activeGroupData && <p role="status">Loading group…</p>}
+      {mode === 'group' && activeGroupId && !groupDetailError && <div ref={addTransactionRef}>
+        <GroupDetailHeader group={headerGroup || {name:'Group overview', currency:'USD'}} members={activeGroupData ? activeGroupMembers || [] : headerGroup?.members || []}
+          overview={groupOverview(headerGroup, currentUser?.uid || currentUser?.user_id || currentUser?.id,
+            activeGroupData ? getCurrentTransactions() : undefined, activeGroupData ? getCurrentBalances() : undefined)}
+          loading={!headerGroup} busy={mutationLoading || groupDetailLoading || !activeGroupData}
+          onBack={() => {setExpenseView('group'); refetchGroups();}} onCreate={() => setShowNewGroup(true)}
+          onAdd={handleOpenModal} onSettle={() => openGroupTab('settleup')} />
+      </div>}
+      {mode === 'group' && activeGroupId && !activeGroupData && !groupDetailError && <GroupSummaryCards pending
+        currency={headerGroup?.currency || 'USD'} displayCurrency={headerGroup?.display_currency || headerGroup?.currency || 'USD'} />}
+      {invitationsError && <div role="alert">Unable to load invitations: {invitationsError} <button onClick={refetchInvitations}>Retry invitations</button></div>}
+      {mode === 'group' && activeGroupId && groupsError && <div role="alert">Unable to load the group list: {groupsError} <button onClick={refetchGroups}>Retry group list</button></div>}
 
       {mode === 'personal' && <section className="expense-dashboard-currency" aria-label="Dashboard currency preference">
-        {currencyPreference.loading ? <p role="status">Loading your currency preference...</p> : currencyPreference.loadError ? <div role="alert">Unable to load your currency preference. <button onClick={currencyPreference.retry}>Retry</button></div> : <>
-          {!personalCurrency && <h2>Choose your dashboard currency</h2>}
+          <h2>{!currencyPreference.loading && !personalCurrency ? 'Choose your dashboard currency' : 'Dashboard currency'}</h2>
           <label htmlFor="personal-display-currency">Show all transactions in</label>
-          <CurrencySelect id="personal-display-currency" value={personalCurrency || ''} placeholder="Choose your currency"
-            disabled={currencyPreference.saving || mutationLoading} onChange={event => currencyPreference.choose(event.target.value)} />
-          <p>{personalCurrency ? 'All your transactions are converted automatically. Change this anytime.' : 'Choose once and we will remember it. You can change it anytime.'}</p>
-          {currencyPreference.saving && <span role="status">Saving currency preference...</span>}
+          <CurrencySelect id="personal-display-currency" value={personalCurrency || ''} placeholder={currencyPreference.loading ? 'Loading your currency…' : 'Choose your currency'}
+            disabled={currencyPreference.loading || currencyPreference.saving || mutationLoading || Boolean(currencyPreference.loadError)} onChange={event => currencyPreference.choose(event.target.value)} />
+          <p>{currencyPreference.loading ? 'Loading your currency preference...' : personalCurrency ? 'All your transactions are converted automatically. Change this anytime.' : 'Choose once and we will remember it. You can change it anytime.'}</p>
+          {currencyPreference.loadError && <div role="alert">Unable to load your currency preference. <button onClick={currencyPreference.retry}>Retry</button></div>}
           {currencyPreference.saveError && <p role="alert">{currencyPreference.saveError}</p>}
-        </>}
       </section>}
-      {mode === 'personal' && personalDashboard.loading && <p role="status">Converting transactions to {personalCurrency}...</p>}
+      {mode === 'personal' && <CurrencyChangeStatus currency={personalCurrency} targetCurrency={currencyPreference.targetCurrency || personalCurrency}
+        saving={currencyPreference.saving} pending={currencyPreference.saving || personalDashboard.loading} error={currencyPreference.saveError || personalDashboard.error} reserveSpace />}
+      {mode === 'personal' && personalError && <div role="alert">Unable to load the complete personal ledger. <button onClick={refetchPersonalExpenses}>Retry transactions</button></div>}
       {mode === 'personal' && personalDashboard.error && <div role="alert">Unable to convert all transactions. Totals and analytics will be available when exchange rates return. Original amounts are shown below. <button onClick={personalDashboard.retry}>Retry conversion</button></div>}
-      {mode === 'personal' && personalDashboard.stale && <p role="status">Using cached exchange rates. Totals will update when fresh rates are available.</p>}
+      {mode === 'personal' && personalDashboard.stale && <p role="status">Using the last available exchange rates for this session.</p>}
       {/* Personal Expense Summary */}
-      {mode === 'personal' && !personalConversionPending && (
+      {mode === 'personal' && (
         <ExpenseSummary 
           transactions={getCurrentTransactions()}
           mode={mode}
           currency={personalCurrency}
+          pending={personalLoading || personalConversionPending || Boolean(personalError)}
         />
       )}
 
       {mode === 'group' && activeGroupId && activeGroupData && (() => {
         const transactions = getCurrentTransactions();
         const balances = getCurrentBalances() || [];
-        const overview = groupOverview(activeGroupData, currentUser?.uid || currentUser?.user_id || currentUser?.id, transactions, balances);
         const remainingBalance = balances.reduce((sum, balance) => sum + Math.max(0, Number(balance.net_balance ?? balance.balance) || 0), 0);
         return <>
-          <GroupDetailHeader group={activeGroupData} members={activeGroupMembers || []} overview={overview}
-            busy={mutationLoading || groupDetailLoading} onBack={() => { setExpenseView('group'); refetchGroups(); }}
-            onCreate={() => setShowNewGroup(true)} onAdd={handleOpenModal} onSettle={() => openGroupTab('settleup')} />
-          <CurrencyConversion key={activeGroupId} base={activeGroupData.currency || 'USD'} preferredCurrency={activeGroupData.display_currency || activeGroupData.currency || 'USD'} amounts={[
-            {label: 'Total group spend', amount: transactions.filter(t => !t.is_deleted).reduce((sum, t) => sum + Number(t.amount || 0), 0)},
-            {label: 'Outstanding balances', amount: remainingBalance},
-            {label: 'Settled', amount: (activeGroupSettlements || []).reduce((sum, t) => sum + Number(t.amount || 0), 0)},
-          ]} />
           <GroupSummaryCards remainingBalance={remainingBalance}
             totalSettlements={(activeGroupSettlements || []).reduce((sum, settlement) => sum + (Number(settlement.amount) || 0), 0)}
             settlementCount={(activeGroupSettlements || []).length}
@@ -701,7 +753,7 @@ const ExpenseManager = () => {
         </>;
       })()}
 
-      {mode === 'group' && groupDetailError && <div className="expense-groups-empty" role="alert"><p>Unable to open this group: {groupDetailError}</p><button className="expense-secondary-button" onClick={() => setExpenseView('group')}>Back to all groups</button></div>}
+      {mode === 'group' && groupDetailError && <div className="expense-groups-empty" role="alert"><p>Unable to open this group: {groupDetailError}</p><button onClick={refetchGroupDetail}>Retry group</button><button className="expense-secondary-button" onClick={() => setExpenseView('group')}>Back to all groups</button></div>}
 
       {/* Group View with Tabs (Balances, Settle Up, Spending, Transactions, Analytics) */}
       {mode === 'group' && activeGroupId && activeGroupData && (
@@ -718,7 +770,13 @@ const ExpenseManager = () => {
             onGroupChange={handleGroupChange}
             onGroupCreate={handleCreateGroup}
             onGroupDelete={handleDeleteGroup}
-            onGroupUpdated={async () => { await refetchGroupDetail(); await refetchGroups(); }}
+            onGroupUpdated={savedGroup => {
+              if (savedGroup && String(savedGroup.id || savedGroup.group_id) === String(activeGroupId)) {
+                updateGroupDetailFromResponse({group: {...activeGroupData, ...savedGroup}});
+                setGroups(previous => previous.map(group => String(group.id || group.group_id) === String(activeGroupId) ? {...group, ...savedGroup} : group));
+              }
+              refreshAfterSave(refetchGroupDetail, refetchGroups);
+            }}
             onGroupLeave={async () => { setExpenseView('group'); await refetchGroups(); }}
             onMemberAdd={async () => await refetchGroupDetail()}
             onMemberRemove={async () => await refetchGroupDetail()}
@@ -747,7 +805,7 @@ const ExpenseManager = () => {
           activeGroupMembers={activeGroupMembers || []}
           currentUserId={currentUser?.uid || currentUser?.user_id}
           onEdit={handleEditTransaction}
-          onDelete={(id) => showConfirm('Are you sure you want to delete this transaction?', () => handleDeleteTransaction(id))}
+          onDelete={requestDeleteTransaction}
           onRestore={handleRestoreTransaction}
           onExportPDF={handleExportPDF}
         /></div>
@@ -757,14 +815,14 @@ const ExpenseManager = () => {
       {mode === 'personal' && (
         <PersonalTabbedView
           transactions={getCurrentTransactions()}
-          conversionPending={personalConversionPending}
+          conversionPending={personalConversionPending || Boolean(personalError)}
           filter={state.filter}
           onFilterChange={(filterType, value) => setState(prev => ({
             ...prev,
             filter: { ...prev.filter, [filterType]: value }
           }))}
           onEdit={handleEditTransaction}
-          onDelete={(id) => showConfirm('Are you sure you want to delete this transaction?', () => handleDeleteTransaction(id))}
+          onDelete={requestDeleteTransaction}
           onRestore={handleRestoreTransaction}
           currentUserId={currentUser?.uid || currentUser?.user_id}
           currency={personalCurrency || 'USD'}
@@ -772,12 +830,23 @@ const ExpenseManager = () => {
         />
       )}
 
-      {showNewGroup && <NewExpenseGroupModal onClose={() => setShowNewGroup(false)} onCreate={handleCreateGroup} />}
+      {showNewGroup && <NewExpenseGroupModal defaultCurrency={personalCurrency || 'USD'} onClose={() => { setShowNewGroup(false); if (activeGroupId) refetchGroupDetail(); }} onCreate={handleCreateGroup} />}
 
       {mode === 'personal' && showFloatingAdd && !showTransactionModal && <button
         className="btn-add-transaction expense-floating-add" onClick={handleOpenModal} disabled={mutationLoading}>
-        <PlusCircle size={20} aria-hidden="true" /><span>Add Transaction</span>
+        <PlusCircle size={20} aria-hidden="true" /><span className="sr-only">Add Transaction</span>
       </button>}
+
+      {mode === 'group' && activeGroupId && activeGroupData && !groupDetailError && showFloatingAdd
+        && !showTransactionModal && !showNewGroup && !isHistoryModalOpen && !showAlertModal && !showConfirmModal &&
+        <div className="expense-floating-actions" role="group" aria-label="Group quick actions">
+          <button className="btn-add-transaction" title="Add expense" onClick={handleOpenModal} disabled={mutationLoading || groupDetailLoading}>
+            <PlusCircle size={20} aria-hidden="true" /><span className="sr-only">Add expense</span>
+          </button>
+          <button className="btn-add-transaction" title="Settle up" onClick={() => openGroupTab('settleup')} disabled={mutationLoading || groupDetailLoading}>
+            <HandCoins size={20} aria-hidden="true" /><span className="sr-only">Settle up</span>
+          </button>
+        </div>}
 
       {/* Transaction Modal */}
       {showTransactionModal && (
@@ -785,7 +854,7 @@ const ExpenseManager = () => {
           mode={mode}
           activeGroup={activeGroupData}
           members={activeGroupMembers || []}
-          editingTransaction={editingTransaction}
+          editingTransaction={expenseInput(editingTransaction)}
           currency={mode === 'group' ? activeGroupData?.currency : personalCurrency}
           currentUser={currentUser}
           onSave={handleSaveTransaction}
@@ -807,7 +876,7 @@ const ExpenseManager = () => {
 
       {/* Confirm Modal */}
       {showConfirmModal && (
-        <ExpenseDialog label="Confirm expense deletion" onClose={() => setShowConfirmModal(false)} className="modal modal-small">
+        <ExpenseDialog label="Confirm expense deletion" onClose={() => setShowConfirmModal(false)} className="modal modal-small expense-delete-confirm-dialog">
             <h2>Are you sure?</h2>
             <p>{confirmMessage}</p>
             <div className="modal-actions">

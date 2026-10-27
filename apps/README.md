@@ -204,6 +204,7 @@ The following tables contain one entry for each of the 300 application files. Fo
 | [web/src/features/expenses/jsx/ExpenseAnalysisView.jsx](web/src/features/expenses/jsx/ExpenseAnalysisView.jsx) | Renders spending insights, category and daily charts, date-range filters and group-total versus saved-share analysis. | `web/expenses` |
 | [web/src/features/expenses/jsx/ExpenseAnalytics.jsx](web/src/features/expenses/jsx/ExpenseAnalytics.jsx) | Re-exports ExpenseAnalysisView as a compatibility entry for existing expense imports. | `web/expenses` |
 | [web/src/features/expenses/jsx/ExpenseDialog.jsx](web/src/features/expenses/jsx/ExpenseDialog.jsx) | Provides a portalled expense dialog with focus containment, Escape handling, scroll locking and focus restoration. | `web/expenses` |
+| [web/src/features/expenses/jsx/ExpenseFriendPicker.jsx](web/src/features/expenses/jsx/ExpenseFriendPicker.jsx) | Searches private saved expense contacts and selects recipients by name or nickname. | `web/expenses` |
 | [web/src/features/expenses/jsx/ExpenseHistoryModal.jsx](web/src/features/expenses/jsx/ExpenseHistoryModal.jsx) | Fetches an expense's edit history and shows a timeline of field, payer and split changes with member names and currency formatting. | `web/expenses` |
 | [web/src/features/expenses/jsx/ExpenseManager.jsx](web/src/features/expenses/jsx/ExpenseManager.jsx) | Coordinates personal/group expense data, group selection, transaction editing, invitations, settlements, history, PDF export and live refresh. | `web/expenses` |
 | [web/src/features/expenses/jsx/ExpenseSummary.jsx](web/src/features/expenses/jsx/ExpenseSummary.jsx) | Calculates visible personal balance/income/spending or group expense totals while excluding deleted transactions. | `web/expenses` |
@@ -325,7 +326,7 @@ The following tables contain one entry for each of the 300 application files. Fo
 | [web/src/hooks/useGroupPlannerQuery.js](web/src/hooks/useGroupPlannerQuery.js) | Defines planner query keys and hooks for groups, destination viewports, places, polls, members, expenses, checklists, vault files and activities. | `web/hooks` |
 | [web/src/hooks/useGroupSocket.js](web/src/hooks/useGroupSocket.js) | Subscribes to authenticated group collaboration/presence events and forwards handlers for places, polls, checklists, itineraries and membership. | `web/hooks` |
 | [web/src/hooks/useMoneyDisplay.js](web/src/hooks/useMoneyDisplay.js) | Formats amounts in a chosen display currency using the exchange-rate hook while leaving stored amounts and calculation units unchanged. | `web/hooks` |
-| [web/src/hooks/usePersonalCurrency.js](web/src/hooks/usePersonalCurrency.js) | Loads and saves the user's explicit dashboard currency choice on their account. | `web/hooks` |
+| [web/src/hooks/usePersonalCurrency.js](web/src/hooks/usePersonalCurrency.js) | Caches the account's chosen dashboard currency across tabs and saves explicit changes. | `web/hooks` |
 | [web/src/hooks/usePersonalDashboard.js](web/src/hooks/usePersonalDashboard.js) | Converts personal transactions into one dashboard currency without changing saved records. | `web/hooks` |
 | [web/src/hooks/useNotesAutoSave.js](web/src/hooks/useNotesAutoSave.js) | Saves and clears a group-scoped notes draft in localStorage; it does not send notes to the server. | `web/hooks` |
 | [web/src/hooks/usePlaceSearchQuery.js](web/src/hooks/usePlaceSearchQuery.js) | Provides cached React Query reads for place search, details and catalog statistics. | `web/hooks` |
@@ -406,6 +407,7 @@ The following tables contain one entry for each of the 300 application files. Fo
 | [web/src/__tests__/currencyConversion.test.jsx](web/src/__tests__/currencyConversion.test.jsx) | Verifies original versus converted totals, currency-pair races, stale/unavailable rates, fixed saved currencies and independent calculator pairs. | `web/tests` |
 | [web/src/__tests__/expenseAnalysisAndDialogs.test.jsx](web/src/__tests__/expenseAnalysisAndDialogs.test.jsx) | Verifies stored-share analysis, calendar/deleted-row handling, history data, dialog focus/scroll behavior, creation retries and former-member attribution. | `web/tests` |
 | [web/src/__tests__/expenseFollowupFixes.test.jsx](web/src/__tests__/expenseFollowupFixes.test.jsx) | Verifies personal history and income classification, deleted-row restore permissions, currency/amount layout, live edit-draft retention and split receipts. | `web/tests` |
+| [web/src/__tests__/expenseFriends.test.jsx](web/src/__tests__/expenseFriends.test.jsx) | Verifies friend selection, nickname search, invitation draft retention and loading states. | `web/tests` |
 | [web/src/__tests__/expenseGroupCreation.test.jsx](web/src/__tests__/expenseGroupCreation.test.jsx) | Verifies API-compatible group creation fields and preserving the entered name after validation failure. | `web/tests` |
 | [web/src/__tests__/expenseGroupNavigation.test.jsx](web/src/__tests__/expenseGroupNavigation.test.jsx) | Verifies exact group URLs, browser back, selected-group restoration, dashboard/empty states and navigation after group creation or invitation acceptance. | `web/tests` |
 | [web/src/__tests__/expenseGroupOverview.test.jsx](web/src/__tests__/expenseGroupOverview.test.jsx) | Verifies paid/share/net distinctions, full-ledger summaries, custom splits, deleted expenses and searchable dashboard/error states. | `web/tests` |
@@ -494,3 +496,20 @@ Use this optional table to record relevant GitHub commits after they exist. Copy
 | Date | GitHub commit | Files/area | Change and validation |
 |---|---|---|---|
 | YYYY-MM-DD | Link to the real commit | Relative paths or feature | Actual behavior/documentation change and checks run |
+
+## Expense currency follow-up (2026-10-26)
+
+The earlier file counts above describe the dated review. Additional expense files:
+
+| File | Responsibility |
+|---|---|
+| [web/src/features/expenses/jsx/CurrencyAmount.jsx](web/src/features/expenses/jsx/CurrencyAmount.jsx) | Displays converted and original money on separate lines; reuses pinned personal rates and retains source units on failure. |
+| [web/src/features/expenses/css/CurrencyAmount.css](web/src/features/expenses/css/CurrencyAmount.css) | Aligns paired amounts, responsive activity/spending rows and history money details. |
+| [web/src/features/expenses/jsx/CurrencyChangeStatus.jsx](web/src/features/expenses/jsx/CurrencyChangeStatus.jsx) | Tracks currency save/conversion progress, errors and completion without adding an action delay. |
+| [web/src/features/expenses/css/CurrencyChangeStatus.css](web/src/features/expenses/css/CurrencyChangeStatus.css) | Styles currency progress and respects reduced motion. |
+| [web/src/__tests__/currencyChangeStatus.test.jsx](web/src/__tests__/currencyChangeStatus.test.jsx) | Tests saving/conversion sequencing, errors, cached changes and cancellation of previous dismissal timers. |
+| [web/src/__tests__/expenseCurrencyLayout.test.jsx](web/src/__tests__/expenseCurrencyLayout.test.jsx) | Tests paired money in settlements/spending/activity/history, unavailable FX, personal source amounts and removed rate controls. |
+
+Group settings applies committed metadata before background reconciliation.
+PDF code loads on export, and copied invitation acceptance navigates without a
+fixed redirect delay. See [the UI/performance report](../docs/archive/reports/expense-ui-latency-2026-10-26.md).
