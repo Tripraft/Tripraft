@@ -113,9 +113,18 @@ captured before commit, so failure to build it also rolls back the join.
 
 The saved invitation survives email transport failure. `email_status` reports
 `disabled`, `queued`, `sent` or `failed`, and `invitation_link` remains available.
-Configured delivery uses SMTP directly without a broker; otherwise it first
-tries the worker queue, then synchronous fallback.
+Without a broker, a bounded background worker submits SMTP after the invitation
+commits, so the HTTP response does not wait for mail transport. `queued` means
+accepted for delivery, not sent. The local queue is best effort: restarting the
+API can lose pending work; retry from the invitation's **Resend email** action.
+When a broker is configured, delivery first tries that queue, then SMTP fallback.
 Tests mock both transports and send no real invitations.
+
+The web form resends an existing unexpired pending invitation when the same
+address is submitted again. If its local list is stale, the web API wrapper
+recovers only the pending-duplicate 409 by reading the invitation and calling
+`/resend`. Member conflicts and all authorization errors remain errors. The
+server's duplicate-create 409 contract and resend authorization stay intact.
 
 Retrying delivery through `/resend` preserves the invitation ID, link, original
 inviter and expiry, and returns `invitation` and `email_status`. Anonymous callers
@@ -123,7 +132,36 @@ receive 401; other members or outsiders receive 403. Non-pending invitations
 return 409 and expired pending invitations return 410. This endpoint is subject
 to the existing invitation rate limit and does not change membership.
 
+Cancellation stores `status=cancelled` and `responded_at`, removes the invitation
+from the recipient's pending list and prevents acceptance/decline or delivery
+retry. Repeating cancellation by an authorized caller returns success without
+changing its timestamp. A contributor can invite the same address again through
+the creation endpoint: the permanent row is reset to pending with a new creation
+timestamp and expiry. Membership is added only on acceptance, never on resend.
+Viewers cannot send, resend or cancel, including invitations they created before
+their role changed.
+
+Native and Celery email workers recheck invitation status, active group, expiry
+and creation timestamp immediately before SMTP. Cancelled, declined, accepted,
+expired, archived or superseded jobs are consumed without sending or retrying.
+Re-inviting cannot revive an older job. A current-generation pending resend is
+still deliverable. This check does not recall already-sent mail or stop SMTP
+that has already started; acceptance always rechecks current invitation state.
+
 ## Expenses, settlements and balances
+
+Expense POST, PUT/PATCH and DELETE accept `?compact=true`. These responses
+contain the changed `expense` (create/update), `permanently_deleted` (delete),
+and `group_balances` when applicable. They omit the account-wide expense page
+and personal summary. The default response remains compatible with existing
+clients. Compact mode changes response work only; authentication, validation,
+locking, audit history and ledger commits are the same.
+
+Group mutation balances are captured in the financial transaction before commit,
+without reopening an independently authorized balance service. The web applies
+the saved row and balances immediately, releases saving controls, then refreshes
+details and group cards concurrently. A refresh failure reports that the save
+succeeded and offers refresh; it must not encourage a duplicate financial write.
 
 Create an expense at the root path with `group_id`, `description`, `amount`,
 optional `paid_by`, and `split_type` (`equal`, `exact`, `percentage`, `shares`).

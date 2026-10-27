@@ -107,6 +107,7 @@ const ExpenseManager = () => {
     expenses: personalExpenses,
     loading: personalLoading,
     refetch: refetchPersonalExpenses,
+    setExpenses: setPersonalExpenses,
     markAsDeleted: markPersonalAsDeleted,
     rollbackDelete: rollbackPersonalDelete
   } = usePersonalExpenses();
@@ -123,6 +124,7 @@ const ExpenseManager = () => {
   const [confirmCallback, setConfirmCallback] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const toastIdRef = useRef(0);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [mutationLoading, setMutationLoading] = useState(false);
   const [showNewGroup, setShowNewGroup] = useState(false);
@@ -195,8 +197,18 @@ const ExpenseManager = () => {
   };
   
   const showToast = (message, type = 'success') => {
-    const id = Date.now();
+    const id = ++toastIdRef.current;
     setToasts(prev => [...prev, { id, message, type }]);
+  };
+
+  // The write has succeeded. Keep reconciliation outside the saving state,
+  // and distinguish a failed refresh from a failed financial transaction.
+  const refreshAfterSave = (...refreshers) => {
+    Promise.all(refreshers.map(refresh => Promise.resolve().then(refresh)))
+      .then(results => {
+        if (results.some(result => result?.isError)) throw new Error('Refresh failed');
+      })
+      .catch(() => showToast('Saved, but the latest details could not load. Please refresh.', 'info'));
   };
   
   const hideToast = (id) => {
@@ -303,13 +315,10 @@ const ExpenseManager = () => {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      if (mode === 'personal') {
-        await refetchPersonalExpenses();
-      } else if (activeGroupId) {
-        await refetchGroupDetail();
-      }
-      await refetchGroups();
-      await refetchInvitations();
+      await Promise.all([
+        ...(mode === 'personal' ? [refetchPersonalExpenses()] : activeGroupId ? [refetchGroupDetail()] : []),
+        refetchGroups(), refetchInvitations(),
+      ]);
     } catch (error) {
       showAlert(`Failed to refresh: ${error.message}`);
     } finally {
@@ -331,7 +340,7 @@ const ExpenseManager = () => {
         updateGroupsFromResponse(result.groups);
       } else {
         // Fallback: Refetch groups if not returned
-        await refetchGroups();
+        refreshAfterSave(refetchGroups);
       }
       
       // Switch to the newly created group
@@ -368,8 +377,8 @@ const ExpenseManager = () => {
         setExpenseView('group');
       }
       
-      // Refetch groups
-      await refetchGroups();
+      setGroups(previous => previous.filter(group => (group.id || group.group_id) !== groupId));
+      refreshAfterSave(refetchGroups);
     } catch (error) {
       // Only show error toast, don't redirect
       showToast(error.message || 'Cannot delete group', 'error');
@@ -389,10 +398,10 @@ const ExpenseManager = () => {
       if (mode === 'personal') {
         let result;
         if (state.editingTransactionId) {
-          result = await expenseApi.updateExpense(state.editingTransactionId, transactionData);
+          result = unwrapEnvelope(await expenseApi.updateExpense(state.editingTransactionId, transactionData));
           showToast('Transaction updated!', 'success');
         } else {
-          result = await expenseApi.createExpense({
+          result = unwrapEnvelope(await expenseApi.createExpense({
             group_id: null,
             description: transactionData.description,
             amount: transactionData.amount,
@@ -402,10 +411,13 @@ const ExpenseManager = () => {
             paid_by: currentUser.uid || currentUser.user_id,
             split_type: 'equal',
             splits: [{ user_id: currentUser.uid || currentUser.user_id, amount: transactionData.amount }]
-          });
+          }));
           showToast('Transaction created!', 'success');
         }
-        await refetchPersonalExpenses();
+        if (result?.expense) setPersonalExpenses(previous => [
+          result.expense, ...previous.filter(row => (row.id || row.expense_id) !== (result.expense.id || result.expense.expense_id)),
+        ]);
+        refreshAfterSave(refetchPersonalExpenses);
       } else {
         // Group expense
         const editingExpense = state.editingTransactionId
@@ -433,18 +445,9 @@ const ExpenseManager = () => {
             ? activeGroupExpenses.map(e => (e.id === state.editingTransactionId || e.expense_id === state.editingTransactionId) ? newExpense : e)
             : [newExpense, ...(activeGroupExpenses || [])];
           
-          // Use new balances if returned, otherwise refetch to get accurate balances
-          if (result.group_balances && result.group_balances.length > 0) {
-            updateExpensesAndBalances(updatedExpenses, result.group_balances);
-            await refetchGroupDetail();
-          } else {
-            // Balances not returned - refetch to ensure accurate calculation
-            await refetchGroupDetail();
-          }
-        } else {
-          // Fallback: Refetch group data
-          await refetchGroupDetail();
+          updateExpensesAndBalances(updatedExpenses, result.group_balances);
         }
+        refreshAfterSave(refetchGroupDetail, refetchGroups);
       }
       
       setShowTransactionModal(false);
@@ -481,16 +484,18 @@ const ExpenseManager = () => {
       const result = unwrapEnvelope(await expenseApi.deleteExpense(id, { permanent }));
       
       // INSTANT UPDATE: Use returned data if available
-      if (mode === 'group' && (result?.expenses || result?.group_balances)) {
+      if (mode === 'group') {
         const expenses = permanent
           ? activeGroupExpenses.filter(item => (item.id || item.expense_id) !== id)
-          : activeGroupExpenses.map(item => (item.id || item.expense_id) === id ? { ...item, is_deleted: true } : item);
-        updateExpensesAndBalances(expenses, result.group_balances);
-        await refetchGroupDetail();
+          : activeGroupExpenses.map(item => (item.id || item.expense_id) === id ? {
+            ...item, is_deleted: true,
+            permissions: { ...item.permissions, can_edit: false, can_delete: false, can_restore: true, can_permanently_delete: true },
+          } : item);
+        updateExpensesAndBalances(expenses, result?.group_balances);
+        refreshAfterSave(refetchGroupDetail, refetchGroups);
       } else if (mode === 'personal') {
-        await refetchPersonalExpenses();
-      } else {
-        await refetchGroupDetail();
+        if (permanent) setPersonalExpenses(previous => previous.filter(row => (row.id || row.expense_id) !== id));
+        refreshAfterSave(refetchPersonalExpenses);
       }
       
       showToast(permanent ? 'Transaction permanently deleted.' : 'Transaction deleted!', 'success');
@@ -508,9 +513,14 @@ const ExpenseManager = () => {
   const handleRestoreTransaction = async id => {
     setMutationLoading(true);
     try {
-      await expenseApi.restoreExpense(id);
-      if (mode === 'personal') await refetchPersonalExpenses();
-      else { await refetchGroupDetail(); await refetchGroups(); }
+      const result = unwrapEnvelope(await expenseApi.restoreExpense(id));
+      if (mode === 'personal') {
+        if (result?.expense) setPersonalExpenses(previous => previous.map(row => (row.id || row.expense_id) === id ? result.expense : row));
+        refreshAfterSave(refetchPersonalExpenses);
+      } else {
+        if (result?.expense) updateExpensesAndBalances(activeGroupExpenses.map(row => (row.id || row.expense_id) === id ? result.expense : row), result.group_balances);
+        refreshAfterSave(refetchGroupDetail, refetchGroups);
+      }
       showToast('Transaction restored!', 'success');
     } catch (error) {
       showToast(`Failed to restore: ${error.message}`, 'error');
@@ -531,9 +541,11 @@ const ExpenseManager = () => {
       setMutationLoading(true);
       showToast('Creating settlement...', 'info');
       
-      await expenseApi.createSettlement(settlementData);
-      // Mutation responses may contain only the default first page of history.
-      await refetchGroupDetail();
+      const result = unwrapEnvelope(await expenseApi.createSettlement(settlementData));
+      if (result?.settlement) updateSettlementsAndBalances([
+        result.settlement, ...activeGroupSettlements.filter(row => (row.id || row.settlement_id) !== (result.settlement.id || result.settlement.settlement_id)),
+      ], result.balances);
+      refreshAfterSave(refetchGroupDetail, refetchGroups);
       showToast('Settlement recorded successfully', 'success');
     } catch (error) {
       showToast(error.message || 'Failed to record settlement', 'error');
@@ -549,7 +561,7 @@ const ExpenseManager = () => {
       activeGroupSettlements.filter(item => (item.id || item.settlement_id) !== settlementId),
       result.balances,
     );
-    await refetchGroupDetail();
+    refreshAfterSave(refetchGroupDetail, refetchGroups);
     showToast('Settlement deleted. Outstanding balances restored.', 'success');
   };
 
@@ -722,7 +734,7 @@ const ExpenseManager = () => {
             onGroupChange={handleGroupChange}
             onGroupCreate={handleCreateGroup}
             onGroupDelete={handleDeleteGroup}
-            onGroupUpdated={async () => { await refetchGroupDetail(); await refetchGroups(); }}
+            onGroupUpdated={() => refreshAfterSave(refetchGroupDetail, refetchGroups)}
             onGroupLeave={async () => { setExpenseView('group'); await refetchGroups(); }}
             onMemberAdd={async () => await refetchGroupDetail()}
             onMemberRemove={async () => await refetchGroupDetail()}

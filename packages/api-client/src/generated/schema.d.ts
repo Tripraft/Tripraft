@@ -7111,7 +7111,10 @@ export interface operations {
     };
     expenses_sql_create_expense_post_api_v1_expenses: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the mutation result and group balances without an account ledger page or personal summary. */
+                compact?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -8314,7 +8317,10 @@ export interface operations {
     };
     expenses_sql_update_expense_put_api_v1_expenses_expense_id: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the mutation result and group balances without an account ledger page or personal summary. */
+                compact?: boolean;
+            };
             header?: never;
             path: {
                 expense_id: string;
@@ -8336,7 +8342,10 @@ export interface operations {
     };
     expenses_sql_delete_expense_delete_api_v1_expenses_expense_id: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the mutation result and group balances without an account ledger page or personal summary. */
+                compact?: boolean;
+            };
             header?: never;
             path: {
                 expense_id: string;
@@ -8358,7 +8367,10 @@ export interface operations {
     };
     expenses_sql_update_expense_patch_api_v1_expenses_expense_id: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the mutation result and group balances without an account ledger page or personal summary. */
+                compact?: boolean;
+            };
             header?: never;
             path: {
                 expense_id: string;

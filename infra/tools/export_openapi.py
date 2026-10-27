@@ -141,6 +141,12 @@ def build(application):
                 operation['parameters'] = [{'name': name, 'in': 'path', 'required': True, 'schema': {
                     'type': 'integer' if rule._converters[name].__class__.__name__ == 'IntegerConverter' else 'string',
                 }} for name in sorted(rule.arguments)]
+            if ((route == '/api/v1/expenses' and method == 'POST') or
+                    (route == '/api/v1/expenses/{expense_id}' and method in {'PUT', 'PATCH', 'DELETE'})):
+                operation.setdefault('parameters', []).append({
+                    'name': 'compact', 'in': 'query', 'schema': {'type': 'boolean', 'default': False},
+                    'description': 'Return the mutation result and group balances without an account ledger page or personal summary.',
+                })
             if route == '/api/v1/auth/me' and method == 'GET':
                 operation['responses']['200'] = response(ref('MeResponse'))
                 operation['security'] = [{'cookieAuth': []}]

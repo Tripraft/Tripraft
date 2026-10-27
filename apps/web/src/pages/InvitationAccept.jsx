@@ -118,6 +118,11 @@ export default function InvitationAccept() {
         } catch {
           setMessage('Your group could not be loaded. Please try the invitation again.');
         }
+      } else if (error.status === 409 && /cancelled|declined/i.test(error.message)) {
+        const state = /cancelled/i.test(error.message) ? 'cancelled' : 'declined';
+        setMessage(`This invitation was ${state}. Ask the inviter to send a new invitation.`);
+        removeAuthStorage('pendingInvitation');
+        removeAuthStorage('invitationEmail');
       } else if (error.status === 403 || error.message.includes('403')) {
         setMessage('This invitation is not for your account. Please log in with the invited email address.');
         setShowWrongUserWarning(true);

@@ -5951,6 +5951,17 @@
       "post": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
         "operationId": "expenses_sql_create_expense_post_api_v1_expenses",
+        "parameters": [
+          {
+            "description": "Return the mutation result and group balances without an account ledger page or personal summary.",
+            "in": "query",
+            "name": "compact",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "default": {
             "content": {
@@ -7248,6 +7259,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Return the mutation result and group balances without an account ledger page or personal summary.",
+            "in": "query",
+            "name": "compact",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -7296,6 +7316,15 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "description": "Return the mutation result and group balances without an account ledger page or personal summary.",
+            "in": "query",
+            "name": "compact",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
@@ -7319,6 +7348,15 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "description": "Return the mutation result and group balances without an account ledger page or personal summary.",
+            "in": "query",
+            "name": "compact",
+            "schema": {
+              "default": false,
+              "type": "boolean"
             }
           }
         ],

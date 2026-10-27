@@ -136,6 +136,7 @@ def create_expense():
     
     user_id = get_current_user_id()
     group_id = validated.get('group_id')  # Can be None for personal expenses
+    compact = parse_boolean('compact')
     
     # paid_by is a UUID string validated by the schema; the service checks
     # that the payer is a member of the group. Defaults to the caller.
@@ -164,6 +165,12 @@ def create_expense():
     )
     
     if success:
+        if compact:
+            response_data = {'expense': result['expense']}
+            if 'balances' in result:
+                response_data['group_balances'] = result['balances']
+            _invalidate_expense_caches()
+            return created_response(data=response_data, message='Expense created')
         # Include the first page plus metadata for subsequent list requests.
         all_expenses_success, all_expenses_result = expense_service_sql.get_user_expenses(
             user_id=user_id,
@@ -242,6 +249,7 @@ def update_expense(expense_id):
     """
     data = g.validated_data
     user_id = get_current_user_id()
+    compact = parse_boolean('compact')
     
     expense_id = record_uuid(expense_id)
     logger.info('Updating expense %s', expense_id)
@@ -263,6 +271,12 @@ def update_expense(expense_id):
     )
     
     if success:
+        if compact:
+            response_data = {'expense': result['expense']}
+            if 'balances' in result:
+                response_data['group_balances'] = result['balances']
+            _invalidate_expense_caches()
+            return success_response(data=response_data, message='Expense updated')
         # Include the first page plus metadata for subsequent list requests.
         all_expenses_success, all_expenses_result = expense_service_sql.get_user_expenses(
             user_id=user_id,
@@ -303,12 +317,19 @@ def delete_expense(expense_id):
     """
     user_id = get_current_user_id()
     expense_id = record_uuid(expense_id)
+    compact = parse_boolean('compact')
     
     success, result = expense_service_sql.delete_expense(
         expense_id, user_id, permanent=parse_boolean('permanent'),
     )
     
     if success:
+        if compact:
+            response_data = {'permanently_deleted': result.get('permanently_deleted', False)}
+            if 'balances' in result:
+                response_data['group_balances'] = result['balances']
+            _invalidate_expense_caches()
+            return success_response(data=response_data, message=result.get('message', 'Expense deleted'))
         # Include the first page of remaining expenses and pagination metadata.
         all_expenses_success, all_expenses_result = expense_service_sql.get_user_expenses(
             user_id=user_id,
