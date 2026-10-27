@@ -34,3 +34,5 @@ Raw SQL audit CSV exports, compressed bundles, detailed JSON dumps and local Sma
 | [reports/partners-onboarding-foundation-2026-10-18.md](reports/partners-onboarding-foundation-2026-10-18.md) | Partner onboarding foundation and native startup |
 | [reports/sql-seed-audit/report.md](reports/sql-seed-audit/report.md) | SQL seed audit — 7 October 2026 |
 | [reports/staff-console-package-drafts-2026-10-19.md](reports/staff-console-package-drafts-2026-10-19.md) | Staff review access and private package drafts |
+
+| [reports/expense-browser-delay-fix-2026-10-26.md](reports/expense-browser-delay-fix-2026-10-26.md) | Browser recording findings, expense delay fixes and currency progress |

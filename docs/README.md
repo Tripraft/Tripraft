@@ -45,3 +45,5 @@ docs/
 ```
 
 Update the owning guide when changing behavior and fix links when moving files. Keep credentials, personal account setup, raw database/CSV exports and compressed report bundles outside published docs. Historical findings are not a statement of current feature status; API source and regression tests establish current behavior.
+
+- [Expense browser delay investigation](archive/reports/expense-browser-delay-fix-2026-10-26.md) explains the supplied network recording, cooperative PostgreSQL fix, retry reduction and current timing evidence.

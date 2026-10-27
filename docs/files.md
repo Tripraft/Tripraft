@@ -762,3 +762,4 @@ remain a record of that earlier review.
 | `apps/web/src/__tests__/groupCurrencyProgress.test.jsx` | Verifies currency saving, pending conversion, failure and retry in group settings. |
 | `services/api/app/core/db/cooperative.py` | Enables cooperative psycopg2 waits in gevent workers before PostgreSQL connections open. |
 | `services/api/tests/test_cooperative_database.py` | Verifies concurrent work during database waits and callback setup and preservation. |
+| `docs/archive/reports/expense-browser-delay-fix-2026-10-26.md` | Records browser HAR findings, expense delay fixes and scoped timing evidence. |
