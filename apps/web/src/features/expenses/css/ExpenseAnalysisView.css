@@ -91,3 +91,6 @@
   .expense-analysis-top-list li { gap: 9px; }
   .expense-analysis-top-list svg { display: none; }
 }
+
+.expense-analysis-donut-center strong { white-space: nowrap; overflow-wrap: normal; font-size: clamp(15px, 1.5vw, 19px); }
+.expense-analysis-exact-total { text-align: center; font-size: 13px; font-weight: 600; margin: -10px 0 22px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }

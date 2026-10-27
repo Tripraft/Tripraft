@@ -9,12 +9,18 @@ jest.mock('../utils/apiClient', () => ({ __esModule: true, default: {
 beforeEach(() => jest.resetAllMocks());
 
 it('requests compact mutation responses without losing permanent-deletion intent', async () => {
+  await expenseApi.createGroup({ name: 'Trip' });
   await expenseApi.createExpense({ amount: '12' });
   await expenseApi.updateExpense('expense', { amount: '20' });
   await expenseApi.deleteExpense('expense', { permanent: true });
+  await expenseApi.sendInvitation({group_id: 'group', email: 'friend@example.test'});
+  await expenseApi.acceptInvitation('invite');
   expect(apiClient.post).toHaveBeenCalledWith('/v1/expenses?compact=true', { amount: '12' });
   expect(apiClient.put).toHaveBeenCalledWith('/v1/expenses/expense?compact=true', { amount: '20' });
   expect(apiClient.delete).toHaveBeenCalledWith('/v1/expenses/expense?compact=true&permanent=true');
+  expect(apiClient.post).toHaveBeenCalledWith('/v1/expenses/groups?compact=true', { name: 'Trip' });
+  expect(apiClient.post).toHaveBeenCalledWith('/v1/expenses/invitations?compact=true', {group_id: 'group', email: 'friend@example.test'});
+  expect(apiClient.post).toHaveBeenCalledWith('/v1/expenses/invitations/invite/accept?compact=true');
 });
 
 it('recovers a pending duplicate by resending its existing invitation', async () => {

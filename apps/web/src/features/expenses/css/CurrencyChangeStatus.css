@@ -1,0 +1,17 @@
+/* Purpose: Provides compact, accessible currency progress with reduced-motion support. */
+.expense-currency-status { position: relative; display: flex; align-items: center; gap: 12px; overflow: hidden; margin: 14px 0; padding: 14px 18px; border: 1px solid #ddd6fe; border-radius: 14px; background: #f5f3ff; color: #6d28d9; animation: expense-currency-appear .2s ease-out; }
+.expense-currency-status > svg { flex-shrink: 0; }
+.expense-currency-status strong { display: block; font-size: 13px; line-height: 1.5; }
+.expense-currency-status span { display: flex; align-items: center; gap: 8px; margin-top: 3px; font-size: 12px; }
+.expense-currency-status small { display: block; margin-top: 5px; }
+.expense-currency-status button { margin-top: 8px; padding: 8px 12px; min-height: 44px; border: 1px solid currentColor; border-radius: 8px; color: inherit; background: transparent; cursor: pointer; }
+.expense-currency-status.is-error { color: #9f1239; background: #fff1f2; border-color: #fecdd3; }
+.expense-currency-status-slot { display: flow-root; min-block-size: 124px; }
+.expense-currency-ready { margin: 14px 0; padding: 14px 18px; color: #64748b; font-size: 13px; }
+@media (max-width: 639px) { .expense-currency-status-slot { min-block-size: 156px; } }
+.expense-currency-spinner { animation: expense-currency-spin 1s linear infinite; }
+.expense-currency-progress { position: absolute; height: 2px; width: 35%; bottom: 0; left: 0; background: #8b5cf6; animation: expense-currency-progress 1.4s ease-in-out infinite alternate; }
+@keyframes expense-currency-progress { to { transform: translateX(190%); } }
+@keyframes expense-currency-spin { to { transform: rotate(360deg); } }
+@keyframes expense-currency-appear { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .expense-currency-status, .expense-currency-spinner, .expense-currency-progress { animation: none; } }

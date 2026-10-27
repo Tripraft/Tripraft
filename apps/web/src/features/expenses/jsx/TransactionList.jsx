@@ -3,6 +3,8 @@ import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 // Purpose: Renders the Transaction List interface within apps\web\src\features\expenses\jsx.
 import ExpenseDialog from './ExpenseDialog';
 import TransactionActivity from './TransactionActivity';
+import CurrencyAmount from './CurrencyAmount';
+import {formatMoney} from '../../../utils/money';
 import DeletedTransactionActions from './DeletedTransactionActions';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Edit2, Trash2, FolderOpen, Info, ChevronLeft, ChevronRight, History, RefreshCw, Utensils, Car, Home, ShoppingBag, Plane, Heart, Zap, Film, Gift, Coffee, Hotel, Gamepad2, Shirt, Pill, Briefcase, Music, Dumbbell, Banknote, CircleDollarSign, HelpCircle } from 'lucide-react';
@@ -465,9 +467,9 @@ const TransactionList = ({
                     )}
                     <td className={`${isIncomeTransaction ? 'amount-green' : 'amount-red'} ${isDeleted ? 'deleted-amount' : ''}`}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span className={isDeleted ? 'deleted-text' : ''}>{formatCurrency(t.amount, t.currency || currency)}
-                          {t.original_currency && t.original_currency !== currency && <small className="expense-original-amount">{formatCurrency(t.original_amount, t.original_currency)} original</small>}
-                          {t.original && <small className="expense-original-amount">{formatCurrency(t.original.amount, t.original.currency)} original · rate {t.original.rate} on {t.original.rate_date}</small>}
+                        <span className={isDeleted ? 'deleted-text' : ''}>{mode === 'group' ? <CurrencyAmount amount={t.amount} currency={t.currency || currency} displayCurrency={activeGroup?.display_currency || currency} /> : formatCurrency(t.amount, t.currency || currency)}
+                          {t.original_currency && t.original_currency !== currency && <small className="expense-original-amount">{formatMoney(t.original_amount, t.original_currency)} original</small>}
+                          {t.original && <small className="expense-original-amount">{formatMoney(t.original.amount, t.original.currency)} original receipt</small>}
                         </span>
                         {isEdited && !isDeleted && (
                           <button 
@@ -662,7 +664,7 @@ const TransactionList = ({
         </div>
       </ExpenseDialog>}
       {showHistoryModal && historyTransaction && (
-        <ExpenseHistoryModal currency={historyTransaction?.original_currency || historyTransaction?.currency || currency}
+        <ExpenseHistoryModal currency={historyTransaction?.original_currency || historyTransaction?.currency || currency} displayCurrency={activeGroup?.display_currency || currency}
           expense={transactions.find(transaction => (transaction.id || transaction.expense_id) === (historyTransaction.id || historyTransaction.expense_id)) || historyTransaction}
           members={members}
           mode={mode}

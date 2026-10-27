@@ -496,3 +496,20 @@ Use this optional table to record relevant GitHub commits after they exist. Copy
 | Date | GitHub commit | Files/area | Change and validation |
 |---|---|---|---|
 | YYYY-MM-DD | Link to the real commit | Relative paths or feature | Actual behavior/documentation change and checks run |
+
+## Expense currency follow-up (2026-10-26)
+
+The earlier file counts above describe the dated review. Additional expense files:
+
+| File | Responsibility |
+|---|---|
+| [web/src/features/expenses/jsx/CurrencyAmount.jsx](web/src/features/expenses/jsx/CurrencyAmount.jsx) | Displays converted and original money on separate lines; reuses pinned personal rates and retains source units on failure. |
+| [web/src/features/expenses/css/CurrencyAmount.css](web/src/features/expenses/css/CurrencyAmount.css) | Aligns paired amounts, responsive activity/spending rows and history money details. |
+| [web/src/features/expenses/jsx/CurrencyChangeStatus.jsx](web/src/features/expenses/jsx/CurrencyChangeStatus.jsx) | Tracks currency save/conversion progress, errors and completion without adding an action delay. |
+| [web/src/features/expenses/css/CurrencyChangeStatus.css](web/src/features/expenses/css/CurrencyChangeStatus.css) | Styles currency progress and respects reduced motion. |
+| [web/src/__tests__/currencyChangeStatus.test.jsx](web/src/__tests__/currencyChangeStatus.test.jsx) | Tests saving/conversion sequencing, errors, cached changes and cancellation of previous dismissal timers. |
+| [web/src/__tests__/expenseCurrencyLayout.test.jsx](web/src/__tests__/expenseCurrencyLayout.test.jsx) | Tests paired money in settlements/spending/activity/history, unavailable FX, personal source amounts and removed rate controls. |
+
+Group settings applies committed metadata before background reconciliation.
+PDF code loads on export, and copied invitation acceptance navigates without a
+fixed redirect delay. See [the UI/performance report](../docs/archive/reports/expense-ui-latency-2026-10-26.md).

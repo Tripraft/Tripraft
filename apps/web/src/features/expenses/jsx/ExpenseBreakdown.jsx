@@ -2,12 +2,13 @@
 import React from 'react';
 import { ChevronDown } from 'lucide-react';
 import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
+import CurrencyAmount from './CurrencyAmount';
 import { expensePeople, expenseParticipation } from '../utils/expensePeople';
 import '../css/ExpenseBreakdown.css';
 
 export default function ExpenseBreakdown({ expenses = [], members = [], currentUserId, selectedUserId,
   currency = 'USD', displayCurrency = currency, title = 'Expense breakdown' }) {
-  const money = useMoneyDisplay(currency, displayCurrency);
+  const money = useMoneyDisplay(currency, displayCurrency, {includeOriginal: false});
   const active = expenses.filter(e => !e.is_deleted);
   const people = expensePeople(members, active);
   const name = id => people.find(person => person.id === String(id))?.name || 'Former member';
@@ -24,7 +25,7 @@ export default function ExpenseBreakdown({ expenses = [], members = [], currentU
           <small>{expense.category || 'Other'}{expense.expense_date ? ` · ${String(expense.expense_date).slice(0, 10)}` : ''}{typeof where === 'string' && where ? ` · ${where}` : ''}</small>
           <small>{expense.split_type === 'reimbursement' ? 'Refund received by' : 'Paid by'} {name(expense.paid_by)}</small>
           {selected && !share.involved && <small className="expense-not-involved">{notInvolved(selectedUserId)}</small>}
-        </div><div className="expense-breakdown-amount"><strong>{money(selected ? share.amount : expense.amount)}</strong>
+        </div><div className="expense-breakdown-amount"><strong><CurrencyAmount amount={selected ? share.amount : expense.amount} currency={currency} displayCurrency={displayCurrency} /></strong>
           {selected && <small>{Number(share.percent.toFixed(2))}% · {own ? 'Your share' : `${name(selectedUserId)}'s share`}</small>}
           <small>{selected ? `Expense total: ${money(expense.amount)}` : 'View everyone’s shares'}</small></div><ChevronDown className="expense-breakdown-chevron" size={16} aria-hidden="true" /></summary>
         <dl aria-label={`Shares for ${expense.description || 'expense'}`}>{people.map(person => {
@@ -32,7 +33,7 @@ export default function ExpenseBreakdown({ expenses = [], members = [], currentU
           return <div key={person.id}><dt>{person.name}{String(person.id) === String(currentUserId) ? ' (You)' : ''}
             {!participation.involved && <small>{notInvolved(person.id)}</small>}
             {participation.involved && participation.amount === 0 && <small>No amount assigned.</small>}
-          </dt><dd>{money(participation.amount)} <small>{Number(participation.percent.toFixed(2))}%</small></dd></div>;
+          </dt><dd><CurrencyAmount amount={participation.amount} currency={currency} displayCurrency={displayCurrency} /> <small>{Number(participation.percent.toFixed(2))}%</small></dd></div>;
         })}</dl>
       </details></li>;
     })}</ul>}

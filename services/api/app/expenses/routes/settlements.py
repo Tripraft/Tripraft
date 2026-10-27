@@ -104,22 +104,8 @@ def create_settlement():
     )
     
     if success:
-        # Get updated balances and debts (complete state)
-        balances_success, balances_result = settlement_service_sql.get_group_balances(group_id, user_id)
-        debts_success, debts_result = settlement_service_sql.get_simplified_debts(group_id, user_id)
-        
-        # TripRaft Model: Also get all settlements for the group
-        settlements_success, settlements_result = settlement_service_sql.get_group_settlements(group_id, user_id)
-        
-        data_payload = {
-            'settlement': result.get('settlement'),
-            'settlements': settlements_result.get('settlements', []) if settlements_success else [],
-            'balances': balances_result.get('balances', []) if balances_success else [],
-            'debts': debts_result.get('debts', []) if debts_success else []
-        }
-        
         _invalidate_settlement_caches()
-        return created_response(data=data_payload)
+        return created_response(data=result)
     else:
         return error_response(
             result.get('error', 'Failed to create settlement'),
@@ -169,20 +155,8 @@ def delete_settlement(settlement_id):
     success, result = settlement_service_sql.delete_settlement(settlement_id, user_id)
     
     if success:
-        group_id = result.get('group_id')
-        
-        # Get updated balances and debts (complete state)
-        balances_success, balances_result = settlement_service_sql.get_group_balances(group_id, user_id)
-        debts_success, debts_result = settlement_service_sql.get_simplified_debts(group_id, user_id)
-        
-        data_payload = {
-            'message': result.get('message', 'Settlement deleted successfully'),
-            'balances': balances_result.get('balances', []) if balances_success else [],
-            'debts': debts_result.get('debts', []) if debts_success else []
-        }
-        
         _invalidate_settlement_caches()
-        return success_response(data=data_payload)
+        return success_response(data=result)
     else:
         return error_response(
             result.get('error', 'Failed to delete settlement'),

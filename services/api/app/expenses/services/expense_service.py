@@ -259,12 +259,10 @@ class ExpenseServiceSQL:
             )
             session.add(history)
             
+            result = {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
             session.commit()
-            session.refresh(expense)
-            
-            logger.info(f"Personal expense created: {expense.id}")
-            
-            return True, {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
+            logger.info('Personal expense created: %s', result['expense']['id'])
+            return True, result
             
         except SplitValidationError as exc:
             logger.info('Rejected invalid personal expense: %s', exc)
@@ -817,8 +815,9 @@ class ExpenseServiceSQL:
                             changed_by=user_id, changes_json=changes,
                             before_snapshot=before, after_snapshot=expense.to_dict(),
                         ))
-                        session.commit()
-                    return True, {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
+                    result = {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
+                    session.commit()
+                    return True, result
 
                 # Always reauthorize against the active group, including former members.
                 group, member = access(session, expense.group_id, user_id)

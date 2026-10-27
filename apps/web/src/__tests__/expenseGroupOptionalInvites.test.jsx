@@ -41,6 +41,20 @@ it('creates the group then sends each unique invitation and shows delivery feedb
   expect(close).toHaveBeenCalledTimes(1);
 });
 
+it('sends at most three invitations concurrently and advances without waiting for a slow recipient', async () => {
+  const pending = [];
+  expenseApi.sendInvitation.mockImplementation(() => new Promise(resolve => pending.push(resolve)));
+  setup();
+  change('Invite by email (optional)', 'one@example.test two@example.test three@example.test four@example.test');
+  fireEvent.click(screen.getByRole('button', { name: 'Create group and invite' }));
+  await waitFor(() => expect(expenseApi.sendInvitation).toHaveBeenCalledTimes(3));
+  await act(async () => pending[1](sent));
+  await waitFor(() => expect(expenseApi.sendInvitation).toHaveBeenCalledTimes(4));
+  expect(screen.getByRole('status')).toHaveTextContent('Invitation email sent');
+  await act(async () => { pending[0](sent); pending[2](sent); pending[3](sent); });
+  await waitFor(() => expect(screen.getAllByRole('status')).toHaveLength(4));
+});
+
 it('retries a failed invitation without recreating the group or resending successful invitations', async () => {
   expenseApi.sendInvitation.mockResolvedValueOnce(sent).mockRejectedValueOnce(new Error('Connection failed')).mockResolvedValueOnce(sent);
   const { create } = setup();

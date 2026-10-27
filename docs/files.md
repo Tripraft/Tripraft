@@ -737,3 +737,29 @@ Each description explains the file responsibility. Strict JSON, lockfiles, gener
 | [services/api/tests/test_trip_invitation_email_link.py](../services/api/tests/test_trip_invitation_email_link.py) | Verifies trip invitation email points to a registered frontend acceptance route. |
 | [services/api/tests/test_uuid_ids.py](../services/api/tests/test_uuid_ids.py) | Verifies UUID field handling and UUID-native API/ORM operations while rejecting legacy integer identifiers. |
 | [services/api/tests/test_websocket_auth.py](../services/api/tests/test_websocket_auth.py) | Verifies Socket.IO authentication, UUID identities, group-room access and presence identifiers. |
+
+## Expense UI and latency additions (2026-10-26)
+
+These entries extend the dated inventory above; existing file descriptions
+remain a record of that earlier review.
+
+| File | Responsibility |
+|---|---|
+| `apps/web/src/features/expenses/jsx/CurrencyAmount.jsx` | Paired converted/source amount presentation with pinned-rate support. |
+| `apps/web/src/features/expenses/css/CurrencyAmount.css` | Responsive paired-money layout. |
+| `apps/web/src/features/expenses/jsx/CurrencyChangeStatus.jsx` | Accessible currency save/conversion feedback. |
+| `apps/web/src/features/expenses/css/CurrencyChangeStatus.css` | Currency animations and reduced-motion styles. |
+| `apps/web/src/__tests__/currencyChangeStatus.test.jsx` | Currency progress/error/completion regressions. |
+| `apps/web/src/__tests__/expenseCurrencyLayout.test.jsx` | Paired currencies and source-unit regressions across the expense views. |
+| `services/api/tests/expense_workflow_benchmark.py` | Opt-in isolated local API timing/SQL-count benchmark. |
+| `infra/tools/render_expense_latency_report.py` | Generates the interactive timing table from benchmark JSON. |
+| `docs/operations/expense-latency.html` | Self-contained filterable local workflow timing evidence. |
+| `docs/archive/reports/expense-ui-latency-2026-10-26.md` | UI changes, performance measurements, verification and limits. |
+| `docs/plans/expenses/README.md` | Index and status of the proposed expense feature backlog. |
+| `docs/plans/expenses/ranked-feature-backlog.md` | Combined ranked 60-item proposed backlog. |
+| `docs/plans/expenses/advanced-concepts.md` | Advanced expense/travel concepts with examples and possible first versions. |
+| `apps/web/src/__tests__/expenseReadLatency.test.jsx` | Verifies single-layer expense retries, deferred group reads and live-owned focus refresh. |
+| `apps/web/src/__tests__/groupCurrencyProgress.test.jsx` | Verifies currency saving, pending conversion, failure and retry in group settings. |
+| `services/api/app/core/db/cooperative.py` | Enables cooperative psycopg2 waits in gevent workers before PostgreSQL connections open. |
+| `services/api/tests/test_cooperative_database.py` | Verifies concurrent work during database waits and callback setup and preservation. |
+| `docs/archive/reports/expense-browser-delay-fix-2026-10-26.md` | Records browser HAR findings, expense delay fixes and scoped timing evidence. |

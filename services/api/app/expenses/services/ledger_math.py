@@ -6,12 +6,18 @@ from sqlalchemy import and_
 from app.expenses.models import GroupBalance, GroupMember, User, money_to_json
 
 
-def member_balances(session, group):
-    rows = session.query(GroupMember, User, GroupBalance).join(
-        User, User.id == GroupMember.user_id,
-    ).outerjoin(GroupBalance, and_(
-        GroupBalance.group_id == group.id, GroupBalance.user_id == GroupMember.user_id,
-    )).filter(GroupMember.group_id == group.id).order_by(User.id).all()
+def member_balances(session, group, *, loaded=False):
+    if loaded:
+        # Full snapshots already loaded all memberships, users and balances.
+        balances = {row.user_id: row for row in group.balances}
+        rows = [(member, member.user, balances.get(member.user_id))
+                for member in sorted(group.members, key=lambda row: row.user_id)]
+    else:
+        rows = session.query(GroupMember, User, GroupBalance).join(
+            User, User.id == GroupMember.user_id,
+        ).outerjoin(GroupBalance, and_(
+            GroupBalance.group_id == group.id, GroupBalance.user_id == GroupMember.user_id,
+        )).filter(GroupMember.group_id == group.id).order_by(User.id).all()
     return [{
         'user_id': str(user.id), 'balance': money_to_json(balance.balance if balance else 0),
         'net_balance': money_to_json(balance.balance if balance else 0),

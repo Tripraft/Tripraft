@@ -43,6 +43,7 @@ export default function usePersonalCurrency(userId, enabled = true) {
     currency: query.data || '', loading: enabled && query.isPending,
     loadError: query.data === undefined ? query.error?.message : '',
     saving: currentMutation && mutation.isPending,
+    targetCurrency: currentMutation && mutation.isPending ? mutation.variables.currency : query.data || '',
     saveError: currentMutation ? mutation.error?.message : '',
     choose, retry: query.refetch,
   };

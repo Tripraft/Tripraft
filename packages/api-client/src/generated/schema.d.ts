@@ -7451,7 +7451,10 @@ export interface operations {
     };
     groups_sql_create_group_post_api_v1_expenses_groups: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the created group without reloading all account groups and their summaries. */
+                compact?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -7895,7 +7898,10 @@ export interface operations {
     };
     invitations_sql_send_invitation_post_api_v1_expenses_invitations: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the saved invitation or joined group without reloading the invitation/account group list. */
+                compact?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -7959,7 +7965,10 @@ export interface operations {
     };
     invitations_sql_accept_invitation_post_api_v1_expenses_invitations_invitation_id_accept: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Return the saved invitation or joined group without reloading the invitation/account group list. */
+                compact?: boolean;
+            };
             header?: never;
             path: {
                 invitation_id: string;

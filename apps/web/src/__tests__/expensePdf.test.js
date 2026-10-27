@@ -47,3 +47,18 @@ it('generates real pages for long references and large values with headers and r
   const commands = doc.internal.pages.flat().join('\n');
   for (let page = 1; page <= doc.getNumberOfPages(); page++) expect(commands).toContain(`Page ${page} of ${doc.getNumberOfPages()}`);
 });
+
+it('aligns numeric headings, body cells and totals to the same column edge', () => {
+  const doc = buildExpensePDF({mode: 'group', balances: [{user_name: 'Alice', balance: 10}],
+    settlements: [{amount: 10, from_user_name: 'Bob', to_user_name: 'Alice'}]});
+  for (const [, options] of autoTable.mock.calls) {
+    for (const section of ['head', 'body', 'foot']) {
+      for (const [index, column] of Object.entries(options.columnStyles)) {
+        const cell = {raw: 'USD 10.00', styles: {halign: 'left'}};
+        options.didParseCell({section, column: {index: Number(index)}, cell});
+        expect(cell.styles.halign).toBe(column.halign);
+      }
+    }
+  }
+  expect(doc.output('arraybuffer').byteLength).toBeGreaterThan(1000);
+});

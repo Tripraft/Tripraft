@@ -163,6 +163,11 @@ def build(application):
                     'name': 'compact', 'in': 'query', 'schema': {'type': 'boolean', 'default': False},
                     'description': 'Return the mutation result and group balances without an account ledger page or personal summary.',
                 })
+            if method == 'POST' and route in {'/api/v1/expenses/invitations', '/api/v1/expenses/invitations/{invitation_id}/accept'}:
+                operation.setdefault('parameters', []).append({
+                    'name': 'compact', 'in': 'query', 'schema': {'type': 'boolean', 'default': False},
+                    'description': 'Return the saved invitation or joined group without reloading the invitation/account group list.',
+                })
             if route == '/api/v1/auth/me' and method == 'GET':
                 operation['responses']['200'] = response(ref('MeResponse'))
                 operation['security'] = [{'cookieAuth': []}]
@@ -172,6 +177,11 @@ def build(application):
                 operation['requestBody'] = {'required': True, 'content': {'application/json': {
                     'schema': ref('CreateExpenseGroup' if method == 'POST' else 'UpdateExpenseGroup')}}}
                 operation['description'] = 'Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger.'
+                if method == 'POST':
+                    operation.setdefault('parameters', []).append({
+                        'name': 'compact', 'in': 'query', 'schema': {'type': 'boolean', 'default': False},
+                        'description': 'Return the created group without reloading all account groups and their summaries.',
+                    })
             elif route == '/api/v1/expenses/friends':
                 operation['security'] = [{'cookieAuth': []}]
                 operation['responses']['200'] = response(ref('ExpenseFriendsResponse' if method == 'GET' else 'ExpenseFriendResponse'))

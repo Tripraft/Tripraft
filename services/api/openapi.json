@@ -6467,6 +6467,17 @@
       "post": {
         "description": "Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger.",
         "operationId": "groups_sql_create_group_post_api_v1_expenses_groups",
+        "parameters": [
+          {
+            "description": "Return the created group without reloading all account groups and their summaries.",
+            "in": "query",
+            "name": "compact",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -6978,6 +6989,17 @@
       "post": {
         "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
         "operationId": "invitations_sql_send_invitation_post_api_v1_expenses_invitations",
+        "parameters": [
+          {
+            "description": "Return the saved invitation or joined group without reloading the invitation/account group list.",
+            "in": "query",
+            "name": "compact",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "default": {
             "content": {
@@ -7053,6 +7075,15 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "description": "Return the saved invitation or joined group without reloading the invitation/account group list.",
+            "in": "query",
+            "name": "compact",
+            "schema": {
+              "default": false,
+              "type": "boolean"
             }
           }
         ],

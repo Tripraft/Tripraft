@@ -1,13 +1,12 @@
 // Purpose: Shows each member's payments and expands their transactions with saved participant shares.
 import React, { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
+import CurrencyAmount from './CurrencyAmount';
 import { expensePeople } from '../utils/expensePeople';
 import ExpenseBreakdown from './ExpenseBreakdown';
 
 export default function MemberSpending({ expenses = [], members = [], currency = 'USD', displayCurrency = currency, currentUserId }) {
   const [expanded, setExpanded] = useState(null);
-  const money = useMoneyDisplay(currency, displayCurrency);
   const spending = useMemo(() => expensePeople(members, expenses).map(person => {
     const transactions = expenses.filter(e => !e.is_deleted && String(e.paid_by) === person.id);
     return { ...person, transactions, paid: transactions.reduce((sum, e) => sum + (Number(e.amount) || 0), 0) };
@@ -21,12 +20,12 @@ export default function MemberSpending({ expenses = [], members = [], currency =
         <button type="button" className="expense-member-toggle" aria-expanded={open} aria-controls={`member-spending-${person.id}`}
           aria-label={`View transactions paid by ${person.name}`} onClick={() => setExpanded(open ? null : person.id)}>
           <span><strong>{person.name}{person.id === String(currentUserId) ? ' (You)' : ''}</strong><small>{person.transactions.length} expense{person.transactions.length === 1 ? '' : 's'}</small></span>
-          <span><strong>{money(person.paid)}</strong><small>{total > 0 ? Number((person.paid / total * 100).toFixed(1)) : 0}% of total</small></span>
+          <span><strong><CurrencyAmount amount={person.paid} currency={currency} displayCurrency={displayCurrency} /></strong><small>{total > 0 ? Number((person.paid / total * 100).toFixed(1)) : 0}% of total</small></span>
           {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
         </button>
         {open && <div id={`member-spending-${person.id}`}><ExpenseBreakdown title={`Transactions paid by ${person.name}`} expenses={person.transactions} members={members} currentUserId={currentUserId} currency={currency} displayCurrency={displayCurrency} /></div>}
       </article>;
     })}</div>}
-    {spending.length > 0 && <div className="expense-member-spending-total"><span>Total Group Spending</span><strong>{money(total)}</strong></div>}
+    {spending.length > 0 && <div className="expense-member-spending-total"><span>Total Group Spending</span><strong><CurrencyAmount amount={total} currency={currency} displayCurrency={displayCurrency} /></strong></div>}
   </section>;
 }

@@ -37,6 +37,7 @@ export default function usePersonalDashboard(transactions, currency = 'USD', ena
       const rate = source === currency ? 1 : rates[source].rate;
       const convert = value => Math.round((Number(value) * rate + Number.EPSILON) * factor) / factor;
       return {...row, amount: convert(row.amount), currency,
+        display_rate: rate,
         original_amount: row.amount, original_currency: source,
         splits: row.splits?.map(split => ({...split, amount: convert(split.amount)}))};
     });

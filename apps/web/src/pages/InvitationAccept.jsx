@@ -20,16 +20,11 @@ export default function InvitationAccept() {
   // Prevent duplicate API calls
   const acceptInProgress = useRef(false);
   const initialized = useRef(false);
-  const redirectTimer = useRef(null);
-
-  useEffect(() => () => clearTimeout(redirectTimer.current), []);
 
   const openJoinedGroup = (groupId) => {
     const userId = currentUser?.uid || currentUser?.user_id;
     const query = new URLSearchParams({ groupId });
-    redirectTimer.current = setTimeout(() => {
-      navigate(`/expenses/${userId}/group?${query}`, { replace: true });
-    }, 2000);
+    navigate(`/expenses/${userId}/group?${query}`, { replace: true });
   };
 
   useEffect(() => {

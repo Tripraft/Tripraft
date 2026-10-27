@@ -3,6 +3,131 @@ from conftest import payload
 from app.expenses.services.expense_service import ExpenseServiceSQL
 
 
+def test_group_read_query_count_does_not_grow_with_members(expense_group, make_user, monkeypatch):
+    from sqlalchemy import event
+    from app.auth.services.auth_service import email_service
+    from app.core.db.connection import engine
+    monkeypatch.setattr(email_service, 'send_verification', lambda *args: True)
+    api, _, gid = expense_group
+    statements = []
+
+    def capture(conn, cursor, statement, parameters, context, executemany):
+        statements.append(statement)
+
+    def read():
+        statements.clear()
+        event.listen(engine, 'before_cursor_execute', capture)
+        try:
+            response = api.get('/api/v1/expenses/groups/' + gid + '/full')
+        finally:
+            event.remove(engine, 'before_cursor_execute', capture)
+        assert response.status_code == 200, response.get_json()
+        return payload(response)['group'], len(statements)
+
+    initial, before = read()
+    assert len(initial['members']) == 1
+    for index in range(5):
+        _, _, email = make_user('latency' + str(index))
+        response = api.post('/api/v1/expenses/groups/' + gid + '/members', json={'email': email})
+        assert response.status_code == 201, response.get_json()
+    expanded, after = read()
+    assert len(expanded['members']) == 6
+    assert expanded['permissions']['can_delete_group']
+    assert len(expanded['balances']) == 6
+    assert after == before, (before, after)
+    print('Group full SQL, one/six members:', before, after)
+
+
+def test_compact_group_creation_skips_account_listing(alice, monkeypatch):
+    from app.expenses.services.expense_group_service import GroupServiceSQL
+    api, _, _ = alice
+
+    def unexpected(*args, **kwargs):
+        raise AssertionError('Creating one group must not reload all account groups')
+
+    monkeypatch.setattr(GroupServiceSQL, 'get_user_groups', unexpected)
+    response = api.post('/api/v1/expenses/groups?compact=true', json={'name': 'Fast group', 'currency': 'INR'})
+    assert response.status_code == 201, response.get_json()
+    data = payload(response)
+    assert data['group_id'] == data['group']['id']
+    assert data['group']['currency'] == 'INR'
+    assert data['group']['member_count'] == 1
+    assert data['group']['my_role'] == 'owner'
+    assert data['group']['my_balance'] == 0
+    assert 'groups' not in data
+
+
+def test_compact_invitations_skip_unrelated_lists(expense_group, bob, monkeypatch):
+    from app.expenses.services.expense_group_service import GroupServiceSQL
+    from app.expenses.services.expense_invite_service import InvitationServiceSQL
+    api, _, gid = expense_group
+    recipient, uid, email = bob
+    monkeypatch.setattr(InvitationServiceSQL, '_send_invitation_email', lambda *args: 'disabled')
+
+    def unexpected(*args, **kwargs):
+        raise AssertionError('Compact invitation writes must not reload account or invitation lists')
+
+    monkeypatch.setattr(InvitationServiceSQL, 'get_group_invitations', unexpected)
+    monkeypatch.setattr(GroupServiceSQL, 'get_user_groups', unexpected)
+    response = api.post('/api/v1/expenses/invitations?compact=true', json={'group_id': gid, 'email': email})
+    assert response.status_code == 201, response.get_json()
+    invitation = payload(response)['invitation']
+    assert 'invitations' not in payload(response)
+    response = recipient.post('/api/v1/expenses/invitations/' + invitation['id'] + '/accept?compact=true')
+    assert response.status_code == 200, response.get_json()
+    data = payload(response)
+    assert 'groups' not in data
+    assert data['group']['id'] == gid
+    assert uid in [row['user_id'] for row in data['group']['members']]
+    assert data['group']['expense_pagination']['total'] == 0
+    assert data['group']['permissions']['can_add_expense']
+
+
+def test_settlement_writes_return_balances_without_reopening_services(group_of_two, monkeypatch):
+    from app.expenses.services.settlement_service import SettlementServiceSQL
+    from app.expenses.services.ledger_math import simplified_debts
+    from sqlalchemy import event
+    from app.core.db.connection import engine
+    api, owner, _, other, group_id = group_of_two
+    response = api.post('/api/v1/expenses?compact=true', json={
+        'description': 'Shared meal', 'group_id': group_id, 'paid_by': owner,
+        'amount': '20', 'split_type': 'equal',
+    })
+    assert response.status_code == 201, response.get_json()
+
+    def unexpected(*args, **kwargs):
+        raise AssertionError('Mutation response must use its own transaction snapshot')
+
+    for name in ('get_group_balances', 'get_simplified_debts', 'get_group_settlements'):
+        monkeypatch.setattr(SettlementServiceSQL, name, unexpected)
+
+    statements = []
+
+    def capture(conn, cursor, statement, parameters, context, executemany):
+        statements.append(statement)
+
+    event.listen(engine, 'before_cursor_execute', capture)
+    try:
+        response = api.post('/api/v1/expenses/settlements', json={
+            'group_id': group_id, 'from_user_id': other, 'to_user_id': owner, 'amount': '4',
+        })
+        assert response.status_code == 201, response.get_json()
+        created = payload(response)
+        assert sorted(row['balance'] for row in created['balances']) == [-6, 6]
+        assert created['debts'] == simplified_debts(created['balances'])
+        assert created['settlements'][0]['id'] == created['settlement']['id']
+        print('Settlement create SQL statements:', len(statements))
+        statements.clear()
+        response = api.delete('/api/v1/expenses/settlements/' + created['settlement']['id'])
+        assert response.status_code == 200, response.get_json()
+        deleted = payload(response)
+        assert sorted(row['balance'] for row in deleted['balances']) == [-10, 10]
+        assert deleted['debts'] == simplified_debts(deleted['balances'])
+        print('Settlement delete SQL statements:', len(statements))
+    finally:
+        event.remove(engine, 'before_cursor_execute', capture)
+
+
 def test_compact_group_writes_skip_account_snapshots(group_of_two, monkeypatch):
     from app.expenses.routes import expenses
     api, owner, _, _, group_id = group_of_two

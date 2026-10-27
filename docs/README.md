@@ -24,6 +24,8 @@ Start with the guide for your task. Commands in these guides run from the reposi
 - [Every published file](files.md) provides the repository-wide inventory.
 - [Repository review](repository-review.md) explains what stays published and what was removed.
 - [Plans](plans/README.md) describe proposed architecture and release gates.
+- [Expense management planning](plans/expenses/README.md) ranks all 60 personal and group travel expense feature ideas.
+- [Expense latency table](operations/expense-latency.html) compares measured local API workflow timings; [UI and performance evidence](archive/reports/expense-ui-latency-2026-10-26.md) explains scope and checks.
 - [Historical reports](archive/README.md) retain dated implementation and audit evidence.
 
 ## Folder conventions
@@ -43,3 +45,5 @@ docs/
 ```
 
 Update the owning guide when changing behavior and fix links when moving files. Keep credentials, personal account setup, raw database/CSV exports and compressed report bundles outside published docs. Historical findings are not a statement of current feature status; API source and regression tests establish current behavior.
+
+- [Expense browser delay investigation](archive/reports/expense-browser-delay-fix-2026-10-26.md) explains the supplied network recording, cooperative PostgreSQL fix, retry reduction and current timing evidence.
