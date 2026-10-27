@@ -1,0 +1,7 @@
+{
+  "revision": "c62f718293a4",
+  "down_revision": "b825c4202610",
+  "operations": [
+    {"op": "add_nullable_column", "table": "users", "column": {"name": "personal_display_currency", "type": "varchar(3)", "nullable": true}}
+  ]
+}

@@ -1,9 +1,10 @@
 # Database releases and employee development
 
 Employees develop and test with restricted credentials. A separate release process
-changes shared database schemas. Production releases need the release administrator's
-approval after staging acceptance. Employee startup can request a fixed,
-owner-approved development migration without receiving schema-owner credentials.
+changes staging and production schemas. Production releases need the release
+administrator's approval after staging acceptance. Employee startup automatically
+applies supported additive changes to the common testing database without
+receiving schema-owner credentials.
 
 Open [the interactive checklist](database-release-checklist.html) in a browser for a
 local planning aid. It does not connect to GitHub or a database, and checking a box
@@ -18,16 +19,16 @@ does not grant approval or deploy anything. GitHub records the actual approvals.
 4. Open a PR for changes. Include a new Alembic migration only when the schema
    changes. Never edit an already deployed migration or make shared schema edits
    directly in the Supabase dashboard.
-5. Startup automatically requests an approved development migration if needed.
+5. Startup automatically applies supported additive development migrations if needed.
    If it still reports pending migrations, send the sanitized revision list to
    the release administrator. The migration may need one-time function setup or
-   approval/deployment. Do not change `alembic_version` manually.
+   the owner release workflow. Do not change `alembic_version` manually.
 
 Engineers may experiment with schemas in their own isolated databases. Their
 personal login to the shared development database still has no schema privileges.
 Application admin accounts do not receive database-owner privileges.
 
-Employees can trigger approved development migrations through the workflow
+Employees can trigger supported additive development migrations at startup
 without receiving direct `ALTER`/`DROP` rights. PostgreSQL does not provide a
 general "run arbitrary migrations but never drop a table" privilege: altering
 and dropping an object are ownership powers. PR/CODEOWNER review controls which
@@ -44,22 +45,45 @@ members of `tripraft_dev_runtime`. If personal logins do not inherit that role,
 the owner must review their membership separately; no role membership is granted
 by this script. Never install this development-only function in production.
 
-After this one-time setup, employees just run `python start.py`. Startup verifies
-the restricted login, reads the migration state and, when behind, requests the
-checkout's target revision from that function. The database owner has explicitly
-approved only the `b825c4202610` → `c62f718293a4` currency-column migration in its
-fixed body. It cannot execute caller SQL, accept table names, drop tables, delete
-rows or change an arbitrary version. The column and migration record change in
-one transaction under the shared release lock. A second employee start is a safe
-no-op. Startup then independently checks the resulting revision and the API checks
-actual schema parity before accepting traffic.
+If the old currency-only function was installed, run this updated setup script
+**once** to install the reusable function. It does not migrate application data
+itself. Restricted employee logins cannot install their own owner function.
 
-Future migrations are normally reviewed and deployed automatically by the
-central `develop` workflow before employees pull that code. The startup function
-refuses unapproved target revisions; the owner can explicitly review and replace
-its fixed body for additional approved operations. This avoids giving employees
-general migration credentials. The one-time function installation itself requires
-an owner session: restricted credentials cannot create their own privilege bridge.
+After setup, employees just run `python start.py`. Startup displays each pending
+revision and applies its `.development.json` companion file. It supports creating
+new tables with plain columns, primary/unique/foreign keys, and adding nullable
+columns without defaults to existing application tables. The current friends
+migration also has a fixed backfill that copies previous invitees into private
+contacts while preserving invitations. The regular Alembic migration remains the
+source for owner/CI deployments.
+
+The database function accepts structured operations, never caller SQL or Python.
+It quotes identifiers, limits types and payload sizes, protects migration and
+employee/agent/audit tables, and refuses drops, renames, type changes and arbitrary
+data updates. New tables grant the backend team role CRUD only; Supabase's public
+API roles receive no access through this bridge. Employees do not receive direct
+schema ownership, `DROP`, `TRUNCATE` or migration-table write privileges.
+
+All pending steps and their version updates commit together under the shared
+release lock. A failed step rolls back the attempt; simultaneous employee starts
+serialize and subsequent starts are a no-op. The database records the requesting
+login and operations in `tripraft_dev_ops.migration_runs` for owner review. Startup
+then independently checks the revision and the API checks real schema parity.
+
+For future supported changes, include a reviewed `.development.json` next to the
+new Alembic migration, with matching `revision`, `down_revision` and `operations`.
+Use the currency and friends files as examples, and test both deployment paths on
+disposable PostgreSQL. No per-revision function replacement is needed. Missing
+manifests, merge revisions and unsupported operations use the owner/CI release
+workflow. Ordinary record CRUD never needs a migration.
+
+This deliberately trusts authorized team developers to request additive changes
+in **testing**. It does not authenticate a manifest against the Alembic body or
+make arbitrary feature branches compatible with one shared schema. Pull matching
+team code after a shared upgrade; an older checkout still blocks on a newer or
+unknown revision. Production must use a separate database without this function
+and the reviewed owner release process below. The startup helper is also disabled
+when `FLASK_ENV` is not `development`; production must set `FLASK_ENV=production`.
 
 ## Shared groups and testing between employees
 
