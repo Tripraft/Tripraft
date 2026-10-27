@@ -17,7 +17,17 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
     const groups = new Set(), expenses = new Set();
     // Joining the socket or returning focus must not restart a slow read that
     // is already in flight. Its authenticated response still reconciles data.
-    const invalidate = (key, preserve = false) => queryClient.invalidateQueries({ queryKey: key, refetchType: 'active' }, {cancelRefetch: !preserve});
+    const invalidate = (key, preserve = false) => {
+      if (preserve) {
+        const state = queryClient.getQueryState(key);
+        // Initial socket join, focus and visibility often happen together.
+        // A recent successful read already reconciled this page. Actual ledger
+        // events below always invalidate, regardless of this recovery window.
+        if (state?.fetchStatus === 'fetching' || (state?.dataUpdatedAt && !state.isInvalidated &&
+            !state.error && Date.now() - state.dataUpdatedAt < 10_000)) return;
+      }
+      return queryClient.invalidateQueries({ queryKey: key, refetchType: 'active' }, {cancelRefetch: !preserve});
+    };
     const refresh = (full = true) => {
       if (cancelled || document.hidden || navigator.onLine === false) return;
       const preserve = full && !personalChanged && !groups.size && !expenses.size;
@@ -107,16 +117,22 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
       finally { connecting = false; }
     };
     connect();
-    const recover = () => { refresh(); if (!socket) connect(); else if (!socket.connected && !authRecoveryUsed) socket.connect(); };
+    const recover = () => {
+      // A healthy socket already records changes while hidden. Flush those
+      // events on return; reconnects still perform full reconciliation.
+      refresh(!socket?.connected);
+      if (!socket) connect(); else if (!socket.connected && !authRecoveryUsed) socket.connect();
+    };
     window.addEventListener('online', recover);
     window.addEventListener('focus', recover);
     document.addEventListener('visibilitychange', recover);
-    // Safety net for disabled WebSockets, missed messages and temporary outages.
+    // Safety net for disabled WebSockets and temporary outages.
     // Hidden/offline tabs do no polling work and catch up when they return.
     let elapsed = 0;
     const fallback = setInterval(() => {
+      if (socket?.connected) { elapsed = 0; return; }
       elapsed += 10000;
-      if (elapsed >= (socket?.connected ? 60000 : 20000)) { elapsed = 0; refresh(); }
+      if (elapsed >= 20000) { elapsed = 0; refresh(); }
     }, 10000);
     return () => {
       cancelled = true;

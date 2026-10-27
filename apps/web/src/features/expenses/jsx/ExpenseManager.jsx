@@ -97,10 +97,16 @@ const ExpenseManager = () => {
   const {
     invitations,
     loading: invitationsLoading,
+    error: invitationsError,
     refetch: refetchInvitations,
     updateInvitationsFromResponse,  // INSTANT UPDATE helper
     removeInvitation  // INSTANT UPDATE helper
   } = useInvitations({enabled: isAuthenticated});
+  // Cards carry the heading, member list and exact summary. Detail loading must
+  // not hold these behind the expense/settlement pages or pending invitations.
+  const summaryGroup = !groupDetailError && (groups || []).find(group =>
+    String(group.id || group.group_id) === String(activeGroupId));
+  const headerGroup = activeGroupData || summaryGroup;
   
   // Personal expenses
   const {
@@ -616,6 +622,7 @@ const ExpenseManager = () => {
   if (authLoading) {
     return (
       <div className="expense-manager">
+        <header className="expense-header"><h1>{mode === 'group' ? 'Group expenses' : 'Expense Dashboard'}</h1></header>
         <div style={{ textAlign: 'center', padding: '4rem' }}>
           <RefreshCw className="spinning" size={48} />
           <p>Loading...</p>
@@ -691,7 +698,18 @@ const ExpenseManager = () => {
         loading={groupsLoading} error={groupsError}
         onSelect={handleGroupChange} onCreate={() => setShowNewGroup(true)} onRetry={refetchGroups}
       />}
-      {mode === 'group' && activeGroupId && groupDetailLoading && !activeGroupData && <p role="status">Loading group…</p>}
+      {mode === 'group' && activeGroupId && !headerGroup && !groupDetailError && <section aria-busy="true" aria-label="Group overview">
+        <h2>Group overview</h2><p role="status">Loading group…</p>
+      </section>}
+      {mode === 'group' && activeGroupId && headerGroup && !activeGroupData && <>
+        <GroupDetailHeader group={headerGroup} members={headerGroup.members || []}
+          overview={groupOverview(headerGroup, currentUser?.uid || currentUser?.user_id || currentUser?.id)}
+          busy onBack={() => setExpenseView('group')} onCreate={() => setShowNewGroup(true)}
+          onAdd={handleOpenModal} onSettle={() => openGroupTab('settleup')} />
+        <p role="status">Loading group transactions and settlements…</p>
+      </>}
+      {invitationsError && <div role="alert">Unable to load invitations: {invitationsError} <button onClick={refetchInvitations}>Retry invitations</button></div>}
+      {mode === 'group' && activeGroupId && groupsError && <div role="alert">Unable to load the group list: {groupsError} <button onClick={refetchGroups}>Retry group list</button></div>}
 
       {mode === 'personal' && <section className="expense-dashboard-currency" aria-label="Dashboard currency preference">
         {currencyPreference.loading ? <p role="status">Loading your currency preference...</p> : currencyPreference.loadError ? <div role="alert">Unable to load your currency preference. <button onClick={currencyPreference.retry}>Retry</button></div> : <>
@@ -739,7 +757,7 @@ const ExpenseManager = () => {
         </>;
       })()}
 
-      {mode === 'group' && groupDetailError && <div className="expense-groups-empty" role="alert"><p>Unable to open this group: {groupDetailError}</p><button className="expense-secondary-button" onClick={() => setExpenseView('group')}>Back to all groups</button></div>}
+      {mode === 'group' && groupDetailError && <div className="expense-groups-empty" role="alert"><p>Unable to open this group: {groupDetailError}</p><button onClick={refetchGroupDetail}>Retry group</button><button className="expense-secondary-button" onClick={() => setExpenseView('group')}>Back to all groups</button></div>}
 
       {/* Group View with Tabs (Balances, Settle Up, Spending, Transactions, Analytics) */}
       {mode === 'group' && activeGroupId && activeGroupData && (

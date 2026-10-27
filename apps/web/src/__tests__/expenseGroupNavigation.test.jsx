@@ -72,6 +72,41 @@ beforeEach(() => {
 });
 afterEach(() => client.clear());
 
+it('renders the page heading while the account is still loading', () => {
+ auth = {isAuthenticated:false, currentUser:null, loading:true};
+ render(<Page />);
+ expect(screen.getByRole('heading', {name:'Group expenses',level:1})).toBeInTheDocument();
+});
+
+it('shows the exact summary position while detail and invitations are still pending', () => {
+ useGroups.mockReturnValue({groups:[{id:'joined-group', name:'Early trip', currency:'USD', my_balance:-12.5,
+   summary:{total_spend:25, you_paid:0, your_share:12.5, expense_count:1}, members:[]}], refetch:jest.fn()});
+ useGroupDetail.mockReturnValue({group:null, loading:true, refetch:jest.fn()});
+ useInvitations.mockReturnValue({invitations:[], loading:true, refetch:jest.fn()});
+ render(<Page />);
+ expect(screen.getByRole('heading', {name:'Group expenses', level:1})).toBeInTheDocument();
+ expect(screen.getByRole('heading', {name:'Early trip'})).toBeInTheDocument();
+ expect(screen.getByRole('heading', {name:'$12.50'})).toHaveClass('is-negative');
+ expect(screen.getByText('Loading group transactions and settlements…')).toBeInTheDocument();
+ expect(screen.queryByRole('tablist')).toBeNull();
+});
+
+it('shows a heading before either group read finishes and reports invitation failure', () => {
+ useGroups.mockReturnValue({groups:[], loading:true, refetch:jest.fn()});
+ useGroupDetail.mockReturnValue({group:null, loading:true, refetch:jest.fn()});
+ useInvitations.mockReturnValue({invitations:[], error:'Offline', refetch:jest.fn()});
+ render(<Page />);
+ expect(screen.getByRole('heading', {name:'Group overview'})).toBeInTheDocument();
+ expect(screen.getByRole('button', {name:'Retry invitations'})).toBeInTheDocument();
+});
+
+it('reports a failed group list independently from the selected ledger', () => {
+ useGroups.mockReturnValue({groups:[], error:'Offline', refetch:jest.fn()});
+ render(<Page />);
+ expect(screen.getByRole('button', {name:'Retry group list'})).toBeInTheDocument();
+ expect(screen.getByText('Group expenses: joined-group')).toBeInTheDocument();
+});
+
 it('opens the exact invitation group without selecting the first group or personal expenses', () => {
   render(<Page />);
   expect(screen.getByText('Group expenses: joined-group')).toBeInTheDocument();

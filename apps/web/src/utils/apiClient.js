@@ -10,6 +10,8 @@ export class APIClient {
     this.baseURL = GlobalConfig.API_BASE_URL;
     this.maxRetries = GlobalConfig.API_MAX_RETRIES ?? 2;
     this.timeout = GlobalConfig.API_TIMEOUT || 30000;
+    this.inflightGets = new Map();
+    this.readGeneration = 0;
   }
 
   _getCookie(name) {
@@ -18,6 +20,11 @@ export class APIClient {
   }
 
   async request(method, endpoint, options = {}) {
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+      // Reads started after a write must not join a pre-write snapshot.
+      this.readGeneration++;
+      this.inflightGets.clear();
+    }
     // Only public reference GETs cross the demo boundary.
     const publicReference = method === 'GET' && (
       /^\/v1\/group-planner\/catalog\/(destinations|places|viewport)(\?|$)/.test(endpoint) ||
@@ -101,7 +108,23 @@ export class APIClient {
     }
     throw lastError || new Error('Network error');
   }
-  get(endpoint, options = {}) { return this.request('GET', endpoint, options); }
+  get(endpoint, options = {}) {
+    // Independently cancellable callers retain their own transport. Expense
+    // queries don't cancel the transport on StrictMode's observer unmount.
+    if (options.signal || options._retried401) return this.request('GET', endpoint, options);
+    const { headers: suppliedHeaders, ...requestOptions } = options;
+    const headers = (suppliedHeaders?.entries ? Array.from(suppliedHeaders.entries())
+      : Array.isArray(suppliedHeaders) ? suppliedHeaders : Object.entries(suppliedHeaders || {}))
+      .map(([name, value]) => [name.toLowerCase(), value]).sort();
+    const key = JSON.stringify([this.baseURL, endpoint, requestOptions, headers,
+      sqlAuthService.currentUser?.id, sqlAuthService.accessToken, sqlAuthService._authVersion, this.readGeneration]);
+    if (this.inflightGets.has(key)) return this.inflightGets.get(key);
+    const pending = this.request('GET', endpoint, options).finally(() => {
+      if (this.inflightGets.get(key) === pending) this.inflightGets.delete(key);
+    });
+    this.inflightGets.set(key, pending);
+    return pending;
+  }
   post(endpoint, body, options = {}) { return this.request('POST', endpoint, { ...options, body }); }
   put(endpoint, body, options = {}) { return this.request('PUT', endpoint, { ...options, body }); }
   delete(endpoint, options = {}) { return this.request('DELETE', endpoint, options); }

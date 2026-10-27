@@ -2,6 +2,12 @@
 
 Date: October 26, 2026 (America/Los_Angeles).
 
+Follow-up: [groups-page load profiling and fixes](groups-page-load-fix-2026-10-26.md)
+adds live PostgreSQL/curl before-and-after measurements, exact query plans,
+pending-GET deduplication and earlier summary-heading rendering. The findings
+below describe the earlier HAR investigation; its lack of live PostgreSQL
+measurements is superseded by that follow-up.
+
 ## What the supplied recording shows
 
 The supplied `download` file is a HAR browser network recording, treated as

@@ -61,6 +61,21 @@ it('authenticates once and refreshes visible member data when another user saves
   expect(read).toHaveBeenCalledTimes(2);
 });
 
+it('coalesces initial connection/focus/visibility recovery after a successful page read', async () => {
+ const read = jest.fn(async () => ({amount:10}));
+ const {result} = renderHook(() => {
+  useExpenseLiveUpdates('member','group');
+  return useQuery({queryKey:['group','group'],queryFn:read});
+ }, {wrapper});
+ await waitFor(() => expect(result.current.data).toEqual({amount:10}));
+ act(() => {events.connect(); window.dispatchEvent(new Event('focus')); document.dispatchEvent(new Event('visibilitychange'));});
+ expect(read).toHaveBeenCalledTimes(1);
+ act(() => jest.advanceTimersByTime(60_000));
+ expect(read).toHaveBeenCalledTimes(1);
+ act(() => {events['expenses:changed']({group_id:'group'}); jest.advanceTimersByTime(150);});
+ expect(read).toHaveBeenCalledTimes(2);
+});
+
 it('coalesces bursts and updates group cards, balances, invitations and open history', async () => {
   const invalidate = jest.spyOn(client, 'invalidateQueries');
   renderHook(() => useExpenseLiveUpdates('member', 'group'), { wrapper });

@@ -3,7 +3,7 @@ from app.expenses.services.group_access import require_contributor
 import logging
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import func
+from sqlalchemy import and_, func
 from sqlalchemy.orm import joinedload
 
 from app.core.config import Config
@@ -206,20 +206,27 @@ class InvitationServiceSQL:
     @service_result
     def get_pending_invitations_for_user(user_id):
         with get_db_session() as session:
-            user = session.get(User, identifier(user_id))
-            if user is None:
-                raise NotFoundError('User not found')
+            uid = identifier(user_id)
             membership = session.query(GroupMember.id).filter(
                 GroupMember.group_id == Invitation.group_id,
-                GroupMember.user_id == user.id, GroupMember.is_active.is_(True),
+                GroupMember.user_id == uid, GroupMember.is_active.is_(True),
             ).exists()
-            rows = session.query(Invitation).join(Group).filter(
-                func.lower(Invitation.invitee_email) == user.email.lower(), Invitation.status == 'pending',
-                Group.is_active.is_(True), ~membership,
-            ).options(joinedload(Invitation.group), joinedload(Invitation.inviter)).order_by(
+            active = session.query(Group.id).filter(
+                Group.id == Invitation.group_id, Group.is_active.is_(True),
+            ).exists()
+            # Keep the user row even with no invitations, retaining the missing-user
+            # error while avoiding a separate user lookup round trip.
+            rows = session.query(User, Invitation).outerjoin(Invitation, and_(
+                func.lower(Invitation.invitee_email) == func.lower(User.email), Invitation.status == 'pending',
+                active, ~membership,
+            )).filter(User.id == uid).options(
+                joinedload(Invitation.group), joinedload(Invitation.inviter),
+            ).order_by(
                 Invitation.created_at.desc(), Invitation.id.desc(),
             ).all()
-            data = [_invitation_dict(row) for row in rows if not _expired(row)]
+            if not rows:
+                raise NotFoundError('User not found')
+            data = [_invitation_dict(row) for _, row in rows if row is not None and not _expired(row)]
             return {'invitations': data, 'count': len(data)}
 
     @staticmethod

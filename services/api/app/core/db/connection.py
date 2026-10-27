@@ -25,6 +25,7 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from .base import Base
+from .timing import track_query_timing
 from app.core.config import Config
 
 logger = logging.getLogger(__name__)
@@ -129,6 +130,9 @@ logger.info(
     'SQLite' if _IS_SQLITE else 'PostgreSQL',
     'SQLite' if TRAVEL_DATA_URL.startswith('sqlite') else 'PostgreSQL',
 )
+
+for _timed_engine in (engine, travel_engine):
+    track_query_timing(_timed_engine)
 
 
 # ---------------------------------------------------------------------------
