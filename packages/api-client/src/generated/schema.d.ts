@@ -4549,6 +4549,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             is_admin: boolean;
+            personal_display_currency?: string | null;
         };
     };
     responses: never;

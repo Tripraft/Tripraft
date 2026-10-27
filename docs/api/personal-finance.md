@@ -78,6 +78,24 @@ reports always exclude them. The transaction list accepts `type=income` or
 
 ## Balance and analysis rules
 
+The personal web dashboard asks users to choose a display currency on their first
+visit. It saves `personal_display_currency` on their account through
+`PUT /api/v1/auth/user/profile`; `GET` of the same endpoint returns the saved
+choice (or null before the first choice). A dropdown lets users change it anytime.
+The nullable column is introduced by migration `c62f718293a4`; existing accounts
+are prompted instead of silently receiving a default.
+
+The dashboard combines all transactions in the selected currency. Entry currency
+applies to the new transaction only: changing it does not switch dashboards or
+hide previous transactions. The web client converts each original amount using
+the exchange-rate API and rounds it to the selected currency's precision for summary cards, history,
+analytics and PDF exports. History also shows the original amount for converted
+rows, and editing always uses the saved original currency and amount. Rate
+refreshes can change displayed estimates; saved records are not rewritten.
+When a required rate is unavailable, original history remains accessible while
+totals, analytics and export wait for a successful conversion. Cached rates are
+identified. API reports below continue to expose original currency totals.
+
 `/personal/summary` accepts currency and date bounds. Every currency has its own
 row in `data.balances`; currencies are never added together or converted.
 

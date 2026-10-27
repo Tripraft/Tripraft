@@ -1,17 +1,50 @@
-# Purpose: Defines canonical release verification and opt-in staging/production deploy-hook calls; release-verify gates deployment and tags select production.
+# Purpose: Test releases, migrate separate environments, and require staged-commit evidence plus admin approval for production.
 name: Deploy
 on:
   push:
-    branches: [main]
-    tags: ['v*']
+    branches: [develop, main]
   workflow_dispatch:
+    inputs:
+      staging_run_id:
+        description: Successful staging Deploy run ID for this exact main commit
+        required: true
+        type: string
+      staging_accepted:
+        description: Profiles, login, CRUD and affected features passed staging acceptance
+        required: true
+        default: false
+        type: boolean
+      backup_reference:
+        description: Verified production backup or snapshot reference (no credentials)
+        required: true
+        type: string
 permissions:
   contents: read
+  actions: read
+# One release at a time across branches; never cancel a running migration.
 concurrency:
-  group: deploy-${{ github.ref }}
+  group: tripraft-database-releases
   cancel-in-progress: false
 jobs:
+  gate:
+    if: ${{ vars.DATABASE_RELEASES_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    outputs:
+      environment: ${{ steps.target.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: Verify release provenance and production protections
+        id: target
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STAGING_RUN_ID: ${{ inputs.staging_run_id }}
+          STAGING_ACCEPTED: ${{ inputs.staging_accepted }}
+          BACKUP_REFERENCE: ${{ inputs.backup_reference }}
+        run: python infra/tools/check_release_gate.py
   release-verify:
+    needs: gate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,24 +56,64 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pip install -r services/api/requirements.txt -r services/api/requirements-dev.txt
       - run: pnpm verify
-  deploy:
-    if: ${{ vars.DEPLOY_HOOKS_ENABLED == 'true' }}
-    needs: release-verify
+  migration-verify:
+    needs: gate
     runs-on: ubuntu-latest
-    environment: ${{ startsWith(github.ref, 'refs/tags/v') && 'production' || 'staging' }}
-    steps:
-      - name: Trigger configured hosting provider
+    services:
+      postgres:
+        image: postgres:16
         env:
-          PRODUCTION_DEPLOY_HOOK: ${{ secrets.PRODUCTION_DEPLOY_HOOK }}
-          STAGING_DEPLOY_HOOK: ${{ secrets.STAGING_DEPLOY_HOOK }}
+          POSTGRES_USER: employee_test
+          POSTGRES_PASSWORD: disposable-test-only
+          POSTGRES_DB: tripraft_employee_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U employee_test -d tripraft_employee_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install -r services/api/requirements.txt -r services/api/requirements-dev.txt
+      - name: Verify migrations, preserved records and employee restrictions on disposable PostgreSQL
+        working-directory: services/api
+        env:
+          EMPLOYEE_TEST_POSTGRES_URL: postgresql://employee_test:disposable-test-only@127.0.0.1:5432/tripraft_employee_test
+        run: python -m pytest tests/test_employee_postgresql.py tests/test_database_release_postgresql.py -q
+  deploy:
+    needs: [gate, release-verify, migration-verify]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ needs.gate.outputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - run: pip install -r services/api/requirements.txt
+      - name: Check application deployment configuration before changing schema
+        if: ${{ needs.gate.outputs.environment != 'development' }}
+        env:
+          DEPLOY_HOOK: ${{ secrets.APPLICATION_DEPLOY_HOOK }}
+          READINESS_URL: ${{ vars.APPLICATION_READINESS_URL }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: python infra/tools/deploy_application.py --check
+      - name: Apply and verify approved database migrations
+        env:
+          MIGRATION_DATABASE_URL: ${{ secrets.MIGRATION_DATABASE_URL }}
+          MIGRATION_EXPECTED_HOST: ${{ vars.MIGRATION_EXPECTED_HOST }}
+          MIGRATION_EXPECTED_USER: ${{ vars.MIGRATION_EXPECTED_USER }}
+          MIGRATION_EXPECTED_DATABASE: ${{ vars.MIGRATION_EXPECTED_DATABASE }}
+          RELEASE_ENVIRONMENT: ${{ needs.gate.outputs.environment }}
+        run: python infra/tools/deploy_database.py --environment "$RELEASE_ENVIRONMENT" --apply
+      - name: Deploy the matching application commit and verify readiness
+        if: ${{ needs.gate.outputs.environment != 'development' }}
+        env:
+          DEPLOY_HOOK: ${{ secrets.APPLICATION_DEPLOY_HOOK }}
+          READINESS_URL: ${{ vars.APPLICATION_READINESS_URL }}
+          RELEASE_SHA: ${{ github.sha }}
+        run: python infra/tools/deploy_application.py
+      - name: Record release evidence
+        env:
+          RELEASE_ENVIRONMENT: ${{ needs.gate.outputs.environment }}
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            DEPLOY_HOOK="$PRODUCTION_DEPLOY_HOOK"
-          else
-            DEPLOY_HOOK="$STAGING_DEPLOY_HOOK"
-          fi
-          if [ -z "$DEPLOY_HOOK" ]; then
-            echo 'Configure the environment deployment hook before enabling releases.'
-            exit 1
-          fi
-          curl --fail --silent --show-error --request POST "$DEPLOY_HOOK" --output /dev/null
+          echo "Released schema for $GITHUB_SHA to $RELEASE_ENVIRONMENT. Development users run the matching code locally; staging/production also require application readiness." >> "$GITHUB_STEP_SUMMARY"

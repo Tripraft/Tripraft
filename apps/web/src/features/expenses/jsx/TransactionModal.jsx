@@ -2,7 +2,7 @@
 import ExpenseDialog from './ExpenseDialog';
 import CurrencySelect from '../../../components/common/jsx/CurrencySelect';
 import React, { useState, useEffect, useRef } from 'react';
-import { X } from 'lucide-react';
+import { X, LoaderCircle } from 'lucide-react';
 
 const TransactionModal = ({ 
   mode, 
@@ -16,6 +16,7 @@ const TransactionModal = ({
   currency
 }) => {
   const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const initializedForm = useRef(null);
   const customSplit = mode === 'group' && editingTransaction && String(editingTransaction.split_type || 'equal').toLowerCase() !== 'equal';
   const [formData, setFormData] = useState({
@@ -115,7 +116,7 @@ const TransactionModal = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (saving || editingTransaction?.is_deleted) return;
+    if (savingRef.current || editingTransaction?.is_deleted) return;
     
     if (mode === 'group' && formData.splitWith.length === 0) {
       onAlert('You must split the expense with at least one person.');
@@ -135,10 +136,11 @@ const TransactionModal = ({
       })
     };
 
+    savingRef.current = true;
     setSaving(true);
     try { await onSave(transactionData); }
     catch (error) { onAlert(error.message || 'Unable to save transaction'); }
-    finally { setSaving(false); }
+    finally { savingRef.current = false; setSaving(false); }
   };
 
   const handleSplitToggle = (memberId) => {
@@ -161,7 +163,8 @@ const TransactionModal = ({
             <X size={24} />
           </button>
         </div>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} aria-busy={saving}>
+          <fieldset disabled={saving} className="expense-transaction-fields">
           {mode === 'personal' && (
             <div className="form-group">
               <label>Transaction Type</label>
@@ -324,8 +327,9 @@ const TransactionModal = ({
               Cancel
             </button>
             {editingTransaction?.is_deleted && <p role="alert">This expense was deleted. Close this dialog and use Revert in the activity list to restore it.</p>}
-            <button type="submit" className="btn-save" disabled={saving || editingTransaction?.is_deleted}>{saving ? 'Saving...' : 'Save'}</button>
+            <button type="submit" className="btn-save" disabled={saving || editingTransaction?.is_deleted}>{saving && <LoaderCircle className="spinning" size={18} aria-hidden="true" />}<span role={saving ? 'status' : undefined}>{saving ? 'Saving...' : 'Save'}</span></button>
           </div>
+          </fieldset>
         </form>
     </ExpenseDialog>
   );

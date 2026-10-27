@@ -439,7 +439,9 @@ const TransactionList = ({
                     )}
                     <td className={`${isIncomeTransaction ? 'amount-green' : 'amount-red'} ${isDeleted ? 'deleted-amount' : ''}`}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span className={isDeleted ? 'deleted-text' : ''}>{formatCurrency(t.amount)}</span>
+                        <span className={isDeleted ? 'deleted-text' : ''}>{formatCurrency(t.amount, t.currency || currency)}
+                          {t.original_currency && t.original_currency !== currency && <small className="expense-original-amount">{formatCurrency(t.original_amount, t.original_currency)} original</small>}
+                        </span>
                         {isEdited && !isDeleted && (
                           <button 
                             className="btn-icon"
@@ -614,7 +616,7 @@ const TransactionList = ({
       {/* Phase 12: Expense History Modal */}
       {restoreError && <p role="alert">{restoreError}</p>}
       {showHistoryModal && historyTransaction && (
-        <ExpenseHistoryModal currency={currency}
+        <ExpenseHistoryModal currency={historyTransaction?.original_currency || historyTransaction?.currency || currency}
           expense={transactions.find(transaction => (transaction.id || transaction.expense_id) === (historyTransaction.id || historyTransaction.expense_id)) || historyTransaction}
           members={members}
           mode={mode}

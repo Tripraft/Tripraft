@@ -40,6 +40,7 @@ def build(application):
         'User': {'type': 'object', 'required': ['id', 'email', 'is_admin'], 'properties': {
             'id': {'type': 'string', 'format': 'uuid'}, 'email': {'type': 'string'},
             'display_name': {'type': ['string', 'null']}, 'is_admin': {'type': 'boolean'},
+            'personal_display_currency': {'type': ['string', 'null'], 'pattern': '^[A-Z]{3}$'},
         }},
         'Health': {'type': 'object', 'required': ['status', 'timestamp'], 'properties': {
             'status': {'type': 'string'}, 'timestamp': {'type': 'string'},

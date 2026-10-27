@@ -16,6 +16,31 @@ from app.expenses.services.expense_service import ExpenseServiceSQL
 BASE = '/api/v1/expenses'
 
 
+def test_dashboard_currency_is_explicit_persistent_and_private(alice, bob):
+    api, uid, _ = alice
+    other_api, _, _ = bob
+    profile = '/api/v1/auth/user/profile'
+    assert payload(api.get(profile))['user']['personal_display_currency'] is None
+    response = api.put(profile, json={'personal_display_currency': ' inr '})
+    assert response.status_code == 200, response.get_json()
+    assert payload(response)['user']['personal_display_currency'] == 'INR'
+    assert payload(api.get(profile))['user']['personal_display_currency'] == 'INR'
+    assert payload(other_api.get(profile))['user']['personal_display_currency'] is None
+    expense = create(api, 'expense', 100, currency='USD')
+    assert api.put(profile, json={'personal_display_currency': 'EUR'}).status_code == 200
+    assert payload(api.get(profile))['user']['personal_display_currency'] == 'EUR'
+    assert payload(api.get(BASE + '/' + expense['id']))['expense']['currency'] == 'USD'
+    with get_db() as session:
+        from app.auth.models import User
+        assert session.get(User, uid).personal_display_currency == 'EUR'
+
+
+@pytest.mark.parametrize('currency', ['', 'US', 'USDD', '12$', 123])
+def test_dashboard_currency_rejects_invalid_values(alice, currency):
+    api, _, _ = alice
+    assert api.put('/api/v1/auth/user/profile', json={'personal_display_currency': currency}).status_code == 422
+
+
 def create(api, kind, amount, **fields):
     path = BASE + ('/incomes' if kind == 'income' else '')
     response = api.post(path, json={'description': kind.title(), 'amount': amount, **fields})
@@ -135,7 +160,10 @@ def test_lists_filters_literal_search_and_stable_pagination(alice):
     assert filtered['total'] == 3 and len(filtered['incomes']) == 1 and filtered['has_more']
     pages = [payload(api.get(BASE + '/incomes?currency=USD&limit=1&offset=' + str(i)))['incomes'][0]['id']
              for i in range(3)]
-    assert pages == [row['id'] for row in reversed(created)]
+    # Equal timestamps use the UUID tie-breaker; UUIDv7 random bits need not
+    # increase when multiple records are created in the same millisecond.
+    expected = sorted(created, key=lambda row: (row['created_at'], UUID(row['id']).int), reverse=True)
+    assert pages == [row['id'] for row in expected]
     assert payload(api.get(BASE + '/incomes?search=%25_'))['total'] == 1
     create(api, 'expense', 4, date='2026-10-02', category='food')
     assert payload(api.get(BASE + '/personal/transactions?type=expense'))['total'] == 1

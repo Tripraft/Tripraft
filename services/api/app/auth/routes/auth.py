@@ -309,7 +309,8 @@ def update_me():
         display_name=data.get('display_name'),
         phone=data.get('phone'),
         photo_url=data.get('photo_url'),
-        default_currency=data.get('default_currency')
+        default_currency=data.get('default_currency'),
+        personal_display_currency=data.get('personal_display_currency')
     )
     
     if success:
@@ -421,7 +422,8 @@ def update_user_profile():
         display_name=data.get('display_name'),
         phone=data.get('phone'),
         photo_url=data.get('photo_url'),
-        default_currency=data.get('default_currency')
+        default_currency=data.get('default_currency'),
+        personal_display_currency=data.get('personal_display_currency')
     )
     
     if success:

@@ -9,7 +9,8 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import ExpenseSummary from './ExpenseSummary';
 import CurrencySelect from '../../../components/common/jsx/CurrencySelect';
 import CurrencyConversion from '../../../components/common/jsx/CurrencyConversion';
-import {isPersonalIncome} from '../utils/personalTransactions';
+import usePersonalDashboard from '../../../hooks/usePersonalDashboard';
+import usePersonalCurrency from '../../../hooks/usePersonalCurrency';
 
 import TransactionModal from './TransactionModal';
 import GroupManager from './GroupManager';
@@ -50,7 +51,6 @@ const unwrapEnvelope = (r) => (r && typeof r === 'object' && 'success' in r && '
 
 const ExpenseManager = () => {
   const navigate = useNavigate();
-  const [personalCurrency, setPersonalCurrency] = useState('USD');
   const { userId: routeUserId, mode: routeMode } = useParams();
   const [searchParams] = useSearchParams();
   const mode = routeMode === 'group' || (!routeMode && searchParams.get('view') === 'group') ? 'group' : 'personal';
@@ -58,6 +58,8 @@ const ExpenseManager = () => {
   
   // Auth state
   const { isAuthenticated, currentUser, loading: authLoading } = useAuth();
+  const currencyPreference = usePersonalCurrency(currentUser?.uid || currentUser?.user_id || currentUser?.id, mode === 'personal' && isAuthenticated);
+  const personalCurrency = currencyPreference.currency;
   useExpenseLiveUpdates(isAuthenticated ? currentUser?.uid || currentUser?.user_id || currentUser?.id : null, activeGroupId);
   
   // Query-backed account/group data; live invalidation is handled above.
@@ -110,6 +112,9 @@ const ExpenseManager = () => {
     rollbackDelete: rollbackPersonalDelete
   } = usePersonalExpenses();
 
+  const personalDashboard = usePersonalDashboard(personalExpenses || [], personalCurrency || 'USD', mode === 'personal' && Boolean(personalCurrency));
+  const personalConversionPending = !personalCurrency || personalDashboard.loading || Boolean(personalDashboard.error);
+
   // UI State
   const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [showAlertModal, setShowAlertModal] = useState(false);
@@ -124,6 +129,25 @@ const ExpenseManager = () => {
   const [showNewGroup, setShowNewGroup] = useState(false);
   const [groupTab, setGroupTab] = useState('balances');
   const groupTabsRef = useRef(null);
+  const addTransactionRef = useRef(null);
+  const [showFloatingAdd, setShowFloatingAdd] = useState(false);
+  useEffect(() => {
+    const button = addTransactionRef.current;
+    if (mode !== 'personal' || !button) return;
+    const update = () => {
+      const rect = button.getBoundingClientRect();
+      setShowFloatingAdd(rect.top < 0 && rect.bottom <= 0);
+    };
+    update();
+    if (typeof IntersectionObserver !== 'undefined') {
+      const observer = new IntersectionObserver(([entry]) => setShowFloatingAdd(entry.boundingClientRect.top < 0 && entry.boundingClientRect.bottom <= 0));
+      observer.observe(button);
+      return () => observer.disconnect();
+    }
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => { window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update); };
+  }, [mode, authLoading, isAuthenticated]);
   const openGroupTab = tab => {
     setGroupTab(tab);
     // The cards sit above the tab content, often outside the current viewport.
@@ -189,7 +213,7 @@ const ExpenseManager = () => {
   // Get current transactions based on mode
   const getCurrentTransactions = () => {
     if (mode === 'personal') {
-      return (personalExpenses || []).filter(expense => (expense.currency || 'USD') === personalCurrency);
+      return personalDashboard.transactions;
     }
     if (!activeGroupId) return [];
     return activeGroupExpenses || [];
@@ -382,7 +406,6 @@ const ExpenseManager = () => {
           });
           showToast('Transaction created!', 'success');
         }
-        if (transactionData.currency) setPersonalCurrency(transactionData.currency);
         await refetchPersonalExpenses();
       } else {
         // Group expense
@@ -523,11 +546,15 @@ const ExpenseManager = () => {
 
   // Get editing transaction
   const editingTransaction = state.editingTransactionId
-    ? getCurrentTransactions().find(t => t.id === state.editingTransactionId || t.expense_id === state.editingTransactionId)
+    ? (mode === 'personal' ? personalExpenses || [] : getCurrentTransactions()).find(t => t.id === state.editingTransactionId || t.expense_id === state.editingTransactionId)
     : null;
 
   // PDF Export handler
   const handleExportPDF = () => {
+    if (mode === 'personal' && personalConversionPending) {
+      showAlert('Wait for currency conversion to finish before exporting. Retry if rates are unavailable.');
+      return;
+    }
     try {
       showToast('Generating PDF report...', 'info');
       
@@ -593,7 +620,7 @@ const ExpenseManager = () => {
             <RefreshCw size={20} className={refreshing ? 'spinning' : ''} />
           </button>
           <ModeToggle mode={mode} onToggle={handleModeToggle} />
-          {mode === 'personal' && <button className="btn-add-transaction" onClick={handleOpenModal} disabled={mutationLoading || (mode === 'group' && (!activeGroupData || groupDetailLoading))}>
+          {mode === 'personal' && <button ref={addTransactionRef} className="btn-add-transaction" onClick={handleOpenModal} disabled={mutationLoading}>
             <PlusCircle size={20} />
             <span>Add Transaction</span>
           </button>}
@@ -624,12 +651,22 @@ const ExpenseManager = () => {
       />}
       {mode === 'group' && activeGroupId && groupDetailLoading && !activeGroupData && <p role="status">Loading group…</p>}
 
-      {mode === 'personal' && <label className="expense-personal-currency">Personal ledger currency
-        <CurrencySelect aria-label="Personal ledger currency" value={personalCurrency} onChange={event => setPersonalCurrency(event.target.value)} />
-        <small>Summary, history and exports show this currency only.</small>
-      </label>}
+      {mode === 'personal' && <section className="expense-dashboard-currency" aria-label="Dashboard currency preference">
+        {currencyPreference.loading ? <p role="status">Loading your currency preference...</p> : currencyPreference.loadError ? <div role="alert">Unable to load your currency preference. <button onClick={currencyPreference.retry}>Retry</button></div> : <>
+          {!personalCurrency && <h2>Choose your dashboard currency</h2>}
+          <label htmlFor="personal-display-currency">Show all transactions in</label>
+          <CurrencySelect id="personal-display-currency" value={personalCurrency || ''} placeholder="Choose your currency"
+            disabled={currencyPreference.saving || mutationLoading} onChange={event => currencyPreference.choose(event.target.value)} />
+          <p>{personalCurrency ? 'All your transactions are converted automatically. Change this anytime.' : 'Choose once and we will remember it. You can change it anytime.'}</p>
+          {currencyPreference.saving && <span role="status">Saving currency preference...</span>}
+          {currencyPreference.saveError && <p role="alert">{currencyPreference.saveError}</p>}
+        </>}
+      </section>}
+      {mode === 'personal' && personalDashboard.loading && <p role="status">Converting transactions to {personalCurrency}...</p>}
+      {mode === 'personal' && personalDashboard.error && <div role="alert">Unable to convert all transactions. Totals and analytics will be available when exchange rates return. Original amounts are shown below. <button onClick={personalDashboard.retry}>Retry conversion</button></div>}
+      {mode === 'personal' && personalDashboard.stale && <p role="status">Using cached exchange rates. Totals will update when fresh rates are available.</p>}
       {/* Personal Expense Summary */}
-      {mode === 'personal' && (
+      {mode === 'personal' && !personalConversionPending && (
         <ExpenseSummary 
           transactions={getCurrentTransactions()}
           mode={mode}
@@ -637,10 +674,6 @@ const ExpenseManager = () => {
         />
       )}
 
-      {mode === 'personal' && <CurrencyConversion base={personalCurrency} amounts={[
-        {label: 'Total expenses', amount: getCurrentTransactions().filter(t => !t.is_deleted && !isPersonalIncome(t)).reduce((sum, t) => sum + Number(t.amount || 0), 0)},
-        {label: 'Total income', amount: getCurrentTransactions().filter(t => !t.is_deleted && isPersonalIncome(t)).reduce((sum, t) => sum + Number(t.amount || 0), 0)},
-      ]} />}
       {mode === 'group' && activeGroupId && activeGroupData && (() => {
         const transactions = getCurrentTransactions();
         const balances = getCurrentBalances() || [];
@@ -723,8 +756,8 @@ const ExpenseManager = () => {
       {/* Personal Mode - Tabbed View (Transaction History + Analytics) */}
       {mode === 'personal' && (
         <PersonalTabbedView
-          key={`personal-${(getCurrentTransactions() || []).length}`}
           transactions={getCurrentTransactions()}
+          conversionPending={personalConversionPending}
           filter={state.filter}
           onFilterChange={(filterType, value) => setState(prev => ({
             ...prev,
@@ -734,12 +767,17 @@ const ExpenseManager = () => {
           onDelete={(id) => showConfirm('Are you sure you want to delete this transaction?', () => handleDeleteTransaction(id))}
           onRestore={handleRestoreTransaction}
           currentUserId={currentUser?.uid || currentUser?.user_id}
-          currency={personalCurrency}
+          currency={personalCurrency || 'USD'}
           onExportPDF={handleExportPDF}
         />
       )}
 
       {showNewGroup && <NewExpenseGroupModal onClose={() => setShowNewGroup(false)} onCreate={handleCreateGroup} />}
+
+      {mode === 'personal' && showFloatingAdd && !showTransactionModal && <button
+        className="btn-add-transaction expense-floating-add" onClick={handleOpenModal} disabled={mutationLoading}>
+        <PlusCircle size={20} aria-hidden="true" /><span>Add Transaction</span>
+      </button>}
 
       {/* Transaction Modal */}
       {showTransactionModal && (

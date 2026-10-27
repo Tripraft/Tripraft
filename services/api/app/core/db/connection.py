@@ -182,27 +182,30 @@ def init_db(app: Optional[Flask] = None) -> None:
     from alembic.config import Config as AlembicConfig
     from alembic.migration import MigrationContext
     from alembic.script import ScriptDirectory
+    from schema_status import schema_status
 
     _import_all_models()
     backend_root = Path(__file__).resolve().parents[3]
     migration_config = AlembicConfig(str(backend_root / 'alembic.ini'))
     migration_config.set_main_option('script_location', str(backend_root / 'migrations'))
-    expected_heads = set(ScriptDirectory.from_config(migration_config).get_heads())
+    scripts = ScriptDirectory.from_config(migration_config)
     with engine.connect() as connection:
         migration_context = MigrationContext.configure(connection, opts={
             'compare_type': True,
             'compare_server_default': True,
         })
-        if set(migration_context.get_current_heads()) != expected_heads:
+        status = schema_status(scripts, migration_context.get_current_heads())
+        if status.state != 'current':
             raise RuntimeError(
-                'Database migrations are not current. Run alembic upgrade head '
-                'from services/api before starting the application.'
+                'Database migrations are not current. ' + status.message
+                + ' See docs/operations/database-releases.md.'
             )
         differences = compare_metadata(migration_context, Base.metadata)
         if differences:
             raise RuntimeError(
-                'Database schema drift detected. Run alembic check and repair '
-                'the schema with an explicit migration before starting the application.'
+                'Database schema drift detected. Ask the release administrator to review '
+                'the schema and repair it with an explicit migration. '
+                'See docs/operations/database-releases.md.'
             )
 
     db_label = 'PostgreSQL' if not _IS_SQLITE else 'SQLite'

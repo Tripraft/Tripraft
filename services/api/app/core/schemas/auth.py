@@ -1,6 +1,7 @@
 # Purpose: Auth-related validation schemas.
 """Auth-related validation schemas."""
 from app.core.config import Config
+from app.core.schemas.fields import CurrencyCode
 from app.auth.security.password import is_password_strong
 from marshmallow import Schema, ValidationError, fields, pre_load, validate, validates
 
@@ -58,3 +59,4 @@ class UpdateProfileSchema(Schema):
     phone = fields.String(validate=validate.Length(max=20), load_default=None)
     photo_url = fields.String(validate=validate.Length(max=500), load_default=None)
     default_currency = fields.String(validate=validate.Length(max=10), load_default=None)
+    personal_display_currency = CurrencyCode(load_default=None)

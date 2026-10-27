@@ -135,7 +135,7 @@ Each published file appears once below. The index covers strict JSON, SQL, histo
 | [api/Dockerfile](api/Dockerfile) | Builds the Python API image from the repository root, installs runtime dependencies, copies service code and starts it as a non-root user. |
 | [api/Dockerfile.dockerignore](api/Dockerfile.dockerignore) | Restricts the repository-root API build context to service code/schema and excludes secrets, runtime data, tests and Office/PDF artifacts. |
 | [api/alembic.ini](api/alembic.ini) | Configures the application's Alembic migration directory, logging and database connection defaults. |
-| [api/docker-entrypoint.sh](api/docker-entrypoint.sh) | Initializes the reference catalog, applies application migrations for a Gunicorn start, then replaces the shell with the requested server/worker command. |
+| [api/docker-entrypoint.sh](api/docker-entrypoint.sh) | Initializes the reference catalog and starts the server/worker against a separately migrated schema; startup never applies application migrations. |
 | [api/gunicorn.conf.py](api/gunicorn.conf.py) | Defines production binding, gevent workers, timeouts, recycling and logging; disables application preload so workers create their own connections. |
 | [api/init_travel_db.py](api/init_travel_db.py) | Initializes the maintained reference-catalog schema and validates existing catalog structure, integrity, foreign keys and optional emptiness without loading seed rows. |
 | [api/openapi.json](api/openapi.json) | Contains exported API routes and explicit request/response schemas used to generate the shared TypeScript API client. |
@@ -145,6 +145,7 @@ Each published file appears once below. The index covers strict JSON, SQL, histo
 | [api/requirements.txt](api/requirements.txt) | Pins the Python API runtime dependencies for Flask, databases, authentication, validation, sockets, workers and external integrations. |
 | [api/ruff.toml](api/ruff.toml) | Selects the Python 3.11 syntax/error lint baseline and excludes migration files from ordinary lint checks. |
 | [api/run.py](api/run.py) | Starts the native Flask/Socket.IO development server, applies gevent patching before imports, and prepares explicitly enabled source reload behavior. |
+| [api/schema_status.py](api/schema_status.py) | Explains migration graph differences and pending revisions without importing application settings or writing to a database. |
 
 ### Application package entry (1 file)
 
@@ -407,6 +408,7 @@ Each published file appears once below. The index covers strict JSON, SQL, histo
 | [api/migrations/versions/b7c8d9e0f1a2_complete_vault_and_place_time_schema.py](api/migrations/versions/b7c8d9e0f1a2_complete_vault_and_place_time_schema.py) | Completes supported vault/place-time schema coverage and validates UUID-native storage. |
 | [api/migrations/versions/c30d4e5f6071_partner_agreement.py](api/migrations/versions/c30d4e5f6071_partner_agreement.py) | Adds demo classification and explicit agreement-reading acknowledgment evidence; reading is separate from signature. |
 | [api/migrations/versions/c4d5e6f7a8b9_add_chat_tables.py](api/migrations/versions/c4d5e6f7a8b9_add_chat_tables.py) | Preserves legacy chat-table creation, tolerating the complete baseline while rejecting partial incompatible chat schemas. |
+| [api/migrations/versions/c62f718293a4_personal_display_currency.py](api/migrations/versions/c62f718293a4_personal_display_currency.py) | Adds a nullable per-user personal dashboard currency preference without choosing a default for existing users. |
 | [api/migrations/versions/c9d2e4f6a8b0_add_personal_income_ledger.py](api/migrations/versions/c9d2e4f6a8b0_add_personal_income_ledger.py) | Adds personal income records, their audit history and related personal-ledger indexes. |
 | [api/migrations/versions/d41e5f607182_agent_signatures.py](api/migrations/versions/d41e5f607182_agent_signatures.py) | Adds approved-agent signature evidence and receipt fields for the agreement draft workflow. |
 | [api/migrations/versions/d4a1c3e8f9b0_add_settlement_and_verification_audit_columns.py](api/migrations/versions/d4a1c3e8f9b0_add_settlement_and_verification_audit_columns.py) | Adds persisted settlement-deletion and account email-verification audit fields. |

@@ -60,6 +60,35 @@ def test_fresh_database_upgrades_to_the_current_schema(tmp_path, monkeypatch):
         engine.dispose()
 
 
+def test_dashboard_currency_upgrade_preserves_existing_user_choice(tmp_path, monkeypatch):
+    url = 'sqlite:///' + (tmp_path / 'dashboard-currency.db').as_posix()
+    config = _config(url, monkeypatch)
+    engine = create_engine(url)
+    user_id = uuid4().hex
+    try:
+        command.upgrade(config, 'b825c4202610')
+        with engine.begin() as connection:
+            connection.execute(text('INSERT INTO users (id, email, password_hash, default_currency) '
+                                    'VALUES (:id, :email, :password, :currency)'),
+                               {'id': user_id, 'email': 'currency@example.test', 'password': 'unused', 'currency': 'INR'})
+        command.upgrade(config, 'head')
+        _assert_current_schema(engine, config)
+        with engine.begin() as connection:
+            assert connection.execute(text('SELECT default_currency, personal_display_currency FROM users WHERE id=:id'),
+                                      {'id': user_id}).one() == ('INR', None)
+            connection.execute(text("UPDATE users SET personal_display_currency='EUR' WHERE id=:id"), {'id': user_id})
+        command.upgrade(config, 'head')
+        with engine.connect() as connection:
+            assert connection.execute(text('SELECT personal_display_currency FROM users WHERE id=:id'),
+                                      {'id': user_id}).scalar_one() == 'EUR'
+        command.downgrade(config, 'b825c4202610')
+        with engine.connect() as connection:
+            assert connection.execute(text('SELECT default_currency FROM users WHERE id=:id'),
+                                      {'id': user_id}).scalar_one() == 'INR'
+    finally:
+        engine.dispose()
+
+
 def test_fresh_schema_can_downgrade_and_reinstall(tmp_path, monkeypatch):
     url = 'sqlite:///' + (tmp_path / 'roundtrip.db').as_posix()
     config = _config(url, monkeypatch)
@@ -342,7 +371,7 @@ def test_employee_and_recovery_sibling_upgrades_preserve_data(tmp_path, monkeypa
                                {'id': user_id, 'email': 'sibling@example.test', 'password': 'unused'})
         command.upgrade(config, 'head')
         _assert_current_schema(engine, config)
-        assert ScriptDirectory.from_config(config).get_heads() == ['b825c4202610']
+        assert ScriptDirectory.from_config(config).get_heads() == ['c62f718293a4']
         with engine.connect() as connection:
             assert connection.execute(text('SELECT email, password_reset_version FROM users WHERE id=:id'),
                                       {'id': user_id}).one() == ('sibling@example.test', None)
