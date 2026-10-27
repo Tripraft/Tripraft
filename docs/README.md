@@ -24,6 +24,7 @@ Start with the guide for your task. Commands in these guides run from the reposi
 - [Every published file](files.md) provides the repository-wide inventory.
 - [Repository review](repository-review.md) explains what stays published and what was removed.
 - [Plans](plans/README.md) describe proposed architecture and release gates.
+- [Expense management planning](plans/expenses/README.md) ranks all 60 personal and group travel expense feature ideas.
 - [Historical reports](archive/README.md) retain dated implementation and audit evidence.
 
 ## Folder conventions
