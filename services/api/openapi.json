@@ -520,6 +520,64 @@
         ],
         "type": "object"
       },
+      "CreateExpenseGroup": {
+        "additionalProperties": false,
+        "properties": {
+          "budget": {
+            "description": "Nonnegative amount in the group ledger currency, up to 9999999999.99; null clears the budget.",
+            "type": [
+              "number",
+              "string",
+              "null"
+            ]
+          },
+          "category": {
+            "maxLength": 50,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "currency": {
+            "pattern": "^[A-Z]{3}$",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 1000,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "display_currency": {
+            "pattern": "^[A-Z]{3}$",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
       "CreateTourDraft": {
         "additionalProperties": false,
         "properties": {},
@@ -1140,6 +1198,9 @@
           "is_registered": {
             "type": "boolean"
           },
+          "is_saved": {
+            "type": "boolean"
+          },
           "label": {
             "type": "string"
           },
@@ -1149,6 +1210,25 @@
               "string",
               "null"
             ]
+          },
+          "shared_groups": {
+            "items": {
+              "properties": {
+                "id": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name"
+              ],
+              "type": "object"
+            },
+            "type": "array"
           },
           "user_id": {
             "format": "uuid",
@@ -2642,6 +2722,62 @@
           }
         },
         "title": "TourDraftContent",
+        "type": "object"
+      },
+      "UpdateExpenseGroup": {
+        "additionalProperties": false,
+        "minProperties": 1,
+        "properties": {
+          "budget": {
+            "description": "Nonnegative amount in the group ledger currency, up to 9999999999.99; null clears the budget.",
+            "type": [
+              "number",
+              "string",
+              "null"
+            ]
+          },
+          "category": {
+            "maxLength": 50,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "currency": {
+            "pattern": "^[A-Z]{3}$",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 1000,
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "display_currency": {
+            "pattern": "^[A-Z]{3}$",
+            "type": "string"
+          },
+          "end_date": {
+            "format": "date",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "start_date": {
+            "format": "date",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
         "type": "object"
       },
       "UploadPackageImage": {
@@ -6329,8 +6465,18 @@
         }
       },
       "post": {
-        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "description": "Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger.",
         "operationId": "groups_sql_create_group_post_api_v1_expenses_groups",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExpenseGroup"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "default": {
             "content": {
@@ -6340,7 +6486,12 @@
             },
             "description": "Response"
           }
-        }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/v1/expenses/groups/join": {
@@ -6409,7 +6560,7 @@
         }
       },
       "patch": {
-        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "description": "Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger.",
         "operationId": "groups_sql_update_group_patch_api_v1_expenses_groups_group_id",
         "parameters": [
           {
@@ -6421,6 +6572,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExpenseGroup"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "default": {
             "content": {
@@ -6430,10 +6591,15 @@
             },
             "description": "Response"
           }
-        }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
       },
       "put": {
-        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "description": "Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger.",
         "operationId": "groups_sql_update_group_put_api_v1_expenses_groups_group_id",
         "parameters": [
           {
@@ -6445,6 +6611,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExpenseGroup"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "default": {
             "content": {
@@ -6454,7 +6630,12 @@
             },
             "description": "Response"
           }
-        }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/v1/expenses/groups/{group_id}/full": {

@@ -1,474 +1,140 @@
-// Purpose: Generates branded personal/group expense PDF reports with summary, transaction, balance and settlement tables using jsPDF and AutoTable.
-/**
- * PDF Export Service for Expense Manager
- * Generates professional PDF reports for personal and group expenses with Tripraft branding
- */
-
-import { jsPDF } from 'jspdf';
+// Purpose: Builds paginated personal/group statements with wrapped details, exact money columns and repeatable page furniture.
+import {jsPDF} from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import GlobalConfig from '../config/globalConfig';
+import {isPersonalIncome} from '../features/expenses/utils/personalTransactions';
 
-// Color theme matching Tripraft brand
-const THEME = {
-  primary: GlobalConfig.PDF_THEME.PRIMARY,
-  secondary: GlobalConfig.PDF_THEME.SECONDARY,
-  success: GlobalConfig.PDF_THEME.SUCCESS,
-  danger: GlobalConfig.PDF_THEME.DANGER,
-  text: GlobalConfig.PDF_THEME.TEXT,
-  textLight: GlobalConfig.PDF_THEME.TEXT_LIGHT,
-  border: GlobalConfig.PDF_THEME.BORDER,
-  tripraftPurple: GlobalConfig.PDF_THEME.PRIMARY
+const INK = [23, 37, 58], MUTED = [91, 106, 124], ACCENT = [62, 73, 153];
+const numeric = value => Number.isFinite(Number(value)) ? Number(value) : 0;
+const money = (amount, currency) => `${currency} ${numeric(amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+const day = row => String(row.expense_date || row.income_date || row.settlement_date || row.date || row.created_at || '').slice(0, 10);
+const dateLabel = value => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return '-';
+  const parsed = new Date(`${value}T12:00:00Z`);
+  return Number.isFinite(parsed.getTime()) ? parsed.toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC'}) : '-';
 };
+const text = value => String(value || '-');
+const memberName = (id, members, direct) => direct?.display_name || direct?.email
+  || (() => {const row = members.find(member => String(member.user_id || member.id) === String(id));
+    return row?.display_name || row?.user?.display_name || row?.email || row?.user?.email;})() || 'Former member';
 
-/**
- * Format currency
- */
-const formatCurrency = (amount, currency = 'USD') => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency,
-    minimumFractionDigits: 2
-  }).format(amount);
-};
-
-/**
- * Format date
- */
-const formatDate = (dateStr) => {
-  if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
-  });
-};
-
-/**
- * Helper to get member name from settlement
- */
-const getMemberName = (userId, allMembers = [], settlement = {}) => {
-  // Try settlement direct fields first
-  if (settlement && settlement.from_user && settlement.from_user.display_name) {
-    return settlement.from_user.display_name;
-  }
-  if (settlement && settlement.to_user && settlement.to_user.display_name) {
-    return settlement.to_user.display_name;
-  }
-  
-  // Try to find in members array
-  if (allMembers && Array.isArray(allMembers)) {
-    const member = allMembers.find(m => {
-      const mId = m.user_id || m.id;
-      return String(mId) === String(userId);
-    });
-    if (member) {
-      return member.display_name || member.user?.display_name || member.email || 'Member';
-    }
-  }
-  
-  return `User ${userId}`;
-};
-
-/**
- * Generate PDF report for expenses
- */
-export const generateExpensePDF = ({
-  mode,
-  groupName = 'Personal',
-  expenses = [],
-  settlements = [],
-  members = [],
-  balances = [],
-  currency = 'USD',
-  userName = 'User'
-}) => {
-  // Create PDF document
-  const doc = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4'
-  });
-
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 15;
-  let yPos = margin;
-  let currentPage = 1;
-
-  // Helper function to add beautiful header with branding
-  const addHeader = (isFirstPage = true) => {
-    // Background gradient effect (solid color)
-    doc.setFillColor(102, 126, 234); // Tripraft purple
-    doc.rect(0, 0, pageWidth, 50, 'F');
-    
-    // Tripraft branding
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(28);
-    doc.setFont('helvetica', 'bold');
-    doc.text('TripRaft', margin, 18);
-    
-    // Tagline
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Expense Management Made Simple', margin, 25);
-    
-    // Report details on right side
-    if (isFirstPage) {
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Expense Report', pageWidth - margin - 50, 18);
-      
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(mode === 'group' ? groupName : 'Personal Expenses', pageWidth - margin - 50, 27);
-      
-      // Date
-      doc.setFontSize(9);
-      doc.text(`Generated: ${new Date().toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })}`, pageWidth - margin - 50, 35);
-    }
-    
-    yPos = 55;
+/** Build without downloading so the same production layout can be rendered in QA. */
+export function buildExpensePDF({mode, groupName = 'Personal', expenses = [], settlements = [], members = [], balances = [], currency = 'USD', userName = 'User', generatedAt = new Date()}) {
+  const group = mode === 'group';
+  const doc = new jsPDF({orientation: 'portrait', unit: 'mm', format: 'a4', compress: true});
+  const width = doc.internal.pageSize.getWidth(), height = doc.internal.pageSize.getHeight();
+  const margin = 14, usable = width - margin * 2, bodyTop = 30, bodyBottom = height - 20;
+  const reportTitle = group ? 'Group expense statement' : 'Personal expense statement';
+  doc.setProperties({title: reportTitle, subject: group ? groupName : userName, author: 'TripRaft', creator: 'TripRaft Expenses'});
+  const active = expenses.filter(row => !row.is_deleted).sort((a, b) => day(a).localeCompare(day(b)) || String(a.id || '').localeCompare(String(b.id || '')));
+  const payments = settlements.filter(row => !row.is_deleted);
+  const income = group ? [] : active.filter(isPersonalIncome);
+  const spending = group ? active : active.filter(row => !isPersonalIncome(row));
+  const sum = rows => rows.reduce((total, row) => total + Math.round(numeric(row.amount) * 100), 0) / 100;
+  const totalSpent = sum(spending), totalIncome = sum(income);
+  const dates = active.map(day).filter(Boolean).sort();
+  let y = bodyTop;
+  const paragraph = (value, size = 9, color = MUTED) => {
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(size); doc.setTextColor(...color);
+    const lines = doc.splitTextToSize(text(value), usable);
+    doc.text(lines, margin, y); y += lines.length * size * .4 + 3;
   };
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(17); doc.setTextColor(...INK);
+  const titleLines = doc.splitTextToSize(group ? groupName : userName, usable);
+  doc.text(titleLines, margin, y); y += titleLines.length * 7 + 3;
+  paragraph(`${dates.length ? `${dateLabel(dates[0])} to ${dateLabel(dates.at(-1))}` : 'No recorded transactions'} | Statement currency: ${currency}`);
+  paragraph('Amounts use the saved ledger or selected personal display currency. Original receipts appear in transaction details.', 8);
 
-  // Helper function to add section title
-  const addSectionTitle = (title) => {
-    if (yPos > pageHeight - 40) {
-      doc.addPage();
-      addPageHeader();
-      yPos = margin;
-    }
-    
-    doc.setFillColor(248, 250, 252);
-    doc.rect(margin - 2, yPos - 5, pageWidth - 2 * margin + 4, 10, 'F');
-    
-    doc.setTextColor(102, 126, 234);
-    doc.setFontSize(13);
-    doc.setFont('helvetica', 'bold');
-    doc.text(title, margin, yPos);
-    yPos += 12;
-  };
-
-  // Add page header for subsequent pages
-  const addPageHeader = () => {
-    currentPage++;
-    doc.setFillColor(245, 245, 250);
-    doc.rect(0, 0, pageWidth, 12, 'F');
-    
-    doc.setTextColor(102, 126, 234);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('TripRaft • Expense Report', margin, 8);
-  };
-
-  // Add header
-  addHeader(true);
-
-  // Summary Section
-  addSectionTitle('Financial Summary');
-  
-  const totalExpenses = expenses.reduce((sum, exp) => sum + (parseFloat(exp.amount) || 0), 0);
-  const totalSettlements = settlements.reduce((sum, s) => sum + (parseFloat(s.amount) || 0), 0);
-  
-  const summaryData = [
-    ['Total Expenses', formatCurrency(totalExpenses, currency)],
-    ['Number of Transactions', expenses.length.toString()],
-    ['Total Settlements', formatCurrency(totalSettlements, currency)],
-  ];
-  
-  if (mode === 'group') {
-    summaryData.push(['Group Members', members.length.toString()]);
-  }
-
-  autoTable(doc, {
-    startY: yPos,
-    head: [['Metric', 'Value']],
-    body: summaryData,
-    theme: 'striped',
-    styles: {
-      fontSize: 10,
-      cellPadding: [7, 12],
-      valign: 'middle',
-    },
-    headStyles: {
-      fillColor: [102, 126, 234],
-      textColor: [255, 255, 255],
-      fontStyle: 'bold',
-      cellPadding: [8, 12],
-      fontSize: 11
-    },
-    columnStyles: {
-      0: { fontStyle: 'bold', textColor: [102, 126, 234], halign: 'left', cellWidth: 70 },
-      1: { fontStyle: 'bold', textColor: [17, 24, 39], halign: 'right' }
-    },
-    alternateRowStyles: {
-      fillColor: [249, 250, 251]
-    },
-    margin: { left: margin, right: margin }
-  });
-  
-  yPos = doc.lastAutoTable.finalY + 15;
-
-  // Balances Section (Group Mode)
-  if (mode === 'group' && balances.length > 0) {
-    addSectionTitle('Current Balances');
-    
-    const balanceRows = balances.map(bal => {
-      const balance = parseFloat(bal.balance || bal.net_balance || 0);
-      return [
-        bal.display_name || bal.user?.display_name || 'Member',
-        balance >= 0 ? formatCurrency(balance, currency) : '-',
-        balance < 0 ? formatCurrency(Math.abs(balance), currency) : '-',
-        balance > 0.01 ? 'is owed' : (balance < -0.01 ? 'owes' : 'settled')
-      ];
-    });
-
+  const table = (title, head, body, widths, rightColumns = [], foot) => {
+    // Keep the section label with its repeated column header and first row.
+    if (y + 28 > bodyBottom) {doc.addPage(); y = bodyTop;}
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...INK);
+    doc.text(title, margin, y); y += 5;
+    const columns = Object.fromEntries(widths.map((cellWidth, index) => [index, {cellWidth, halign: rightColumns.includes(index) ? 'right' : 'left',
+      ...(rightColumns.includes(index) ? {fontStyle: 'bold'} : {})}]));
     autoTable(doc, {
-      startY: yPos,
-      head: [['Member', 'Gets Back', 'Owes', 'Status']],
-      body: balanceRows,
-      theme: 'striped',
-      styles: {
-        fontSize: 10,
-        cellPadding: [7, 10],
-        valign: 'middle',
-        lineColor: [229, 231, 235],
-        lineWidth: 0.5
+      startY: y, head: [head], body: body.length ? body : [['No records', ...head.slice(1).map(() => '-')]],
+      ...(foot ? {foot: [foot], showFoot: 'lastPage'} : {}),
+      theme: 'plain', tableWidth: usable, margin: {left: margin, right: margin, top: bodyTop, bottom: 20},
+      showHead: 'everyPage', rowPageBreak: 'avoid',
+      styles: {font: 'helvetica', fontSize: 8.5, cellPadding: 3, overflow: 'linebreak', valign: 'top', textColor: INK,
+        lineColor: [227, 232, 239], lineWidth: {bottom: .15}},
+      headStyles: {fillColor: INK, textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 8},
+      footStyles: {fillColor: [235, 239, 248], textColor: INK, fontStyle: 'bold'},
+      alternateRowStyles: {fillColor: [246, 248, 251]}, columnStyles: columns,
+      didParseCell: data => {
+        // Keep large monetary values intact instead of wrapping digits or clipping.
+        if (data.section !== 'head' && rightColumns.includes(data.column.index)) {
+          const value = String(data.cell.raw ?? '');
+          doc.setFont('helvetica', 'bold');
+          const unitWidth = doc.getStringUnitWidth(value);
+          data.cell.styles.fontSize = Math.min(8.5, (widths[data.column.index] - 6) * doc.internal.scaleFactor / Math.max(unitWidth, 1));
+        }
       },
-      headStyles: {
-        fillColor: [102, 126, 234],
-        textColor: [255, 255, 255],
-        fontStyle: 'bold',
-        cellPadding: [8, 10],
-        fontSize: 11,
-        lineColor: [102, 126, 234],
-        lineWidth: 1
-      },
-      columnStyles: {
-        0: { halign: 'left' },
-        1: { textColor: [5, 150, 105], halign: 'right', fontStyle: 'bold' },
-        2: { textColor: [220, 38, 38], halign: 'right', fontStyle: 'bold' },
-        3: { halign: 'center', textColor: [107, 114, 128], fontSize: 9 }
-      },
-      alternateRowStyles: {
-        fillColor: [249, 250, 251]
-      },
-      margin: { left: margin, right: margin }
     });
-    
-    yPos = doc.lastAutoTable.finalY + 15;
-  }
+    y = doc.lastAutoTable.finalY + 12;
+  };
 
-  // Category Breakdown
-  addSectionTitle('Spending by Category');
-  
-  const categoryTotals = {};
-  expenses.forEach(exp => {
-    const cat = exp.category || 'Other';
-    categoryTotals[cat] = (categoryTotals[cat] || 0) + (parseFloat(exp.amount) || 0);
+  table('Statement summary', ['Measure', 'Amount / count'], [
+    ['Total spending (net of refunds)', money(totalSpent, currency)],
+    ...(!group ? [['Income received', money(totalIncome, currency)], ['Net cash flow', money(totalIncome - totalSpent, currency)]] : []),
+    ['Recorded transactions', String(active.length)],
+    ...(group ? [['Group members', String(members.length)], ['Payments recorded', money(sum(payments), currency)]] : []),
+  ], [usable - 65, 65], [1]);
+
+  let runningCents = 0;
+  const description = row => {
+    const receipt = row.original || (row.original_currency ? {currency: row.original_currency, amount: row.original_amount} : null);
+    return [text(row.description), `${text(row.category || 'Other')}${!group ? ` | ${isPersonalIncome(row) ? 'Income' : 'Expense'}` : ` | ${text(row.split_type || 'equal')} split`}`,
+      ...(receipt ? [`Original: ${money(receipt.amount, receipt.currency)}${receipt.rate ? ` | Rate: ${receipt.rate}${receipt.rate_date ? ` (${receipt.rate_date})` : ''}` : ''}`] : [])].join('\n');
+  };
+  const rows = active.map(row => {
+    if (group) return [dateLabel(day(row)), description(row), row.paid_by_name || memberName(row.paid_by || row.paidBy, members, row.payer || row.paid_by_user), money(row.amount, currency)];
+    const credit = isPersonalIncome(row), amount = numeric(row.amount);
+    runningCents += Math.round(amount * 100) * (credit ? 1 : -1);
+    return [dateLabel(day(row)), description(row), credit ? '-' : money(amount, currency), credit ? money(amount, currency) : '-', money(runningCents / 100, currency)];
   });
-  
-  const categoryRows = Object.entries(categoryTotals)
-    .sort((a, b) => b[1] - a[1])
-    .map(([cat, amount]) => [
-      cat,
-      formatCurrency(amount, currency),
-      totalExpenses > 0 ? `${((amount / totalExpenses) * 100).toFixed(1)}%` : '0%'
-    ]);
+  table('Transaction activity', group ? ['Date', 'Description / source receipt', 'Paid by', 'Amount'] : ['Date', 'Description / source receipt', 'Money out', 'Money in', 'Net activity'], rows,
+    group ? [24, usable - 106, 40, 42] : [24, usable - 120, 32, 32, 32], group ? [3] : [2, 3, 4],
+    group ? ['Total', '', '', money(totalSpent, currency)] : ['Totals', '', money(totalSpent, currency), money(totalIncome, currency), money(totalIncome - totalSpent, currency)]);
 
-  autoTable(doc, {
-    startY: yPos,
-    head: [['Category', 'Amount', 'Percentage']],
-    body: categoryRows,
-    theme: 'striped',
-    styles: {
-      fontSize: 10,
-      cellPadding: [7, 12],
-      valign: 'middle',
-      lineColor: [229, 231, 235],
-      lineWidth: 0.5
-    },
-    headStyles: {
-      fillColor: [102, 126, 234],
-      textColor: [255, 255, 255],
-      fontStyle: 'bold',
-      cellPadding: [8, 12],
-      fontSize: 11,
-      lineWidth: 1
-    },
-    columnStyles: {
-      0: { halign: 'left' },
-      1: { halign: 'right', fontStyle: 'bold' },
-      2: { halign: 'right', textColor: [102, 126, 234], fontStyle: 'bold' }
-    },
-    alternateRowStyles: {
-      fillColor: [249, 250, 251]
-    },
-    margin: { left: margin, right: margin }
-  });
-  
-  yPos = doc.lastAutoTable.finalY + 15;
-
-  // Expense Details
-  addSectionTitle('Transaction History');
-  
-  const expenseRows = expenses.map(exp => [
-    formatDate(exp.expense_date || exp.date || exp.created_at),
-    exp.description || '-',
-    exp.category || 'Other',
-    formatCurrency(exp.amount || 0, currency)
-  ]);
-
-  autoTable(doc, {
-    startY: yPos,
-    head: [['Date', 'Description', 'Category', 'Amount']],
-    body: expenseRows,
-    theme: 'striped',
-    styles: {
-      fontSize: 9,
-      cellPadding: [6, 8],
-      valign: 'middle',
-      overflow: 'ellipsize',
-      cellWidth: 'wrap',
-      lineColor: [229, 231, 235],
-      lineWidth: 0.5
-    },
-    headStyles: {
-      fillColor: [102, 126, 234],
-      textColor: [255, 255, 255],
-      fontStyle: 'bold',
-      cellPadding: [7, 8],
-      fontSize: 10,
-      lineWidth: 1
-    },
-    columnStyles: {
-      0: { cellWidth: 25, halign: 'left' },
-      1: { cellWidth: 'auto', halign: 'left' },
-      2: { cellWidth: 30, halign: 'center' },
-      3: { cellWidth: 30, halign: 'right', fontStyle: 'bold' }
-    },
-    alternateRowStyles: {
-      fillColor: [249, 250, 251]
-    },
-    margin: { left: margin, right: margin }
-  });
-
-  // Settlement History (if any)
-  if (settlements.length > 0) {
-    yPos = doc.lastAutoTable.finalY + 15;
-    
-    if (yPos > pageHeight - 70) {
-      doc.addPage();
-      addPageHeader();
-      yPos = margin;
-    }
-    
-    addSectionTitle('Settlement History');
-    
-    const settlementRows = settlements.map(s => {
-      // Get proper names from settlement object
-      let fromName = 'Unknown';
-      let toName = 'Unknown';
-      
-      // Check settlement object structure
-      if (s.from_user && s.from_user.display_name) {
-        fromName = s.from_user.display_name;
-      } else if (s.payer_name && s.payer_name !== 'undefined') {
-        fromName = s.payer_name;
-      } else if (s.payer_id) {
-        fromName = getMemberName(s.payer_id, members, s);
-      }
-      
-      if (s.to_user && s.to_user.display_name) {
-        toName = s.to_user.display_name;
-      } else if (s.payee_name && s.payee_name !== 'undefined') {
-        toName = s.payee_name;
-      } else if (s.payee_id) {
-        toName = getMemberName(s.payee_id, members, s);
-      }
-      
-      return [
-        formatDate(s.created_at || s.date || s.settlement_date),
-        fromName,
-        toName,
-        formatCurrency(s.amount || 0, currency)
-      ];
-    });
-
-    autoTable(doc, {
-      startY: yPos,
-      head: [['Date', 'From', 'To', 'Amount']],
-      body: settlementRows,
-      theme: 'striped',
-      styles: {
-        fontSize: 9,
-        cellPadding: [7, 10],
-        valign: 'middle',
-        lineColor: [229, 231, 235],
-        lineWidth: 0.5
-      },
-      headStyles: {
-        fillColor: [118, 75, 162],
-        textColor: [255, 255, 255],
-        fontStyle: 'bold',
-        cellPadding: [8, 10],
-        fontSize: 10,
-        lineWidth: 1
-      },
-      columnStyles: {
-        0: { halign: 'left' },
-        1: { halign: 'left' },
-        2: { halign: 'left' },
-        3: { halign: 'right', fontStyle: 'bold' }
-      },
-      alternateRowStyles: {
-        fillColor: [249, 250, 251]
-      },
-      margin: { left: margin, right: margin }
-    });
+  if (!group) {
+    if (y + 14 > bodyBottom) {doc.addPage(); y = bodyTop;}
+    paragraph('Net activity starts at zero for the exported records and equals income minus spending.', 8);
   }
+  if (group && balances.length) table('Current member balances', ['Member', 'Gets back', 'Owes'], balances.map(row => {
+    const balance = numeric(row.net_balance ?? row.balance);
+    return [row.display_name || row.user_name || row.user?.display_name || memberName(row.user_id || row.id, members),
+      balance > 0 ? money(balance, currency) : '-', balance < 0 ? money(-balance, currency) : '-'];
+  }), [usable - 92, 46, 46], [1, 2]);
+  if (group && payments.length) table('Recorded payments', ['Date', 'From', 'To', 'Amount'], payments.map(row => [
+    dateLabel(day(row)), row.from_user_name || row.payer_name || memberName(row.from_user_id || row.payer_id || row.from, members, row.from_user),
+    row.to_user_name || row.payee_name || memberName(row.to_user_id || row.payee_id || row.to, members, row.to_user), money(row.amount, currency),
+  ]), [24, (usable - 66) / 2, (usable - 66) / 2, 42], [3]);
+  const categories = new Map();
+  spending.forEach(row => categories.set(row.category || 'Other', (categories.get(row.category || 'Other') || 0) + Math.round(numeric(row.amount) * 100)));
+  table('Spending by category', ['Category', 'Net spending'], [...categories].sort((a, b) => b[1] - a[1]).map(([category, cents]) => [category, money(cents / 100, currency)]), [usable - 65, 65], [1]);
 
-  // Add footer to all pages
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    
-    // Footer divider
-    doc.setDrawColor(229, 231, 235);
-    doc.setLineWidth(0.5);
-    doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
-    
-    // Footer text
-    doc.setFontSize(8);
-    doc.setTextColor(107, 114, 128);
-    doc.text(
-      'TripRaft • Expense Management',
-      margin,
-      pageHeight - 10
-    );
-    
-    // Page number (right aligned)
-    doc.text(
-      `Page ${i} of ${pageCount}`,
-      pageWidth - margin - 20,
-      pageHeight - 10
-    );
+  const pages = doc.getNumberOfPages();
+  for (let page = 1; page <= pages; page++) {
+    doc.setPage(page); doc.setFillColor(...INK); doc.rect(0, 0, width, 22, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(255, 255, 255); doc.text('TripRaft', margin, 10);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.text(reportTitle, margin, 16);
+    doc.text(`Generated ${dateLabel(generatedAt.toISOString().slice(0, 10))}`, width - margin, 10, {align: 'right'});
+    doc.text(`Currency ${currency} | Private statement`, width - margin, 16, {align: 'right'});
+    doc.setDrawColor(222, 228, 236); doc.line(margin, height - 15, width - margin, height - 15);
+    doc.setFontSize(7.5); doc.setTextColor(...MUTED);
+    doc.text('TripRaft | Expense statement | Private', margin, height - 10);
+    doc.setTextColor(...ACCENT); doc.text(`Page ${page} of ${pages}`, width - margin, height - 10, {align: 'right'});
   }
+  return doc;
+}
 
-  // Save the PDF
-  const filename = mode === 'group' 
-    ? `TripRaft_${groupName.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
-    : `TripRaft_Personal_Expenses_${new Date().toISOString().split('T')[0]}.pdf`;
-  
+export const generateExpensePDF = options => {
+  const doc = buildExpensePDF(options);
+  const name = options.mode === 'group' ? String(options.groupName || 'Group').replace(/[^a-z0-9]/gi, '_') : 'Personal_Expenses';
+  const filename = `TripRaft_${name}_${new Date().toISOString().slice(0, 10)}.pdf`;
   doc.save(filename);
-  
   return filename;
 };
 
-
-export default { generateExpensePDF };
+export default {generateExpensePDF};

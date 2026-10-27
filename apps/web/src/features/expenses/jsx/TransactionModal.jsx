@@ -5,6 +5,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, LoaderCircle } from 'lucide-react';
 import ExpenseSplitEditor from './ExpenseSplitEditor';
 import { buildSplit } from '../utils/splitMethods';
+import useExchangeRate from '../../../hooks/useExchangeRate';
+import {formatMoney} from '../../../utils/money';
 
 const TransactionModal = ({ 
   mode, 
@@ -23,7 +25,7 @@ const TransactionModal = ({
   const [splitError, setSplitError] = useState('');
   const [formData, setFormData] = useState({
     type: 'expense',
-    currency: currency || 'USD',
+    currency: (mode === 'group' && activeGroup?.display_currency) || currency || 'USD',
     description: '',
     amount: '',
     category: 'Food',
@@ -32,6 +34,8 @@ const TransactionModal = ({
     splitWith: [],
     splitType: 'equal', splitValues: {}, bill: { items: [], tax: '', tip: '', discount: '' },
   });
+  const ledgerCurrency = activeGroup?.currency || currency || 'USD';
+  const exchange = useExchangeRate(formData.currency, ledgerCurrency, 0, mode === 'group');
 
   // Helper function to get member display name
   const getMemberName = (member) => {
@@ -60,7 +64,7 @@ const TransactionModal = ({
       const editingSplitType = rawSplitType === 'custom'
         ? (editingTransaction.splits?.some(split => split.shares != null) ? 'shares' : 'exact') : rawSplitType;
       // Determine type based on category
-      const isIncome = editingTransaction.category && editingTransaction.category.toLowerCase() === 'salary';
+      const isIncome = editingTransaction.type === 'income' || editingTransaction.category?.toLowerCase() === 'salary';
       
       // ≡ƒöº CRITICAL FIX: Backend uses snake_case (paid_by), frontend uses camelCase (paidBy)
       const paidByValue = editingTransaction.paidBy || editingTransaction.paid_by || '';
@@ -140,7 +144,7 @@ const TransactionModal = ({
       amount: parseFloat(formData.amount),
       category: formData.category,
       expense_date: formData.date,
-      ...(mode === 'personal' && !editingTransaction && {currency: formData.currency}),
+      ...((mode === 'group' || !editingTransaction) && {currency: formData.currency}),
       ...(mode === 'group' && {
         paidBy: formData.paidBy,
         splitWith: formData.splitWith,
@@ -198,11 +202,14 @@ const TransactionModal = ({
             </div>
           )}
 
-          {mode === 'personal' && <div className="form-group">
+          <div className="form-group">
             <label htmlFor="transaction-currency">Currency</label>
-            <CurrencySelect id="transaction-currency" value={formData.currency} disabled={saving || !!editingTransaction}
+            <CurrencySelect id="transaction-currency" value={formData.currency} disabled={saving || (mode === 'personal' && !!editingTransaction)}
               onChange={event => setFormData(prev => ({...prev, currency: event.target.value}))} />
-          </div>}
+            {mode === 'group' && formData.currency !== ledgerCurrency && <p role="status">{exchange.data
+              ? `About ${formatMoney(Number(formData.amount || 0) * exchange.data.rate, ledgerCurrency)} in the group ledger. Original ${formData.currency} is saved with the receipt.`
+              : exchange.error || 'Loading the conversion rate...'}</p>}
+          </div>
           <div className="form-group">
             <label htmlFor="description">Description</label>
             <input 
@@ -218,7 +225,7 @@ const TransactionModal = ({
           <div className="form-group">
             <label htmlFor="amount">Amount</label>
             <div className="expense-amount-field">
-              <span className="expense-amount-currency">{mode === 'personal' ? formData.currency : currency || activeGroup?.currency || 'USD'}</span>
+              <span className="expense-amount-currency">{formData.currency}</span>
               <input 
                 type="number" 
                 id="amount"
@@ -255,7 +262,8 @@ const TransactionModal = ({
                 </select>
               </div>
 
-              <ExpenseSplitEditor form={formData} setForm={setFormData} members={groupMembers} currency={currency || activeGroup?.currency || 'USD'} />
+              <ExpenseSplitEditor form={formData} setForm={setFormData} members={groupMembers} currency={formData.currency}
+                previewCurrency={ledgerCurrency} previewRate={exchange.data?.rate} />
               {splitError && <p role="alert">{splitError}</p>}
             </>
           )}

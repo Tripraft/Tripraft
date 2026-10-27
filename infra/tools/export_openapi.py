@@ -62,6 +62,10 @@ def build(application):
             'nickname': {'type': ['string', 'null'], 'maxLength': 100},
             'display_name': {'type': ['string', 'null']}, 'label': {'type': 'string'},
             'is_registered': {'type': 'boolean'}, 'user_id': {'type': ['string', 'null'], 'format': 'uuid'},
+            'is_saved': {'type': 'boolean'},
+            'shared_groups': {'type': 'array', 'items': {'type': 'object', 'required': ['id', 'name'], 'properties': {
+                'id': {'type': 'string', 'format': 'uuid'}, 'name': {'type': 'string'},
+            }}},
         }},
         'SaveExpenseFriend': {'type': 'object', 'required': ['email'], 'additionalProperties': False, 'properties': {
             'email': {'type': 'string', 'format': 'email'},
@@ -74,6 +78,18 @@ def build(application):
         'ExpenseFriendResponse': envelope({'type': 'object', 'required': ['friend'], 'properties': {'friend': ref('ExpenseFriend')}}),
         'AuditResponse': envelope(ref('AuditData')),
     }
+    group_fields = {
+        'name': {'type': 'string', 'minLength': 1, 'maxLength': 100},
+        'description': {'type': ['string', 'null'], 'maxLength': 1000},
+        'category': {'type': ['string', 'null'], 'maxLength': 50},
+        'currency': {'type': 'string', 'pattern': '^[A-Z]{3}$'},
+        'display_currency': {'type': 'string', 'pattern': '^[A-Z]{3}$'},
+        'budget': {'type': ['number', 'string', 'null'], 'description': 'Nonnegative amount in the group ledger currency, up to 9999999999.99; null clears the budget.'},
+        'start_date': {'type': ['string', 'null'], 'format': 'date'},
+        'end_date': {'type': ['string', 'null'], 'format': 'date'},
+    }
+    schemas['CreateExpenseGroup'] = {'type': 'object', 'required': ['name'], 'additionalProperties': False, 'properties': group_fields}
+    schemas['UpdateExpenseGroup'] = {'type': 'object', 'minProperties': 1, 'additionalProperties': False, 'properties': group_fields}
     for model in (PartnerRegister, PartnerLogin, ApplicationUpdate, ApplicationSubmit, ReviewDecision,
                   AgreementAcknowledgment, PartnerAgreementDocument, PartnerAgreementStatus,
                   AgentAgreementSign, AgentSignatureReceipt,
@@ -150,6 +166,12 @@ def build(application):
             if route == '/api/v1/auth/me' and method == 'GET':
                 operation['responses']['200'] = response(ref('MeResponse'))
                 operation['security'] = [{'cookieAuth': []}]
+            elif ((route == '/api/v1/expenses/groups' and method == 'POST') or
+                  (route == '/api/v1/expenses/groups/{group_id}' and method in {'PUT', 'PATCH'})):
+                operation['security'] = [{'cookieAuth': []}]
+                operation['requestBody'] = {'required': True, 'content': {'application/json': {
+                    'schema': ref('CreateExpenseGroup' if method == 'POST' else 'UpdateExpenseGroup')}}}
+                operation['description'] = 'Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger.'
             elif route == '/api/v1/expenses/friends':
                 operation['security'] = [{'cookieAuth': []}]
                 operation['responses']['200'] = response(ref('ExpenseFriendsResponse' if method == 'GET' else 'ExpenseFriendResponse'))

@@ -24,16 +24,16 @@ it('switches category charts to the actual saved share instead of an equal avera
   expect(screen.getByText('$45.00')).toBeInTheDocument();
   expect(screen.queryByText('$75.00')).toBeNull();
   expect(screen.getByRole('button', { name: 'My share' })).toHaveAttribute('aria-pressed', 'true');
-  expect(screen.getByRole('img', { name: 'Daily spending over 14 calendar days' })).toBeInTheDocument();
+  expect(screen.getByRole('img', { name: 'Daily spending across the selected period' })).toBeInTheDocument();
 });
 
 it('excludes deleted expenses and uses calendar dates, inclusive averages and zero-spend days', () => {
   const result = analyzeExpenses(expenses, { now: new Date('2026-10-13T12:00:00'), range: 'week' });
   expect(result.total).toBe(150);
-  expect(result.dailyAverage).toBe(75);
-  expect(result.daily).toHaveLength(14);
-  expect(result.daily[12]).toEqual({ date: '2026-10-12', amount: 100 });
-  expect(result.daily[13]).toEqual({ date: '2026-10-13', amount: 50 });
+  expect(result.dailyAverage).toBeCloseTo(150 / 7);
+  expect(result.daily).toHaveLength(7);
+  expect(result.daily[5]).toEqual({ date: '2026-10-12', amount: 100 });
+  expect(result.daily[6]).toEqual({ date: '2026-10-13', amount: 50 });
   expect(result.daily[0].amount).toBe(0);
   expect(analyzeExpenses([{ amount: 5, expense_date: 'invalid' }]).total).toBe(5);
 });

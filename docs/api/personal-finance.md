@@ -80,6 +80,24 @@ reports always exclude them. The transaction list accepts `type=income` or
 
 ## Balance and analysis rules
 
+The [PDF statement guide](expense-statements.md) covers money-in/out columns,
+net activity, original receipts and the bank-style export layout.
+
+The web history loads every page of personal expenses and the actual personal
+income ledger. Income creation, editing, deletion and history use `/incomes`
+routes. If either ledger cannot load, the dashboard reports the error rather
+than presenting incomplete totals as zero.
+
+Personal and group analysis use inclusive calendar periods: today and the
+preceding 6, 29, 89 or 364 days, plus all-time and custom date bounds. Explicit
+transaction dates retain their calendar day; timestamp-only legacy records use
+the viewer's local day. Presets exclude future and deleted transactions. Income
+uses the same period as spending. Charts include zero-spend days and averages
+divide by the complete calendar interval. All-time includes undated legacy
+amounts in totals, though these cannot be plotted on a particular day. Group
+settlement counts use the selected interval too. Group card sparklines fill
+14 days through the latest expense so a single expense has a visible trend.
+
 The personal web dashboard asks users to choose a display currency on their first
 visit. It saves `personal_display_currency` on their account through
 `PUT /api/v1/auth/user/profile`; `GET` of the same endpoint returns the saved

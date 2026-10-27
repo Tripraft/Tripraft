@@ -53,7 +53,7 @@ class ExpenseServiceSQL:
         expense_date: Optional[str] = None,
         notes: Optional[str] = None,
         receipt_url: Optional[str] = None,
-        currency: str = 'USD',
+        currency: Optional[str] = None,
         split_details: Optional[Dict] = None,
     ) -> Tuple[bool, Dict[str, Any]]:
         """
@@ -83,13 +83,13 @@ class ExpenseServiceSQL:
                 group_id = ExpenseServiceSQL._identifier(group_id)
             amount = ExpenseServiceSQL._positive_money(amount)
             ExpenseServiceSQL._validate_text(description, category, notes)
-            currency = ExpenseServiceSQL._currency(currency)
+            currency = ExpenseServiceSQL._currency(currency) if currency else None
             with get_db_session() as session:
                 # For personal expenses (no group)
                 if group_id is None:
                     return ExpenseServiceSQL._create_personal_expense(
                         session, user_id, description, amount, paid_by,
-                        category, expense_date, notes, receipt_url, currency
+                        category, expense_date, notes, receipt_url, currency or 'USD'
                     )
                 
                 # For group expenses
@@ -147,6 +147,12 @@ class ExpenseServiceSQL:
                 expense_splits = ExpenseServiceSQL._calculate_splits(
                     session, group_id, expense.id, amount, paid_by, split_type, splits, split_details
                 )
+                from app.expenses.services.expense_conversion import convert_allocations
+                expense.amount, expense.original = convert_allocations(
+                    ExpenseServiceSQL, expense_splits, amount, currency or group.currency,
+                    group.currency, split_type.lower(), ExpenseServiceSQL._split_details(split_type, splits, split_details),
+                )
+                amount = expense.amount
                 
                 if not expense_splits:
                     return False, {'error': 'Failed to calculate splits'}
@@ -824,9 +830,6 @@ class ExpenseServiceSQL:
                 if not is_group_owner and not is_expense_creator:
                     return False, {'error': 'You can only edit expenses you created', 'status_code': 403}
                 
-                if currency is not _UNSET and currency != expense.currency:
-                    raise SplitValidationError('Group expense currency must match the group currency')
-
                 # Capture the complete old ledger before validating the
                 # replacement.  Validation happens before reversal, so an
                 # invalid edit never leaves a partially-mutated balance.
@@ -864,6 +867,25 @@ class ExpenseServiceSQL:
                 if desired_split_type not in {'equal', 'exact', 'percentage', 'shares', 'adjustment', 'reimbursement', 'itemized'}:
                     raise SplitValidationError('Unsupported split type')
 
+                converted_splits = None
+                next_original = expense.original
+                if currency is not _UNSET and currency != group.currency:
+                    if amount is None:
+                        raise SplitValidationError('Source amount is required with a different currency')
+                    converted_splits = ExpenseServiceSQL._calculate_splits(
+                        session, expense.group_id, expense_id, desired_amount,
+                        desired_payer, desired_split_type, splits,
+                        expense.split_details if split_details is _UNSET else split_details,
+                    )
+                    from app.expenses.services.expense_conversion import convert_allocations
+                    desired_amount, next_original = convert_allocations(
+                        ExpenseServiceSQL, converted_splits, desired_amount, currency, group.currency,
+                        desired_split_type, ExpenseServiceSQL._split_details(desired_split_type, splits,
+                            expense.split_details if split_details is _UNSET else split_details),
+                    )
+                elif amount is not None or splits is not None:
+                    next_original = None
+
                 payer_member = session.query(GroupMember).filter(
                     GroupMember.group_id == expense.group_id,
                     GroupMember.user_id == desired_payer,
@@ -880,7 +902,9 @@ class ExpenseServiceSQL:
                 replace_splits = splits is not None or split_type_changed or amount_changed
                 if split_details is not _UNSET and splits is None:
                     raise SplitValidationError('Splits are required when changing bill details')
-                if splits is not None:
+                if converted_splits is not None:
+                    new_splits = converted_splits
+                elif splits is not None:
                     new_splits = ExpenseServiceSQL._calculate_splits(
                         session, expense.group_id, expense_id, desired_amount,
                         desired_payer, desired_split_type, splits,
@@ -907,6 +931,9 @@ class ExpenseServiceSQL:
                     new_splits = old_splits
 
                 changes = []
+                if next_original != expense.original:
+                    changes.append({'field': 'original', 'old': expense.original, 'new': next_original})
+                    expense.original = next_original
                 if replace_splits:
                     details = ExpenseServiceSQL._split_details(desired_split_type, splits,
                         expense.split_details if split_details is _UNSET else split_details)

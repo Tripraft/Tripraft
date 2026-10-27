@@ -97,11 +97,21 @@ def _publish_changes(session):
                 contact_owners.update(owner_id for owner_id, in reader.query(FriendContact.owner_id).filter(
                     FriendContact.email.in_(changed_names),
                 ).distinct())
+                changed_ids = [uid for uid, in reader.query(User.id).filter(User.email.in_(changed_names))]
+                reverse_emails = reader.query(FriendContact.email).filter(FriendContact.owner_id.in_(changed_ids))
+                contact_owners.update(uid for uid, in reader.query(User.id).filter(User.email.in_(reverse_emails)))
+                shared_groups = reader.query(GroupMember.group_id).filter(
+                    GroupMember.user_id.in_(changed_ids), GroupMember.is_active.is_(True),
+                )
+                contact_owners.update(uid for uid, in reader.query(GroupMember.user_id).join(Group).filter(
+                    GroupMember.group_id.in_(shared_groups), GroupMember.is_active.is_(True), Group.is_active.is_(True),
+                ))
             for group_id, user_id in reader.query(GroupMember.group_id, GroupMember.user_id).filter(
                 GroupMember.group_id.in_(changes), GroupMember.is_active.is_(True),
             ):
                 recipients[group_id].add(user_id)
         for group_id, change in changes.items():
+            contact_owners.update(recipients[group_id] | change['users'])
             for user_id in recipients[group_id] | change['users']:
                 socketio.emit('expenses:changed', {
                     'group_id': str(group_id),

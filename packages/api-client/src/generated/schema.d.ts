@@ -1042,7 +1042,7 @@ export interface paths {
         /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
         get: operations["groups_sql_get_my_groups_get_api_v1_expenses_groups"];
         put?: never;
-        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        /** @description Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger. */
         post: operations["groups_sql_create_group_post_api_v1_expenses_groups"];
         delete?: never;
         options?: never;
@@ -1076,14 +1076,14 @@ export interface paths {
         };
         /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
         get: operations["groups_sql_get_group_get_api_v1_expenses_groups_group_id"];
-        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        /** @description Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger. */
         put: operations["groups_sql_update_group_put_api_v1_expenses_groups_group_id"];
         post?: never;
         /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
         delete: operations["groups_sql_delete_group_delete_api_v1_expenses_groups_group_id"];
         options?: never;
         head?: never;
-        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        /** @description Create or update group metadata. Only the owner may update display currency, budget or dates. Ledger currency changes require an unused ledger. */
         patch: operations["groups_sql_update_group_patch_api_v1_expenses_groups_group_id"];
         trace?: never;
     };
@@ -3819,6 +3819,19 @@ export interface components {
             message?: string;
             success: boolean;
         };
+        CreateExpenseGroup: {
+            /** @description Nonnegative amount in the group ledger currency, up to 9999999999.99; null clears the budget. */
+            budget?: number | string | null;
+            category?: string | null;
+            currency?: string;
+            description?: string | null;
+            display_currency?: string;
+            /** Format: date */
+            end_date?: string | null;
+            name: string;
+            /** Format: date */
+            start_date?: string | null;
+        };
         /** CreateTourDraft */
         CreateTourDraft: Record<string, never>;
         /** DepartureProposal */
@@ -4051,8 +4064,14 @@ export interface components {
             /** Format: uuid */
             id: string;
             is_registered: boolean;
+            is_saved?: boolean;
             label: string;
             nickname?: string | null;
+            shared_groups?: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            }[];
             /** Format: uuid */
             user_id?: string | null;
         };
@@ -4586,6 +4605,19 @@ export interface components {
              * @default
              */
             transport_details: string;
+        };
+        UpdateExpenseGroup: {
+            /** @description Nonnegative amount in the group ledger currency, up to 9999999999.99; null clears the budget. */
+            budget?: number | string | null;
+            category?: string | null;
+            currency?: string;
+            description?: string | null;
+            display_currency?: string;
+            /** Format: date */
+            end_date?: string | null;
+            name?: string;
+            /** Format: date */
+            start_date?: string | null;
         };
         /** UploadPackageImage */
         UploadPackageImage: {
@@ -7424,7 +7456,11 @@ export interface operations {
             path?: never;
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateExpenseGroup"];
+            };
+        };
         responses: {
             /** @description Response */
             default: {
@@ -7488,7 +7524,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateExpenseGroup"];
+            };
+        };
         responses: {
             /** @description Response */
             default: {
@@ -7532,7 +7572,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateExpenseGroup"];
+            };
+        };
         responses: {
             /** @description Response */
             default: {

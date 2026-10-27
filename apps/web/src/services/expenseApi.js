@@ -13,6 +13,11 @@ const BASE = GlobalConfig.ENDPOINTS.EXPENSE;
 const AUTH_BASE = GlobalConfig.ENDPOINTS.AUTH;
 
 class ExpenseApiService {
+  async getIncomes(params = {}) { return apiClient.get(`${BASE}/incomes?${new URLSearchParams(params)}`); }
+  async createIncome(data) { return apiClient.post(`${BASE}/incomes`, data); }
+  async updateIncome(id, data) { return apiClient.put(`${BASE}/incomes/${id}`, data); }
+  async deleteIncome(id) { return apiClient.delete(`${BASE}/incomes/${id}`); }
+  async getIncomeHistory(id) { return apiClient.get(`${BASE}/incomes/${id}/history`); }
   // No-ops kept for backward compatibility with AuthContext / useExpenseQuery
   setAuthToken() {}
   setCurrentUser() {}

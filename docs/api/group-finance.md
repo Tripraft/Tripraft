@@ -17,6 +17,7 @@ with role `admin` still behave as owners. Role changes accept `member` and
 | Add expense or invite a friend | Yes | Yes | Yes |
 | Edit or delete an expense | Any | Own creations | Own creations |
 | Update group name, description or category | Yes | Yes | No |
+| Update default/display currency, budget or dates | Yes | No | No |
 | Add an existing account directly | Yes | As member | No |
 | Promote/demote roles or remove someone else | Yes | No | No |
 | Leave after balance reaches exactly zero | No | Yes | Yes |
@@ -39,6 +40,10 @@ The web expense dashboard exposes metadata editing for owners/admins, role
 changes and member removal for owners, member leave, invitation cancellation
 for the inviter/owner/admin, and settlement deletion for authorized users.
 Group/member/settlement deletion and role changes require confirmation.
+After the group header scrolls above the viewport, floating **Add expense**
+and **Settle up** actions reuse the personal expense pattern. Settlement opens
+and focuses the existing settlement tab; Add expense opens the existing form.
+They hide while manager dialogs are open and respect pending mutation state.
 Settlement history is visible to every active member; unrelated members see
 other people's suggested payments as view-only. The expense payer has no extra
 edit/delete rights unless they are also the creator or owner.
@@ -47,6 +52,8 @@ The dashboard reads all independently paginated expense and settlement pages
 for complete history, spending, analytics and PDF export. One-cent debts remain
 visible. Switching groups clears pending actions; revoked membership hides
 cached financial data after the authorization failure.
+The [PDF statement guide](expense-statements.md) describes the paginated export,
+source receipts, full descriptions, saved names and monetary column layout.
 
 ## Groups and members
 
@@ -70,6 +77,39 @@ Creation requires a trimmed name of 1–100 characters. Description permits
 Description and category can be cleared with JSON `null`. Currency can change
 only before any expense or settlement has ever been recorded, including rows
 subsequently deleted; metadata edits never imply a currency conversion.
+
+Creation and update also accept `display_currency`, nullable `budget`, and
+nullable ISO `start_date`/`end_date`. Only the owner may update these settings.
+Budget is a nonnegative amount in ledger currency, at most 9999999999.99,
+rounded to cents; null removes it. End date cannot precede start date, including
+partial updates. Settings, cards and group details show the saved budget and
+dates. Explicit group dates take precedence over linked trip dates.
+
+The selected creation currency initializes the ledger and first entry choice.
+`display_currency` changes the shared display and default entry currency at any
+time without rewriting the ledger. Members may choose another input currency
+per expense. A fresh server quote converts the amount once into ledger currency;
+all seven split methods allocate exact ledger cents. Equal/percentage/share
+splits use their original weights after conversion; other methods retain the
+source allocation proportions. Unavailable or stale rates reject the entire
+financial change. Expense `original` retains source amount/currency, quote/date,
+source splits and details. Lists and receipts show original money, and editing
+opens those source units. Metadata edits preserve the saved quote; financial
+edits obtain a new quote. Delete/restore uses the saved ledger amounts.
+The split editor previews the converted ledger total and distributes its cents
+before displaying member shares. INR 1000 converted to USD 10.53 shows USD 5.27
+and USD 5.26 for two equal participants, never USD 500 each. Exact/itemized input
+fields remain in the selected source currency, labelled separately from estimates.
+
+Display quotes are shared and pinned for the browser session. Changing tabs,
+window focus or remounting does not fetch them again. The group header provides
+an explicit **Refresh conversion** button and quote date. Failed conversions
+show original units instead of a fabricated 1:1 conversion.
+
+Migration `f95ba4c5d6e8` adds five nullable columns: the four group preferences
+and expense source metadata. Its additive development manifest is supported by
+the restricted development migration bridge. Production uses the normal release
+process; saving this feature does not deploy production.
 
 Full details accept `expense_limit`, `expense_offset`, `settlement_limit` and
 `settlement_offset`. Limits default to 50 and are bounded to 100. Independent

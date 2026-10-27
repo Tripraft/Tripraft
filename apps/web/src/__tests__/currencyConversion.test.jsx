@@ -5,10 +5,12 @@ import CurrencyConversion from '../components/common/jsx/CurrencyConversion';
 import TransactionModal from '../features/expenses/jsx/TransactionModal';
 import ExpenseSummary from '../features/expenses/jsx/ExpenseSummary';
 import {getCurrencies, getExchangeRate} from '../services/currencyApi';
+import {clearExchangeRateCache} from '../hooks/useExchangeRate';
 jest.mock('../services/currencyApi', () => ({getCurrencies: jest.fn(), getExchangeRate: jest.fn()}));
 const amounts = [{label: 'Total Trip Spend', amount: 100}, {label: 'Trip budget', amount: 1000}, {label: 'Per person', amount: 50}];
 const rate = {base: 'USD', quote: 'INR', rate: 96, date: '2026-10-15', fetched_at: '2026-10-16T10:00:00Z'};
 beforeEach(() => {
+  clearExchangeRateCache();
   jest.clearAllMocks();
   getCurrencies.mockResolvedValue({currencies: [{code: 'USD', name: 'US Dollar'}, {code: 'INR', name: 'Indian Rupee'}, {code: 'AED', name: 'UAE Dirham'}]});
   getExchangeRate.mockResolvedValue(rate);

@@ -234,3 +234,24 @@ it('shows a floating add action only after scrolling above the original CTA, and
     expect(disconnect).toHaveBeenCalled();
   } finally { global.IntersectionObserver = original; }
 });
+
+it('shows group quick actions after scrolling and opens settlement or the expense form', () => {
+  useGroupDetail.mockImplementation(id => ({group: {id, name: id},
+    members: [{id: 'friend-uuid', display_name: 'Me'}, {id: 'other', display_name: 'Friend'}],
+    expenses: [], balances: [], settlements: [], invitations: [], refetch: jest.fn()}));
+  const original = global.IntersectionObserver;
+  let observe;
+  global.IntersectionObserver = jest.fn(callback => {observe = callback; return {observe: jest.fn(), disconnect: jest.fn()};});
+  try {
+    render(<Page />);
+    expect(screen.queryByRole('group', {name: 'Group quick actions'})).toBeNull();
+    act(() => observe([{boundingClientRect: {top: -300, bottom: -10}}]));
+    const actions = screen.getByRole('group', {name: 'Group quick actions'});
+    fireEvent.click(actions.querySelectorAll('button')[1]);
+    expect(screen.getByRole('tab', {name: 'Settle Up'})).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', {name: 'Settle Up'})).toHaveFocus();
+    fireEvent.click(actions.querySelector('button'));
+    expect(screen.getByRole('dialog', {name: 'Transaction'})).toBeInTheDocument();
+    expect(screen.queryByRole('group', {name: 'Group quick actions'})).toBeNull();
+  } finally {global.IntersectionObserver = original;}
+});

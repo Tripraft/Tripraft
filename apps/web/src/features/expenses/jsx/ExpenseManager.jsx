@@ -14,6 +14,7 @@ import usePersonalCurrency from '../../../hooks/usePersonalCurrency';
 import TransactionModal from './TransactionModal';
 import GroupManager from './GroupManager';
 import GroupDashboard from './GroupDashboard';
+import ExpenseConnections from './ExpenseConnections';
 import ExpenseDialog from './ExpenseDialog';
 import GroupDetailHeader from './GroupDetailHeader';
 import NewExpenseGroupModal from './NewExpenseGroupModal';
@@ -29,7 +30,7 @@ import PendingInvitations from './PendingInvitations';
 
 import Toast from '@tripraft/ui/Toast';
 import ErrorBoundary from '../../../components/common/jsx/ErrorBoundary';
-import { PlusCircle, RefreshCw } from 'lucide-react';
+import { PlusCircle, RefreshCw, HandCoins } from 'lucide-react';
 import expenseApi from '../../../services/expenseApi';
 import useExpenseLiveUpdates from '../../../hooks/useExpenseLiveUpdates';
 import { generateExpensePDF } from '../../../services/pdfExportService';
@@ -43,7 +44,7 @@ import {
 import '../css/ExpenseManager.css';
 import '../css/ExpenseGroups.css';
 import '../css/ExpenseResponsive.css';
-import { expensePayload } from '../../../utils/money';
+import { expensePayload, expenseInput } from '../../../utils/money';
 
 /** Unwrap backend response envelope { success, data, meta } -> inner data */
 const unwrapEnvelope = (r) => (r && typeof r === 'object' && 'success' in r && 'data' in r) ? r.data : r;
@@ -106,6 +107,7 @@ const ExpenseManager = () => {
   const {
     expenses: personalExpenses,
     loading: personalLoading,
+    error: personalError,
     refetch: refetchPersonalExpenses,
     setExpenses: setPersonalExpenses,
     markAsDeleted: markPersonalAsDeleted,
@@ -134,7 +136,8 @@ const ExpenseManager = () => {
   const [showFloatingAdd, setShowFloatingAdd] = useState(false);
   useEffect(() => {
     const button = addTransactionRef.current;
-    if (mode !== 'personal' || !button) return;
+    setShowFloatingAdd(false);
+    if (!button) return;
     const update = () => {
       const rect = button.getBoundingClientRect();
       setShowFloatingAdd(rect.top < 0 && rect.bottom <= 0);
@@ -148,7 +151,7 @@ const ExpenseManager = () => {
     window.addEventListener('scroll', update, true);
     window.addEventListener('resize', update);
     return () => { window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update); };
-  }, [mode, authLoading, isAuthenticated]);
+  }, [mode, activeGroupId, Boolean(activeGroupData), authLoading, isAuthenticated]);
   const openGroupTab = tab => {
     setGroupTab(tab);
     // The cards sit above the tab content, often outside the current viewport.
@@ -397,7 +400,16 @@ const ExpenseManager = () => {
       
       if (mode === 'personal') {
         let result;
-        if (state.editingTransactionId) {
+        const existing = personalExpenses.find(row => (row.id || row.expense_id) === state.editingTransactionId);
+        if (existing?._income || (!state.editingTransactionId && transactionData.type === 'income')) {
+          const incomeData = {description: transactionData.description, amount: transactionData.amount,
+            category: transactionData.category, income_date: transactionData.expense_date,
+            ...(transactionData.currency && {currency: transactionData.currency})};
+          result = unwrapEnvelope(await (existing ? expenseApi.updateIncome(existing.id, incomeData) : expenseApi.createIncome(incomeData)));
+          const income = result.income;
+          result = {expense: {...income, _income: true, type: 'income', expense_date: income.income_date, created_by: income.user_id}};
+          showToast(existing ? 'Income updated!' : 'Income recorded!', 'success');
+        } else if (state.editingTransactionId) {
           result = unwrapEnvelope(await expenseApi.updateExpense(state.editingTransactionId, transactionData));
           showToast('Transaction updated!', 'success');
         } else {
@@ -481,7 +493,8 @@ const ExpenseManager = () => {
         markPersonalAsDeleted(id);
       }
       
-      const result = unwrapEnvelope(await expenseApi.deleteExpense(id, { permanent }));
+      const income = mode === 'personal' && personalExpenses.find(row => (row.id || row.expense_id) === id)?._income;
+      const result = unwrapEnvelope(await (income ? expenseApi.deleteIncome(id) : expenseApi.deleteExpense(id, { permanent })));
       
       // INSTANT UPDATE: Use returned data if available
       if (mode === 'group') {
@@ -494,7 +507,7 @@ const ExpenseManager = () => {
         updateExpensesAndBalances(expenses, result?.group_balances);
         refreshAfterSave(refetchGroupDetail, refetchGroups);
       } else if (mode === 'personal') {
-        if (permanent) setPersonalExpenses(previous => previous.filter(row => (row.id || row.expense_id) !== id));
+        if (permanent || income) setPersonalExpenses(previous => previous.filter(row => (row.id || row.expense_id) !== id));
         refreshAfterSave(refetchPersonalExpenses);
       }
       
@@ -572,7 +585,7 @@ const ExpenseManager = () => {
 
   // PDF Export handler
   const handleExportPDF = () => {
-    if (mode === 'personal' && personalConversionPending) {
+    if (mode === 'personal' && (personalConversionPending || personalError)) {
       showAlert('Wait for currency conversion to finish before exporting. Retry if rates are unavailable.');
       return;
     }
@@ -664,6 +677,7 @@ const ExpenseManager = () => {
         currentUser={currentUser}
       />
 
+      {mode === 'group' && <ExpenseConnections userId={currentUser?.uid || currentUser?.user_id || currentUser?.id} />}
       {mode === 'group' && !activeGroupId && <GroupDashboard
         groups={(groups || []).filter(group => group && (group.id || group.group_id))}
         currentUserId={currentUser?.uid || currentUser?.user_id || currentUser?.id}
@@ -684,10 +698,11 @@ const ExpenseManager = () => {
         </>}
       </section>}
       {mode === 'personal' && personalDashboard.loading && <p role="status">Converting transactions to {personalCurrency}...</p>}
+      {mode === 'personal' && personalError && <div role="alert">Unable to load the complete personal ledger. <button onClick={refetchPersonalExpenses}>Retry transactions</button></div>}
       {mode === 'personal' && personalDashboard.error && <div role="alert">Unable to convert all transactions. Totals and analytics will be available when exchange rates return. Original amounts are shown below. <button onClick={personalDashboard.retry}>Retry conversion</button></div>}
       {mode === 'personal' && personalDashboard.stale && <p role="status">Using the last available exchange rates for this session.</p>}
       {/* Personal Expense Summary */}
-      {mode === 'personal' && !personalConversionPending && (
+      {mode === 'personal' && !personalConversionPending && !personalError && (
         <ExpenseSummary 
           transactions={getCurrentTransactions()}
           mode={mode}
@@ -701,9 +716,9 @@ const ExpenseManager = () => {
         const overview = groupOverview(activeGroupData, currentUser?.uid || currentUser?.user_id || currentUser?.id, transactions, balances);
         const remainingBalance = balances.reduce((sum, balance) => sum + Math.max(0, Number(balance.net_balance ?? balance.balance) || 0), 0);
         return <>
-          <GroupDetailHeader group={activeGroupData} members={activeGroupMembers || []} overview={overview}
+          <div ref={mode === 'group' ? addTransactionRef : undefined}><GroupDetailHeader group={activeGroupData} members={activeGroupMembers || []} overview={overview}
             busy={mutationLoading || groupDetailLoading} onBack={() => { setExpenseView('group'); refetchGroups(); }}
-            onCreate={() => setShowNewGroup(true)} onAdd={handleOpenModal} onSettle={() => openGroupTab('settleup')} />
+            onCreate={() => setShowNewGroup(true)} onAdd={handleOpenModal} onSettle={() => openGroupTab('settleup')} /></div>
           <GroupSummaryCards remainingBalance={remainingBalance}
             totalSettlements={(activeGroupSettlements || []).reduce((sum, settlement) => sum + (Number(settlement.amount) || 0), 0)}
             settlementCount={(activeGroupSettlements || []).length}
@@ -773,7 +788,7 @@ const ExpenseManager = () => {
       {mode === 'personal' && (
         <PersonalTabbedView
           transactions={getCurrentTransactions()}
-          conversionPending={personalConversionPending}
+          conversionPending={personalConversionPending || Boolean(personalError)}
           filter={state.filter}
           onFilterChange={(filterType, value) => setState(prev => ({
             ...prev,
@@ -788,12 +803,23 @@ const ExpenseManager = () => {
         />
       )}
 
-      {showNewGroup && <NewExpenseGroupModal onClose={() => { setShowNewGroup(false); if (activeGroupId) refetchGroupDetail(); }} onCreate={handleCreateGroup} />}
+      {showNewGroup && <NewExpenseGroupModal defaultCurrency={personalCurrency || 'USD'} onClose={() => { setShowNewGroup(false); if (activeGroupId) refetchGroupDetail(); }} onCreate={handleCreateGroup} />}
 
       {mode === 'personal' && showFloatingAdd && !showTransactionModal && <button
         className="btn-add-transaction expense-floating-add" onClick={handleOpenModal} disabled={mutationLoading}>
         <PlusCircle size={20} aria-hidden="true" /><span>Add Transaction</span>
       </button>}
+
+      {mode === 'group' && activeGroupId && activeGroupData && !groupDetailError && showFloatingAdd
+        && !showTransactionModal && !showNewGroup && !isHistoryModalOpen && !showAlertModal && !showConfirmModal &&
+        <div className="expense-floating-actions" role="group" aria-label="Group quick actions">
+          <button className="btn-add-transaction" onClick={handleOpenModal} disabled={mutationLoading || groupDetailLoading}>
+            <PlusCircle size={20} aria-hidden="true" /><span>Add expense</span>
+          </button>
+          <button className="btn-add-transaction" onClick={() => openGroupTab('settleup')} disabled={mutationLoading || groupDetailLoading}>
+            <HandCoins size={20} aria-hidden="true" /><span>Settle up</span>
+          </button>
+        </div>}
 
       {/* Transaction Modal */}
       {showTransactionModal && (
@@ -801,7 +827,7 @@ const ExpenseManager = () => {
           mode={mode}
           activeGroup={activeGroupData}
           members={activeGroupMembers || []}
-          editingTransaction={editingTransaction}
+          editingTransaction={expenseInput(editingTransaction)}
           currency={mode === 'group' ? activeGroupData?.currency : personalCurrency}
           currentUser={currentUser}
           onSave={handleSaveTransaction}
