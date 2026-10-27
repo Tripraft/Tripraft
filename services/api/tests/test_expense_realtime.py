@@ -222,3 +222,23 @@ def test_rolled_back_personal_changes_are_not_delivered(alice, watch):
         assert changes(observer) == []
         session.rollback()
     assert changes(observer) == []
+
+
+def test_saved_friend_refreshes_are_private_and_signup_updates_the_name(alice, bob, client, watch):
+    owner, _, _ = alice
+    other, _, _ = bob
+    observer, outsider = watch(owner), watch(other)
+    email = 'future-friend@example.test'
+    assert owner.post('/api/v1/expenses/friends', json={'email': email}).status_code == 200
+    rows = observer.get_received(NS)
+    assert [row['args'][0] for row in rows if row['name'] == 'expenses:friends-changed'] == [{}]
+    assert outsider.get_received(NS) == []
+    response = client.post('/api/v1/auth/signup', json={
+        'email': email, 'password': 'TestPassw0rd!', 'display_name': 'Taylor Smith',
+    })
+    assert response.status_code == 201
+    rows = observer.get_received(NS)
+    assert [row['args'][0] for row in rows if row['name'] == 'expenses:friends-changed'] == [{}]
+    assert outsider.get_received(NS) == []
+    friend = payload(owner.get('/api/v1/expenses/friends'))['friends'][0]
+    assert friend['label'] == 'Taylor Smith'

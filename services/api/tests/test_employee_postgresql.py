@@ -45,7 +45,8 @@ def test_employee_postgresql_migration_preserves_existing_data(monkeypatch):
         _import_all_models()
         added = set(inspect(engine).get_table_names()) - original_tables
         assert added == {'employees', 'employee_sessions', 'employee_access_requests',
-                         'employee_access_events', 'employee_provisioning_jobs', 'employee_developer_credentials'}
+                         'employee_access_events', 'employee_provisioning_jobs', 'employee_developer_credentials',
+                         'friend_contacts'}
         with engine.connect() as connection:
             assert connection.execute(text('SELECT email FROM users WHERE id=:id'), {'id': uid}).scalar_one() == 'preserve@example.test'
             assert compare_metadata(MigrationContext.configure(connection, opts={
@@ -143,7 +144,7 @@ def test_employee_postgresql_migration_preserves_existing_data(monkeypatch):
             command.upgrade(config, 'head')
             with engine.connect() as connection:
                 assert connection.execute(text('SELECT email FROM users WHERE id=:id'), {'id': uid}).scalar_one() == 'preserve@example.test'
-                assert connection.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == 'c62f718293a4'
+                assert connection.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == 'd73f8293a5b6'
                 assert compare_metadata(MigrationContext.configure(connection, opts={
                     'compare_type': True, 'compare_server_default': True}), Base.metadata) == []
     finally:

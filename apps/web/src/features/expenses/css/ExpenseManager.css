@@ -1443,6 +1443,7 @@ button.btn-icon.btn-delete:active {
 .expense-transaction-fields {border:0; padding:0; margin:0; min-width:0;}
 .expense-transaction-fields:disabled {opacity:0.75;}
 .expense-transaction-fields .btn-save {display:inline-flex; align-items:center; justify-content:center; gap:8px;}
+.expense-transaction-fields .spinning {animation:spin 1s linear infinite;}
 .expense-original-amount {display:block; color:#64748b; font-size:12px; margin-top:4px;}
 @media (max-width:640px) {
   .expense-manager .expense-floating-add {right:16px; bottom:calc(80px + env(safe-area-inset-bottom));}

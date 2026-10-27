@@ -46,6 +46,15 @@ class ExpenseApiService {
     return apiClient.put(`${AUTH_BASE}/user/profile`, updates);
   }
 
+  /** Private contacts are reusable across expense groups, without sending mail. */
+  async getFriends({search = '', limit = 50, offset = 0} = {}) {
+    return apiClient.get(`${BASE}/friends?${new URLSearchParams({search, limit, offset})}`);
+  }
+
+  async saveFriend({email, nickname}) {
+    return apiClient.post(`${BASE}/friends`, {email, ...(nickname !== undefined && {nickname})});
+  }
+
   /**
    * Get user's groups
    */

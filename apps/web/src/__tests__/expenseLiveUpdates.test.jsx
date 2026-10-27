@@ -154,3 +154,12 @@ it('invalidates the saved preference only when a currency change is announced', 
   expect(invalidate).toHaveBeenCalledWith({queryKey: ['user', 'personal-currency', 'member'], refetchType: 'active'});
   expect(invalidate).not.toHaveBeenCalledWith(expect.objectContaining({queryKey: ['personal-dashboard-rate']}));
 });
+
+it('refreshes only the private friends list after a saved contact or signup name changes', async () => {
+  const invalidate = jest.spyOn(client, 'invalidateQueries');
+  renderHook(() => useExpenseLiveUpdates('member', null), {wrapper});
+  await waitFor(() => expect(events['expenses:friends-changed']).toBeDefined());
+  act(() => events['expenses:friends-changed']({}));
+  expect(invalidate).toHaveBeenCalledTimes(1);
+  expect(invalidate).toHaveBeenCalledWith({queryKey: ['user', 'expense-friends', 'member'], refetchType: 'active'});
+});

@@ -49,11 +49,12 @@ class DatabaseReleaseTests(unittest.TestCase):
         scripts = ScriptDirectory.from_config(config)
         status = schema_status(scripts, ['b825c4202610'])
         self.assertEqual(status.state, 'behind')
-        self.assertEqual([r for r, _ in status.pending], ['c62f718293a4'])
+        self.assertEqual([r for r, _ in status.pending], ['c62f718293a4', 'd73f8293a5b6'])
         self.assertIn('currency', status.message)
         self.assertEqual(schema_status(scripts, ['not-in-this-checkout']).state, 'unknown')
         self.assertEqual(schema_status(scripts, []).state, 'uninitialized')
-        self.assertEqual(schema_status(scripts, ['c62f718293a4']).state, 'current')
+        self.assertEqual(schema_status(scripts, ['c62f718293a4']).state, 'behind')
+        self.assertEqual(schema_status(scripts, ['d73f8293a5b6']).state, 'current')
         # An existing sibling is upgradeable through the merge, regardless of ID ordering.
         for sibling in ('a74b8293a4b5', 'a714c3202601'):
             self.assertEqual(schema_status(scripts, [sibling]).state, 'behind')

@@ -76,8 +76,18 @@ def test_release_lock_and_upgrade_on_postgresql(monkeypatch, apply_method):
                 with pytest.raises(DBAPIError):
                     restricted.execute(text("SELECT tripraft_dev_ops.apply_approved_migration('unapproved; DROP TABLE public.users')"))
                 restricted.rollback()
+                # This branch adds friend contacts, but the fixed owner approval
+                # still covers only the personal-currency revision. Exercise the
+                # approved step, then require an owner release for the new head.
+                assert restricted.execute(text(
+                    "SELECT tripraft_dev_ops.apply_approved_migration('c62f718293a4')"
+                )).scalar_one() == 'c62f718293a4'
+                restricted.commit()
                 restricted.execute(text('SET TRANSACTION READ ONLY'))
-                assert requester.request_migration(restricted, ScriptDirectory.from_config(runner.migration_config()))
+                with pytest.raises(DBAPIError, match='not been approved by the owner'):
+                    requester.request_migration(restricted, ScriptDirectory.from_config(runner.migration_config()))
+                restricted.rollback()
+                assert restricted.execute(text('SELECT version_num FROM alembic_version')).scalar_one() == 'c62f718293a4'
                 restricted.execute(text('RESET ROLE'))
                 restricted.commit()
         else:

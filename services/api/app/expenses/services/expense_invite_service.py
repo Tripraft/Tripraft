@@ -12,7 +12,8 @@ from app.core.exceptions import AuthorizationError, ConflictError, GoneError, No
 from app.core.schemas.invitations import InviteMemberSchema
 from marshmallow import ValidationError as SchemaError
 from app.expenses.models import Group, GroupMember, Invitation, User
-from app.expenses.services.group_access import access, active_group, admin, identifier, join_member, service_result
+from app.expenses.services.group_access import UNSET, access, active_group, admin, identifier, join_member, service_result
+from app.expenses.services.friend_service import save_contact
 from app.notifications.email.links import expense_invitation_link
 
 logger = logging.getLogger(__name__)
@@ -107,7 +108,7 @@ class InvitationServiceSQL:
 
     @staticmethod
     @service_result
-    def send_invitation(group_id, invitee_email, invited_by_user_id):
+    def send_invitation(group_id, invitee_email, invited_by_user_id, nickname=UNSET):
         try:
             invitee_email = InviteMemberSchema().load({'email': invitee_email})['email']
         except SchemaError:
@@ -137,6 +138,9 @@ class InvitationServiceSQL:
             invitation.expires_at = _now() + timedelta(days=InvitationServiceSQL.INVITATION_EXPIRY_DAYS)
             invitation.responded_at = None
             group.updated_at = datetime.now(timezone.utc)
+            # Contact and invitation commit together, even when email delivery
+            # is disabled or later fails. A rejected invitation saves nothing.
+            save_contact(session, member.user_id, invitee_email, nickname)
             session.commit()
             data = _invitation_dict(invitation)
             invitation_id, group_name = str(invitation.id), group.name
@@ -167,6 +171,8 @@ class InvitationServiceSQL:
             data = _invitation_dict(invitation)
             inviter_name = invitation.inviter.display_name or invitation.inviter.email.split('@')[0]
             group_name = group.name
+            save_contact(session, member.user_id, invitation.invitee_email)
+            session.commit()
         email_status = InvitationServiceSQL._send_invitation_email(
             data['invitee_email'], inviter_name, group_name, data['id'],
         )

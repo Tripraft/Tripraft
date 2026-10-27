@@ -1,8 +1,8 @@
 # Purpose: Invitation validation schemas.
 """Invitation validation schemas."""
-from app.core.schemas.fields import UUIDString
+from app.core.schemas.fields import UUIDString, TrimmedString
 from marshmallow import (Schema, ValidationError, fields, pre_load,
-                         validates_schema)
+                         validate, validates_schema)
 
 
 class _EmailNormalizingSchema(Schema):
@@ -29,6 +29,7 @@ class CreateExpenseInvitationSchema(_EmailNormalizingSchema):
     invitee_email = fields.Email(load_default=None)
     invited_email = fields.Email(load_default=None)
     email = fields.Email(load_default=None)
+    nickname = TrimmedString(allow_none=True, validate=validate.Length(max=100))
 
     @validates_schema
     def validate_has_email(self, data, **kwargs):

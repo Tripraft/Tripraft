@@ -89,6 +89,31 @@ def test_dashboard_currency_upgrade_preserves_existing_user_choice(tmp_path, mon
         engine.dispose()
 
 
+def test_friend_contacts_upgrade_backfills_invitees_without_changing_invitations(tmp_path, monkeypatch):
+    url = 'sqlite:///' + (tmp_path / 'friends-upgrade.db').as_posix()
+    config = _config(url, monkeypatch)
+    engine = create_engine(url)
+    owner_id, group_id, invitation_id = uuid4().hex, uuid4().hex, uuid4().hex
+    try:
+        command.upgrade(config, 'c62f718293a4')
+        with engine.begin() as connection:
+            connection.execute(text("INSERT INTO users(id,email,password_hash) VALUES (:id,'owner@example.test','unused')"), {'id': owner_id})
+            connection.execute(text("INSERT INTO groups(id,name,created_by) VALUES (:id,'Preserved group',:owner)"), {'id': group_id, 'owner': owner_id})
+            connection.execute(text("INSERT INTO invitations(id,group_id,invitee_email,invited_by,status) "
+                                    "VALUES (:id,:group,' Friend@Example.test ',:owner,'declined')"),
+                               {'id': invitation_id, 'group': group_id, 'owner': owner_id})
+        command.upgrade(config, 'head')
+        _assert_current_schema(engine, config)
+        with engine.connect() as connection:
+            assert connection.execute(text('SELECT owner_id,email,nickname FROM friend_contacts')).one() == (owner_id, 'friend@example.test', None)
+            assert connection.execute(text('SELECT id,status FROM invitations')).one() == (invitation_id, 'declined')
+        command.downgrade(config, 'c62f718293a4')
+        with engine.connect() as connection:
+            assert connection.execute(text('SELECT id,status FROM invitations')).one() == (invitation_id, 'declined')
+    finally:
+        engine.dispose()
+
+
 def test_fresh_schema_can_downgrade_and_reinstall(tmp_path, monkeypatch):
     url = 'sqlite:///' + (tmp_path / 'roundtrip.db').as_posix()
     config = _config(url, monkeypatch)
@@ -297,7 +322,9 @@ def test_fresh_install_sql_can_be_generated_without_a_database(url, monkeypatch)
     config = _config(url, monkeypatch, output)
     command.upgrade(config, 'head', sql=True)
     sql = output.getvalue()
-    assert sql.count('CREATE TABLE ') == 47  # 46 application tables plus Alembic version.
+    assert sql.count('CREATE TABLE ') == 48  # 47 application tables plus Alembic version.
+    assert 'CREATE TABLE friend_contacts' in sql
+    assert 'INSERT INTO friend_contacts' in sql
     assert 'CREATE TABLE tour_package_media' in sql
     assert 'CREATE TABLE tour_package_reviews' in sql
     assert 'CREATE TABLE agent_agreement_acknowledgments' in sql
@@ -371,7 +398,7 @@ def test_employee_and_recovery_sibling_upgrades_preserve_data(tmp_path, monkeypa
                                {'id': user_id, 'email': 'sibling@example.test', 'password': 'unused'})
         command.upgrade(config, 'head')
         _assert_current_schema(engine, config)
-        assert ScriptDirectory.from_config(config).get_heads() == ['c62f718293a4']
+        assert ScriptDirectory.from_config(config).get_heads() == ['d73f8293a5b6']
         with engine.connect() as connection:
             assert connection.execute(text('SELECT email, password_reset_version FROM users WHERE id=:id'),
                                       {'id': user_id}).one() == ('sibling@example.test', None)

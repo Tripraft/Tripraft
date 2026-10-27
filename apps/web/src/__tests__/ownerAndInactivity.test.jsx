@@ -1,5 +1,6 @@
 // Purpose: Verifies UUID owner controls and actual personal share, and tests the optional idle tracker's warning/activity reset in isolation.
 import React from 'react';import {render,screen,fireEvent,act} from '@testing-library/react';
+jest.mock('../features/expenses/jsx/ExpenseFriendPicker', () => () => null);
 jest.mock('../context/AuthContext',()=>({useAuth:jest.fn()}));jest.mock('../services/expenseApi',()=>({__esModule:true,default:{}}));
 import {useAuth} from '../context/AuthContext';import Inactivity from '../features/auth/jsx/InactivityTracker';import GroupManager from '../features/expenses/jsx/GroupManager';import GroupDetailHeader from '../features/expenses/jsx/GroupDetailHeader';
 it('shows owner controls and self identity for UUID users',()=>{const uid='0190-user-uuid';render(<GroupManager groups={[]} activeGroupId="group-uuid" activeGroup={{created_by:uid}} members={[{user_id:uid,display_name:'Owner name'},{user_id:'0190-other-uuid',display_name:'Friend'}]} currentUser={{uid}} pendingInvitationsFromParent={[]} usingMegaBootstrap showAlert={jest.fn()}/>);expect(screen.getAllByText('Owner').length).toBeGreaterThan(0);expect(screen.getByText('(You)')).toBeInTheDocument();expect(screen.getByTitle('Remove member (Owner Only)')).toBeInTheDocument();});

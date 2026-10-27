@@ -18,6 +18,7 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
     const refresh = () => {
       if (cancelled || document.hidden || navigator.onLine === false) return;
       invalidate(['personalExpenses']);
+      invalidate(['user', 'expense-friends', userId]);
       invalidate(['groups']);
       invalidate(['invitations']);
       if (activeGroupRef.current) groups.add(activeGroupRef.current);
@@ -68,6 +69,9 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
           ...(token ? { auth: { token } } : {}),
         });
         socket.on('expenses:changed', onChange);
+        socket.on('expenses:friends-changed', () => {
+          if (!cancelled) invalidate(['user', 'expense-friends', userId]);
+        });
         socket.on('connect', () => {authRecoveryUsed = false; refresh();}); // Initial join and every reconnect catch up.
         socket.on('connect_error', async error => {
           const message = error.message || '';
