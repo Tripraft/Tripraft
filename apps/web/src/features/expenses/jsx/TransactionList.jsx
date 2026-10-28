@@ -3,7 +3,7 @@ import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 // Purpose: Renders the Transaction List interface within apps\web\src\features\expenses\jsx.
 import ExpenseDialog from './ExpenseDialog';
 import TransactionActivity from './TransactionActivity';
-import CurrencyAmount from './CurrencyAmount';
+import ExpenseAmount from './ExpenseAmount';
 import {formatMoney} from '../../../utils/money';
 import DeletedTransactionActions from './DeletedTransactionActions';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -467,9 +467,8 @@ const TransactionList = ({
                     )}
                     <td className={`${isIncomeTransaction ? 'amount-green' : 'amount-red'} ${isDeleted ? 'deleted-amount' : ''}`}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span className={isDeleted ? 'deleted-text' : ''}>{mode === 'group' ? <CurrencyAmount amount={t.amount} currency={t.currency || currency} displayCurrency={activeGroup?.display_currency || currency} /> : formatCurrency(t.amount, t.currency || currency)}
+                        <span className={isDeleted ? 'deleted-text' : ''}>{mode === 'group' ? <ExpenseAmount expense={t} currency={currency} displayCurrency={activeGroup?.display_currency || currency} /> : formatCurrency(t.amount, t.currency || currency)}
                           {t.original_currency && t.original_currency !== currency && <small className="expense-original-amount">{formatMoney(t.original_amount, t.original_currency)} original</small>}
-                          {t.original && <small className="expense-original-amount">{formatMoney(t.original.amount, t.original.currency)} original receipt</small>}
                         </span>
                         {isEdited && !isDeleted && (
                           <button 
@@ -615,17 +614,17 @@ const TransactionList = ({
               <div className="receipt-breakdown">
                 {selectedTransaction.split_type === 'itemized' && selectedTransaction.split_details?.items?.map((item, index) => <div key={`item-${index}`} className="receipt-split-item">
                   <span className="split-name">{item.name}<small style={{ display: 'block' }}>{item.user_ids.map(id => getMemberName(id)).join(', ')}</small></span>
-                  <span className="split-amt">{formatCurrency(item.amount, selectedTransaction.original?.currency || selectedTransaction.currency || currency)}</span>
+                  <span className="split-amt"><ExpenseAmount expense={selectedTransaction} sourceAmount={item.amount} currency={currency} displayCurrency={activeGroup?.display_currency || currency} /></span>
                 </div>)}
                 {selectedTransaction.split_type === 'itemized' && ['tax', 'tip', 'discount'].filter(key => Number(selectedTransaction.split_details?.[key])).map(key => <div key={key} className="receipt-split-item">
-                  <span className="split-name">{key[0].toUpperCase() + key.slice(1)}</span><span className="split-amt">{formatCurrency((key === 'discount' ? -1 : 1) * Number(selectedTransaction.split_details[key]), selectedTransaction.original?.currency || selectedTransaction.currency || currency)}</span>
+                  <span className="split-name">{key[0].toUpperCase() + key.slice(1)}</span><span className="split-amt"><ExpenseAmount expense={selectedTransaction} sourceAmount={(key === 'discount' ? -1 : 1) * Number(selectedTransaction.split_details[key])} currency={currency} displayCurrency={activeGroup?.display_currency || currency} /></span>
                 </div>)}
                 <div className="receipt-label">SPLIT BREAKDOWN</div>
                 {selectedTransaction.splits && Array.isArray(selectedTransaction.splits) && selectedTransaction.splits.map((split, idx) => (
                   <div key={idx} className="receipt-split-item">
                     <span className="split-name">{split.user_name || split.display_name || getMemberName(split.user_id)}</span>
                     <span className="split-dots"></span>
-                    <span className="split-amt">{formatCurrency(split.amount)}</span>
+                    <span className="split-amt"><ExpenseAmount expense={selectedTransaction} split={split} currency={currency} displayCurrency={activeGroup?.display_currency || currency} /></span>
                   </div>
                 ))}
               </div>
@@ -634,7 +633,7 @@ const TransactionList = ({
               
               <div className="receipt-total">
                 <span className="total-label">TOTAL AMOUNT</span>
-                <span className="total-value">{formatCurrency(selectedTransaction.amount)}</span>
+                <span className="total-value"><ExpenseAmount expense={selectedTransaction} currency={currency} displayCurrency={activeGroup?.display_currency || currency} /></span>
               </div>
             </div>
             

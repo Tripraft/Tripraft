@@ -9,7 +9,7 @@ import ExpenseDialog from './ExpenseDialog';
 import ExpenseFriendPicker from './ExpenseFriendPicker';
 import CurrencyChangeStatus from './CurrencyChangeStatus';
 import useExchangeRate from '../../../hooks/useExchangeRate';
-import { formatMoney } from '../../../utils/money';
+import CurrencyAmount from './CurrencyAmount';
 
 const unwrapEnvelope = response => response?.data ?? response;
 const invitationLink = invitation => invitation.invitation_link ||
@@ -412,7 +412,7 @@ const GroupManager = ({
     const isYou = String(id) === String(userId);
     const paid = expenses.filter(expense => !expense.is_deleted && String(expense.paid_by) === String(id)).reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
     return <li key={id}><span className={`expense-member-avatar avatar-${index % 4}`} aria-hidden="true">{name.split(/\s+/).map(part => part[0]).slice(0, 2).join('').toUpperCase()}</span>
-      <div className="expense-member-identity"><strong>{name}{isYou && <small>(You)</small>}</strong><span>Paid {formatMoney(paid, activeGroup?.currency || 'USD')}</span></div>
+      <div className="expense-member-identity"><strong>{name}{isYou && <small>(You)</small>}</strong><span>Paid <CurrencyAmount amount={paid} currency={activeGroup?.currency || 'USD'} displayCurrency={displayCurrency} /></span></div>
       <span className={`expense-member-role ${isOwner ? 'is-owner' : ''}`}>{isOwner ? 'Owner' : member.role === 'admin' ? 'Admin' : 'Member'}</span>
       <div className="expense-member-actions">{permissions.can_manage_roles && !isOwner && <button disabled={actionBusy} onClick={() => confirm(`${member.role === 'admin' ? 'Remove admin access from' : 'Make admin:'} ${name}?`, async () => {
         await expenseApi.updateGroupMemberRole(activeGroupId, id, member.role === 'admin' ? 'member' : 'admin'); await refreshGroup();
@@ -435,7 +435,7 @@ const GroupManager = ({
         <div className="expense-member-settings-info"><strong>{activeGroup.name}</strong><p>{activeGroup.description || 'Add a description to tell your crew what this group is for.'}</p></div>
         <dl className="expense-settings-facts">
           <div><dt>Display currency</dt><dd>{activeGroup.display_currency || activeGroup.currency || 'USD'}</dd></div>
-          <div><dt>Group budget</dt><dd>{activeGroup.budget != null ? formatMoney(activeGroup.budget, activeGroup.currency || 'USD') : 'Not set'}</dd></div>
+          <div><dt>Group budget</dt><dd>{activeGroup.budget != null ? <CurrencyAmount amount={activeGroup.budget} currency={activeGroup.currency || 'USD'} displayCurrency={displayCurrency} /> : 'Not set'}</dd></div>
           <div><dt>Travel dates</dt><dd>{activeGroup.start_date || 'Not set'} / {activeGroup.end_date || 'Not set'}</dd></div>
           <div><dt>Category</dt><dd>{activeGroup.category || 'General'}</dd></div>
         </dl>

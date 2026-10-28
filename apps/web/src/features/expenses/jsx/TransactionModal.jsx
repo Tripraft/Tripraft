@@ -60,6 +60,9 @@ const TransactionModal = ({
     // A live refetch replaces member/expense objects; it must not overwrite a draft.
     initializedForm.current = formKey;
     if (editingTransaction) {
+      const receipt = mode === 'group' ? editingTransaction.original : null;
+      const editingSplits = receipt?.splits || editingTransaction.splits || [];
+      const editingDetails = receipt?.split_details || editingTransaction.split_details;
       const rawSplitType = String(editingTransaction.split_type || 'equal').toLowerCase();
       const editingSplitType = rawSplitType === 'custom'
         ? (editingTransaction.splits?.some(split => split.shares != null) ? 'shares' : 'exact') : rawSplitType;
@@ -96,16 +99,16 @@ const TransactionModal = ({
       setFormData({
         type: isIncome ? 'income' : 'expense',
         description: editingTransaction.description || '',
-        currency: editingTransaction.currency || currency || 'USD',
-        amount: Math.abs(Number(editingTransaction.amount)) || '',
+        currency: receipt?.currency || editingTransaction.currency || currency || 'USD',
+        amount: Math.abs(Number(receipt?.amount ?? editingTransaction.amount)) || '',
         category: editingTransaction.category || 'Food',
         date: dateValue,
         paidBy: paidByValue,
         splitWith: splitWithValue.map(String),
         splitType: editingSplitType,
-        splitValues: Object.fromEntries((editingTransaction.splits || []).map(s => [String(s.user_id),
-          editingSplitType === 'percentage' ? s.percentage : editingSplitType === 'shares' ? s.shares : editingSplitType === 'adjustment' ? editingTransaction.split_details?.adjustments?.[s.user_id] || 0 : Math.abs(Number(s.amount))])),
-        bill: { items: [], tax: '', tip: '', discount: '', ...(editingSplitType === 'itemized' ? editingTransaction.split_details : {}) },
+        splitValues: Object.fromEntries(editingSplits.map(s => [String(s.user_id),
+          editingSplitType === 'percentage' ? s.percentage : editingSplitType === 'shares' ? s.shares : editingSplitType === 'adjustment' ? editingDetails?.adjustments?.[s.user_id] || 0 : Math.abs(Number(s.amount))])),
+        bill: { items: [], tax: '', tip: '', discount: '', ...(editingSplitType === 'itemized' ? editingDetails : {}) },
       });
     } else if (mode === 'group' && members && members.length > 0) {
       const firstMemberId = getMemberId(members[0]);

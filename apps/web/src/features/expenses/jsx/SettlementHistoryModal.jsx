@@ -136,7 +136,7 @@ const SettlementHistoryModal = ({ isOpen, onClose, settlements = [], currency = 
         <div className="shm-body">
           {confirming && (
             <div role="alertdialog" aria-label="Delete settlement" className="shm-delete-confirm">
-              <p>Delete this <CurrencyAmount amount={confirming.amount} currency={currency} displayCurrency={group?.display_currency || currency} /> settlement record? This restores the outstanding balances. It does not refund or transfer money. To correct a payment, delete the record and add its replacement.</p>
+              <p>Delete this <CurrencyAmount amount={confirming.amount} currency={confirming.currency || currency} displayCurrency={group?.display_currency || currency} /> settlement record? This restores the outstanding balances. It does not refund or transfer money. To correct a payment, delete the record and add its replacement.</p>
               {error && <p role="alert">{error}</p>}
               <button type="button" disabled={deleting} onClick={deleteSettlement}>{deleting ? 'Deleting...' : 'Confirm deletion'}</button>
               <button type="button" disabled={deleting} onClick={() => { setConfirming(null); setError(''); }}>Cancel</button>
@@ -180,7 +180,7 @@ const SettlementHistoryModal = ({ isOpen, onClose, settlements = [], currency = 
                       </div>
                     </div>
                     <div className="shm-item-right">
-                      <span className="shm-amount"><CurrencyAmount amount={settlement.amount} currency={currency} displayCurrency={group?.display_currency || currency} /></span>
+                      <span className="shm-amount"><CurrencyAmount amount={settlement.amount} currency={settlement.currency || currency} displayCurrency={group?.display_currency || currency} /></span>
                       {onDelete && canDeleteSettlement(settlement, group, currentUserId) && (
                         <button type="button" disabled={deleting} onClick={() => { setConfirming(settlement); setError(''); }}>
                           Delete settlement

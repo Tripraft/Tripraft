@@ -1,6 +1,6 @@
 // Purpose: Verify paired currencies across group settlements, spending, activity and saved history, including FX failure.
 import React from 'react';
-import {render, screen, waitFor, within} from '@testing-library/react';
+import {fireEvent, render, screen, waitFor, within} from '@testing-library/react';
 import CurrencyAmount from '../features/expenses/jsx/CurrencyAmount';
 import GroupDetailHeader from '../features/expenses/jsx/GroupDetailHeader';
 import MemberSpending from '../features/expenses/jsx/MemberSpending';
@@ -8,11 +8,16 @@ import TransactionActivity from '../features/expenses/jsx/TransactionActivity';
 import SettlementView from '../features/expenses/jsx/SettlementView';
 import SettlementHistory from '../features/expenses/jsx/SettlementHistoryModal';
 import ExpenseHistory from '../features/expenses/jsx/ExpenseHistoryModal';
+import ExpenseAmount from '../features/expenses/jsx/ExpenseAmount';
+import ExpenseBreakdown from '../features/expenses/jsx/ExpenseBreakdown';
+import TransactionList from '../features/expenses/jsx/TransactionList';
+import TransactionModal from '../features/expenses/jsx/TransactionModal';
+import {expensePayload} from '../utils/money';
 import {clearExchangeRateCache} from '../hooks/useExchangeRate';
-import {getExchangeRate} from '../services/currencyApi';
+import {getCurrencies, getExchangeRate} from '../services/currencyApi';
 import {useExpenseEditHistory} from '../hooks/useExpenseQuery';
 
-jest.mock('../services/currencyApi', () => ({getExchangeRate: jest.fn()}));
+jest.mock('../services/currencyApi', () => ({getCurrencies: jest.fn(), getExchangeRate: jest.fn()}));
 jest.mock('../hooks/useExpenseQuery', () => ({useExpenseEditHistory: jest.fn()}));
 const group = {id: 'trip', name: 'Trip', currency: 'USD', display_currency: 'INR', created_by: 'me'};
 const members = [{id: 'me', display_name: 'Me'}, {id: 'friend', display_name: 'Friend'}];
@@ -21,7 +26,112 @@ const payment = {id: 'payment', amount: 10, from_user_id: 'friend', to_user_id: 
 beforeEach(() => {
   clearExchangeRateCache();
   getExchangeRate.mockReset().mockImplementation(async (base, quote) => ({base, quote, rate: 95}));
+  getCurrencies.mockResolvedValue({currencies: ['USD', 'INR', 'EUR'].map(code => ({code, name: code}))});
   useExpenseEditHistory.mockReturnValue({data: {history: []}, isLoading: false});
+});
+
+const paidExpense = {...expense, amount: 10.53, split_type: 'equal',
+  splits: [{user_id: 'me', amount: 5.27}, {user_id: 'friend', amount: 5.26}],
+  original: {amount: '1000', currency: 'INR', rate: '.01053', ledger_currency: 'USD', split_type: 'equal',
+    splits: [{user_id: 'me', amount: '500'}, {user_id: 'friend', amount: '500'}]}};
+
+it('shows the saved INR receipt under the exact USD ledger amount in activity without an FX request', () => {
+  render(<TransactionActivity transactions={[paidExpense]} group={{...group, display_currency: 'USD'}} currency="USD"
+    currentUserId="me" getMemberName={() => 'Me'} formatDate={() => 'Oct 26'} wasEdited={() => false} />);
+  expect(screen.getByText('$10.53')).toHaveClass('expense-money-primary');
+  expect(screen.getByText('INR 1,000.00')).toHaveClass('expense-money-original');
+  expect(getExchangeRate).not.toHaveBeenCalled();
+});
+
+it('keeps the saved original visible when display conversion fails', async () => {
+  getExchangeRate.mockRejectedValue(new Error('Unavailable'));
+  render(<ExpenseAmount expense={paidExpense} currency="USD" displayCurrency="EUR" />);
+  await waitFor(() => expect(getExchangeRate).toHaveBeenCalledTimes(1));
+  expect(screen.getByText('$10.53')).toBeInTheDocument();
+  expect(screen.getByText('INR 1,000.00')).toBeInTheDocument();
+});
+
+it('converts the ledger to a third display currency while retaining the paid receipt amount', async () => {
+  getExchangeRate.mockResolvedValue({base: 'USD', quote: 'EUR', rate: 2});
+  render(<ExpenseAmount expense={paidExpense} currency="USD" displayCurrency="EUR" />);
+  expect(await screen.findByText('€21.06')).toHaveClass('expense-money-primary');
+  expect(screen.getByText('INR 1,000.00')).toHaveClass('expense-money-original');
+});
+
+it('shows saved equal shares with their original amounts in the receipt and member breakdown', () => {
+  const view = render(<TransactionList mode="group" filter={{}} transactions={[paidExpense]} members={members} currentUserId="me"
+    activeGroup={{...group, display_currency: 'USD'}} currency="USD" />);
+  fireEvent.click(screen.getByTitle('View split details'));
+  const receipt = screen.getByRole('dialog', {name: 'Expense split details'});
+  expect(within(receipt).getByText('$5.27')).toBeInTheDocument();
+  expect(within(receipt).getByText('$5.26')).toBeInTheDocument();
+  expect(within(receipt).getAllByText('INR 500.00')).toHaveLength(2);
+  view.unmount();
+  render(<ExpenseBreakdown expenses={[paidExpense]} members={members} currency="USD" />);
+  expect(screen.getAllByText('INR 500.00')).toHaveLength(2);
+});
+
+it('preserves the sign of a refund in the paid currency and each saved share', () => {
+  render(<ExpenseAmount expense={{...paidExpense, amount: -10.53}} split={{user_id: 'me', amount: -5.27}} />);
+  expect(screen.getByText('-$5.27')).toBeInTheDocument();
+  expect(screen.getByText('-INR 500.00')).toBeInTheDocument();
+});
+
+it('uses the saved conversion rate for bill items instead of a current receipt quote', () => {
+  render(<ExpenseAmount expense={paidExpense} sourceAmount={200} currency="USD" />);
+  expect(screen.getByText('$2.11')).toHaveClass('expense-money-primary');
+  expect(screen.getByText('INR 200.00')).toHaveClass('expense-money-original');
+  expect(getExchangeRate).not.toHaveBeenCalled();
+});
+
+it('shows the original currency in the creation snapshot after later edits', () => {
+  useExpenseEditHistory.mockReturnValue({data: {history: [{action: 'created', after_snapshot: paidExpense}]}, isLoading: false});
+  render(<ExpenseHistory expense={{...paidExpense, original: null}} currency="USD" members={members} onClose={jest.fn()} />);
+  expect(screen.getByText('INR 1,000.00')).toBeInTheDocument();
+  expect(getExchangeRate).not.toHaveBeenCalled();
+});
+
+it('shows each history side with its own saved currency even after another currency edit', () => {
+  const after = {...paidExpense, amount: 20, original: {...paidExpense.original, amount: '18', currency: 'EUR', splits: [{user_id: 'me', amount: '9'}]}};
+  useExpenseEditHistory.mockReturnValue({data: {history: [{action: 'updated', before_snapshot: paidExpense, after_snapshot: after,
+    changes: [{field: 'original', old: paidExpense.original, new: after.original},
+      {field: 'amount', old: 10.53, new: 20}, {field: 'splits', old: paidExpense.splits, new: [{user_id: 'me', amount: 10}]}]}]}, isLoading: false});
+  render(<ExpenseHistory expense={{...paidExpense, original: {...paidExpense.original, currency: 'GBP'}}}
+    members={members} currency="USD" onClose={jest.fn()} />);
+  expect(screen.getByText('Paid in INR')).toBeInTheDocument();
+  expect(screen.getByText('Paid in EUR')).toBeInTheDocument();
+  expect(screen.getAllByText('INR 1,000.00')).toHaveLength(2);
+  expect(screen.getAllByText('EUR 18.00')).toHaveLength(2);
+  expect(screen.getAllByText('INR 500.00')).toHaveLength(2);
+  expect(getExchangeRate).not.toHaveBeenCalled();
+});
+
+it('shows returning to the group currency as a paid-currency change', () => {
+  const after = {...paidExpense, original: null};
+  useExpenseEditHistory.mockReturnValue({data: {history: [{action: 'updated', before_snapshot: paidExpense, after_snapshot: after,
+    changes: [{field: 'original', old: paidExpense.original, new: null}]}]}, isLoading: false});
+  render(<ExpenseHistory expense={after} currency="USD" members={members} onClose={jest.fn()} />);
+  expect(screen.getByText('Paid in INR')).toBeInTheDocument();
+  expect(screen.getByText('Paid in USD')).toBeInTheDocument();
+  expect(screen.getByText('INR 1,000.00')).toBeInTheDocument();
+});
+
+it('opens the paid currency and original split values for editing and preserves a metadata-only save', async () => {
+  getExchangeRate.mockResolvedValue({base: 'INR', quote: 'USD', rate: .01053});
+  const save = jest.fn();
+  render(<TransactionModal mode="group" editingTransaction={paidExpense} activeGroup={{...group, display_currency: 'USD'}}
+    members={members} currency="USD" currentUser={{uid: 'me'}} onSave={save} />);
+  expect(screen.getByLabelText('Amount')).toHaveValue(1000);
+  expect(screen.getByLabelText('Currency')).toHaveValue('INR');
+  await waitFor(() => expect(screen.getByLabelText('Me share')).toHaveTextContent('$5.27'));
+  expect(within(screen.getByLabelText('Me share')).getByText('INR 500.00')).toBeInTheDocument();
+  fireEvent.change(screen.getByLabelText('Description'), {target: {value: 'Updated meal'}});
+  fireEvent.click(screen.getByRole('button', {name: 'Save'}));
+  await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+  const payload = expensePayload(save.mock.calls[0][0], {editingExpense: paidExpense});
+  expect(payload.description).toBe('Updated meal');
+  expect(payload).not.toHaveProperty('amount');
+  expect(payload).not.toHaveProperty('currency');
 });
 
 it('keeps the source amount visible with its actual currency when a quote fails', async () => {

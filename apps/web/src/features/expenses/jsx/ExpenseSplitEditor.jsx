@@ -3,6 +3,7 @@ import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { SPLIT_METHODS, buildSplit, convertedSplitPreview } from '../utils/splitMethods';
 import { formatMoney } from '../../../utils/money';
+import CurrencyAmount from './CurrencyAmount';
 import '../css/ExpenseSplitEditor.css';
 
 export default function ExpenseSplitEditor({ form, setForm, members, currency, previewCurrency = currency, previewRate }) {
@@ -41,7 +42,8 @@ export default function ExpenseSplitEditor({ form, setForm, members, currency, p
             <input type="number" aria-label={`${name} ${kind}`} step={kind === 'shares' ? '1' : '0.01'} min={kind === 'adjustment' ? undefined : '0'}
               placeholder={kind === 'shares' ? '1' : '0'} value={form.splitValues[id] ?? ''}
               onChange={e => update({ splitValues: { ...form.splitValues, [id]: e.target.value } })} /><span>{unit}</span></label>}
-          {included && result && <output aria-label={`${name} share`}>{formatMoney(preview.find(s => s.user_id === id)?.amount, outputCurrency)}</output>}
+          {included && result && <output aria-label={`${name} share`}><CurrencyAmount amount={preview.find(s => s.user_id === id)?.amount} currency={outputCurrency}
+            original={converted ? {amount: result.preview.find(s => s.user_id === id)?.amount, currency} : undefined} /></output>}
         </div>;
       })}
     </div>
