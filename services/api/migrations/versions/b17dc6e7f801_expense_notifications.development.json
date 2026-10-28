@@ -1,0 +1,26 @@
+{
+  "revision": "b17dc6e7f801",
+  "down_revision": "a06cb5d6e7f9",
+  "operations": [{
+    "op": "create_table",
+    "table": "expense_notifications",
+    "columns": [
+      {"name": "id", "type": "uuid", "nullable": false},
+      {"name": "user_id", "type": "uuid", "nullable": false},
+      {"name": "group_id", "type": "uuid", "nullable": false},
+      {"name": "actor_id", "type": "uuid", "nullable": false},
+      {"name": "kind", "type": "varchar(40)", "nullable": false},
+      {"name": "title", "type": "varchar(160)", "nullable": false},
+      {"name": "body", "type": "text", "nullable": true},
+      {"name": "is_read", "type": "boolean", "nullable": false},
+      {"name": "created_at", "type": "timestamp", "nullable": false}
+    ],
+    "primary_key": ["id"],
+    "foreign_keys": [
+      {"columns": ["user_id"], "table": "users", "references": ["id"], "on_delete": "CASCADE"},
+      {"columns": ["group_id"], "table": "groups", "references": ["id"], "on_delete": "CASCADE"},
+      {"columns": ["actor_id"], "table": "users", "references": ["id"], "on_delete": "NO ACTION"}
+    ],
+    "unique": []
+  }]
+}

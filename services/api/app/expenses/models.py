@@ -432,6 +432,25 @@ class Invitation(Base):
         }
 
 
+class ExpenseNotification(Base):
+    """Private, durable updates; read state belongs to one recipient in one group."""
+    __tablename__ = 'expense_notifications'
+    __table_args__ = (
+        Index('idx_expense_notifications_inbox', 'user_id', 'is_read', 'created_at'),
+        Index('idx_expense_notifications_group', 'user_id', 'group_id', 'created_at'),
+    )
+
+    id = Column(Uuid, primary_key=True, default=uuid7)
+    user_id = Column(Uuid, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    group_id = Column(Uuid, ForeignKey('groups.id', ondelete='CASCADE'), nullable=False)
+    actor_id = Column(Uuid, ForeignKey('users.id'), nullable=False)
+    kind = Column(String(40), nullable=False)
+    title = Column(String(160), nullable=False)
+    body = Column(Text)
+    is_read = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, nullable=False, default=func.now())
+
+
 class ExpenseHistory(Base):
     """Expense edit history for audit trail"""
     __tablename__ = 'expense_history'

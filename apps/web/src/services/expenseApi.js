@@ -13,6 +13,8 @@ const BASE = GlobalConfig.ENDPOINTS.EXPENSE;
 const AUTH_BASE = GlobalConfig.ENDPOINTS.AUTH;
 
 class ExpenseApiService {
+  async getNotifications(params = {}) { return apiClient.get(`${BASE}/groups/notifications?${new URLSearchParams(params)}`); }
+  async readNotifications(ids) { return apiClient.post(`${BASE}/groups/notifications/read`, {ids}); }
   async getIncomes(params = {}) { return apiClient.get(`${BASE}/incomes?${new URLSearchParams(params)}`); }
   async createIncome(data) { return apiClient.post(`${BASE}/incomes`, data); }
   async updateIncome(id, data) { return apiClient.put(`${BASE}/incomes/${id}`, data); }

@@ -185,6 +185,24 @@ def _import_all_models():
     import_module('app.partners.package_models')
 
 
+def _optional_development_index(difference):
+    """The additive dev bridge cannot create these nonunique lookup indexes.
+
+    Match both name and exact shape. Changed indexes, integrity constraints,
+    missing columns/tables and all production drift remain startup failures.
+    """
+    expected = {
+        'idx_expense_notifications_inbox': ('user_id', 'is_read', 'created_at'),
+        'idx_expense_notifications_group': ('user_id', 'group_id', 'created_at'),
+    }
+    if not isinstance(difference, tuple) or len(difference) != 2 or difference[0] != 'add_index':
+        return False
+    index = difference[1]
+    return (getattr(index, 'name', None) in expected and not index.unique
+            and index.table.name == 'expense_notifications'
+            and tuple(column.name for column in index.columns) == expected[index.name])
+
+
 def init_db(app: Optional[Flask] = None) -> None:
     """Verify a migrated schema; application startup never changes DDL."""
     from alembic.autogenerate import compare_metadata
@@ -210,6 +228,14 @@ def init_db(app: Optional[Flask] = None) -> None:
                 + ' See docs/operations/database-releases.md.'
             )
         differences = compare_metadata(migration_context, Base.metadata)
+        environment = app.config.get('FLASK_ENV') if app is not None else Config.FLASK_ENV
+        if environment == 'development':
+            optional = [difference for difference in differences if _optional_development_index(difference)]
+            differences = [difference for difference in differences if not _optional_development_index(difference)]
+            if optional:
+                logger.warning('Development notification lookup indexes are absent; the additive startup bridge '
+                               'does not create secondary indexes. A regular Alembic release installs them. '
+                               'All integrity and remaining schema checks still apply.')
         if differences:
             raise RuntimeError(
                 'Database schema drift detected. Ask the release administrator to review '

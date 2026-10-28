@@ -783,3 +783,12 @@ remain a record of that earlier review.
 | `services/api/app/core/db/cooperative.py` | Enables cooperative psycopg2 waits in gevent workers before PostgreSQL connections open. |
 | `services/api/tests/test_cooperative_database.py` | Verifies concurrent work during database waits and callback setup and preservation. |
 | `docs/archive/reports/expense-browser-delay-fix-2026-10-26.md` | Records browser HAR findings, expense delay fixes and scoped timing evidence. |
+| `apps/web/src/features/expenses/jsx/ExpenseNotifications.jsx` | Accessible notification cards, group/unread filters, local timestamps, pagination and read actions. |
+| `apps/web/src/features/expenses/css/ExpenseNotifications.css` | Responsive notification badges, card controls and inbox dialog styling. |
+| `apps/web/src/hooks/useExpenseNotifications.js` | User-scoped expense inbox queries, recovery polling and explicit read mutations. |
+| `apps/web/src/__tests__/expenseNotifications.test.jsx` | Inbox filtering, read isolation, retries, local timestamps, badges and revoked-cache regressions. |
+| `services/api/app/expenses/services/expense_notifications.py` | Stages private notifications in expense, settlement, settings and membership transactions. |
+| `services/api/migrations/versions/b17dc6e7f801_expense_notifications.py` | Adds the durable private expense inbox and its indexes and PostgreSQL access restrictions. |
+| `services/api/migrations/versions/b17dc6e7f801_expense_notifications.development.json` | Approved additive development migration definition for the expense inbox table. |
+| `services/api/tests/test_expense_notifications.py` | Durable unread state, event coverage, authorization, rollback and device invalidation tests. |
+| `docs/api/expense-notifications.md` | Expense notification behavior, API contract, migration and validation coverage. |

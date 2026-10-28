@@ -312,6 +312,34 @@ def test_startup_detects_drift_even_when_database_is_stamped_head(tmp_path, monk
         engine.dispose()
 
 
+def test_development_bridge_may_omit_only_notification_lookup_indexes(tmp_path, monkeypatch):
+    from flask import Flask
+    url = 'sqlite:///' + (tmp_path / 'development-notification-indexes.db').as_posix()
+    config = _config(url, monkeypatch)
+    engine = create_engine(url)
+    monkeypatch.setattr(database, 'engine', engine)
+    development, production = Flask('development'), Flask('production')
+    development.config['FLASK_ENV'] = 'development'
+    production.config['FLASK_ENV'] = 'production'
+    try:
+        command.upgrade(config, 'head')
+        with engine.begin() as connection:
+            connection.execute(text('DROP INDEX idx_expense_notifications_inbox'))
+            connection.execute(text('DROP INDEX idx_expense_notifications_group'))
+        # Reproduce the approved bridge: no DDL at startup and the table/keys match.
+        database.init_db(development)
+        assert inspect(engine).get_indexes('expense_notifications') == []
+        with pytest.raises(RuntimeError, match='schema drift'):
+            database.init_db(production)
+        # Even in development, a different missing lookup index still fails.
+        with engine.begin() as connection:
+            connection.execute(text('DROP INDEX idx_expense_history_user'))
+        with pytest.raises(RuntimeError, match='schema drift'):
+            database.init_db(development)
+    finally:
+        engine.dispose()
+
+
 @pytest.mark.parametrize('url', [
     'sqlite:///',
     'postgresql://localhost/compile_only',
@@ -322,7 +350,9 @@ def test_fresh_install_sql_can_be_generated_without_a_database(url, monkeypatch)
     config = _config(url, monkeypatch, output)
     command.upgrade(config, 'head', sql=True)
     sql = output.getvalue()
-    assert sql.count('CREATE TABLE ') == 49  # 48 application tables plus Alembic version.
+    assert sql.count('CREATE TABLE ') == 50  # 49 application tables plus Alembic version.
+    assert 'CREATE TABLE expense_notifications' in sql
+    assert 'idx_expense_notifications_inbox' in sql
     assert 'CREATE TABLE gp_vault_file_contents' in sql
     assert 'CREATE TABLE friend_contacts' in sql
     assert 'INSERT INTO friend_contacts' in sql
@@ -399,7 +429,7 @@ def test_employee_and_recovery_sibling_upgrades_preserve_data(tmp_path, monkeypa
                                {'id': user_id, 'email': 'sibling@example.test', 'password': 'unused'})
         command.upgrade(config, 'head')
         _assert_current_schema(engine, config)
-        assert ScriptDirectory.from_config(config).get_heads() == ['a06cb5d6e7f9']
+        assert ScriptDirectory.from_config(config).get_heads() == ['b17dc6e7f801']
         with engine.connect() as connection:
             assert connection.execute(text('SELECT email, password_reset_version FROM users WHERE id=:id'),
                                       {'id': user_id}).one() == ('sibling@example.test', None)

@@ -70,6 +70,10 @@ customer prices. See the [staff and draft contracts](../archive/reports/staff-co
 `/api/v1/expenses/friends` saves private reusable recipients and searches their
 names, nicknames or email addresses. See [the saved-friends contract](expense-friends.md).
 
+Expense changes also create [durable private notifications](expense-notifications.md)
+with per-group unread counts, a combined inbox, explicit read acknowledgements,
+and timestamps displayed in the viewer's local time.
+
 ## Group planner writes and timestamps
 
 Planner serializers return UTC timestamps with explicit offsets; clients display

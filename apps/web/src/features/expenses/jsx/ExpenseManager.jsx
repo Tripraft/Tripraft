@@ -30,9 +30,11 @@ import PendingInvitations from './PendingInvitations';
 
 import Toast from '@tripraft/ui/Toast';
 import ErrorBoundary from '../../../components/common/jsx/ErrorBoundary';
-import { PlusCircle, RefreshCw, HandCoins } from 'lucide-react';
+import { PlusCircle, RefreshCw, HandCoins, Bell } from 'lucide-react';
 import expenseApi from '../../../services/expenseApi';
 import useExpenseLiveUpdates from '../../../hooks/useExpenseLiveUpdates';
+import useExpenseNotifications from '../../../hooks/useExpenseNotifications';
+import ExpenseNotifications, {NotificationBadge} from './ExpenseNotifications';
 import {
   useAuth,
   useGroups,
@@ -57,6 +59,9 @@ const ExpenseManager = () => {
   
   // Auth state
   const { isAuthenticated, currentUser, loading: authLoading } = useAuth();
+  const notificationUserId = isAuthenticated ? currentUser?.uid || currentUser?.user_id || currentUser?.id : null;
+  const notificationSummary = useExpenseNotifications(notificationUserId);
+  const [notificationView, setNotificationView] = useState(null);
   const currencyPreference = usePersonalCurrency(currentUser?.uid || currentUser?.user_id || currentUser?.id, mode === 'personal' && isAuthenticated);
   const personalCurrency = currencyPreference.currency;
   useExpenseLiveUpdates(isAuthenticated ? currentUser?.uid || currentUser?.user_id || currentUser?.id : null, activeGroupId);
@@ -655,6 +660,12 @@ const ExpenseManager = () => {
           <p>{mode === 'group' ? 'Share the costs. Enjoy the journey.' : 'Manage your personal and group trip expenses.'}</p>
         </div>
         <div className="header-actions">
+          <button className="expense-notification-trigger" aria-haspopup="dialog"
+            aria-label={`Expense notifications${notificationSummary.isError ? ' unavailable' : `, ${notificationSummary.data?.unread_count || 0} unread`}`}
+            onClick={() => setNotificationView({groupId: null})}>
+            <Bell size={19} /><span className="expense-notification-label">Notifications</span>
+            {notificationSummary.isError ? <span aria-hidden="true">!</span> : <NotificationBadge count={notificationSummary.data?.unread_count} />}
+          </button>
           <button 
             className="btn-refresh" 
             onClick={handleRefresh}
@@ -670,6 +681,10 @@ const ExpenseManager = () => {
           </button>}
         </div>
       </header>
+
+      {notificationView && <ExpenseNotifications key={notificationUserId} userId={notificationUserId}
+        initialGroupId={notificationView.groupId} groups={groups || []} onClose={() => setNotificationView(null)}
+        onOpenGroup={groupId => setExpenseView('group', groupId)} />}
 
       {/* Pending Invitations - with INSTANT UPDATES */}
       <PendingInvitations 
@@ -696,8 +711,16 @@ const ExpenseManager = () => {
         groups={(groups || []).filter(group => group && (group.id || group.group_id))}
         currentUserId={currentUser?.uid || currentUser?.user_id || currentUser?.id}
         loading={groupsLoading} error={groupsError}
+        notificationCounts={notificationSummary.data?.group_counts || {}}
+        onNotifications={groupId => setNotificationView({groupId})}
         onSelect={handleGroupChange} onCreate={() => setShowNewGroup(true)} onRetry={refetchGroups}
       />}
+      {mode === 'group' && activeGroupId && !groupDetailError && <div className="expense-active-notifications">
+        <button className="expense-group-notifications" aria-haspopup="dialog"
+          aria-label={`Group updates, ${notificationSummary.data?.group_counts?.[activeGroupId] || 0} unread`}
+          onClick={() => setNotificationView({groupId: activeGroupId})}><Bell size={17} />Group updates
+          <NotificationBadge count={notificationSummary.data?.group_counts?.[activeGroupId]} /></button>
+      </div>}
       {mode === 'group' && activeGroupId && !groupDetailError && <div ref={addTransactionRef}>
         <GroupDetailHeader group={headerGroup || {name:'Group overview', currency:'USD'}} members={activeGroupData ? activeGroupMembers || [] : headerGroup?.members || []}
           overview={groupOverview(headerGroup, currentUser?.uid || currentUser?.user_id || currentUser?.id,

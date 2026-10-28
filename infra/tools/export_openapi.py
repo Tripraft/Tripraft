@@ -76,6 +76,27 @@ def build(application):
             'has_more': {'type': 'boolean'}, 'limit': {'type': 'integer'}, 'offset': {'type': 'integer'},
         }}),
         'ExpenseFriendResponse': envelope({'type': 'object', 'required': ['friend'], 'properties': {'friend': ref('ExpenseFriend')}}),
+        'ExpenseNotification': {'type': 'object', 'required': ['id', 'group_id', 'group_name', 'actor_name', 'kind', 'title', 'is_read', 'created_at'], 'properties': {
+            'id': {'type': 'string', 'format': 'uuid'}, 'group_id': {'type': 'string', 'format': 'uuid'},
+            'group_name': {'type': 'string'}, 'actor_name': {'type': 'string'}, 'kind': {'type': 'string'},
+            'title': {'type': 'string'}, 'body': {'type': ['string', 'null']}, 'is_read': {'type': 'boolean'},
+            'created_at': {'type': 'string', 'format': 'date-time', 'description': 'UTC instant; display in the viewer local timezone.'},
+        }},
+        'ExpenseNotificationsResponse': envelope({'type': 'object', 'required': ['notifications', 'unread_count', 'group_counts', 'groups', 'pagination'], 'properties': {
+            'notifications': {'type': 'array', 'items': ref('ExpenseNotification')},
+            'unread_count': {'type': 'integer', 'minimum': 0},
+            'group_counts': {'type': 'object', 'additionalProperties': {'type': 'integer', 'minimum': 0}},
+            'groups': {'type': 'array', 'items': {'type': 'object', 'required': ['id', 'name'], 'properties': {
+                'id': {'type': 'string', 'format': 'uuid'}, 'name': {'type': 'string'},
+            }}},
+            'pagination': {'type': 'object', 'required': ['total', 'limit', 'offset', 'has_more'], 'properties': {
+                'total': {'type': 'integer'}, 'limit': {'type': 'integer'}, 'offset': {'type': 'integer'}, 'has_more': {'type': 'boolean'},
+            }},
+        }}),
+        'ReadExpenseNotifications': {'type': 'object', 'required': ['ids'], 'properties': {
+            'ids': {'type': 'array', 'minItems': 1, 'maxItems': 100, 'items': {'type': 'string', 'format': 'uuid'}},
+        }},
+        'ReadExpenseNotificationsResponse': envelope({'type': 'object', 'required': ['marked'], 'properties': {'marked': {'type': 'integer', 'minimum': 0}}}),
         'AuditResponse': envelope(ref('AuditData')),
     }
     group_fields = {
@@ -193,6 +214,21 @@ def build(application):
                         {'name': 'limit', 'in': 'query', 'schema': {'type': 'integer', 'minimum': 1, 'maximum': 100}},
                         {'name': 'offset', 'in': 'query', 'schema': {'type': 'integer', 'minimum': 0}},
                     ]
+            elif route in {'/api/v1/expenses/groups/notifications', '/api/v1/expenses/groups/notifications/read'}:
+                operation['security'] = [{'cookieAuth': []}]
+                operation['description'] = 'Private expense inbox; current active membership required. Responses are never cached.'
+                if method == 'GET':
+                    operation['responses']['200'] = response(ref('ExpenseNotificationsResponse'))
+                    operation['parameters'] = [
+                        {'name': 'group_id', 'in': 'query', 'schema': {'type': 'string', 'format': 'uuid'}},
+                        {'name': 'unread_only', 'in': 'query', 'schema': {'type': 'boolean'}},
+                        {'name': 'limit', 'in': 'query', 'schema': {'type': 'integer', 'minimum': 1, 'maximum': 100}},
+                        {'name': 'offset', 'in': 'query', 'schema': {'type': 'integer', 'minimum': 0}},
+                    ]
+                else:
+                    operation['responses']['200'] = response(ref('ReadExpenseNotificationsResponse'))
+                    operation['requestBody'] = {'required': True, 'content': {'application/json': {'schema': ref('ReadExpenseNotifications')}}}
+                    operation['parameters'] = [{'name': 'X-CSRF-Token', 'in': 'header', 'schema': {'type': 'string'}, 'description': 'Required with cookie authentication.'}]
             elif route in {'/api/health/live', '/api/health/ready', '/api/health/'}:
                 operation['responses']['200'] = response(ref('Health'))
                 if route.endswith('/ready'):

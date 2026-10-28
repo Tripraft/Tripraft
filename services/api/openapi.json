@@ -1317,6 +1317,141 @@
         ],
         "type": "object"
       },
+      "ExpenseNotification": {
+        "properties": {
+          "actor_name": {
+            "type": "string"
+          },
+          "body": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "created_at": {
+            "description": "UTC instant; display in the viewer local timezone.",
+            "format": "date-time",
+            "type": "string"
+          },
+          "group_id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "group_name": {
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "is_read": {
+            "type": "boolean"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "group_id",
+          "group_name",
+          "actor_name",
+          "kind",
+          "title",
+          "is_read",
+          "created_at"
+        ],
+        "type": "object"
+      },
+      "ExpenseNotificationsResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "group_counts": {
+                "additionalProperties": {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              "groups": {
+                "items": {
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "notifications": {
+                "items": {
+                  "$ref": "#/components/schemas/ExpenseNotification"
+                },
+                "type": "array"
+              },
+              "pagination": {
+                "properties": {
+                  "has_more": {
+                    "type": "boolean"
+                  },
+                  "limit": {
+                    "type": "integer"
+                  },
+                  "offset": {
+                    "type": "integer"
+                  },
+                  "total": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "total",
+                  "limit",
+                  "offset",
+                  "has_more"
+                ],
+                "type": "object"
+              },
+              "unread_count": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "notifications",
+              "unread_count",
+              "group_counts",
+              "groups",
+              "pagination"
+            ],
+            "type": "object"
+          },
+          "message": {
+            "type": "string"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ],
+        "type": "object"
+      },
       "Health": {
         "properties": {
           "checks": {
@@ -2374,6 +2509,50 @@
           "completed_at"
         ],
         "title": "ProvisioningJobRecord",
+        "type": "object"
+      },
+      "ReadExpenseNotifications": {
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "type": "object"
+      },
+      "ReadExpenseNotificationsResponse": {
+        "properties": {
+          "data": {
+            "properties": {
+              "marked": {
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "marked"
+            ],
+            "type": "object"
+          },
+          "message": {
+            "type": "string"
+          },
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success",
+          "data"
+        ],
         "type": "object"
       },
       "RequestCreate": {
@@ -6519,6 +6698,122 @@
             "description": "Response"
           }
         }
+      }
+    },
+    "/api/v1/expenses/groups/notifications": {
+      "get": {
+        "description": "Private expense inbox; current active membership required. Responses are never cached.",
+        "operationId": "groups_sql_get_expense_notifications_get_api_v1_expenses_groups_notifications",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "group_id",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "unread_only",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "maximum": 100,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "minimum": 0,
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExpenseNotificationsResponse"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
+      }
+    },
+    "/api/v1/expenses/groups/notifications/read": {
+      "post": {
+        "description": "Private expense inbox; current active membership required. Responses are never cached.",
+        "operationId": "groups_sql_read_expense_notifications_post_api_v1_expenses_groups_notifications_read",
+        "parameters": [
+          {
+            "description": "Required with cookie authentication.",
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadExpenseNotifications"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadExpenseNotificationsResponse"
+                }
+              }
+            },
+            "description": "Response"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        },
+        "security": [
+          {
+            "cookieAuth": []
+          }
+        ]
       }
     },
     "/api/v1/expenses/groups/{group_id}": {

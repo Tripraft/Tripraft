@@ -7,7 +7,7 @@ from sqlalchemy import event, inspect
 from sqlalchemy.orm import Session
 
 from app.auth.models import FriendContact, User
-from app.expenses.models import Expense, ExpenseHistory, Group, GroupBalance, GroupMember, Income, Invitation, Settlement
+from app.expenses.models import Expense, ExpenseHistory, ExpenseNotification, Group, GroupBalance, GroupMember, Income, Invitation, Settlement
 from app.trips.realtime.events import _authenticate_socket
 from app.trips.realtime.socketio_ext import socketio
 from app.expenses.services.friend_service import FRIEND_CHANGE_KEY
@@ -17,6 +17,7 @@ NAMESPACE = '/expenses'
 _PENDING = 'expense_live_changes'
 _PERSONAL_PENDING = 'personal_live_changes'
 _FRIEND_NAMES_PENDING = 'friend_contact_names_changed'
+_INBOX_PENDING = 'expense_inbox_changed'
 
 
 def _user_room(user_id):
@@ -43,6 +44,9 @@ def _capture_changes(session, flush_context):
     pending = session.info.setdefault(_PENDING, {})
     personal = session.info.setdefault(_PERSONAL_PENDING, {})
     for row in list(session.new) + list(session.dirty) + list(session.deleted):
+        if isinstance(row, ExpenseNotification):
+            session.info.setdefault(_INBOX_PENDING, set()).add(row.user_id)
+            continue
         if isinstance(row, User):
             if row in session.new or inspect(row).attrs.display_name.history.has_changes():
                 session.info.setdefault(_FRIEND_NAMES_PENDING, set()).add(row.email.strip().lower())
@@ -85,7 +89,8 @@ def _publish_changes(session):
     personal = session.info.pop(_PERSONAL_PENDING, {})
     contact_owners = session.info.pop(FRIEND_CHANGE_KEY, set())
     changed_names = session.info.pop(_FRIEND_NAMES_PENDING, set())
-    if (not changes and not personal and not contact_owners and not changed_names) or socketio.server is None:
+    inbox_users = session.info.pop(_INBOX_PENDING, set())
+    if (not changes and not personal and not contact_owners and not changed_names and not inbox_users) or socketio.server is None:
         return
     try:
         from app.core.db.connection import SessionLocal
@@ -128,6 +133,8 @@ def _publish_changes(session):
             # The client rereads only its private list. Names and email addresses
             # never travel in Socket.IO notifications or group-wide rooms.
             socketio.emit('expenses:friends-changed', {}, room=_user_room(owner_id), namespace=NAMESPACE)
+        for user_id in inbox_users:
+            socketio.emit('expenses:notifications-changed', {}, room=_user_room(user_id), namespace=NAMESPACE)
     except Exception:
         # A delivery outage must never turn an already-committed payment into
         # an HTTP failure that encourages the caller to submit it again.
@@ -139,6 +146,7 @@ def _discard_changes(session):
     session.info.pop(_PERSONAL_PENDING, None)
     session.info.pop(FRIEND_CHANGE_KEY, None)
     session.info.pop(_FRIEND_NAMES_PENDING, None)
+    session.info.pop(_INBOX_PENDING, None)
 
 
 def init_expense_realtime():
