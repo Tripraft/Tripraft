@@ -234,7 +234,8 @@ def init_db(app: Optional[Flask] = None) -> None:
             differences = [difference for difference in differences if not _optional_development_index(difference)]
             if optional:
                 logger.warning('Development notification lookup indexes are absent; the additive startup bridge '
-                               'does not create secondary indexes. A regular Alembic release installs them. '
+                               'does not create secondary indexes. Ask the owner for explicit index maintenance; '
+                               'upgrading an already current revision does not replay its migration. '
                                'All integrity and remaining schema checks still apply.')
         if differences:
             raise RuntimeError(
