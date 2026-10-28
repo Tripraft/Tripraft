@@ -112,14 +112,21 @@ def test_group_planner_invitation_uses_the_real_email_service(alice, bob, monkey
     _, _, bob_email = bob
     group_id = _travel_group(alice_api)
     calls = []
+    jobs = []
     from app.notifications.email.smtp import email_service
+    monkeypatch.setattr(type(email_service), 'enabled', property(lambda self: True))
     monkeypatch.setattr(email_service, 'send_invitation', lambda **kwargs: calls.append(kwargs) or True)
+    monkeypatch.setattr('app.notifications.email.background.submit_auth_email',
+                        lambda send, *args: jobs.append((send, args)) or True)
 
     response = alice_api.post(
         '/api/v1/group-planner/invitations',
         json={'group_id': group_id, 'email': bob_email},
     )
     assert response.status_code in (200, 201), response.get_json()
+    assert not calls and len(jobs) == 1
+    send, args = jobs[0]
+    assert send(*args)
     assert calls and calls[0]['to_email'] == bob_email
     assert calls[0]['invitation_type'] == 'trip'
 

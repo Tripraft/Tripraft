@@ -229,6 +229,9 @@ export default function useChatSocket(groupId, userId) {
         'poll:voted': [gpKeys.polls],
         'poll:deleted': [gpKeys.polls],
         'checklist:toggled': [gpKeys.checklist],
+        'checklist:created': [gpKeys.checklist],
+        'vault:uploaded': [gpKeys.vault],
+        'vault:deleted': [gpKeys.vault],
         'itinerary:updated': [gpKeys.group, gpKeys.places],
         'member:joined': [gpKeys.members, gpKeys.group],
       };

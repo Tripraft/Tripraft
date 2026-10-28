@@ -8,7 +8,7 @@ Base and User are imported from shared_db (single source of truth).
 All Group Planner-specific models (TravelGroup, Place, Poll, etc.) are defined here.
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import List, Optional
 
 from app.auth.models import User, UserSession
@@ -22,6 +22,15 @@ from sqlalchemy import (JSON, Boolean, Column, Date, DateTime, Float,
                         UniqueConstraint, false)
 from sqlalchemy.orm import relationship, validates
 from sqlalchemy.sql import func
+
+
+def utc_iso(value):
+    """Serialize stored UTC instants with an explicit offset, including SQLite."""
+    if value is None:
+        return None
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc).isoformat()
 
 
 class TravelGroup(Base):
@@ -95,8 +104,8 @@ class TravelGroup(Base):
             'budget_currency': self.budget_currency,
             'expense_group_id': str(self.expense_group_id) if self.expense_group_id else None,
             'is_active': self.is_active,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'created_at': utc_iso(self.created_at),
+            'updated_at': utc_iso(self.updated_at),
             'member_count': len([m for m in (self.members or []) if m.is_active]) if self.members else 0
         }
 
@@ -114,7 +123,7 @@ class TravelGroup(Base):
                         'role': m.role,
                         'crew_role': m.crew_role,
                         'is_creator': m.role == 'creator',
-                        'joined_at': m.joined_at.isoformat() if m.joined_at else None
+                        'joined_at': utc_iso(m.joined_at)
                     }
                     members_data.append(member_dict)
             data['members'] = members_data
@@ -165,7 +174,7 @@ class TripMember(Base):
             'crew_role': self.crew_role,
             'is_active': self.is_active,
             'is_creator': self.role == 'creator',
-            'joined_at': self.joined_at.isoformat() if self.joined_at else None,
+            'joined_at': utc_iso(self.joined_at),
             'display_name': self.user.display_name if self.user else None,
             'email': self.user.email if self.user else None,
             'photo_url': self.user.photo_url if self.user else None
@@ -238,7 +247,7 @@ class Place(Base):
             'added_by_name': self.adder.display_name if self.adder else None,
             'votes': vote_user_ids,
             'vote_count': len(vote_user_ids),
-            'added_at': self.created_at.isoformat() if self.created_at else None
+            'added_at': utc_iso(self.created_at)
         }
 
 
@@ -312,10 +321,10 @@ class Poll(Base):
             'votes_detail': votes_detail,
             'voted_by': voted_by,
             'is_multiple_choice': self.is_multiple_choice,
-            'expires_at': self.expires_at.isoformat() if self.expires_at else None,
+            'expires_at': utc_iso(self.expires_at),
             'created_by': str(self.created_by),
             'created_by_name': self.creator.display_name if self.creator else None,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            'created_at': utc_iso(self.created_at)
         }
 
 
@@ -378,9 +387,9 @@ class TripInvitation(Base):
             'invited_by': str(self.invited_by),
             'invited_by_name': self.inviter.display_name if self.inviter else None,
             'status': self.status,
-            'expires_at': self.expires_at.isoformat() if self.expires_at else None,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'responded_at': self.responded_at.isoformat() if self.responded_at else None
+            'expires_at': utc_iso(self.expires_at),
+            'created_at': utc_iso(self.created_at),
+            'responded_at': utc_iso(self.responded_at)
         }
 
 
@@ -420,15 +429,15 @@ class ChecklistItem(Base):
             'item': self.item,
             'completed': self.completed,
             'completed_by': str(self.completed_by) if self.completed_by else None,
-            'completed_at': self.completed_at.isoformat() if self.completed_at else None,
+            'completed_at': utc_iso(self.completed_at),
             'authorId': str(self.author_id),
             'author_name': self.author.display_name if self.author else None,
             'category': self.category,
             'priority': self.priority,
-            'due_date': self.due_date.isoformat() if self.due_date else None,
+            'due_date': utc_iso(self.due_date),
             'assigned_to_id': str(self.assigned_to_id) if self.assigned_to_id else None,
             'assigned_to_name': self.assignee.display_name if self.assignee else None,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            'created_at': utc_iso(self.created_at)
         }
 
 
@@ -457,8 +466,8 @@ class ItineraryDocument(Base):
             'last_edited_by': str(self.last_edited_by) if self.last_edited_by else None,
             'last_edited_by_name': self.editor.display_name if self.editor else None,
             'version': self.version,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            'created_at': utc_iso(self.created_at),
+            'updated_at': utc_iso(self.updated_at)
         }
 
 
@@ -497,7 +506,7 @@ class GroupActivity(Base):
             'entity_type': self.entity_type,
             'entity_id': str(self.entity_id) if self.entity_id else None,
             'details': self.details,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            'created_at': utc_iso(self.created_at)
         }
 
 
@@ -536,7 +545,7 @@ class Notification(Base):
             'body': self.body,
             'data': self.data,
             'is_read': self.is_read,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            'created_at': utc_iso(self.created_at)
         }
 
 
@@ -570,8 +579,20 @@ class VaultDocument(Base):
             'file_size': self.file_size,
             'uploaded_by': str(self.uploaded_by),
             'uploaded_by_name': self.uploader.display_name if self.uploader else None,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'created_at': utc_iso(self.created_at),
         }
+
+
+class VaultFileContent(Base):
+    """Private bounded document payloads in the existing application database.
+
+    Keeping content separate prevents vault listings from fetching file bodies.
+    Text encoding also supports the approved additive development migration bridge.
+    """
+    __tablename__ = 'gp_vault_file_contents'
+
+    document_id = Column(Uuid, ForeignKey('gp_vault_documents.id', ondelete='CASCADE'), primary_key=True)
+    content_base64 = Column(Text, nullable=False)
 
 
 # ---------------------------------------------------------------------------
@@ -624,7 +645,7 @@ class ChatMessage(Base):
             'parent_message_id': str(self.parent_message_id) if self.parent_message_id else None,
             'is_deleted': self.is_deleted,
             'is_archived': self.is_archived,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'created_at': utc_iso(self.created_at),
         }
 
 
@@ -654,7 +675,7 @@ class ChatSummary(Base):
             'to_message_id': str(self.to_message_id),
             'summary_text': self.summary_text,
             'topic_tags': self.topic_tags or [],
-            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'created_at': utc_iso(self.created_at),
         }
 
 
@@ -678,5 +699,5 @@ class MessageRead(Base):
             'group_id': str(self.group_id),
             'user_id': str(self.user_id),
             'last_read_message_id': str(self.last_read_message_id) if self.last_read_message_id else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'updated_at': utc_iso(self.updated_at),
         }

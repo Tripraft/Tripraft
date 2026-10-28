@@ -70,6 +70,26 @@ customer prices. See the [staff and draft contracts](../archive/reports/staff-co
 `/api/v1/expenses/friends` saves private reusable recipients and searches their
 names, nicknames or email addresses. See [the saved-friends contract](expense-friends.md).
 
+Expense changes also create [durable private notifications](expense-notifications.md)
+with per-group unread counts, a combined inbox, explicit read acknowledgements,
+and timestamps displayed in the viewer's local time.
+
+## Group planner writes and timestamps
+
+Planner serializers return UTC timestamps with explicit offsets; clients display
+instants in the member's local timezone. Calendar trip/visit dates stay date-only.
+Poll fields have no update endpoint after creation. Voting returns the existing
+`poll_id`, `votes`, `user_vote` fields plus a `poll` object for immediate UI updates.
+Trip invitation creation/resend returns an `email_status` without waiting for SMTP.
+Vault uploads above 10,485,760 actual file bytes return 413. See the
+[planner behavior guide](../guides/group-planner.md) for details.
+
+Vault content defaults to the existing application database connection, including
+Supabase PostgreSQL. After migration `a06cb5d6e7f9`, new files are shared with active
+members of their own group through authenticated vault GETs. Responses are
+`private, no-store`; metadata lists never return file content or storage credentials.
+An optional private Supabase Storage bucket backend uses the same HTTP contracts.
+
 ## Partner agreement and post-approval agent signature
 
 Applications submit before agreement signing. `GET /api/v1/partners/agreement` and `/agreement/download` provide the complete supplied draft and exact original Word file after staff approval/email verification. Staff equivalents remain `/api/v1/admin/partners/agreement` and `/agreement/download`. All are private and never cached.

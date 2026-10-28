@@ -16,7 +16,7 @@ import {
   useGroupMembers,
 } from '../../../../hooks/useGroupPlannerQuery';
 import { toArray } from '../../utils/groupPlannerUtils';
-import { formatActivityMessage, formatRelativeTime, getInitials } from '../../utils/formatters';
+import { formatActivityMessage, formatRelativeTime, getInitials, parsePlannerInstant } from '../../utils/formatters';
 const category = (event) => {
   const type = String(event.entity_type || '') + ' ' + String(event.action || '');
   return /place|itinerary/.test(type)
@@ -64,7 +64,7 @@ export default function PulseTab({ groupId, onOpenTab }) {
         created_at: p.created_at,
       }));
     return [...activities, ...polls].sort(
-      (a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0),
+      (a, b) => (parsePlannerInstant(b.created_at).getTime() || 0) - (parsePlannerInstant(a.created_at).getTime() || 0),
     );
   }, [raw, pollRaw]);
   const visible = events.filter((e) => filter === 'All' || category(e) === filter);
@@ -122,7 +122,7 @@ export default function PulseTab({ groupId, onOpenTab }) {
                   m.display_name === event.user_name,
               );
             const day = event.created_at
-              ? new Date(event.created_at).toLocaleDateString('en-US', {
+              ? parsePlannerInstant(event.created_at).toLocaleDateString('en-US', {
                   weekday: 'long',
                   month: 'short',
                   day: 'numeric',
@@ -131,7 +131,7 @@ export default function PulseTab({ groupId, onOpenTab }) {
             const previous = visible[index - 1]?.created_at;
             const sameDay =
               previous &&
-              new Date(previous).toDateString() === new Date(event.created_at).toDateString();
+              parsePlannerInstant(previous).toDateString() === parsePlannerInstant(event.created_at).toDateString();
             return (
               <React.Fragment key={event.id || index}>
                 {!sameDay && <h2 className="gp-activity-day">{day}</h2>}

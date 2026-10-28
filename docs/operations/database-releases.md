@@ -28,6 +28,30 @@ Engineers may experiment with schemas in their own isolated databases. Their
 personal login to the shared development database still has no schema privileges.
 Application admin accounts do not receive database-owner privileges.
 
+Employees can use their own feature branches and application changes; they do
+not need to match an administrator's Git commit. Branches sharing one database
+must still contain its migration history and agree with its actual schema.
+After saving or committing local work, update an existing feature branch with:
+
+```powershell
+cd C:\Tripraft
+git status
+git fetch origin
+git merge origin/develop
+.\.venv\Scripts\Activate.ps1
+python start.py --check-database
+python infra/tools/team_sync/check-team-preview-schema.py . services/api/.env
+python start.py
+```
+
+Run the merge while on the employee's own branch (`git branch --show-current`
+shows it). Resolve merge conflicts before running the checks. For a new feature,
+first update `develop`, then use `git switch -c feature/your-change`. Each employee
+keeps their personal `.env`. To test an independent or incompatible schema
+without coordinating a shared upgrade, use an isolated development database;
+one shared database cannot simultaneously have different schema versions for
+different branches. The launcher never overwrites or merges the active branch.
+
 Employees can trigger supported additive development migrations at startup
 without receiving direct `ALTER`/`DROP` rights. PostgreSQL does not provide a
 general "run arbitrary migrations but never drop a table" privilege: altering
@@ -35,6 +59,86 @@ and dropping an object are ownership powers. PR/CODEOWNER review controls which
 migration code the separate deployment identity executes. Do not grant employees
 table ownership to bypass startup. Deleting individual permitted test records
 through CRUD is different from dropping a table or database.
+
+## Recover when the shared database is ahead of `develop`
+
+`Restricted development database credentials verified` means that the personal
+login passed the restricted-role metadata check. A subsequent revision mismatch
+is a code compatibility problem; granting the employee schema-owner access does
+not fix it.
+
+For example, a checkout with head `f95ba4c5d6e8` cannot start against a database at
+`b17dc6e7f801`. The intervening migrations are:
+
+| Revision | Application change |
+| --- | --- |
+| `a06cb5d6e7f9` | Private shared vault file contents |
+| `b17dc6e7f801` | Private expense notification inbox |
+
+If a newer local feature checkout passes with `b17dc6e7f801`, but the temporary
+incoming `develop` checkout reports `f95ba4c5d6e8`, the team branch does not yet
+contain the changes already applied to the shared testing database. Startup
+keeps running the verified current checkout when this optional preview update
+fails. Employees whose current checkout is also old remain blocked.
+
+The release administrator should:
+
+1. Confirm that the affected `.env` points to the intended **development**
+   database, then read its migration version. Check the latest GitHub `develop`
+   commit rather than relying only on a local branch reference.
+2. Find the complete code containing that database revision. Review and test
+   the matching application changes and migrations together, then publish the
+   branch and merge its PR into `develop` using the required CI/CODEOWNER checks.
+   Copying just the revision file or changing its `revision` value does not
+   establish application compatibility. If these changes are not approved for
+   shared development, the owner must plan recovery or provide a separate,
+   compatible development database before employees can resume.
+3. Have employees save or commit their local work and update from the approved
+   branch. From the repository root, with their environment activated:
+
+   ```powershell
+   git fetch origin
+   git switch develop
+   git pull --ff-only origin develop
+   python start.py --check-database
+   python infra/tools/team_sync/check-team-preview-schema.py . services/api/.env
+   python start.py
+   ```
+
+   Stop if Git reports local changes or divergent history; preserve that work
+   and reconcile it separately. `--check-database` checks credentials and
+   privileges; the next command independently checks migration versions.
+4. Keep each employee's existing personal development credentials if they pass.
+   A new employee needs a separately provisioned restricted login and private
+   `.env` delivery. The reviewed provisioning helper is
+   `services/api/app/employees/database_provisioning.py`; its SQL is a draft for
+   owner review, not an automatic grant. Follow
+   [the employee database access review](employee-database-review.md) for the
+   table allowlist and role restrictions. A TripRaft application admin login
+   does not provision a PostgreSQL login or grant Supabase dashboard access.
+
+When the database already matches the approved code, no schema upgrade is needed
+to resolve this incident. Do not downgrade the shared database, manually update
+`alembic_version`, disable the startup checks, or distribute owner credentials.
+
+For future automatic releases, first configure the `development` GitHub
+environment's `MIGRATION_DATABASE_URL` secret and the three `MIGRATION_EXPECTED_*`
+variables described below. Configure and verify staging and production as well
+before turning on the repository-wide `DATABASE_RELEASES_ENABLED` flag, since it
+also enables releases on `main`. Enabling the flag does not rerun previously
+skipped workflows. The reviewed code must already be available on the release
+branch before its release can succeed. The startup bridge is a separate mechanism
+and can advance the testing database while CI releases are disabled.
+
+The additive startup bridge does not install the two nonunique notification
+lookup indexes (`idx_expense_notifications_inbox` and
+`idx_expense_notifications_group`). Their absence is separate from the revision
+mismatch and is tolerated in development. If revision `b17dc6e7f801` is already
+recorded, `alembic upgrade head` does not replay that migration to add its indexes.
+The owner should use a reviewed forward migration or targeted repair matching
+the index definitions in `b17dc6e7f801_expense_notifications.py`, and verify real
+schema parity before a staging/production release. Do not reset the recorded
+revision to force a replay.
 
 ## Automatic migration on `python start.py`
 

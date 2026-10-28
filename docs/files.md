@@ -1,5 +1,25 @@
 # Published file guide
 
+Group planner additions on 2026-10-27 are documented in the
+[planner guide](guides/group-planner.md):
+
+| File | What it does |
+|---|---|
+| [apps/web/src/__tests__/plannerTime.test.js](../apps/web/src/__tests__/plannerTime.test.js) | Checks UTC/local timestamp conversion, calendar dates and bounded invitation batches. |
+| [apps/web/src/__tests__/plannerUploads.test.jsx](../apps/web/src/__tests__/plannerUploads.test.jsx) | Verifies browser checks at and around the 10 MB upload limit. |
+| [docs/guides/group-planner.md](guides/group-planner.md) | Describes planner writes, immutable polls, local timestamps, uploads and Treasury behavior. |
+| [docs/archive/reports/group-planner-latency-2026-10-27.md](archive/reports/group-planner-latency-2026-10-27.md) | Records planner changes, measurement scope and validation. |
+| [docs/operations/group-planner-latency-evidence-2026-10-27.json](operations/group-planner-latency-evidence-2026-10-27.json) | Stores isolated before/after HTTP timing and SQL count samples. |
+| [services/api/app/notifications/email/trip_invitations.py](../services/api/app/notifications/email/trip_invitations.py) | Queues bounded trip invitation delivery and rechecks invitation generation/status before SMTP. |
+| [services/api/tests/test_planner_latency.py](../services/api/tests/test_planner_latency.py) | Enforces planner create-operation query budgets on a disposable database. |
+| [services/api/tests/test_planner_timestamps_and_delivery.py](../services/api/tests/test_planner_timestamps_and_delivery.py) | Checks UTC serializers, poll permissions/immutability, notifications and deferred invitation delivery. |
+| [services/api/tests/test_planner_upload_limits.py](../services/api/tests/test_planner_upload_limits.py) | Checks exact-size upload boundaries, bounded reads and HTTP 413 responses. |
+| [services/api/app/trips/services/vault_storage.py](../services/api/app/trips/services/vault_storage.py) | Provides the optional private Supabase Storage adapter with bounded downloads and credential-safe errors. |
+| [services/api/tests/test_planner_shared_files.py](../services/api/tests/test_planner_shared_files.py) | Verifies same-group file sharing, revoked/outsider denial, storage rollback and private bucket behavior. |
+| [services/api/migrations/versions/a06cb5d6e7f9_shared_vault_file_contents.py](../services/api/migrations/versions/a06cb5d6e7f9_shared_vault_file_contents.py) | Adds private document content using the existing database and removes public Data API grants. |
+| [services/api/migrations/versions/a06cb5d6e7f9_shared_vault_file_contents.development.json](../services/api/migrations/versions/a06cb5d6e7f9_shared_vault_file_contents.development.json) | Applies the additive file-content table through the approved development startup bridge. |
+| [infra/tools/setup_planner_storage.py](../infra/tools/setup_planner_storage.py) | Checks or explicitly creates the optional private object bucket without printing credentials. |
+
 Reviewed on 2026-10-20. This inventory describes all **665 published files**, including **45 documentation files**. [Start with the documentation index](README.md), or read [the repository review](repository-review.md) for publication decisions. Ignored datasets, raw audit exports, checkpoint notes and root planning originals are excluded.
 
 Each description explains the file responsibility. Strict JSON, lockfiles, generated declarations and binary assets are described without adding invalid inline comments. Update this index when published files change.
@@ -763,3 +783,12 @@ remain a record of that earlier review.
 | `services/api/app/core/db/cooperative.py` | Enables cooperative psycopg2 waits in gevent workers before PostgreSQL connections open. |
 | `services/api/tests/test_cooperative_database.py` | Verifies concurrent work during database waits and callback setup and preservation. |
 | `docs/archive/reports/expense-browser-delay-fix-2026-10-26.md` | Records browser HAR findings, expense delay fixes and scoped timing evidence. |
+| `apps/web/src/features/expenses/jsx/ExpenseNotifications.jsx` | Accessible notification cards, group/unread filters, local timestamps, pagination and read actions. |
+| `apps/web/src/features/expenses/css/ExpenseNotifications.css` | Responsive notification badges, card controls and inbox dialog styling. |
+| `apps/web/src/hooks/useExpenseNotifications.js` | User-scoped expense inbox queries, recovery polling and explicit read mutations. |
+| `apps/web/src/__tests__/expenseNotifications.test.jsx` | Inbox filtering, read isolation, retries, local timestamps, badges and revoked-cache regressions. |
+| `services/api/app/expenses/services/expense_notifications.py` | Stages private notifications in expense, settlement, settings and membership transactions. |
+| `services/api/migrations/versions/b17dc6e7f801_expense_notifications.py` | Adds the durable private expense inbox and its indexes and PostgreSQL access restrictions. |
+| `services/api/migrations/versions/b17dc6e7f801_expense_notifications.development.json` | Approved additive development migration definition for the expense inbox table. |
+| `services/api/tests/test_expense_notifications.py` | Durable unread state, event coverage, authorization, rollback and device invalidation tests. |
+| `docs/api/expense-notifications.md` | Expense notification behavior, API contract, migration and validation coverage. |

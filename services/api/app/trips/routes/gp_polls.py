@@ -37,7 +37,6 @@ polls_bp = Blueprint(
 @polls_bp.route('/groups/<group_id>/polls', methods=['POST'])
 @limit_api(Config.RATE_LIMITS['create'])
 @require_auth
-@require_group_role('member')
 def create_poll(group_id):
     """
     Create a poll in a group
@@ -79,11 +78,9 @@ def create_poll(group_id):
         
         if success:
             logger.info(f"Poll created in group {group_id}")
-            invalidate_cache('gp_polls:*')
-            invalidate_cache('gp_groups:*')
             return created_response(data=result.get('poll'))
         else:
-            return error_response(result.get('error'))
+            return error_response(result.get('error'), result.get('status_code', 400))
             
     except Exception as e:
         logger.error(f"Create poll error: {str(e)}")
@@ -174,7 +171,6 @@ def vote_poll(group_id, poll_id):
         )
         
         if success:
-            invalidate_cache('gp_polls:*')
             return success_response(data=result)
         else:
             return error_response(result.get('error'))

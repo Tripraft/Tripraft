@@ -34,7 +34,7 @@ import { isPlannerDemo, plannerPath } from '../demo/demoMode';
 import '../css/GroupPlannerPage.css';
 
 import { TABS } from '../constants/tabConfig';
-import { unwrap, toArray, toObject, tripDayNumber } from '../utils/groupPlannerUtils';
+import { unwrap, toArray, toObject, tripDayNumber, settlePlannerInvitations } from '../utils/groupPlannerUtils';
 
 import GroupSelector from './shared/GroupSelector';
 import MapPanel from './map/MapPanel';
@@ -54,6 +54,8 @@ export default function GroupPlannerManager() {
 
   // -- Orchestrator state --
   const [selectedGroupId, setSelectedGroupId] = useState(routeGroupId || null);
+  const selectedGroupRef = useRef(selectedGroupId);
+  selectedGroupRef.current = selectedGroupId;
   const realtime = useChatSocket(selectedGroupId, currentUser?.uid);
   const [activeTab, setActiveTab] = useState('itinerary');
   const [mapDay, setMapDay] = useState('all');
@@ -237,30 +239,37 @@ export default function GroupPlannerManager() {
       const { invite_emails: emails = [], ...payload } = groupData;
       const result = await createGroupMut.mutateAsync(payload);
       const newGroup = unwrap(result);
+      setShowCreateModal(false);
+      if (newGroup?.id) handleSelectGroup(newGroup.id);
+      if (emails.length) showToast('Group created. Sending invitations…');
       const failed = [];
       let createdInvites = 0;
+      let emailUnavailable = false;
       if (newGroup?.id) {
-        for (const email of emails) {
-          try {
-            await groupPlannerApi.createInvitation(newGroup.id, email);
+        const results = await settlePlannerInvitations(emails,
+          email => groupPlannerApi.createInvitation(newGroup.id, email));
+        for (const result of results) {
+          if (result.status === 'fulfilled') {
             createdInvites++;
-          } catch {
-            failed.push(email);
+            emailUnavailable ||= ['disabled', 'failed'].includes(unwrap(result.value)?.email_status);
+          } else {
+            failed.push(result.email);
           }
         }
       }
-      setShowCreateModal(false);
       showToast(
         createdInvites
           ? `Group created with ${createdInvites} invitation${createdInvites === 1 ? '' : 's'}`
           : 'Group created',
       );
-      if (newGroup?.id) handleSelectGroup(newGroup.id);
+      if (emailUnavailable) showToast('Invitations saved. Email is unavailable; share the invitation links from The Circle.', 'error');
       if (failed.length) {
-        setInviteEmail(failed.join(', '));
-        setShowInviteModal(true);
+        if (selectedGroupRef.current === newGroup?.id) {
+          setInviteEmail(failed.join(', '));
+          setShowInviteModal(true);
+        }
         showToast(
-          'Group created. Some invitations failed; retry the remaining addresses or send them later.',
+          `Some invitations for ${newGroup?.name || 'the new group'} failed; open that group's Circle to retry.`,
           'error',
         );
       }
@@ -292,24 +301,22 @@ export default function GroupPlannerManager() {
     }
     invitingRef.current = true;
     setIsInviting(true);
-    let successCount = 0;
-    let failCount = 0;
-    for (const email of emails) {
-      try {
-        await groupPlannerApi.createInvitation(selectedGroupId, email);
-        successCount++;
-      } catch {
-        failCount++;
-      }
-    }
+    const results = await settlePlannerInvitations(emails,
+      email => groupPlannerApi.createInvitation(selectedGroupId, email));
+    const succeeded = results.filter(result => result.status === 'fulfilled');
+    const failed = results.filter(result => result.status === 'rejected');
+    const successCount = succeeded.length, failCount = failed.length;
     invitingRef.current = false;
     setIsInviting(false);
-    setInviteEmail('');
+    if (selectedGroupRef.current !== selectedGroupId) return;
+    setInviteEmail(failed.map(result => result.email).join(', '));
     queryClient.invalidateQueries({ queryKey: gpKeys.members(selectedGroupId) });
     queryClient.invalidateQueries({ queryKey: [...gpKeys.all, 'invitations', selectedGroupId] });
     if (successCount > 0)
       showToast(successCount === 1 ? 'Invitation created' : `${successCount} invitations created`);
     if (failCount > 0) showToast(`${failCount} invite${failCount > 1 ? 's' : ''} failed`, 'error');
+    if (succeeded.some(result => ['disabled', 'failed'].includes(unwrap(result.value)?.email_status)))
+      showToast('Invitations saved. Email is unavailable; share the invitation links from The Circle.', 'error');
     if (successCount > 0 && failCount === 0) setShowInviteModal(false);
   };
 

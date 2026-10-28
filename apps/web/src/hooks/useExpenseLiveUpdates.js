@@ -13,7 +13,7 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
   useEffect(() => {
     if (!userId) return;
     let cancelled = false, connecting = false, socket, timer, authRecoveryUsed = false;
-    let personalChanged = false;
+    let personalChanged = false, inboxChanged = false;
     const groups = new Set(), expenses = new Set();
     // Joining the socket or returning focus must not restart a slow read that
     // is already in flight. Its authenticated response still reconciles data.
@@ -30,9 +30,10 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
     };
     const refresh = (full = true) => {
       if (cancelled || document.hidden || navigator.onLine === false) return;
-      const preserve = full && !personalChanged && !groups.size && !expenses.size;
+      const preserve = full && !personalChanged && !inboxChanged && !groups.size && !expenses.size;
       const reconcile = key => invalidate(key, preserve);
       if (full || personalChanged) reconcile(['personalExpenses']);
+      if (full || groups.size || inboxChanged) reconcile(['expense-notifications', userId]);
       if (full || groups.size) {
         reconcile(['user', 'expense-friends', userId]);
         reconcile(['groups']);
@@ -45,7 +46,7 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
       if (expenses.size) {
         for (const id of expenses) reconcile(['expense-edit-history', id]);
       } else if (full) reconcile(['expense-edit-history']); // Recover history after missed events.
-      groups.clear(); expenses.clear(); personalChanged = false;
+      groups.clear(); expenses.clear(); personalChanged = false; inboxChanged = false;
     };
     const schedule = () => {
       if (timer) return;
@@ -71,6 +72,19 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
         queryClient.setQueryData(['groups'], old => old && ({ ...old,
           groups: (old.groups || []).filter(group => String(group.id || group.group_id) !== String(data.group_id)),
         }));
+        queryClient.cancelQueries({queryKey: ['expense-notifications', userId]}, {revert: false});
+        queryClient.setQueriesData({queryKey: ['expense-notifications', userId]}, old => {
+          if (!old) return old;
+          const groupCounts = {...old.group_counts};
+          const removedUnread = groupCounts[data.group_id] || 0;
+          delete groupCounts[data.group_id];
+          const notifications = (old.notifications || []).filter(row => String(row.group_id) !== String(data.group_id));
+          return {...old, notifications, group_counts: groupCounts,
+            unread_count: Math.max(0, (old.unread_count || 0) - removedUnread),
+            groups: (old.groups || []).filter(group => String(group.id) !== String(data.group_id)),
+            ...(old.pagination && {pagination: {...old.pagination,
+              total: Math.max(0, old.pagination.total - ((old.notifications || []).length - notifications.length))}})};
+        });
       }
       schedule();
     };
@@ -87,6 +101,9 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
           ...(token ? { auth: { token } } : {}),
         });
         socket.on('expenses:changed', onChange);
+        socket.on('expenses:notifications-changed', () => {
+          if (!cancelled) {inboxChanged = true; schedule();}
+        });
         socket.on('expenses:friends-changed', () => {
           if (!cancelled) invalidate(['user', 'expense-friends', userId]);
         });

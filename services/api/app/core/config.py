@@ -54,6 +54,12 @@ class Config:
     # Request-level safety caps for admin bulk imports. Flask reads
     # MAX_CONTENT_LENGTH to reject oversized bodies before decoding them.
     MAX_CONTENT_LENGTH: int = _get_int('MAX_CONTENT_LENGTH', 16 * 1024 * 1024)
+
+    # Group vault credentials stay on the API server, never in VITE_* settings.
+    VAULT_STORAGE_BACKEND: str = os.getenv('VAULT_STORAGE_BACKEND', 'database')
+    SUPABASE_URL: str = os.getenv('SUPABASE_URL', '')
+    SUPABASE_SERVICE_ROLE_KEY: str = os.getenv('SUPABASE_SERVICE_ROLE_KEY', '')
+    SUPABASE_VAULT_BUCKET: str = os.getenv('SUPABASE_VAULT_BUCKET', 'tripraft-group-vault')
     MAX_BULK_INGEST_ITEMS: int = _get_int('MAX_BULK_INGEST_ITEMS', 1000)
 
     # Application

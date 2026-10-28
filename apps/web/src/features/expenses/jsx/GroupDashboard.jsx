@@ -1,6 +1,7 @@
 // Purpose: Shows searchable expense-group cards with member avatars, spending trends, personal share and outstanding position.
 import React, { useId, useState } from 'react';
-import { ArrowDownLeft, ArrowUpRight, Check, Plus, Search, Users } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, Bell, Check, Plus, Search, Users } from 'lucide-react';
+import {NotificationBadge} from './ExpenseNotifications';
 import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 import { groupOverview, groupDateRange } from '../utils/groupOverview';
 
@@ -46,7 +47,7 @@ function SpendSparkline({ daily }) {
   </svg></div>;
 }
 
-export default function GroupDashboard({ groups, currentUserId, loading, error, onSelect, onCreate, onRetry }) {
+export default function GroupDashboard({ groups, currentUserId, loading, error, onSelect, onCreate, onRetry, notificationCounts = {}, onNotifications }) {
   const [search, setSearch] = useState('');
   const visible = groups.filter(group => (group.name || '').toLowerCase().includes(search.toLowerCase().trim()));
   return <section className="expense-groups-dashboard" aria-labelledby="expense-groups-title">
@@ -64,7 +65,13 @@ export default function GroupDashboard({ groups, currentUserId, loading, error, 
       </div> : <>
         <label className="expense-group-search"><Search size={18} /><input type="search" placeholder="Search groups…" aria-label="Search groups" value={search} onChange={event => setSearch(event.target.value)} /></label>
         <div className="expense-group-grid">
-          {visible.map(group => <ExpenseGroupCard key={group.id || group.group_id} group={group} currentUserId={currentUserId} onSelect={onSelect}/>)}
+          {visible.map(group => <div className={`expense-group-card-wrap ${notificationCounts[group.id || group.group_id] > 0 ? 'has-notifications' : ''}`} key={group.id || group.group_id}>
+            <ExpenseGroupCard group={group} currentUserId={currentUserId} onSelect={onSelect}/>
+            {notificationCounts[group.id || group.group_id] > 0 && <button type="button" className="expense-group-notifications" aria-haspopup="dialog"
+              aria-label={`${group.name}: ${notificationCounts[group.id || group.group_id]} unread updates`}
+              onClick={() => onNotifications?.(group.id || group.group_id)}><Bell size={15} />New updates
+              <NotificationBadge count={notificationCounts[group.id || group.group_id]} /></button>}
+          </div>)}
           <button className="expense-new-group-card" onClick={onCreate}><span><Plus size={26} /></span><strong>Create a new group</strong><small>Bring your next adventure together</small></button>
         </div>
         {!visible.length && <p className="expense-search-empty" role="status">No groups match “{search}”. Try another name.</p>}

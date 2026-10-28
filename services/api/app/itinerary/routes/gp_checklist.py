@@ -76,7 +76,6 @@ def add_checklist_item(group_id):
         )
         
         if success:
-            invalidate_cache('gp_checklist:*')
             return created_response(data=result.get('item'))
         else:
             return error_response(result.get('error'), result.get('status_code', 400))
@@ -186,6 +185,7 @@ def toggle_checklist_item(item_id, group_id=None):
         
         if success:
             invalidate_cache('gp_checklist:*')
+            invalidate_cache('gp_groups:*')
             return success_response(data=result.get('item', result))
         else:
             return error_response(result.get('error'), result.get('status_code', 404))
@@ -233,6 +233,7 @@ def update_checklist_item(item_id):
         
         if success:
             invalidate_cache('gp_checklist:*')
+            invalidate_cache('gp_groups:*')
             return success_response(data=result.get('item'))
         else:
             status = 404 if 'not found' in result.get('error', '').lower() else 400
@@ -293,6 +294,7 @@ def delete_checklist_item(item_id, group_id=None):
         
         if success:
             invalidate_cache('gp_checklist:*')
+            invalidate_cache('gp_groups:*')
             return success_response(message=result.get('message'))
         else:
             status = 404 if 'not found' in result.get('error', '').lower() else 400
@@ -332,6 +334,7 @@ def assign_checklist_item(item_id):
         
         if success:
             invalidate_cache('gp_checklist:*')
+            invalidate_cache('gp_groups:*')
             return success_response(data=result.get('item'))
         else:
             return error_response(result.get('error'), result.get('status_code', 400))

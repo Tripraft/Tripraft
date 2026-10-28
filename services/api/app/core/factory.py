@@ -106,6 +106,10 @@ def create_app():
     # Root endpoints
     _register_root_endpoints(app)
 
+    # Durable notifications must work even when WebSockets are disabled.
+    from app.expenses.services.expense_notifications import init_expense_notifications
+    init_expense_notifications()
+
     # Real-time WebSockets
     _init_socketio(app)
 

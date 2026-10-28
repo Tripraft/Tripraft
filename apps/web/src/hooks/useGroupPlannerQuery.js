@@ -2,6 +2,22 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import groupPlannerApi from '../services/groupPlannerApi';
 
+// Use the saved server object immediately; reconciliation can run in the background.
+export function upsertPlannerItem(previous, item, field) {
+  if (!item?.id) return previous;
+  const items = Array.isArray(previous?.data) ? previous.data : previous?.data?.[field] || [];
+  const exists = items.some(entry => String(entry.id) === String(item.id));
+  const next = exists
+    ? items.map(entry => String(entry.id) === String(item.id) ? item : entry)
+    : field === 'checklist' ? [...items, item] : [item, ...items];
+  return {
+    ...previous,
+    data: previous?.data && !Array.isArray(previous.data)
+      ? { ...previous.data, [field]: next }
+      : next,
+  };
+}
+
 // Cache key factory — consistent keys for invalidation
 export const gpKeys = {
   all:       ['group-planner'],
@@ -97,7 +113,8 @@ export function useCreatePoll(groupId) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (pollData) => groupPlannerApi.createPoll(groupId, pollData),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      queryClient.setQueryData(gpKeys.polls(groupId), old => upsertPlannerItem(old, response.data, 'polls'));
       queryClient.invalidateQueries({ queryKey: gpKeys.polls(groupId) });
     },
   });
@@ -134,7 +151,9 @@ export function useCreateGroup() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (groupData) => groupPlannerApi.createGroup(groupData),
-    onSuccess: () => {
+    onSuccess: (response) => {
+      if (response.data?.id) queryClient.setQueryData(gpKeys.group(response.data.id), response);
+      queryClient.setQueryData(gpKeys.groups(), old => upsertPlannerItem(old, response.data, 'groups'));
       queryClient.invalidateQueries({ queryKey: gpKeys.groups() });
     },
   });
