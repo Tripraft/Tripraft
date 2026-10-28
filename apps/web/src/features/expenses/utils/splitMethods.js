@@ -1,8 +1,8 @@
 // Purpose: Builds validated split requests and cent-accurate previews for all expense methods.
 export const SPLIT_METHODS = [
   ['equal', 'Equally', 'Split evenly. Select a name to include or remove someone.'],
-  ['exact', 'By exact amounts', 'Enter how much each person should pay.'],
-  ['percentage', 'By percentage', 'Enter percentages that add up to 100%.'],
+  ['exact', 'By exact amounts', 'Enter each person’s amount. The last amount fills automatically.'],
+  ['percentage', 'By percentage', 'Enter percentages totaling 100%. The last percentage fills automatically.'],
   ['shares', 'By shares', 'Use shares for couples, families or different portions.'],
   ['adjustment', 'By adjustment', 'Add or subtract from someone’s equal share. The remaining amount is split equally among everyone without an adjustment.'],
   ['reimbursement', 'Reimbursement', 'Choose who received the refund, then enter how much each person gets back.'],

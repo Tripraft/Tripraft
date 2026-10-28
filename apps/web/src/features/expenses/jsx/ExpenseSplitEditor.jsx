@@ -1,5 +1,5 @@
 // Purpose: Progressive split controls with participant toggles, bill item assignments and a live preview.
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { SPLIT_METHODS, buildSplit, convertedSplitPreview } from '../utils/splitMethods';
 import { formatMoney } from '../../../utils/money';
@@ -7,6 +7,25 @@ import CurrencyAmount from './CurrencyAmount';
 import '../css/ExpenseSplitEditor.css';
 
 export default function ExpenseSplitEditor({ form, setForm, members, currency, previewCurrency = currency, previewRate }) {
+  const autoFilled = useRef(null);
+  useEffect(() => {
+    const { splitType, splitWith, splitValues, amount } = form;
+    if (!['exact', 'percentage'].includes(splitType) || !splitWith.length || !(Number(amount) > 0)) {
+      autoFilled.current = null;
+      return;
+    }
+    if (autoFilled.current?.kind !== splitType || !splitWith.includes(autoFilled.current?.id)) autoFilled.current = null;
+    const empty = splitWith.filter(id => splitValues[id] == null || splitValues[id] === '');
+    const id = empty.length === 1 ? empty[0] : empty.length === 0 ? autoFilled.current?.id : null;
+    if (!id) return;
+    const others = splitWith.filter(uid => uid !== id).map(uid => Number(splitValues[uid]));
+    if (others.some(value => !Number.isFinite(value) || value < 0)) return;
+    const target = splitType === 'percentage' ? 10000 : Math.round(Number(amount) * 100);
+    const remainder = Math.max(0, target - others.reduce((sum, value) => sum + Math.round(value * 100), 0));
+    const value = (remainder / 100).toFixed(2);
+    autoFilled.current = { id, kind: splitType };
+    if (splitValues[id] !== value) setForm(prev => ({ ...prev, splitValues: { ...prev.splitValues, [id]: value } }));
+  }, [form, setForm]);
   const idOf = m => String(m.user_id || m.id);
   const nameOf = m => m.user?.display_name || m.display_name || m.user?.email || m.email || 'Member';
   const update = patch => setForm(prev => ({ ...prev, ...patch }));
@@ -23,27 +42,45 @@ export default function ExpenseSplitEditor({ form, setForm, members, currency, p
   const preview = converted?.splits || result?.preview;
   const kind = form.splitType;
   const unit = kind === 'percentage' ? '%' : kind === 'shares' ? 'shares' : currency;
-  const entered = form.splitWith.reduce((sum, id) => sum + (Number(form.splitValues[id]) || 0), 0);
+  const tracksAllocation = ['exact', 'reimbursement', 'percentage'].includes(kind);
+  // Match validation's per-person cent rounding so a balanced split never shows a negative remainder.
+  const entered = form.splitWith.reduce((sum, id) => sum + Math.round((Number(form.splitValues[id]) || 0) * 100), 0) / 100;
+  const target = kind === 'percentage' ? 100 : Math.round(Number(form.amount || 0) * 100) / 100;
+  const remaining = Math.round((target - entered) * 100) / 100;
+  const overAllocated = tracksAllocation && remaining < 0;
+  const allocationState = overAllocated ? 'has-error' : remaining === 0 && !error ? 'is-complete' : 'is-pending';
+  const allocationValue = value => kind === 'percentage' ? `${Number(value.toFixed(2))}%` : formatMoney(value, currency);
+  const status = overAllocated
+    ? `Allocated ${allocationValue(-remaining)} too much. ${kind === 'percentage' ? 'Percentages must add up to 100%.' : `Amounts must add up to ${formatMoney(target, currency)}.`}`
+    : error;
   return <section className="expense-split-editor" aria-label="Expense split">
     <label htmlFor="split-method">Split method</label>
     <select id="split-method" value={kind} onChange={e => update({ splitType: e.target.value, splitValues: {} })} aria-describedby="split-help">
       {SPLIT_METHODS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
     </select>
     <p id="split-help" className="split-help">{SPLIT_METHODS.find(([value]) => value === kind)?.[2]}</p>
-    {converted && <p className="split-help">Estimated shares in {outputCurrency}. Amount inputs use {currency}.</p>}
-    {kind === 'percentage' && <p className="split-progress" aria-live="polite">{Number(entered.toFixed(2))}% of 100% · {Number((100 - entered).toFixed(2))}% remaining</p>}
-    {['exact', 'reimbursement'].includes(kind) && <p className="split-progress" aria-live="polite">{formatMoney(entered, currency)} allocated · {formatMoney(Number(form.amount || 0) - entered, currency)} remaining</p>}
-    <div className="split-members">
+    <p className="split-currency-context">Amounts in <strong>{currency}</strong>{currency !== previewCurrency && <> · Group currency <strong>{previewCurrency}</strong></>}{converted && <> · Estimated shares in {outputCurrency}</>}</p>
+    {tracksAllocation && <p className={`split-progress ${allocationState}`} aria-live="polite">
+      <span className="split-allocated">{allocationValue(entered)} allocated</span>
+      <span className="split-remaining">{allocationValue(remaining)} remaining</span>
+    </p>}
+    <div className={`split-members${!['equal', 'itemized'].includes(kind) ? ' has-values' : ''}`}>
       {members.map(member => {
         const id = idOf(member), name = nameOf(member), included = form.splitWith.includes(id);
         return <div className="split-member" key={id}>
           <label className="split-member-name"><input type="checkbox" checked={included} onChange={() => toggle(id)} /><span>{name}</span></label>
           {included && !['equal', 'itemized'].includes(kind) && <label className="split-value"><span className="sr-only">{name} {kind}</span>
             <input type="number" aria-label={`${name} ${kind}`} step={kind === 'shares' ? '1' : '0.01'} min={kind === 'adjustment' ? undefined : '0'}
+              aria-invalid={overAllocated || undefined} aria-describedby={overAllocated ? 'split-status' : undefined}
               placeholder={kind === 'shares' ? '1' : '0'} value={form.splitValues[id] ?? ''}
-              onChange={e => update({ splitValues: { ...form.splitValues, [id]: e.target.value } })} /><span>{unit}</span></label>}
-          {included && result && <output aria-label={`${name} share`}><CurrencyAmount amount={preview.find(s => s.user_id === id)?.amount} currency={outputCurrency}
-            original={converted ? {amount: result.preview.find(s => s.user_id === id)?.amount, currency} : undefined} /></output>}
+              onChange={e => {
+                if (autoFilled.current?.id === id) autoFilled.current = null;
+                update({ splitValues: { ...form.splitValues, [id]: e.target.value } });
+              }} /><span>{unit}</span></label>}
+          {included && <output aria-label={`${name} share`}><span className="split-share-currency">{outputCurrency}</span>{result
+            ? <CurrencyAmount amount={preview.find(s => s.user_id === id)?.amount} currency={outputCurrency}
+              original={converted ? {amount: result.preview.find(s => s.user_id === id)?.amount, currency} : undefined} />
+            : <span className="split-share-pending">—</span>}</output>}
         </div>;
       })}
     </div>
@@ -59,6 +96,6 @@ export default function ExpenseSplitEditor({ form, setForm, members, currency, p
       <button className="split-add-item" type="button" disabled={form.bill.items.length >= 100} onClick={() => update({ bill: { ...form.bill, items: [...form.bill.items, { name: '', amount: '', user_ids: [...form.splitWith] }] } })}><Plus size={16} /> Add item</button>
       <div className="split-bill-extras">{['tax', 'tip', 'discount'].map(key => <label key={key}>{key[0].toUpperCase() + key.slice(1)}<input aria-label={key[0].toUpperCase() + key.slice(1)} type="number" min="0" step="0.01" value={form.bill[key]} onChange={e => update({ bill: { ...form.bill, [key]: e.target.value } })} /></label>)}</div>
     </div>}
-    <p className={`split-status${error ? ' has-error' : ''}`} aria-live="polite">{error || `Total allocated: ${formatMoney(converted?.total ?? form.amount, outputCurrency)}${kind === 'reimbursement' ? ' refunded' : ''}`}</p>
+    <p id="split-status" className={`split-status${status ? ' has-error' : ' is-complete'}`} aria-live="polite">{status || `Total allocated: ${formatMoney(converted?.total ?? form.amount, outputCurrency)}${kind === 'reimbursement' ? ' refunded' : ''}`}</p>
   </section>;
 }

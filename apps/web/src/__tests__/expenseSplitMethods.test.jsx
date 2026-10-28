@@ -102,7 +102,8 @@ it('shows the percentage remaining and blocks totals below and above 100%', asyn
   render(<TransactionModal mode="group" members={members} onSave={save} />);
   change('Description', 'Dinner'); change('Amount', '100'); change('Split method', 'percentage');
   change('Alice percentage', '30'); change('Bob percentage', '30');
-  expect(screen.getByText('60% of 100% · 40% remaining')).toBeInTheDocument();
+  expect(screen.getByText('60% allocated')).toBeInTheDocument();
+  expect(screen.getByText('40% remaining')).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Save' }));
   expect(save).not.toHaveBeenCalled();
   expect(screen.getByRole('alert')).toHaveTextContent('100%');
@@ -112,6 +113,86 @@ it('shows the percentage remaining and blocks totals below and above 100%', asyn
   change('Bob percentage', '70');
   fireEvent.click(screen.getByRole('button', { name: 'Save' }));
   await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+});
+
+it.each(['exact', 'reimbursement', 'percentage'])('flags excess %s allocation immediately and clears it after correction', kind => {
+  const save = jest.fn();
+  render(<TransactionModal mode="group" members={members} currency="EUR" onSave={save} />);
+  change('Description', 'Dinner'); change('Amount', '499.89'); change('Split method', kind);
+  change(`Alice ${kind}`, '100'); change(`Bob ${kind}`, kind === 'percentage' ? '20' : '600');
+  const excess = screen.getByText(kind === 'percentage' ? '-20% remaining' : '-€200.11 remaining');
+  expect(excess.parentElement).toHaveClass('has-error');
+  expect(screen.getByText(/Allocated .* too much/)).toHaveClass('has-error');
+  expect(screen.getByLabelText(`Bob ${kind}`)).toHaveAttribute('aria-invalid', 'true');
+  fireEvent.submit(screen.getByRole('button', {name: 'Save'}).closest('form'));
+  expect(save).not.toHaveBeenCalled();
+  change(`Alice ${kind}`, kind === 'percentage' ? '80' : '100');
+  change(`Bob ${kind}`, kind === 'percentage' ? '20' : '399.89');
+  expect(screen.getByText(kind === 'percentage' ? '0% remaining' : '€0.00 remaining').parentElement).toHaveClass('is-complete');
+  expect(screen.getByLabelText(`Bob ${kind}`)).not.toHaveAttribute('aria-invalid');
+  expect(screen.queryByText(/Allocated .* too much/)).not.toBeInTheDocument();
+});
+
+it.each(['exact', 'percentage', 'shares', 'reimbursement'])('keeps currency visible for incomplete %s splits', kind => {
+  render(<TransactionModal mode="group" activeGroup={{id: 'g', currency: 'EUR'}} members={members} currency="EUR" />);
+  change('Amount', '100'); change('Split method', kind);
+  expect(screen.getByText('Amounts in').closest('p')).toHaveTextContent('Amounts in EUR');
+  expect(screen.getByLabelText('Alice share')).toHaveTextContent('EUR');
+  expect(screen.getByLabelText('Bob share')).toHaveTextContent('EUR');
+  expect(document.getElementById('split-status')).toHaveClass('has-error');
+});
+
+it('sums rounded cents and excludes unselected people from allocation feedback', () => {
+  render(<TransactionModal mode="group" members={members} currency="EUR" />);
+  change('Amount', '0.30'); change('Split method', 'exact');
+  change('Alice exact', '0.10'); change('Bob exact', '0.20');
+  expect(screen.getByText('€0.00 remaining').parentElement).toHaveClass('is-complete');
+  fireEvent.click(screen.getByRole('checkbox', {name: 'Bob'}));
+  expect(screen.getByText('€0.20 remaining').parentElement).toHaveClass('is-pending');
+  expect(screen.getByText('€0.10 allocated')).toBeInTheDocument();
+});
+
+it.each(['exact', 'percentage'])('fills the last %s value, updates the remainder, and respects a manual override', kind => {
+  const save = jest.fn();
+  render(<TransactionModal mode="group" members={[...members, {user_id: 'c', display_name: 'Charlie'}]} currency="EUR" onSave={save} />);
+  change('Description', 'Dinner'); change('Amount', '499.89'); change('Split method', kind);
+  change(`Alice ${kind}`, '20');
+  expect(screen.getByLabelText(`Charlie ${kind}`)).toHaveValue(null);
+  change(`Bob ${kind}`, '30');
+  expect(screen.getByLabelText(`Charlie ${kind}`)).toHaveValue(kind === 'percentage' ? 50 : 449.89);
+  expect(screen.getByText(kind === 'percentage' ? '0% remaining' : '€0.00 remaining').parentElement).toHaveClass('is-complete');
+  change(`Alice ${kind}`, '25');
+  expect(screen.getByLabelText(`Charlie ${kind}`)).toHaveValue(kind === 'percentage' ? 45 : 444.89);
+  if (kind === 'exact') {
+    change('Amount', '500');
+    expect(screen.getByLabelText('Charlie exact')).toHaveValue(445);
+  }
+  change(`Charlie ${kind}`, '10'); change(`Alice ${kind}`, '40');
+  expect(screen.getByLabelText(`Charlie ${kind}`)).toHaveValue(10);
+  fireEvent.submit(screen.getByRole('button', {name: 'Save'}).closest('form'));
+  expect(save).not.toHaveBeenCalled();
+});
+
+it.each(['exact', 'percentage'])('keeps the automatic %s remainder non-negative and recovers from an excess', kind => {
+  render(<TransactionModal mode="group" members={[...members, {user_id: 'c', display_name: 'Charlie'}]} currency="EUR" />);
+  change('Amount', '100'); change('Split method', kind);
+  change(`Alice ${kind}`, '80'); change(`Bob ${kind}`, '30');
+  expect(screen.getByLabelText(`Charlie ${kind}`)).toHaveValue(0);
+  expect(screen.getByText(/Allocated .* too much/)).toBeInTheDocument();
+  change(`Bob ${kind}`, '10');
+  expect(screen.getByLabelText(`Charlie ${kind}`)).toHaveValue(10);
+  expect(screen.queryByText(/Allocated .* too much/)).not.toBeInTheDocument();
+});
+
+it.each(['exact', 'percentage'])('saves the automatic third %s allocation without another input', async kind => {
+  const save = jest.fn().mockResolvedValue({});
+  render(<TransactionModal mode="group" members={[...members, {user_id: 'c', display_name: 'Charlie'}]} currency="EUR" onSave={save} />);
+  change('Description', 'Dinner'); change('Amount', '100'); change('Split method', kind);
+  change(`Alice ${kind}`, '20'); change(`Bob ${kind}`, '30');
+  fireEvent.click(screen.getByRole('button', {name: 'Save'}));
+  await waitFor(() => expect(save).toHaveBeenCalledWith(expect.objectContaining({split_type: kind,
+    splits: expect.arrayContaining([expect.objectContaining({user_id: 'c', amount: 50,
+      ...(kind === 'percentage' ? {percentage: 50} : {})})])})));
 });
 
 it('retains user input after a save error and supports retry', async () => {

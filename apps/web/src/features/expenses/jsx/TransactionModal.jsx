@@ -36,6 +36,7 @@ const TransactionModal = ({
   });
   const ledgerCurrency = activeGroup?.currency || currency || 'USD';
   const exchange = useExchangeRate(formData.currency, ledgerCurrency, 0, mode === 'group');
+  useEffect(() => { setSplitError(''); }, [formData]);
 
   // Helper function to get member display name
   const getMemberName = (member) => {

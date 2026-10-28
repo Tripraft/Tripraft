@@ -2,16 +2,27 @@
 .expense-split-editor { margin: 0 0 20px; padding: 16px; border: 1px solid var(--color-border-light, #e5e7eb); border-radius: 12px; background: var(--color-bg-primary, #fff); }
 .expense-split-editor > label { display: block; margin-bottom: 8px; font-weight: 600; }
 .expense-split-editor > select { width: 100%; padding: 10px; border: 1px solid var(--color-border-light, #d1d5db); border-radius: 8px; background: var(--color-bg-primary, #fff); color: inherit; }
-.split-help, .split-status { font-size: 13px; line-height: 1.5; color: var(--color-text-secondary, #6b7280); margin: 10px 0; }
-.split-progress { font-size: 13px; font-variant-numeric: tabular-nums; color: var(--color-primary-600, #7c3aed); }
+.expense-split-editor .split-help, .expense-split-editor .split-status, .expense-split-editor .split-currency-context { font-size: 13px; line-height: 1.5; color: var(--color-text-secondary, #6b7280); margin: 8px 0; }
+.expense-split-editor .split-currency-context { font-size: 12px; }
+.expense-split-editor .split-progress { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.split-progress > span { padding: 6px 10px; border-radius: 6px; }
+.split-progress .split-allocated { color: #6d28d9; background: #f5f3ff; }
+.split-progress .split-remaining { color: #92400e; background: #fffbeb; }
+.split-progress.is-complete > span { color: #166534; background: #f0fdf4; }
+.split-progress.has-error > span { color: #b91c1c; background: #fef2f2; }
 .split-members { display: grid; gap: 4px; }
-.split-member { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--color-border-light, #e5e7eb); }
-.split-member-name { display: flex; align-items: center; gap: 10px; flex: 1 1 120px; cursor: pointer; }
+.split-member { display: grid; grid-template-columns: minmax(0, 1fr) minmax(90px, 120px); align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-border-light, #e5e7eb); }
+.split-members.has-values .split-member { grid-template-columns: minmax(0, 1fr) 140px minmax(90px, 120px); }
+.split-member-name { display: flex; align-items: center; min-width: 0; gap: 10px; cursor: pointer; }
 .expense-split-editor input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--color-primary-600, #7c3aed); flex-shrink: 0; }
-.split-value { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-secondary, #6b7280); }
-.split-value input { width: 90px; }
+.split-value { display: grid; grid-template-columns: minmax(0, 1fr) 42px; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-secondary, #6b7280); }
+.split-value input { width: 100%; text-align: right; font-variant-numeric: tabular-nums; }
+.split-value > span:last-child { text-align: right; white-space: nowrap; }
 .expense-split-editor input:not([type=checkbox]) { padding: 8px; border: 1px solid var(--color-border-light, #d1d5db); border-radius: 7px; background: var(--color-bg-primary, #fff); color: inherit; }
-.split-member output { font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; margin-left: auto; }
+.expense-split-editor input[aria-invalid=true] { border-color: #b91c1c; }
+.split-member output { grid-column: -2 / -1; min-width: 0; text-align: right; font-size: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.split-share-currency { display: block; margin-bottom: 3px; font-size: 11px; font-weight: 500; color: var(--color-text-secondary, #6b7280); }
+.split-share-pending { color: var(--color-text-secondary, #6b7280); }
 .split-bill { display: grid; gap: 12px; margin-top: 16px; }
 .split-bill-item { min-width: 0; padding: 10px; border: 1px solid var(--color-border-light, #e5e7eb); border-radius: 8px; }
 .split-bill-item legend { font-size: 12px; color: var(--color-text-secondary, #6b7280); }
@@ -23,7 +34,13 @@
 .split-bill-extras { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .split-bill-extras label { display: grid; gap: 6px; font-size: 12px; }
 .split-bill-extras input { width: 100%; }
-.split-status { margin-bottom: 0; color: var(--color-primary-600, #7c3aed); }
-.split-status.has-error { color: var(--color-text-secondary, #6b7280); }
+.expense-split-editor .split-status { margin: 10px 0 0; }
+.expense-split-editor .split-status.is-complete { color: #166534; }
+.expense-split-editor .split-status.has-error { color: #b91c1c; }
 .expense-split-editor .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-@media (max-width: 480px) { .expense-split-editor { padding: 12px; } .split-member-name { flex-basis: 100px; } .split-value input { width: 70px; } }
+@media (max-width: 600px) {
+  .split-members.has-values .split-member { grid-template-columns: minmax(0, 1fr) minmax(90px, 120px); gap: 8px 12px; }
+  .split-members.has-values .split-member-name { grid-column: 1 / -1; }
+  .split-value { width: 140px; max-width: 100%; }
+}
+@media (max-width: 480px) { .expense-split-editor { padding: 12px; } }
