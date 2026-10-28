@@ -3,6 +3,17 @@
  * Formatting helpers for the Group Planner UI.
  */
 
+export function parsePlannerInstant(value) {
+  // Older cached API timestamps may be UTC without a suffix.
+  const text = typeof value === 'string' ? value.trim() : value;
+  return new Date(typeof text === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(text)
+    && !/(Z|[+-]\d{2}:?\d{2})$/i.test(text) ? text + 'Z' : text);
+}
+
+export function formatCalendarDate(value) {
+  return formatDate(typeof value === 'string' ? value.slice(0, 10) : value);
+}
+
 export function formatDate(dateStr) {
   let date;
   if (dateStr instanceof Date || typeof dateStr === 'number') {
@@ -10,8 +21,8 @@ export function formatDate(dateStr) {
   } else {
     const text = String(dateStr ?? '').trim();
     if (!text) return '';
-    const dateOnly = text.split('T')[0];
-    date = new Date(dateOnly + 'T00:00:00');
+    date = /^\d{4}-\d{2}-\d{2}$/.test(text)
+      ? new Date(text + 'T00:00:00') : parsePlannerInstant(text);
   }
   if (Number.isNaN(date.getTime())) return '';
   return date.toLocaleDateString('en-US', {
@@ -23,7 +34,9 @@ export function formatDate(dateStr) {
 
 export function formatTime(dateStr) {
   if (!dateStr) return '';
-  return new Date(dateStr).toLocaleTimeString('en-US', {
+  const date = parsePlannerInstant(dateStr);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleTimeString('en-US', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
@@ -56,7 +69,9 @@ export function formatDateRange(startStr, endStr) {
 
 export function formatRelativeTime(dateStr) {
   if (!dateStr) return 'Just now';
-  const diffMin = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000);
+  const instant = parsePlannerInstant(dateStr);
+  if (Number.isNaN(instant.getTime())) return '';
+  const diffMin = Math.floor((Date.now() - instant.getTime()) / 60000);
   if (diffMin < 1) return 'Just now';
   if (diffMin < 60) return diffMin + 'm ago';
   const diffHr = Math.floor(diffMin / 60);

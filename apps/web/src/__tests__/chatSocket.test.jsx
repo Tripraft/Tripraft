@@ -58,6 +58,19 @@ it('ignores another group and applies same-group message edits without losing hi
  expect(pageMessages(client.getQueryData(['chat','messages','group']).pages[0])[0].content).toBe('After');
 });
 
+it.each([
+ ['checklist:created', gpKeys.checklist],
+ ['vault:uploaded', gpKeys.vault],
+ ['vault:deleted', gpKeys.vault],
+])('refreshes workspace collections and activity for %s', async (event, key) => {
+ const invalidate = jest.spyOn(client, 'invalidateQueries');
+ renderHook(() => useChatSocket('group', 'user'), {wrapper});
+ await waitFor(() => expect(events[event]).toBeDefined());
+ act(() => events[event]({group_id: 'group', item: {id: 'task'}}));
+ expect(invalidate).toHaveBeenCalledWith({queryKey: key('group')});
+ expect(invalidate).toHaveBeenCalledWith({queryKey: gpKeys.activities('group')});
+});
+
 it('clears private planner and chat caches when live access is revoked', async () => {
  client.setQueryData(gpKeys.group('group'), {data: {name: 'Secret'}});
  client.setQueryData(gpKeys.places('group'), {data: [{name: 'Private stop'}]});

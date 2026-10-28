@@ -5,7 +5,7 @@ import { tripDates } from '../../utils/plannerSchedule';
 import { tripDayNumber, unwrap } from '../../utils/groupPlannerUtils';
 import React, { useMemo, useState, useRef, useCallback, useEffect, useLayoutEffect } from 'react';
 import { useAuth } from '../../../../context/AuthContext';
-import { useGroupPolls, useGroupMembers, gpKeys } from '../../../../hooks/useGroupPlannerQuery';
+import { useGroupPolls, useGroupMembers, gpKeys, upsertPlannerItem } from '../../../../hooks/useGroupPlannerQuery';
 import { useMessages, useSendMessage, useDeleteMessage, useEditMessage } from '../../../../hooks/useChatQuery';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '../../../../hooks/useExpenseQuery';
@@ -387,6 +387,10 @@ export default function ChatPanel({
   }, [hasNextPage, isFetchingNextPage, fetchNextPage, unreadScoutCount]);
 
   const [showPollForm, setShowPollForm] = useState(false);
+  const [pollCreating, setPollCreating] = useState(false);
+  const pollCreatingRef = useRef(false);
+  const pollGroupRef = useRef(groupId);
+  pollGroupRef.current = groupId;
   const [pollWinner, setPollWinner] = useState(null);
   const [winnerDate, setWinnerDate] = useState('');
   const [winnerSaving, setWinnerSaving] = useState(false);
@@ -407,7 +411,9 @@ export default function ChatPanel({
 
   const handleVotePoll = async (pollId, optionIndex) => {
     try {
-      await groupPlannerApi.voteOnPoll(groupId, pollId, optionIndex);
+      await queryClient.cancelQueries({ queryKey: gpKeys.polls(groupId) });
+      const response = await groupPlannerApi.voteOnPoll(groupId, pollId, optionIndex);
+      queryClient.setQueryData(gpKeys.polls(groupId), old => upsertPlannerItem(old, unwrap(response)?.poll, 'polls'));
       queryClient.invalidateQueries({ queryKey: gpKeys.polls(groupId) });
     } catch {
       showToast('Failed to vote', 'error');
@@ -426,27 +432,40 @@ export default function ChatPanel({
   };
 
   const handleCreatePoll = async () => {
+    if (pollCreatingRef.current || !canEdit) return;
     const question = pollQuestion.trim();
     const opts = pollOptions.map((o) => o.trim()).filter(Boolean);
     if (!question || opts.length < 2) {
       showToast('Need a question and at least 2 options', 'error');
       return;
     }
+    if (new Set(opts).size !== opts.length) {
+      showToast('Poll options must be unique', 'error');
+      return;
+    }
+    pollCreatingRef.current = true;
+    setPollCreating(true);
     try {
-      await groupPlannerApi.createPoll(groupId, {
+      await queryClient.cancelQueries({ queryKey: gpKeys.polls(groupId) });
+      const response = await groupPlannerApi.createPoll(groupId, {
         name: question,
         options: opts,
         is_multiple_choice: pollMultiChoice,
       });
+      queryClient.setQueryData(gpKeys.polls(groupId), old => upsertPlannerItem(old, unwrap(response), 'polls'));
       queryClient.invalidateQueries({ queryKey: gpKeys.polls(groupId) });
       queryClient.invalidateQueries({ queryKey: gpKeys.activities(groupId) });
+      if (pollGroupRef.current !== groupId) return;
       setShowPollForm(false);
       setPollQuestion('');
       setPollOptions(['', '']);
       setPollMultiChoice(false);
       showToast('Poll created');
-    } catch {
-      showToast('Failed to create poll', 'error');
+    } catch (error) {
+      if (pollGroupRef.current === groupId) showToast(error.message || 'Failed to create poll', 'error');
+    } finally {
+      pollCreatingRef.current = false;
+      setPollCreating(false);
     }
   };
 
@@ -976,6 +995,7 @@ export default function ChatPanel({
         <div
           className="gp-modal-overlay"
           onClick={() => {
+            if (pollCreatingRef.current) return;
             setShowPollForm(false);
             setPollQuestion('');
             setPollOptions(['', '']);
@@ -983,6 +1003,7 @@ export default function ChatPanel({
           }}
         >
           <div className="gp-poll-modal" onClick={(e) => e.stopPropagation()}>
+            <fieldset disabled={pollCreating} style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }} aria-busy={pollCreating}>
             <div className="gp-poll-create-header">
               <span className="gp-poll-create-title">Create a Poll</span>
               <button
@@ -1048,9 +1069,10 @@ export default function ChatPanel({
                 </label>
               </div>
               <button className="gp-poll-create-submit" onClick={handleCreatePoll}>
-                Create Poll
+                {pollCreating ? 'Creating poll…' : 'Create Poll'}
               </button>
             </div>
+            </fieldset>
           </div>
         </div>
       )}

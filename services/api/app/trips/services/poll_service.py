@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from app.trips.models import (GroupActivity, Poll, PollVote,
                                              TravelGroup, TripMember)
 from app.core.db.connection import get_db_session
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 
 logger = logging.getLogger(__name__)
 
@@ -62,14 +62,16 @@ class PollService:
 
             with get_db_session() as session:
                 # Check membership
-                member = session.query(TripMember).filter(
+                member = session.query(TripMember).options(joinedload(TripMember.user)).filter(
                     TripMember.group_id == group_id,
                     TripMember.user_id == user_id,
                     TripMember.is_active == True
                 ).first()
                 
                 if not member:
-                    return False, {'error': 'Not a member of this group'}
+                    return False, {'error': 'Not a member of this group', 'status_code': 403}
+                if member.role not in {'creator', 'admin', 'member'}:
+                    return False, {'error': 'Member role or higher required', 'status_code': 403}
                 
                 # Validate options
                 if not options or len(options) < 2:
@@ -94,15 +96,17 @@ class PollService:
                     options=options,
                     is_multiple_choice=is_multiple_choice,
                     expires_at=parsed_expires_at,
-                    created_by=user_id
+                    created_by=user_id,
+                    creator=member.user,
+                    votes=[],
                 )
                 session.add(poll)
                 session.flush()
                 
                 # Update group timestamp
-                group = session.get(TravelGroup, group_id)
-                if group:
-                    group.updated_at = datetime.now(timezone.utc)
+                session.query(TravelGroup).filter(TravelGroup.id == group_id).update(
+                    {TravelGroup.updated_at: datetime.now(timezone.utc)}, synchronize_session=False,
+                )
                 
                 # Log activity
                 activity = GroupActivity(
@@ -115,33 +119,30 @@ class PollService:
                 )
                 session.add(activity)
                 
+                # Persist notifications in the same transaction, avoiding a
+                # second connection/commit and keeping them tied to this poll.
+                from app.notifications.services.notification_service import notification_service
+                notification_service.add_group_notifications(
+                    session, group_id=group_id, exclude_user_id=user_id,
+                    type='poll_created', title=f'New poll: {name}'[:200],
+                    data={'poll_id': poll.id, 'poll_name': name},
+                )
+                session.flush()
+                poll_dict = poll.to_dict()
                 session.commit()
-                session.refresh(poll)
-                
-                logger.info(f"Poll created: {poll.id} in group {group_id}")
-                
-                # Notify group members
-                try:
-                    from app.notifications.services.notification_service import \
-                        notification_service
-                    notification_service.notify_group_members(
-                        group_id=group_id,
-                        exclude_user_id=user_id,
-                        type='poll_created',
-                        title=f'New poll: {name}',
-                        data={'poll_id': poll.id, 'poll_name': name}
-                    )
-                except Exception:
-                    pass
+                logger.info("Poll created: %s in group %s", poll_dict['id'], group_id)
+                from app.core.cache.redis import invalidate_cache
+                invalidate_cache('gp_polls:*')
+                invalidate_cache('gp_groups:*')
                 
                 # Real-time broadcast
                 try:
                     from app.trips.realtime.events import emit_to_group
-                    emit_to_group(group_id, 'poll:created', {'poll': poll.to_dict(), 'user_id': user_id})
+                    emit_to_group(group_id, 'poll:created', {'poll': poll_dict, 'user_id': user_id})
                 except Exception:
                     pass
                 
-                return True, {'poll': poll.to_dict()}
+                return True, {'poll': poll_dict}
                 
         except Exception as e:
             logger.error(f"Create poll error: {str(e)}")
@@ -237,11 +238,13 @@ class PollService:
                     return False, {'error': 'Not a member of this group'}
                 
                 # Get poll
-                poll = session.query(Poll).filter(
+                poll = session.query(Poll).options(
+                    selectinload(Poll.votes), joinedload(Poll.creator),
+                ).filter(
                     Poll.id == poll_id,
                     Poll.group_id == group_id,
                     Poll.is_deleted == False
-                ).first()
+                ).with_for_update(of=Poll).first()
                 
                 if not poll:
                     return False, {'error': 'Poll not found'}
@@ -280,24 +283,17 @@ class PollService:
                 
                 # Remember the selected vote before removing other choices so a
                 # repeated click toggles it off in single-choice polls as well.
-                existing_vote = session.query(PollVote).filter(
-                    PollVote.poll_id == poll_id,
-                    PollVote.user_id == user_id,
-                    PollVote.option == option
-                ).first()
+                own_votes = [v for v in poll.votes if str(v.user_id) == str(user_id)]
+                existing_vote = next((v for v in own_votes if v.option == option), None)
 
                 if not poll.is_multiple_choice:
-                    previous_votes = session.query(PollVote).filter(
-                        PollVote.poll_id == poll_id,
-                        PollVote.user_id == user_id
-                    ).all()
-                    for pv in previous_votes:
+                    for pv in own_votes:
                         if pv is not existing_vote:
-                            session.delete(pv)
+                            poll.votes.remove(pv)
                 
                 if existing_vote:
                     # Toggle off if already voted
-                    session.delete(existing_vote)
+                    poll.votes.remove(existing_vote)
                 else:
                     # Add vote
                     vote = PollVote(
@@ -305,18 +301,20 @@ class PollService:
                         user_id=user_id,
                         option=option
                     )
-                    session.add(vote)
+                    poll.votes.append(vote)
                 
                 # Update group timestamp
-                group = session.get(TravelGroup, group_id)
-                if group:
-                    group.updated_at = datetime.now(timezone.utc)
-                
-                session.commit()
-                session.refresh(poll)
+                session.query(TravelGroup).filter(TravelGroup.id == group_id).update(
+                    {TravelGroup.updated_at: datetime.now(timezone.utc)}, synchronize_session=False,
+                )
+                session.flush()
                 
                 # Get updated poll data
                 poll_data = poll.to_dict()
+                session.commit()
+                from app.core.cache.redis import invalidate_cache
+                invalidate_cache('gp_polls:*')
+                invalidate_cache('gp_groups:*')
                 
                 logger.info(f"Vote recorded for poll {poll_id} by user {user_id}")
                 
@@ -333,6 +331,7 @@ class PollService:
                 return True, {
                     'poll_id': str(poll_id),
                     'votes': poll_data['votes'],
+                    'poll': poll_data,
                     'user_vote': None if existing_vote else option
                 }
                 

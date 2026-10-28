@@ -1067,6 +1067,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/expenses/groups/notifications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Private expense inbox; current active membership required. Responses are never cached. */
+        get: operations["groups_sql_get_expense_notifications_get_api_v1_expenses_groups_notifications"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/expenses/groups/notifications/read": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Private expense inbox; current active membership required. Responses are never cached. */
+        post: operations["groups_sql_read_expense_notifications_post_api_v1_expenses_groups_notifications_read"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/expenses/groups/{group_id}": {
         parameters: {
             query?: never;
@@ -4093,6 +4127,45 @@ export interface components {
             message?: string;
             success: boolean;
         };
+        ExpenseNotification: {
+            actor_name: string;
+            body?: string | null;
+            /**
+             * Format: date-time
+             * @description UTC instant; display in the viewer local timezone.
+             */
+            created_at: string;
+            /** Format: uuid */
+            group_id: string;
+            group_name: string;
+            /** Format: uuid */
+            id: string;
+            is_read: boolean;
+            kind: string;
+            title: string;
+        };
+        ExpenseNotificationsResponse: {
+            data: {
+                group_counts: {
+                    [key: string]: number;
+                };
+                groups: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                }[];
+                notifications: components["schemas"]["ExpenseNotification"][];
+                pagination: {
+                    has_more: boolean;
+                    limit: number;
+                    offset: number;
+                    total: number;
+                };
+                unread_count: number;
+            };
+            message?: string;
+            success: boolean;
+        };
         Health: {
             checks?: {
                 [key: string]: {
@@ -4446,6 +4519,16 @@ export interface components {
             revision: number;
             /** Status */
             status: string;
+        };
+        ReadExpenseNotifications: {
+            ids: string[];
+        };
+        ReadExpenseNotificationsResponse: {
+            data: {
+                marked: number;
+            };
+            message?: string;
+            success: boolean;
         };
         /** RequestCreate */
         RequestCreate: {
@@ -7485,6 +7568,76 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    groups_sql_get_expense_notifications_get_api_v1_expenses_groups_notifications: {
+        parameters: {
+            query?: {
+                group_id?: string;
+                unread_only?: boolean;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseNotificationsResponse"];
+                };
+            };
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    groups_sql_read_expense_notifications_post_api_v1_expenses_groups_notifications_read: {
+        parameters: {
+            query?: never;
+            header?: {
+                /** @description Required with cookie authentication. */
+                "X-CSRF-Token"?: string;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ReadExpenseNotifications"];
+            };
+        };
+        responses: {
+            /** @description Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ReadExpenseNotificationsResponse"];
+                };
+            };
             /** @description Response */
             default: {
                 headers: {

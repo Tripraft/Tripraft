@@ -24,12 +24,13 @@ import {
   useUploadVaultFile,
   useDeleteVaultFile,
   gpKeys,
+  upsertPlannerItem,
 } from '../../../../hooks/useGroupPlannerQuery';
 import groupPlannerApi from '../../../../services/groupPlannerApi';
 import apiClient from '../../../../utils/apiClient';
 import GlobalConfig from '../../../../config/globalConfig';
 import { toArray } from '../../utils/groupPlannerUtils';
-import { formatDate, formatFileSize } from '../../utils/formatters';
+import { formatDate, formatCalendarDate, formatFileSize } from '../../utils/formatters';
 import { isPlannerDemo } from '../../demo/demoMode';
 export default function LogisticsTab({ groupId, showToast, canEdit = true }) {
   const client = useQueryClient(),
@@ -49,15 +50,22 @@ export default function LogisticsTab({ groupId, showToast, canEdit = true }) {
     uploadMutation = useUploadVaultFile(groupId),
     deleteMutation = useDeleteVaultFile(groupId);
   const inputRef = useRef(null),
-    qrRef = useRef(null);
+    qrRef = useRef(null),
+    previewFileRef = useRef(null),
+    downloadBusyRef = useRef(false),
+    activeGroupRef = useRef(groupId);
+  activeGroupRef.current = groupId;
   const [tab, setTab] = useState('pretrip'),
     [editing, setEditing] = useState(null),
     [saving, setSaving] = useState(false),
     [formError, setFormError] = useState(''),
+    [uploadError, setUploadError] = useState(''),
     [dragging, setDragging] = useState(false),
     [preview, setPreview] = useState(null),
     [previewUrl, setPreviewUrl] = useState(null),
     [previewError, setPreviewError] = useState(''),
+    [previewAttempt, setPreviewAttempt] = useState(0),
+    [downloadingDoc, setDownloadingDoc] = useState(null),
     [qrDoc, setQrDoc] = useState(null);
   const visible = tasks.filter((t) =>
       tab === 'packing' ? t.category === 'packing' : t.category !== 'packing',
@@ -75,6 +83,7 @@ export default function LogisticsTab({ groupId, showToast, canEdit = true }) {
   useEffect(() => {
     setPreviewUrl(null);
     setPreviewError('');
+    previewFileRef.current = null;
     if (!preview) return;
     const controller = new AbortController();
     let url;
@@ -86,6 +95,7 @@ export default function LogisticsTab({ groupId, showToast, canEdit = true }) {
       .then((blob) => {
         if (!controller.signal.aborted) {
           url = URL.createObjectURL(blob);
+          previewFileRef.current = {groupId, documentId: preview.id, url};
           setPreviewUrl(url);
         }
       })
@@ -94,17 +104,21 @@ export default function LogisticsTab({ groupId, showToast, canEdit = true }) {
       });
     return () => {
       controller.abort();
+      previewFileRef.current = null;
       if (url) URL.revokeObjectURL(url);
     };
-  }, [preview, groupId]);
+  }, [preview, groupId, previewAttempt]);
   const refresh = () => {
     client.invalidateQueries({ queryKey: gpKeys.checklist(groupId) });
     client.invalidateQueries({ queryKey: gpKeys.activities(groupId) });
   };
   const upload = async (file) => {
     if (!file || uploadMutation.isPending || !canEdit) return;
+    setUploadError('');
     if (file.size > 10 * 1024 * 1024) {
+      setUploadError('Files must be 10 MB or smaller.');
       showToast('Files must be 10 MB or smaller.', 'error');
+      if (inputRef.current) inputRef.current.value = '';
       return;
     }
     try {
@@ -112,6 +126,7 @@ export default function LogisticsTab({ groupId, showToast, canEdit = true }) {
       client.invalidateQueries({ queryKey: gpKeys.activities(groupId) });
       showToast('Booking uploaded');
     } catch (e) {
+      setUploadError(e.message || 'Upload failed');
       showToast(e.message || 'Upload failed', 'error');
     } finally {
       if (inputRef.current) inputRef.current.value = '';
@@ -138,12 +153,14 @@ export default function LogisticsTab({ groupId, showToast, canEdit = true }) {
       assigned_to_id: editing.assigned_to_id || null,
     };
     try {
-      if (editing.id) await groupPlannerApi.updateChecklistItem(groupId, editing.id, payload);
-      else
-        await groupPlannerApi.addChecklistItem(groupId, payload.text, {
+      await client.cancelQueries({ queryKey: gpKeys.checklist(groupId) });
+      const response = editing.id
+        ? await groupPlannerApi.updateChecklistItem(groupId, editing.id, payload)
+        : await groupPlannerApi.addChecklistItem(groupId, payload.text, {
           ...payload,
           due_date: payload.due_date || undefined,
         });
+      client.setQueryData(gpKeys.checklist(groupId), old => upsertPlannerItem(old, response.data, 'checklist'));
       refresh();
       setEditing(null);
       showToast('Task saved');
@@ -163,21 +180,33 @@ export default function LogisticsTab({ groupId, showToast, canEdit = true }) {
     }
   };
   const download = async (doc) => {
+    if (downloadBusyRef.current) return;
+    downloadBusyRef.current = true;
+    setDownloadingDoc(doc.id);
     try {
-      const blob = await apiClient.get(
-        `${GlobalConfig.ENDPOINTS.GROUP_PLANNER}/groups/${groupId}/vault/${doc.id}`,
-        { responseType: 'blob' },
-      );
-      const url = URL.createObjectURL(blob),
-        a = document.createElement('a');
+      const cached = previewFileRef.current;
+      const reusePreview = cached?.groupId === groupId && cached.documentId === doc.id;
+      let url = reusePreview ? cached.url : null;
+      if (!url) {
+        const blob = await apiClient.get(
+          `${GlobalConfig.ENDPOINTS.GROUP_PLANNER}/groups/${groupId}/vault/${doc.id}`,
+          { responseType: 'blob' },
+        );
+        if (activeGroupRef.current !== groupId) return;
+        url = URL.createObjectURL(blob);
+      }
+      const a = document.createElement('a');
       a.href = url;
       a.download = doc.filename;
       document.body.appendChild(a);
       a.click();
       a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      if (!reusePreview) setTimeout(() => URL.revokeObjectURL(url), 1000);
     } catch (e) {
       showToast(e.message || 'Download failed', 'error');
+    } finally {
+      downloadBusyRef.current = false;
+      setDownloadingDoc(null);
     }
   };
   return (
@@ -244,6 +273,7 @@ export default function LogisticsTab({ groupId, showToast, canEdit = true }) {
               />
             </div>
           )}
+          {uploadError && <p role="alert">{uploadError}</p>}
           {vaultLoading ? (
             <p role="status">Loading your bookings...</p>
           ) : vaultError ? (
@@ -277,9 +307,9 @@ export default function LogisticsTab({ groupId, showToast, canEdit = true }) {
                         <Eye size={13} />
                         Preview
                       </button>
-                      <button onClick={() => download(doc)}>
+                      <button onClick={() => download(doc)} disabled={downloadingDoc === doc.id}>
                         <Download size={13} />
-                        Download
+                        {downloadingDoc === doc.id ? 'Downloading…' : 'Download'}
                       </button>
                       {doc.booking_code && (
                         <button onClick={() => setQrDoc(doc)}>
@@ -370,7 +400,7 @@ export default function LogisticsTab({ groupId, showToast, canEdit = true }) {
                     </button>
                     <p>
                       {item.assigned_to_name || item.author_name || 'Anyone'}
-                      {item.due_date ? ' · Due ' + formatDate(item.due_date) : ''}
+                      {item.due_date ? ' · Due ' + formatCalendarDate(item.due_date) : ''}
                       <span className={'gp-task-priority ' + item.priority}>{item.priority}</span>
                     </p>
                   </div>
@@ -505,6 +535,10 @@ export default function LogisticsTab({ groupId, showToast, canEdit = true }) {
           >
             <div className="gp-doc-preview-header">
               <h2>{preview.title || preview.filename}</h2>
+              <div className="gp-doc-preview-actions">
+                <button className="gp-hub-button" onClick={() => download(preview)} disabled={!previewUrl || downloadingDoc === preview.id}>
+                  <Download size={15} /> Download
+                </button>
               <button
                 className="gp-icon-button"
                 aria-label="Close booking preview"
@@ -512,15 +546,16 @@ export default function LogisticsTab({ groupId, showToast, canEdit = true }) {
               >
                 <X size={17} />
               </button>
+              </div>
             </div>
             <div className="gp-doc-preview-body">
               {previewError ? (
-                <p role="alert">{previewError}</p>
+                <div><p role="alert">{previewError}</p><button className="gp-hub-button" onClick={() => setPreviewAttempt(value => value + 1)}>Retry preview</button></div>
               ) : !previewUrl ? (
                 <p role="status">Loading document...</p>
               ) : preview.mime_type?.includes('pdf') ? (
                 <iframe
-                  src={previewUrl}
+                  src={previewUrl + '#toolbar=0&navpanes=0'}
                   title={preview.filename}
                   className="gp-doc-preview-iframe"
                 />

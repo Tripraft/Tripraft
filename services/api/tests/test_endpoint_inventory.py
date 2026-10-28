@@ -170,7 +170,11 @@ def test_repeated_gp_invitation_keeps_a_valid_email_link(trip, bob, monkeypatch)
     _, _, bob_email = bob
     from app.notifications.email.smtp import email_service
     calls = []
+    jobs = []
+    monkeypatch.setattr(type(email_service), 'enabled', property(lambda self: True))
     monkeypatch.setattr(email_service, 'send_invitation', lambda **kwargs: calls.append(kwargs) or True)
+    monkeypatch.setattr('app.notifications.email.background.submit_auth_email',
+                        lambda send, *args: jobs.append((send, args)) or True)
     responses = [api.post(
         '/api/v2/group-planner/invitations',
         json={'group_id': group_id, 'email': bob_email},
@@ -180,7 +184,12 @@ def test_repeated_gp_invitation_keeps_a_valid_email_link(trip, bob, monkeypatch)
         assert response.status_code == 201, response.get_json()
     invitation_id = payload(responses[0])['id']
     assert UUID(invitation_id).version == 7
-    assert len(calls) == 2
+    assert not calls  # The HTTP response never waits for SMTP.
+    assert len(jobs) == 2
+    assert all(args[0] == invitation_id for _, args in jobs)
+    for send, args in jobs:
+        assert send(*args)
+    assert len(calls) == 1  # The superseded generation is skipped.
     assert all(call['invitation_token'] == invitation_id for call in calls)
     assert all(call['group_name'] == 'Endpoint inventory' for call in calls)
 

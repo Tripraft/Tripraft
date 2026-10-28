@@ -5,6 +5,7 @@ File upload / download / list / delete for the logistics vault.
 """
 
 import logging
+from io import BytesIO
 
 from app.core.apiutils.responses import (created_response, error_response,
                                      not_found_response, success_response)
@@ -12,6 +13,7 @@ from app.core.config import Config
 from app.core.rate_limiter import limit_api
 from app.auth.security.decorators import require_auth, require_group_role
 from flask import Blueprint, g, request, send_file
+from werkzeug.exceptions import RequestEntityTooLarge
 
 logger = logging.getLogger(__name__)
 
@@ -42,8 +44,10 @@ def upload_vault_file(group_id):
         )
         if ok:
             return created_response(data=result['document'])
-        return error_response(result.get('error'), 400)
+        return error_response(result.get('error'), result.get('status_code', 400))
 
+    except RequestEntityTooLarge:
+        return error_response('File exceeds 10 MB limit', 413)
     except Exception as e:
         logger.error("Vault upload route error: %s", e)
         return error_response('Upload failed', 500)
@@ -79,14 +83,17 @@ def download_vault_file(group_id, doc_id):
             group_id=group_id, doc_id=doc_id, user_id=g.user_id,
         )
         if not ok:
-            return error_response(result.get('error'), 404)
+            return error_response(result.get('error'), result.get('status_code', 404))
 
-        return send_file(
-            result['path'],
+        response = send_file(
+            BytesIO(result['data']) if 'data' in result else result['path'],
             mimetype=result['mime_type'],
             as_attachment=True,
             download_name=result['filename'],
         )
+        response.headers['Cache-Control'] = 'private, no-store'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        return response
 
     except Exception as e:
         logger.error("Vault download route error: %s", e)

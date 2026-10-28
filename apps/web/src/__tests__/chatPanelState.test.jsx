@@ -1,12 +1,12 @@
 // Purpose: Verifies inline message actions, group-switch composer reset, loading state, Crew answer failures and card-specific expense deletion.
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 jest.mock('../context/AuthContext', () => ({ useAuth: () => ({ currentUser: { uid: 'user-uuid' } }) }));
 jest.mock('../hooks/useGroupPlannerQuery', () => ({
+  ...jest.requireActual('../hooks/useGroupPlannerQuery'),
   useGroupPolls: () => ({ data: [] }),
   useGroupMembers: () => ({ data: [] }),
-  gpKeys: { expenses: id => ['group-planner', 'expenses', id] },
 }));
 jest.mock('../hooks/useChatQuery', () => ({
   useMessages: jest.fn(), useSendMessage: jest.fn(), useDeleteMessage: jest.fn(), useEditMessage: jest.fn(),
@@ -14,7 +14,7 @@ jest.mock('../hooks/useChatQuery', () => ({
 jest.mock('../hooks/useChatSocket', () => ({ __esModule: true, default: () => ({
   connected: true, typingUsers: [], emitTyping: jest.fn(), emitRead: jest.fn(),
 }) }));
-jest.mock('../services/groupPlannerApi', () => ({ __esModule: true, default: { confirmCrewAction: jest.fn() } }));
+jest.mock('../services/groupPlannerApi', () => ({ __esModule: true, default: { confirmCrewAction: jest.fn(), createPoll: jest.fn() } }));
 jest.mock('../features/scout/ScoutConsentCard', () => () => null);
 jest.mock('../features/scout/CrewCards', () => ({
   CrewQuestionCard: ({ onAnswer }) => <button onClick={() => onAnswer('Yes')}>Answer Crew</button>,
@@ -26,6 +26,7 @@ jest.mock('../features/scout/CrewCards', () => ({
 import { useMessages, useSendMessage, useDeleteMessage, useEditMessage } from '../hooks/useChatQuery';
 import ChatPanel from '../features/trips/jsx/chat/ChatPanel';
 import groupPlannerApi from '../services/groupPlannerApi';
+import { gpKeys } from '../hooks/useGroupPlannerQuery';
 
 let client, send, remove;
 beforeEach(() => {
@@ -58,6 +59,35 @@ it('keeps edit and delete in an inline options menu and saves message edits', as
 });
 afterEach(() => client.clear());
 const panel = (id, showToast) => <QueryClientProvider client={client}><ChatPanel groupId={id} showToast={showToast} /></QueryClientProvider>;
+
+it('locks every poll field during creation, prevents duplicates and permits retry after failure', async () => {
+  let resolve, reject;
+  groupPlannerApi.createPoll.mockImplementation(() => new Promise((ok, fail) => { resolve = ok; reject = fail; }));
+  const toast = jest.fn();
+  render(panel('first', toast));
+  fireEvent.click(screen.getByRole('button', { name: /Polls/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Create a Poll' }));
+  fireEvent.change(screen.getByPlaceholderText("What's your question?"), {target: {value: 'Dinner?'}});
+  fireEvent.change(screen.getByPlaceholderText('Option 1'), {target: {value: 'Tapas'}});
+  fireEvent.change(screen.getByPlaceholderText('Option 2'), {target: {value: 'Sushi'}});
+  const submit = screen.getByRole('button', {name: 'Create Poll'});
+  fireEvent.click(submit);
+  fireEvent.click(submit);
+  await waitFor(() => expect(groupPlannerApi.createPoll).toHaveBeenCalledTimes(1));
+  const fieldset = submit.closest('fieldset');
+  for (const control of fieldset.querySelectorAll('input, button')) expect(control).toBeDisabled();
+  fireEvent.click(fieldset.closest('.gp-modal-overlay'));
+  expect(fieldset).toBeInTheDocument();
+  await act(async () => reject(new Error('Offline')));
+  expect(screen.getByPlaceholderText("What's your question?")).toHaveValue('Dinner?');
+  expect(submit).toBeEnabled();
+  expect(toast).toHaveBeenCalledWith('Offline', 'error');
+  fireEvent.click(submit);
+  await waitFor(() => expect(groupPlannerApi.createPoll).toHaveBeenCalledTimes(2));
+  await act(async () => resolve({success: true, data: {id: 'saved', name: 'Dinner?', options: ['Tapas', 'Sushi']}}));
+  expect(screen.queryByPlaceholderText("What's your question?")).not.toBeInTheDocument();
+  expect(client.getQueryData(gpKeys.polls('first')).data).toEqual([expect.objectContaining({id: 'saved'})]);
+});
 
 it('clears the composer and mention popup when the group changes', () => {
   const { rerender } = render(panel('first'));

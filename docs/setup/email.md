@@ -74,3 +74,18 @@ retry, and already verified links display success. A signed-in account's profile
 is refreshed after verification; pending group invitations remain available
 through the continue action. The current application records verification but
 does not require it for login or group membership.
+
+## Trip planner invitation delivery
+
+Trip planner create/resend endpoints save the invitation before accepting email
+work into the existing bounded local executor (two workers, 32 outstanding jobs).
+They return `email_status: queued`, `disabled`, or `failed`; `queued` reports
+acceptance into that process, not confirmed delivery. A stopped process can lose
+pending work, so these jobs are best effort. Resend or share the invitation link
+from the Circle when delivery fails. The planner warns when email is disabled
+or the executor cannot accept the job.
+
+Before SMTP begins, the worker rechecks that the invitation is pending, unexpired,
+belongs to an active group and still has the same creation generation. A cancelled,
+accepted or superseded invitation is skipped. SMTP does not hold a database lock.
+Trip links use `/invitations/{id}` and require the intended recipient's account.

@@ -74,7 +74,7 @@ class ChecklistService:
         try:
             with get_db_session() as session:
                 # Check membership
-                member = session.query(TripMember).filter(
+                member = session.query(TripMember).options(joinedload(TripMember.user)).filter(
                     TripMember.group_id == group_id,
                     TripMember.user_id == created_by_id,
                     TripMember.is_active == True
@@ -107,6 +107,7 @@ class ChecklistService:
                     item=text.strip(),
                     completed=False,
                     author_id=created_by_id,
+                    author=member.user,
                     category=category.strip() if category else None,
                     priority=priority,
                     due_date=parsed_due_date,
@@ -116,9 +117,9 @@ class ChecklistService:
                 session.flush()
                 
                 # Update group timestamp
-                group = session.get(TravelGroup, group_id)
-                if group:
-                    group.updated_at = datetime.now(timezone.utc)
+                session.query(TravelGroup).filter(TravelGroup.id == group_id).update(
+                    {TravelGroup.updated_at: datetime.now(timezone.utc)}, synchronize_session=False,
+                )
                 
                 # Log activity
                 activity = GroupActivity(
@@ -131,12 +132,19 @@ class ChecklistService:
                 )
                 session.add(activity)
                 
+                session.flush()
+                item_dict = checklist_item.to_dict()
                 session.commit()
-                session.refresh(checklist_item)
-                
-                logger.info(f"Checklist item added: {checklist_item.id} in group {group_id}")
-                
-                return True, {'item': checklist_item.to_dict()}
+                logger.info("Checklist item added: %s in group %s", item_dict['id'], group_id)
+                from app.core.cache.redis import invalidate_cache
+                invalidate_cache('gp_checklist:*')
+                invalidate_cache('gp_groups:*')
+                try:
+                    from app.trips.realtime.events import emit_to_group
+                    emit_to_group(group_id, 'checklist:created', {'item': item_dict, 'user_id': created_by_id})
+                except Exception:
+                    logger.debug('Checklist broadcast unavailable', exc_info=True)
+                return True, {'item': item_dict}
                 
         except Exception as e:
             logger.error(f"Add checklist item error: {str(e)}")
