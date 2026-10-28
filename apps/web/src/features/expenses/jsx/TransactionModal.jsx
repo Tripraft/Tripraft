@@ -38,9 +38,8 @@ const TransactionModal = ({
     splitType: 'equal', splitValues: {}, bill: { items: [], tax: '', tip: '', discount: '' },
   });
   const ledgerCurrency = activeGroup?.currency || currency || 'INR';
-  const exchange = useExchangeRate(formData.currency, ledgerCurrency, 0, mode === 'group');
   const preferredCurrency = activeGroup?.display_currency || ledgerCurrency;
-  const previewCurrency = formData.currency === preferredCurrency ? ledgerCurrency : preferredCurrency;
+  const previewCurrency = preferredCurrency;
   const previewExchange = useExchangeRate(formData.currency, previewCurrency, 0, mode === 'group');
   useEffect(() => { setSplitError(''); }, [formData]);
 
@@ -208,9 +207,9 @@ const TransactionModal = ({
             <label htmlFor="transaction-currency">Currency</label>
             <CurrencySelect id="transaction-currency" value={formData.currency} disabled={saving || (mode === 'personal' && !!editingTransaction)}
               onChange={event => setFormData(prev => ({...prev, currency: event.target.value}))} />
-            {mode === 'group' && formData.currency !== ledgerCurrency && <p role="status">{exchange.data
-              ? `About ${formatMoney(Number(formData.amount || 0) * exchange.data.rate, ledgerCurrency)} in the group ledger. Original ${formData.currency} is saved with the receipt.`
-              : exchange.error || 'Loading the conversion rate...'}</p>}
+            {mode === 'group' && formData.currency !== previewCurrency && <p role="status">{previewExchange.data
+              ? `About ${formatMoney(Number(formData.amount || 0) * previewExchange.data.rate, previewCurrency)} in the group currency.`
+              : previewExchange.error || 'Loading the conversion rate...'}</p>}
           </div>
           <div className="form-group">
             <label htmlFor="description">Description</label>

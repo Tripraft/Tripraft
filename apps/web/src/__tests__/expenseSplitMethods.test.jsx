@@ -36,7 +36,7 @@ it.each(cases)('saves %s from the group expense dialog with an accurate preview 
     change('Tax', '10'); change('Tip', '15'); change('Discount', '5');
   }
   expect(screen.getByLabelText('Alice share')).toHaveTextContent(kind === 'reimbursement' ? '-$30.00' : `$${expected[0].toFixed(2)}`);
-  if (kind === 'reimbursement') expect(screen.getByLabelText('Refund received by')).toHaveValue('a');
+  if (kind === 'reimbursement') expect(screen.getByRole('radio', {name: 'Refund received by Alice'})).toBeChecked();
   fireEvent.click(screen.getByRole('button', { name: 'Save' }));
   await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
   const data = save.mock.calls[0][0];

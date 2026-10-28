@@ -596,7 +596,7 @@ const TransactionList = ({
               </div>
               
               <div className="receipt-divider"></div>
-              {selectedTransaction.original && <div className="receipt-item"><span className="receipt-label">ORIGINAL RECEIPT</span><span className="receipt-value">{formatCurrency(selectedTransaction.original.amount, selectedTransaction.original.currency)} · rate {selectedTransaction.original.rate} on {selectedTransaction.original.rate_date}</span></div>}
+              {selectedTransaction.original && selectedTransaction.original.currency !== (activeGroup?.display_currency || currency) && <div className="receipt-item"><span className="receipt-label">ORIGINAL RECEIPT</span><span className="receipt-value">{formatCurrency(selectedTransaction.original.amount, selectedTransaction.original.currency)} · rate {selectedTransaction.original.rate} on {selectedTransaction.original.rate_date}</span></div>}
               
               <div className="receipt-item">
                 <span className="receipt-label">{selectedTransaction.split_type === 'reimbursement' ? 'REFUND RECEIVED BY' : 'PAID BY'}</span>

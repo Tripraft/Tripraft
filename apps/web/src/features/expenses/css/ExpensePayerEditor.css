@@ -5,25 +5,53 @@
 .payer-mode { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; margin: 12px 0; border-radius: 9px; background: var(--color-bg-secondary, #f1f5f9); }
 .payer-mode button { border: 1px solid transparent; background: transparent; color: inherit; border-radius: 7px; padding: 9px 8px; cursor: pointer; }
 .payer-mode button[aria-pressed="true"] { background: var(--color-bg-primary, #fff); color: var(--color-primary-600, #6d28d9); border-color: var(--color-border-light, #dce2ec); font-weight: 600; box-shadow: 0 1px 3px #0000000a; }
-.payer-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(110px, .85fr) 32px; gap: 8px; align-items: center; margin: 10px 0; }
-.payer-row label, .payer-single { min-width: 0; display: block; }
-.payer-row select, .payer-single select { width: 100%; min-width: 0; }
-.expense-payer-editor select { font: inherit; font-size: 16px; padding: 10px 8px; border: 1px solid var(--color-border-light, #dce2ec); border-radius: 8px; background: var(--color-bg-primary, #fff); color: inherit; }
+.payer-members { display: grid; gap: 8px; min-width: 0; margin: 14px 0 0; padding: 0; border: 0; }
+.payer-member-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(140px, .85fr); gap: 12px; align-items: center; min-width: 0; padding: 10px 12px; border: 1px solid var(--color-border-light, #dce2ec); border-radius: 10px; }
+.payer-member-row.is-selected { border-color: var(--color-primary-300, #c4b5fd); background: var(--color-bg-secondary, #f8fafc); }
+.expense-payer-editor .payer-member-name { display: flex; align-items: center; gap: 10px; min-width: 0; margin: 0; cursor: pointer; }
+.payer-member-name strong { font-size: .9rem; font-weight: 500; overflow-wrap: anywhere; }
+.expense-payer-editor .payer-member-name input { appearance: auto; flex: 0 0 18px; width: 18px; height: 18px; margin: 0; padding: 0; accent-color: var(--color-primary-600, #7c3aed); }
+.payer-single-amount { text-align: right; font-size: .9rem; font-variant-numeric: tabular-nums; }
 .expense-payer-editor button { min-height: 40px; }
-.expense-payer-editor .payer-amount { display: flex; align-items: center; border: 1px solid var(--color-border-light, #dce2ec); border-radius: 8px; overflow: hidden; }
-.payer-amount > span { padding-left: 10px; font-size: .75rem; color: var(--color-text-secondary, #64748b); }
-.expense-payer-editor .payer-amount input { min-width: 0; width: 100%; border: 0; background: transparent; padding: 10px 8px; }
-.payer-actions button, .payer-remove { display: inline-flex; gap: 5px; align-items: center; border: 0; background: transparent; color: var(--color-primary-600, #6d28d9); padding: 7px 0; cursor: pointer; }
-.payer-actions button:disabled { opacity: .45; cursor: default; }
-.payer-remove { justify-content: center; color: var(--color-text-secondary, #64748b); }
+.expense-payer-editor .payer-amount { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); align-items: center; min-width: 0; margin: 0; border: 1px solid var(--color-border-light, #dce2ec); border-radius: 8px; background: var(--color-bg-primary, #fff); overflow: hidden; }
+.expense-payer-editor .payer-currency { white-space: nowrap; overflow-wrap: normal; word-break: normal; text-align: center; font-size: .75rem; font-weight: 600; color: var(--color-text-secondary, #64748b); border-right: 1px solid var(--color-border-light, #dce2ec); }
+.expense-payer-editor .payer-amount input { min-width: 0; width: 100%; border: 0; border-radius: 0; background: transparent; padding: 10px 8px; color: inherit; font-size: 16px; font-variant-numeric: tabular-nums; text-align: right; box-shadow: none; }
+.expense-payer-editor .payer-amount:focus-within { border-color: var(--color-primary-600, #7c3aed); box-shadow: 0 0 0 2px var(--color-primary-100, #ede9fe); }
+.expense-payer-editor .payer-amount input:focus-visible { outline: none; }
+.payer-amount:has(input:disabled) { opacity: .5; }
+.payer-actions { min-height: 40px; margin-top: 6px; font-size: .8rem; color: var(--color-text-secondary, #64748b); }
+.payer-actions button { border: 0; background: transparent; color: var(--color-primary-600, #6d28d9); padding: 7px 0; cursor: pointer; }
 .payer-progress { font-size: .8rem; flex-wrap: wrap; padding: 10px; border-radius: 7px; background: var(--color-bg-secondary, #f1f5f9); }
 .payer-progress.has-error { color: #b91c1c; background: #fef2f2; }
 .payer-progress.is-complete { color: #047857; background: #ecfdf5; }
-.payer-preview { margin-top: 14px; font-size: .8rem; }
-.payer-preview summary { cursor: pointer; font-weight: 600; }
-.payer-preview-scroll { overflow-x: auto; margin-top: 10px; }
-.payer-preview table { width: 100%; min-width: 320px; border-collapse: collapse; }
-.payer-preview th, .payer-preview td { text-align: right; padding: 9px 5px; border-bottom: 1px solid var(--color-border-light, #dce2ec); vertical-align: top; }
-.payer-preview th:first-child { text-align: left; overflow-wrap: anywhere; max-width: 120px; }
-.payer-preview td > span:first-child:not(.expense-money-pair) { display: block; font-size: .7rem; color: var(--color-text-secondary, #64748b); }
-@media (max-width: 480px) { .expense-payer-editor { padding: 12px; } .payer-row { grid-template-columns: minmax(0, 1fr) minmax(95px, .8fr) 26px; gap: 5px; } }
+.payer-preview { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border-light, #dce2ec); font-size: .85rem; }
+.payer-preview h3 { font-size: .9rem; font-weight: 600; margin: 0; }
+.payer-preview-scroll { overflow-x: auto; margin-top: 12px; }
+.payer-preview table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.payer-preview th, .payer-preview td { text-align: right; padding: 12px 10px; border-bottom: 1px solid var(--color-border-light, #dce2ec); vertical-align: top; line-height: 1.4; }
+.payer-preview thead th { white-space: nowrap; font-size: .75rem; font-weight: 500; color: var(--color-text-secondary, #64748b); background: var(--color-bg-secondary, #f8fafc); }
+.payer-preview th:first-child { text-align: left; width: 32%; overflow-wrap: anywhere; }
+.payer-preview tbody th { font-weight: 500; }
+.payer-preview .expense-money-primary, .payer-preview .expense-money-original { white-space: nowrap; }
+.payer-preview .payer-net-status { display: block; width: fit-content; margin: 5px 0 0 auto; padding: 2px 7px; border-radius: 5px; font-size: .7rem; font-weight: 500; }
+.payer-net.is-credit .payer-net-status { color: #047857; background: #ecfdf5; }
+.payer-net.is-debit .payer-net-status { color: #b45309; background: #fffbeb; }
+.payer-net.is-settled .payer-net-status { color: var(--color-text-secondary, #64748b); background: var(--color-bg-secondary, #f1f5f9); }
+.payer-preview > .payer-help { margin: 10px 0 0; line-height: 1.5; }
+@media (max-width: 480px) {
+  .expense-payer-editor { padding: 12px; }
+  .payer-member-row { grid-template-columns: minmax(0, 1fr) 140px; gap: 8px; padding: 10px 8px; }
+  .payer-preview-scroll { overflow: visible; }
+  .payer-preview table, .payer-preview tbody { display: block; }
+  .payer-preview thead { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .payer-preview tbody { display: grid; gap: 10px; }
+  .payer-preview tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 8px; padding: 12px; border: 1px solid var(--color-border-light, #dce2ec); border-radius: 10px; }
+  .payer-preview th, .payer-preview td { display: block; padding: 0; border: 0; min-width: 0; }
+  .payer-preview tbody th:first-child { grid-column: 1 / -1; width: auto; }
+  .payer-preview td::before { content: attr(data-label); display: block; margin-bottom: 6px; color: var(--color-text-secondary, #64748b); font-size: .65rem; white-space: nowrap; }
+}
+@media (max-width: 360px) {
+  .payer-member-row { grid-template-columns: minmax(0, 1fr); }
+  .payer-member-row .payer-amount { margin-left: 28px; }
+  .payer-single-amount { padding-left: 28px; text-align: left; }
+}

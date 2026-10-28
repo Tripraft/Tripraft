@@ -24,6 +24,7 @@ it.each(['equal', 'exact', 'percentage', 'shares', 'adjustment', 'reimbursement'
   render(<TransactionModal mode="group" activeGroup={{id: 'g', currency: 'INR'}} members={members} currentUser={{uid: 'a'}} onSave={save} />);
   change('Description', 'Dinner'); change('Amount', '100');
   fireEvent.click(screen.getByRole('button', {name: 'Multiple people'}));
+  fireEvent.click(screen.getByRole('checkbox', {name: 'Paid by Bob'}));
   change('Alice paid amount', '75'); change('Bob paid amount', '25'); change('Split method', kind);
   if (kind === 'exact' || kind === 'reimbursement') change(`Alice ${kind}`, '30');
   if (kind === 'reimbursement') change('Bob reimbursement', '70');
@@ -46,6 +47,7 @@ it('blocks incomplete contributions, fills the remainder, and switches back to o
   render(<TransactionModal mode="group" members={members} currentUser={{uid: 'a'}} onSave={save} />);
   change('Description', 'Dinner'); change('Amount', '1200');
   fireEvent.click(screen.getByRole('button', {name: 'Multiple people'}));
+  fireEvent.click(screen.getByRole('checkbox', {name: 'Paid by Bob'}));
   change('Alice paid amount', '900');
   fireEvent.submit(screen.getByRole('button', {name: 'Save'}).closest('form'));
   expect(save).not.toHaveBeenCalled();
@@ -57,7 +59,7 @@ it('blocks incomplete contributions, fills the remainder, and switches back to o
   fireEvent.submit(screen.getByRole('button', {name: 'Save'}).closest('form'));
   expect(save).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', {name: 'One person'}));
-  change('Paid By', 'b');
+  fireEvent.click(screen.getByRole('radio', {name: 'Paid by Bob'}));
   fireEvent.click(screen.getByRole('button', {name: 'Save'}));
   await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
   expect(save.mock.calls[0][0].payers).toEqual([{user_id: 'b', amount: 1200}]);
@@ -68,12 +70,17 @@ it('shows USD source contributions and INR equivalents, including when INR is a 
   expect(screen.getByLabelText('Currency')).toHaveValue('INR');
   change('Currency', 'USD'); change('Amount', '100');
   fireEvent.click(screen.getByRole('button', {name: 'Multiple people'}));
+  fireEvent.click(screen.getByRole('checkbox', {name: 'Paid by Bob'}));
   change('Alice paid amount', '75'); change('Bob paid amount', '25');
   const payments = screen.getByRole('region', {name: 'Expense payments'});
   await waitFor(() => expect(within(payments).getByText('₹6,000.00')).toBeInTheDocument());
   expect(within(payments).getByText('USD 75.00')).toBeInTheDocument();
   expect(within(payments).getAllByText('₹2,000.00').length).toBeGreaterThan(0);
   expect(within(payments).getAllByText('USD 25.00').length).toBeGreaterThan(0);
+  change('Currency', 'INR');
+  expect(screen.getByRole('heading', {name: 'Balance preview · INR'})).toBeInTheDocument();
+  expect(document.querySelectorAll('.expense-money-original')).toHaveLength(0);
+  expect(within(payments).queryByText(/USD/)).toBeNull();
 });
 
 it('loads saved source contributions and preserves financial fields on a metadata edit', async () => {
@@ -113,4 +120,59 @@ it('credits each payer in member totals and keeps converted contributions reconc
   expect(screen.getByRole('button', {name: 'View transactions paid by Bob'})).toHaveTextContent('₹25.00');
   expect(screen.getByRole('button', {name: 'View transactions paid by Alice'})).toHaveTextContent('₹75.00');
   expect(convertedPayers([{user_id: 'a', amount: 33.33}, {user_id: 'b', amount: 66.67}], 100, .0125).map(p => p.amount)).toEqual([.42, .83]);
+});
+
+it('shows all members as checkboxes, enabling amounts only for selected payers', async () => {
+  const save = jest.fn();
+  render(<TransactionModal mode="group" members={[...members, {user_id: 'c', display_name: 'Casey'}]} currentUser={{uid: 'a'}} onSave={save} />);
+  change('Description', 'Dinner'); change('Amount', '100');
+  fireEvent.click(screen.getByRole('button', {name: 'Multiple people'}));
+  const payments = screen.getByRole('region', {name: 'Expense payments'});
+  expect(within(payments).queryByRole('combobox')).toBeNull();
+  expect(within(payments).queryByRole('button', {name: 'Add payer'})).toBeNull();
+  expect(within(payments).getAllByRole('checkbox')).toHaveLength(3);
+  expect(screen.getByLabelText('Bob paid amount')).toBeDisabled();
+  expect(screen.getByLabelText('Casey paid amount')).toBeDisabled();
+  fireEvent.click(screen.getByRole('checkbox', {name: 'Paid by Bob'}));
+  expect(screen.getByLabelText('Bob paid amount')).toBeEnabled();
+  change('Alice paid amount', '75'); change('Bob paid amount', '25');
+  fireEvent.click(screen.getByRole('checkbox', {name: 'Paid by Alice'}));
+  expect(screen.getByLabelText('Alice paid amount')).toBeDisabled();
+  change('Bob paid amount', '100');
+  fireEvent.click(screen.getByRole('button', {name: 'Save'}));
+  await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+  expect(save.mock.calls[0][0].payers).toEqual([{user_id: 'b', amount: 100}]);
+});
+
+it('uses radio selection for one payer and presents labelled balance amounts before their status', async () => {
+  render(<TransactionModal mode="group" members={members} currentUser={{uid: 'a'}} />);
+  change('Amount', '100');
+  const payments = screen.getByRole('region', {name: 'Expense payments'});
+  expect(within(payments).queryByRole('combobox')).toBeNull();
+  fireEvent.click(screen.getByRole('radio', {name: 'Paid by Bob'}));
+  expect(screen.getByRole('radio', {name: 'Paid by Bob'})).toBeChecked();
+  expect(screen.getByRole('radio', {name: 'Paid by Alice'})).not.toBeChecked();
+  const table = screen.getByRole('table', {name: 'Payment and balance preview'});
+  const bob = within(table).getByRole('rowheader', {name: 'Bob'}).closest('tr');
+  const net = within(bob).getAllByRole('cell')[2];
+  expect(net).toHaveAttribute('data-label', 'Balance change');
+  expect(net).toHaveTextContent('₹50.00Receive');
+  expect(within(table).getByRole('columnheader', {name: 'Cost share'})).toBeInTheDocument();
+  await waitFor(() => expect(screen.getByLabelText('Currency')).toHaveValue('INR'));
+});
+
+it.each(['INR', 'USD'])('shows only INR for an INR expense in an INR group with a %s ledger', async ledger => {
+  render(<TransactionModal mode="group" activeGroup={{id: 'g', currency: ledger, display_currency: 'INR'}}
+    members={members} currentUser={{uid: 'a'}} />);
+  change('Amount', '100');
+  fireEvent.click(screen.getByRole('button', {name: 'Multiple people'}));
+  fireEvent.click(screen.getByRole('checkbox', {name: 'Paid by Bob'}));
+  change('Alice paid amount', '75'); change('Bob paid amount', '25');
+  expect(screen.getByRole('heading', {name: 'Balance preview · INR'})).toBeInTheDocument();
+  expect(screen.getByLabelText('Alice share')).toHaveTextContent('₹50.00');
+  expect(document.querySelectorAll('.expense-money-original')).toHaveLength(0);
+  expect(within(screen.getByRole('region', {name: 'Expense payments'})).queryByText(/USD/)).toBeNull();
+  expect(screen.queryByText(/in the group currency\./)).toBeNull();
+  await waitFor(() => expect(screen.getByLabelText('Currency')).toHaveValue('INR'));
+  expect(getExchangeRate).not.toHaveBeenCalled();
 });

@@ -5,11 +5,22 @@ the equal, exact, percentage, shares, adjustment, reimbursement and itemized spl
 methods. Contributions use the expense currency and must add up to its total.
 Refunds use the same controls to record who received the money.
 
+Choose one payer using the member radio list, or tick the members who contributed
+in **Multiple people**. Unselected members' amount inputs stay disabled. There
+are no payer dropdowns or separate add/remove actions. Currency codes occupy a
+fixed column beside each amount. Balance previews align money at the top of
+each row with the receive/pay status underneath; on phones they become labelled
+member cards.
+
 New groups default to INR unless a saved currency preference is supplied.
 Existing groups retain their currency. Selecting USD for an INR group shows
 USD contributions and estimated INR amounts. Saved details, history and PDFs
 retain each source contribution together with the converted ledger contribution.
 The preferred group display currency is also respected in previews.
+When the entered currency matches the group's selected currency, show a single
+amount. Show a second amount only when the entered currency differs. If a saved
+receipt already uses the display currency, show that saved amount once, without
+converting it back through a different ledger currency.
 
 Focused number fields in expense dialogs ignore mouse-wheel stepping, including
 personal expenses, income, group amounts, payments and split inputs.
