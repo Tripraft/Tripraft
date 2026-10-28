@@ -1,5 +1,25 @@
 # Published file guide
 
+Group planner additions on 2026-10-27 are documented in the
+[planner guide](guides/group-planner.md):
+
+| File | What it does |
+|---|---|
+| [apps/web/src/__tests__/plannerTime.test.js](../apps/web/src/__tests__/plannerTime.test.js) | Checks UTC/local timestamp conversion, calendar dates and bounded invitation batches. |
+| [apps/web/src/__tests__/plannerUploads.test.jsx](../apps/web/src/__tests__/plannerUploads.test.jsx) | Verifies browser checks at and around the 10 MB upload limit. |
+| [docs/guides/group-planner.md](guides/group-planner.md) | Describes planner writes, immutable polls, local timestamps, uploads and Treasury behavior. |
+| [docs/archive/reports/group-planner-latency-2026-10-27.md](archive/reports/group-planner-latency-2026-10-27.md) | Records planner changes, measurement scope and validation. |
+| [docs/operations/group-planner-latency-evidence-2026-10-27.json](operations/group-planner-latency-evidence-2026-10-27.json) | Stores isolated before/after HTTP timing and SQL count samples. |
+| [services/api/app/notifications/email/trip_invitations.py](../services/api/app/notifications/email/trip_invitations.py) | Queues bounded trip invitation delivery and rechecks invitation generation/status before SMTP. |
+| [services/api/tests/test_planner_latency.py](../services/api/tests/test_planner_latency.py) | Enforces planner create-operation query budgets on a disposable database. |
+| [services/api/tests/test_planner_timestamps_and_delivery.py](../services/api/tests/test_planner_timestamps_and_delivery.py) | Checks UTC serializers, poll permissions/immutability, notifications and deferred invitation delivery. |
+| [services/api/tests/test_planner_upload_limits.py](../services/api/tests/test_planner_upload_limits.py) | Checks exact-size upload boundaries, bounded reads and HTTP 413 responses. |
+| [services/api/app/trips/services/vault_storage.py](../services/api/app/trips/services/vault_storage.py) | Provides the optional private Supabase Storage adapter with bounded downloads and credential-safe errors. |
+| [services/api/tests/test_planner_shared_files.py](../services/api/tests/test_planner_shared_files.py) | Verifies same-group file sharing, revoked/outsider denial, storage rollback and private bucket behavior. |
+| [services/api/migrations/versions/a06cb5d6e7f9_shared_vault_file_contents.py](../services/api/migrations/versions/a06cb5d6e7f9_shared_vault_file_contents.py) | Adds private document content using the existing database and removes public Data API grants. |
+| [services/api/migrations/versions/a06cb5d6e7f9_shared_vault_file_contents.development.json](../services/api/migrations/versions/a06cb5d6e7f9_shared_vault_file_contents.development.json) | Applies the additive file-content table through the approved development startup bridge. |
+| [infra/tools/setup_planner_storage.py](../infra/tools/setup_planner_storage.py) | Checks or explicitly creates the optional private object bucket without printing credentials. |
+
 Reviewed on 2026-10-20. This inventory describes all **665 published files**, including **45 documentation files**. [Start with the documentation index](README.md), or read [the repository review](repository-review.md) for publication decisions. Ignored datasets, raw audit exports, checkpoint notes and root planning originals are excluded.
 
 Each description explains the file responsibility. Strict JSON, lockfiles, generated declarations and binary assets are described without adding invalid inline comments. Update this index when published files change.

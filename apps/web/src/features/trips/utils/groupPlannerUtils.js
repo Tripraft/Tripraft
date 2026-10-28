@@ -10,6 +10,17 @@ export function unwrap(r) {
   return r;
 }
 
+export async function settlePlannerInvitations(emails, send) {
+  const results = [];
+  // Bound concurrent requests so a large invite list does not flood the API.
+  for (let offset = 0; offset < emails.length; offset += 3) {
+    const batch = emails.slice(offset, offset + 3);
+    const settled = await Promise.allSettled(batch.map(email => send(email)));
+    results.push(...settled.map((result, index) => ({ email: batch[index], ...result })));
+  }
+  return results;
+}
+
 export function toArray(raw, ...keys) {
   const d = unwrap(raw);
   if (Array.isArray(d)) return d;

@@ -29,6 +29,7 @@ os.environ.setdefault("FLASK_ENV", "development")
 # could exercise anyway. Tests that need Redis install a fake in
 # app.extensions["redis"].
 os.environ["REDIS_URL"] = ""
+os.environ["VAULT_STORAGE_BACKEND"] = "local"  # Disposable tests never contact cloud storage.
 
 
 @pytest.fixture(scope="session")

@@ -17,7 +17,6 @@ import { canRecordSettlement } from '../../../expenses/utils/groupPermissions';
 import SettlementModal from '../../../expenses/jsx/SettlementModal';
 import PlannerExpenseModal from '../shared/PlannerExpenseModal';
 import useExchangeRate from '../../../../hooks/useExchangeRate';
-import CurrencyConversion from '../../../../components/common/jsx/CurrencyConversion';
 export default function TreasuryTab({
   groupId,
   group,
@@ -159,11 +158,6 @@ export default function TreasuryTab({
           )}
         </div>
       </div>
-      <CurrencyConversion key={groupId} base={currency} preferredCurrency={displayCurrency} amounts={[
-        {label: 'Total Trip Spend', amount: total},
-        ...(budget ? [{label: 'Trip budget', amount: budget, currency: displayCurrency}] : []),
-        {label: 'Per person', amount: total / Math.max(1, members.length || summary?.member_count || group?.member_count || 1)},
-      ]} />
       {exchange.error && <p role="status" className="gp-form-hint">Amounts shown in {currency}; the {displayCurrency} display rate is unavailable.</p>}
       {!ledgerId ? (
         <div className="gp-feature-card gp-treasury-connect">

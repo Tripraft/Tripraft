@@ -1,0 +1,17 @@
+{
+  "revision": "a06cb5d6e7f9",
+  "down_revision": "f95ba4c5d6e8",
+  "operations": [
+    {
+      "op": "create_table",
+      "table": "gp_vault_file_contents",
+      "columns": [
+        {"name": "document_id", "type": "uuid", "nullable": false},
+        {"name": "content_base64", "type": "text", "nullable": false}
+      ],
+      "primary_key": ["document_id"],
+      "foreign_keys": [{"columns": ["document_id"], "table": "gp_vault_documents", "references": ["id"], "on_delete": "CASCADE"}],
+      "unique": []
+    }
+  ]
+}

@@ -63,21 +63,12 @@ def create_invitation():
         if success:
             logger.info(f"Invitation created for {email}")
             invalidate_cache('gp_invitations:*')
+            invalidate_cache('gp_groups:*')
             
-            # Send email notification (optional)
-            try:
-                from app.notifications.email.smtp import email_service
-                email_service.send_invitation(
-                    to_email=email,
-                    inviter_name=result.get('invited_by_name', 'Someone'),
-                    group_name=result.get('group_name', 'a group'),
-                    invitation_token=str(result.get('invitation_id')),
-                    invitation_type='trip',
-                )
-            except Exception as email_error:
-                logger.warning(f"Failed to send invitation email: {email_error}")
-            
-            return created_response(data=result.get('invitation', result))
+            from app.notifications.email.trip_invitations import queue_trip_invitation
+            invitation = result.get('invitation', result)
+            invitation['email_status'] = queue_trip_invitation(invitation)
+            return created_response(data=invitation)
         else:
             return error_response(result.get('error'), result.get('status_code', 400))
             
@@ -180,6 +171,7 @@ def decline_invitation(invitation_id):
         
         if success:
             invalidate_cache('gp_invitations:*')
+            invalidate_cache('gp_groups:*')
             return success_response(message=result.get('message'))
         else:
             return error_response(result.get('error'))
@@ -275,20 +267,12 @@ def resend_invitation(invitation_id):
         )
         
         if success:
-            # Send email notification
-            try:
-                from app.notifications.email.smtp import email_service
-                email_service.send_invitation(
-                    to_email=result.get('invited_email'),
-                    inviter_name=result.get('invited_by_name', 'Someone'),
-                    group_name=result.get('group_name', 'a group'),
-                    invitation_token=str(invitation_id),
-                    invitation_type='trip',
-                )
-            except Exception as email_error:
-                logger.warning(f"Failed to send invitation email: {email_error}")
-            
-            return success_response(data=result.get('invitation', result))
+            invalidate_cache('gp_invitations:*')
+            invalidate_cache('gp_groups:*')
+            from app.notifications.email.trip_invitations import queue_trip_invitation
+            invitation = result.get('invitation', result)
+            invitation['email_status'] = queue_trip_invitation(invitation)
+            return success_response(data=invitation)
         else:
             return error_response(result.get('error'))
             
@@ -318,6 +302,7 @@ def cancel_invitation(invitation_id):
         
         if success:
             invalidate_cache('gp_invitations:*')
+            invalidate_cache('gp_groups:*')
             return success_response(message=result.get('message'))
         else:
             return error_response(result.get('error'))

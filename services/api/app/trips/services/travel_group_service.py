@@ -108,6 +108,8 @@ class GroupService:
                     destination_id=str(destination_id) if destination_id else None,
                     group_code=group_code,
                     created_by=user_id,
+                    owner=user,
+                    members=[],
                     start_date=parsed_start_date,
                     end_date=parsed_end_date,
                     estimated_budget=estimated_budget,
@@ -118,8 +120,9 @@ class GroupService:
                 
                 # Add creator as member with 'creator' role
                 member = TripMember(
-                    group_id=group.id,
+                    group=group,
                     user_id=user_id,
+                    user=user,
                     role='creator',
                     is_active=True
                 )
@@ -144,13 +147,12 @@ class GroupService:
                 )
                 session.add(activity)
                 
-                session.commit()
-                session.refresh(group)
-                
-                logger.info(f"Group created: {group.id} by user {user_id}")
-                
-                # Build response with members
+                # Serialize flushed defaults/known relationships before commit
+                # expires them. Return only after the transaction succeeds.
+                session.flush()
                 group_dict = group.to_dict(include_members=True)
+                session.commit()
+                logger.info("Group created: %s by user %s", group_dict['id'], user_id)
                 
                 return True, {'group': group_dict}
                 

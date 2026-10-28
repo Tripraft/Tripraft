@@ -1,0 +1,563 @@
+{
+  "date": "2026-10-27",
+  "baseline": "a74e647",
+  "scope": "Flask HTTP test client; migrated disposable SQLite; one actor; no SMTP/network; five warm samples per version. No production or browser latency claim.",
+  "samples": {
+    "before": [
+      {
+        "sample": 1,
+        "operation": "group",
+        "status": 201,
+        "ms": 9.821,
+        "sql": 11
+      },
+      {
+        "sample": 1,
+        "operation": "poll",
+        "status": 201,
+        "ms": 9.119,
+        "sql": 13
+      },
+      {
+        "sample": 1,
+        "operation": "vote",
+        "status": 200,
+        "ms": 10.709,
+        "sql": 13
+      },
+      {
+        "sample": 1,
+        "operation": "checklist",
+        "status": 201,
+        "ms": 10.255,
+        "sql": 10
+      },
+      {
+        "sample": 1,
+        "operation": "invitation",
+        "status": 201,
+        "ms": 10.592,
+        "sql": 12
+      },
+      {
+        "sample": 1,
+        "operation": "place",
+        "status": 201,
+        "ms": 11.874,
+        "sql": 15
+      },
+      {
+        "sample": 1,
+        "operation": "chat",
+        "status": 201,
+        "ms": 7.909,
+        "sql": 8
+      },
+      {
+        "sample": 2,
+        "operation": "group",
+        "status": 201,
+        "ms": 11.438,
+        "sql": 11
+      },
+      {
+        "sample": 2,
+        "operation": "poll",
+        "status": 201,
+        "ms": 10.831,
+        "sql": 13
+      },
+      {
+        "sample": 2,
+        "operation": "vote",
+        "status": 200,
+        "ms": 8.612,
+        "sql": 13
+      },
+      {
+        "sample": 2,
+        "operation": "checklist",
+        "status": 201,
+        "ms": 11.388,
+        "sql": 10
+      },
+      {
+        "sample": 2,
+        "operation": "invitation",
+        "status": 201,
+        "ms": 9.058,
+        "sql": 12
+      },
+      {
+        "sample": 2,
+        "operation": "place",
+        "status": 201,
+        "ms": 11.632,
+        "sql": 15
+      },
+      {
+        "sample": 2,
+        "operation": "chat",
+        "status": 201,
+        "ms": 8.846,
+        "sql": 8
+      },
+      {
+        "sample": 3,
+        "operation": "group",
+        "status": 201,
+        "ms": 9.592,
+        "sql": 11
+      },
+      {
+        "sample": 3,
+        "operation": "poll",
+        "status": 201,
+        "ms": 10.734,
+        "sql": 13
+      },
+      {
+        "sample": 3,
+        "operation": "vote",
+        "status": 200,
+        "ms": 8.511,
+        "sql": 13
+      },
+      {
+        "sample": 3,
+        "operation": "checklist",
+        "status": 201,
+        "ms": 8.91,
+        "sql": 10
+      },
+      {
+        "sample": 3,
+        "operation": "invitation",
+        "status": 201,
+        "ms": 9.149,
+        "sql": 12
+      },
+      {
+        "sample": 3,
+        "operation": "place",
+        "status": 201,
+        "ms": 14.941,
+        "sql": 15
+      },
+      {
+        "sample": 3,
+        "operation": "chat",
+        "status": 201,
+        "ms": 8.3,
+        "sql": 8
+      },
+      {
+        "sample": 4,
+        "operation": "group",
+        "status": 201,
+        "ms": 10.715,
+        "sql": 11
+      },
+      {
+        "sample": 4,
+        "operation": "poll",
+        "status": 201,
+        "ms": 12.051,
+        "sql": 13
+      },
+      {
+        "sample": 4,
+        "operation": "vote",
+        "status": 200,
+        "ms": 10.929,
+        "sql": 13
+      },
+      {
+        "sample": 4,
+        "operation": "checklist",
+        "status": 201,
+        "ms": 9.173,
+        "sql": 10
+      },
+      {
+        "sample": 4,
+        "operation": "invitation",
+        "status": 201,
+        "ms": 9.39,
+        "sql": 12
+      },
+      {
+        "sample": 4,
+        "operation": "place",
+        "status": 201,
+        "ms": 11.701,
+        "sql": 15
+      },
+      {
+        "sample": 4,
+        "operation": "chat",
+        "status": 201,
+        "ms": 7.696,
+        "sql": 8
+      },
+      {
+        "sample": 5,
+        "operation": "group",
+        "status": 201,
+        "ms": 9.099,
+        "sql": 11
+      },
+      {
+        "sample": 5,
+        "operation": "poll",
+        "status": 201,
+        "ms": 8.91,
+        "sql": 13
+      },
+      {
+        "sample": 5,
+        "operation": "vote",
+        "status": 200,
+        "ms": 8.907,
+        "sql": 13
+      },
+      {
+        "sample": 5,
+        "operation": "checklist",
+        "status": 201,
+        "ms": 7.392,
+        "sql": 10
+      },
+      {
+        "sample": 5,
+        "operation": "invitation",
+        "status": 201,
+        "ms": 8.139,
+        "sql": 12
+      },
+      {
+        "sample": 5,
+        "operation": "place",
+        "status": 201,
+        "ms": 12.094,
+        "sql": 15
+      },
+      {
+        "sample": 5,
+        "operation": "chat",
+        "status": 201,
+        "ms": 9.771,
+        "sql": 8
+      }
+    ],
+    "after": [
+      {
+        "sample": 1,
+        "operation": "group",
+        "status": 201,
+        "ms": 7.345,
+        "sql": 8
+      },
+      {
+        "sample": 1,
+        "operation": "poll",
+        "status": 201,
+        "ms": 7.954,
+        "sql": 8
+      },
+      {
+        "sample": 1,
+        "operation": "vote",
+        "status": 200,
+        "ms": 6.62,
+        "sql": 7
+      },
+      {
+        "sample": 1,
+        "operation": "checklist",
+        "status": 201,
+        "ms": 7.093,
+        "sql": 8
+      },
+      {
+        "sample": 1,
+        "operation": "invitation",
+        "status": 201,
+        "ms": 7.781,
+        "sql": 8
+      },
+      {
+        "sample": 1,
+        "operation": "place",
+        "status": 201,
+        "ms": 11.733,
+        "sql": 15
+      },
+      {
+        "sample": 1,
+        "operation": "chat",
+        "status": 201,
+        "ms": 7.305,
+        "sql": 8
+      },
+      {
+        "sample": 2,
+        "operation": "group",
+        "status": 201,
+        "ms": 7.732,
+        "sql": 8
+      },
+      {
+        "sample": 2,
+        "operation": "poll",
+        "status": 201,
+        "ms": 7.135,
+        "sql": 8
+      },
+      {
+        "sample": 2,
+        "operation": "vote",
+        "status": 200,
+        "ms": 8.191,
+        "sql": 7
+      },
+      {
+        "sample": 2,
+        "operation": "checklist",
+        "status": 201,
+        "ms": 7.424,
+        "sql": 8
+      },
+      {
+        "sample": 2,
+        "operation": "invitation",
+        "status": 201,
+        "ms": 7.177,
+        "sql": 8
+      },
+      {
+        "sample": 2,
+        "operation": "place",
+        "status": 201,
+        "ms": 10.016,
+        "sql": 15
+      },
+      {
+        "sample": 2,
+        "operation": "chat",
+        "status": 201,
+        "ms": 8.529,
+        "sql": 8
+      },
+      {
+        "sample": 3,
+        "operation": "group",
+        "status": 201,
+        "ms": 7.494,
+        "sql": 8
+      },
+      {
+        "sample": 3,
+        "operation": "poll",
+        "status": 201,
+        "ms": 7.043,
+        "sql": 8
+      },
+      {
+        "sample": 3,
+        "operation": "vote",
+        "status": 200,
+        "ms": 6.949,
+        "sql": 7
+      },
+      {
+        "sample": 3,
+        "operation": "checklist",
+        "status": 201,
+        "ms": 7.811,
+        "sql": 8
+      },
+      {
+        "sample": 3,
+        "operation": "invitation",
+        "status": 201,
+        "ms": 7.552,
+        "sql": 8
+      },
+      {
+        "sample": 3,
+        "operation": "place",
+        "status": 201,
+        "ms": 10.741,
+        "sql": 15
+      },
+      {
+        "sample": 3,
+        "operation": "chat",
+        "status": 201,
+        "ms": 6.957,
+        "sql": 8
+      },
+      {
+        "sample": 4,
+        "operation": "group",
+        "status": 201,
+        "ms": 7.157,
+        "sql": 8
+      },
+      {
+        "sample": 4,
+        "operation": "poll",
+        "status": 201,
+        "ms": 7.554,
+        "sql": 8
+      },
+      {
+        "sample": 4,
+        "operation": "vote",
+        "status": 200,
+        "ms": 6.916,
+        "sql": 7
+      },
+      {
+        "sample": 4,
+        "operation": "checklist",
+        "status": 201,
+        "ms": 8.735,
+        "sql": 8
+      },
+      {
+        "sample": 4,
+        "operation": "invitation",
+        "status": 201,
+        "ms": 7.299,
+        "sql": 8
+      },
+      {
+        "sample": 4,
+        "operation": "place",
+        "status": 201,
+        "ms": 11.778,
+        "sql": 15
+      },
+      {
+        "sample": 4,
+        "operation": "chat",
+        "status": 201,
+        "ms": 6.957,
+        "sql": 8
+      },
+      {
+        "sample": 5,
+        "operation": "group",
+        "status": 201,
+        "ms": 8.441,
+        "sql": 8
+      },
+      {
+        "sample": 5,
+        "operation": "poll",
+        "status": 201,
+        "ms": 7.331,
+        "sql": 8
+      },
+      {
+        "sample": 5,
+        "operation": "vote",
+        "status": 200,
+        "ms": 7.82,
+        "sql": 7
+      },
+      {
+        "sample": 5,
+        "operation": "checklist",
+        "status": 201,
+        "ms": 6.967,
+        "sql": 8
+      },
+      {
+        "sample": 5,
+        "operation": "invitation",
+        "status": 201,
+        "ms": 8.999,
+        "sql": 8
+      },
+      {
+        "sample": 5,
+        "operation": "place",
+        "status": 201,
+        "ms": 10.111,
+        "sql": 15
+      },
+      {
+        "sample": 5,
+        "operation": "chat",
+        "status": 201,
+        "ms": 8.504,
+        "sql": 8
+      }
+    ]
+  },
+  "medians": {
+    "before": {
+      "group": {
+        "ms": 9.821,
+        "sql": 11
+      },
+      "poll": {
+        "ms": 10.734,
+        "sql": 13
+      },
+      "vote": {
+        "ms": 8.907,
+        "sql": 13
+      },
+      "checklist": {
+        "ms": 9.173,
+        "sql": 10
+      },
+      "invitation": {
+        "ms": 9.149,
+        "sql": 12
+      },
+      "place": {
+        "ms": 11.874,
+        "sql": 15
+      },
+      "chat": {
+        "ms": 8.3,
+        "sql": 8
+      }
+    },
+    "after": {
+      "group": {
+        "ms": 7.494,
+        "sql": 8
+      },
+      "poll": {
+        "ms": 7.331,
+        "sql": 8
+      },
+      "vote": {
+        "ms": 6.949,
+        "sql": 7
+      },
+      "checklist": {
+        "ms": 7.424,
+        "sql": 8
+      },
+      "invitation": {
+        "ms": 7.552,
+        "sql": 8
+      },
+      "place": {
+        "ms": 10.741,
+        "sql": 15
+      },
+      "chat": {
+        "ms": 7.305,
+        "sql": 8
+      }
+    }
+  }
+}

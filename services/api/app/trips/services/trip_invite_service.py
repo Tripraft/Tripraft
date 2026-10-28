@@ -15,6 +15,7 @@ from app.trips.models import TripInvitation as Invitation
 from app.trips.models import TripMember
 from app.auth.models import User
 from app.core.db.connection import get_db_session
+from sqlalchemy.orm import joinedload
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +50,9 @@ class InvitationService:
         try:
             with get_db_session() as session:
                 # Check inviter is a member
-                member = session.query(TripMember).filter(
+                member = session.query(TripMember).options(
+                    joinedload(TripMember.group), joinedload(TripMember.user),
+                ).filter(
                     TripMember.group_id == group_id,
                     TripMember.user_id == inviter_id,
                     TripMember.is_active == True
@@ -61,7 +64,7 @@ class InvitationService:
                     return False, {'error': 'Member role or higher required', 'status_code': 403}
                 
                 # Get group
-                group = session.get(TravelGroup, group_id)
+                group = member.group
                 if not group or not group.is_active:
                     return False, {'error': 'Group not found'}
                 
@@ -92,17 +95,18 @@ class InvitationService:
                     existing_invitation.expires_at = datetime.now(timezone.utc) + timedelta(days=expires_days)
                     existing_invitation.created_at = datetime.now(timezone.utc)
                     existing_invitation.invited_by = inviter_id
-                    session.commit()
-                    session.refresh(existing_invitation)
-                    
-                    inviter = session.get(User, inviter_id)
-                    return True, {
+                    existing_invitation.inviter = member.user
+                    existing_invitation.group = group
+                    session.flush()
+                    result = {
                         'invitation': existing_invitation.to_dict(),
                         'invitation_id': str(existing_invitation.id),
                         'group_name': group.name,
                         'invited_email': invited_email,
-                        'invited_by_name': inviter.display_name if inviter else 'Unknown',
+                        'invited_by_name': member.user.display_name,
                     }
+                    session.commit()
+                    return True, result
                 
                 # Check if invited user exists
                 invited_user = session.query(User).filter(
@@ -112,9 +116,11 @@ class InvitationService:
                 # Create invitation
                 invitation = Invitation(
                     group_id=group_id,
+                    group=group,
                     invitee_email=invited_email,
                     invitee_user_id=invited_user.id if invited_user else None,
                     invited_by=inviter_id,
+                    inviter=member.user,
                     status='pending',
                     expires_at=datetime.now(timezone.utc) + timedelta(days=expires_days)
                 )
@@ -132,21 +138,17 @@ class InvitationService:
                 )
                 session.add(activity)
                 
-                session.commit()
-                session.refresh(invitation)
-                
-                logger.info(f"Invitation created: {invitation.id} to {invited_email}")
-                
-                # Build response with group name and inviter name
-                inviter = session.get(User, inviter_id)
-                
-                return True, {
+                session.flush()
+                result = {
                     'invitation': invitation.to_dict(),
                     'invitation_id': str(invitation.id),
                     'group_name': group.name,
                     'invited_email': invited_email,
-                    'invited_by_name': inviter.display_name if inviter else 'Unknown'
+                    'invited_by_name': member.user.display_name,
                 }
+                session.commit()
+                logger.info("Invitation created: %s", result['invitation_id'])
+                return True, result
                 
         except Exception as e:
             logger.error(f"Create invitation error: {str(e)}")

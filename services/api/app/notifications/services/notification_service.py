@@ -18,6 +18,19 @@ logger = logging.getLogger(__name__)
 class NotificationService:
 
     @staticmethod
+    def add_group_notifications(session, group_id, exclude_user_id, type, title, body=None, data=None):
+        """Stage group notifications inside the caller's transaction."""
+        recipients = session.query(TripMember.user_id).filter(
+            TripMember.group_id == group_id,
+            TripMember.is_active == True,
+            TripMember.user_id != exclude_user_id,
+        ).all()
+        session.add_all([
+            Notification(user_id=user_id, group_id=group_id, type=type, title=title, body=body, data=data)
+            for (user_id,) in recipients
+        ])
+
+    @staticmethod
     def notify_group_members(
         group_id: str,
         exclude_user_id: str,
@@ -29,21 +42,9 @@ class NotificationService:
         """Send a notification to all active members of a group except the actor."""
         try:
             with get_db_session() as session:
-                members = session.query(TripMember).filter(
-                    TripMember.group_id == group_id,
-                    TripMember.is_active == True,
-                    TripMember.user_id != exclude_user_id
-                ).all()
-
-                for m in members:
-                    session.add(Notification(
-                        user_id=m.user_id,
-                        group_id=group_id,
-                        type=type,
-                        title=title,
-                        body=body,
-                        data=data,
-                    ))
+                NotificationService.add_group_notifications(
+                    session, group_id, exclude_user_id, type, title, body, data,
+                )
                 session.commit()
         except Exception as e:
             logger.error(f"notify_group_members error: {e}")
