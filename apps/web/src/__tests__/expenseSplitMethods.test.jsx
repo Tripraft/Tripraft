@@ -51,9 +51,9 @@ it('defaults to equal, lets names toggle participants, and reallocates the full 
   render(<TransactionModal mode="group" members={members} currentUser={{ uid: 'a' }} />);
   change('Amount', '10.01');
   expect(screen.getByLabelText('Split method')).toHaveValue('equal');
-  expect(screen.getByLabelText('Alice share')).toHaveTextContent('$5.01');
+  expect(screen.getByLabelText('Alice share')).toHaveTextContent('₹5.01');
   fireEvent.click(screen.getByText('Bob', { selector: 'span' }));
-  expect(screen.getByLabelText('Alice share')).toHaveTextContent('$10.01');
+  expect(screen.getByLabelText('Alice share')).toHaveTextContent('₹10.01');
   fireEvent.click(screen.getByText('Alice', { selector: 'span' }));
   fireEvent.submit(screen.getByRole('button', { name: 'Save' }).closest('form'));
   expect(screen.getByRole('alert')).toHaveTextContent('Select at least one person');

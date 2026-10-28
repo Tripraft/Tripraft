@@ -53,7 +53,7 @@ class DatabaseReleaseTests(unittest.TestCase):
     def test_additive_plan_covers_all_pending_changes_in_order(self):
         scripts = self.scripts()
         plan = requester.migration_plan(scripts, schema_status(scripts, ['b825c4202610']))
-        self.assertEqual([step['revision'] for step in plan], ['c62f718293a4', 'd73f8293a5b6', 'e84a93b4c6d7', 'f95ba4c5d6e8', 'a06cb5d6e7f9', 'b17dc6e7f801'])
+        self.assertEqual([step['revision'] for step in plan], ['c62f718293a4', 'd73f8293a5b6', 'e84a93b4c6d7', 'f95ba4c5d6e8', 'a06cb5d6e7f9', 'b17dc6e7f801', 'c28ed7f80912'])
         self.assertEqual(plan[1]['operations'][0]['table'], 'friend_contacts')
         self.assertEqual(plan[2]['operations'], [{'op': 'add_nullable_column', 'table': 'expenses',
             'column': {'name': 'split_details', 'type': 'text', 'nullable': True}}])
@@ -64,6 +64,10 @@ class DatabaseReleaseTests(unittest.TestCase):
         self.assertEqual(notifications['table'], 'expense_notifications')
         self.assertEqual(notifications['unique'], [])
         self.assertTrue(all(key['on_delete'] in ('CASCADE', 'NO ACTION') for key in notifications['foreign_keys']))
+        payments = plan[6]['operations'][0]
+        self.assertEqual(payments['table'], 'expense_payments')
+        self.assertIn({'name': 'amount_minor', 'type': 'bigint', 'nullable': False}, payments['columns'])
+        self.assertEqual(payments['unique'], [{'name': 'uq_expense_payment', 'columns': ['expense_id', 'user_id']}])
 
     def test_unsupported_older_migrations_are_not_partly_applied(self):
         connection = mock.MagicMock()
@@ -89,7 +93,7 @@ class DatabaseReleaseTests(unittest.TestCase):
         scripts = ScriptDirectory.from_config(config)
         status = schema_status(scripts, ['b825c4202610'])
         self.assertEqual(status.state, 'behind')
-        self.assertEqual([r for r, _ in status.pending], ['c62f718293a4', 'd73f8293a5b6', 'e84a93b4c6d7', 'f95ba4c5d6e8', 'a06cb5d6e7f9', 'b17dc6e7f801'])
+        self.assertEqual([r for r, _ in status.pending], ['c62f718293a4', 'd73f8293a5b6', 'e84a93b4c6d7', 'f95ba4c5d6e8', 'a06cb5d6e7f9', 'b17dc6e7f801', 'c28ed7f80912'])
         self.assertIn('currency', status.message)
         self.assertEqual(schema_status(scripts, ['not-in-this-checkout']).state, 'unknown')
         self.assertEqual(schema_status(scripts, []).state, 'uninitialized')
@@ -97,7 +101,8 @@ class DatabaseReleaseTests(unittest.TestCase):
         self.assertEqual(schema_status(scripts, ['d73f8293a5b6']).state, 'behind')
         self.assertEqual(schema_status(scripts, ['f95ba4c5d6e8']).state, 'behind')
         self.assertEqual(schema_status(scripts, ['a06cb5d6e7f9']).state, 'behind')
-        self.assertEqual(schema_status(scripts, ['b17dc6e7f801']).state, 'current')
+        self.assertEqual(schema_status(scripts, ['b17dc6e7f801']).state, 'behind')
+        self.assertEqual(schema_status(scripts, ['c28ed7f80912']).state, 'current')
         # An existing sibling is upgradeable through the merge, regardless of ID ordering.
         for sibling in ('a74b8293a4b5', 'a714c3202601'):
             self.assertEqual(schema_status(scripts, [sibling]).state, 'behind')

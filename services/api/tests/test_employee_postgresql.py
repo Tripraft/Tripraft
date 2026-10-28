@@ -49,7 +49,7 @@ def test_employee_postgresql_migration_preserves_existing_data(monkeypatch):
         added = set(inspect(engine).get_table_names()) - original_tables
         assert added == {'employees', 'employee_sessions', 'employee_access_requests',
                          'employee_access_events', 'employee_provisioning_jobs', 'employee_developer_credentials',
-                         'friend_contacts', 'gp_vault_file_contents', 'expense_notifications'}
+                         'friend_contacts', 'gp_vault_file_contents', 'expense_notifications', 'expense_payments'}
         with engine.connect() as connection:
             assert connection.execute(text('SELECT email FROM users WHERE id=:id'), {'id': uid}).scalar_one() == 'preserve@example.test'
             assert compare_metadata(MigrationContext.configure(connection, opts={

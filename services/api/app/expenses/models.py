@@ -21,6 +21,7 @@ from sqlalchemy import (JSON, BigInteger, Boolean, CheckConstraint, Column, Date
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from sqlalchemy.types import TypeDecorator
+from sqlalchemy.ext.hybrid import hybrid_property
 
 
 class SplitDetailsJSON(TypeDecorator):
@@ -176,6 +177,7 @@ class Expense(Base):
     payer = relationship('User', back_populates='expenses_paid', foreign_keys=[paid_by])
     creator = relationship('User', back_populates='expenses_created', foreign_keys=[created_by])
     splits = relationship('ExpenseSplit', back_populates='expense', cascade='all, delete-orphan')
+    payments = relationship('ExpensePayment', cascade='all, delete-orphan', order_by='ExpensePayment.position', lazy='selectin')
     history = relationship('ExpenseHistory', back_populates='expense', cascade='all, delete-orphan')
 
     def to_dict(self, include_splits=True):
@@ -188,6 +190,10 @@ class Expense(Base):
             'currency': self.currency,
             'paid_by': str(self.paid_by),
             'paid_by_name': self.payer.display_name if self.payer else None,
+            'payers': [payment.to_dict() for payment in self.payments] or [{
+                'user_id': str(self.paid_by), 'amount': money_to_json(self.amount),
+                'user_name': self.payer.display_name if self.payer else None,
+            }],
             'split_type': self.split_type,
             'split_details': self.split_details,
             'original': self.original,
@@ -206,6 +212,36 @@ class Expense(Base):
         if include_splits and self.splits:
             data['splits'] = [s.to_dict() for s in self.splits]
         return data
+
+
+class ExpensePayment(Base):
+    """Signed ledger contributions, independent of who consumed an expense."""
+    __tablename__ = 'expense_payments'
+    __table_args__ = (UniqueConstraint('expense_id', 'user_id', name='uq_expense_payment'),)
+
+    id = Column(Uuid, primary_key=True, default=uuid7)
+    expense_id = Column(Uuid, ForeignKey('expenses.id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(Uuid, ForeignKey('users.id'), nullable=False)
+    amount_minor = Column(BigInteger, nullable=False)
+    position = Column(Integer, nullable=False)
+    user = relationship('User', lazy='joined')
+
+    @hybrid_property
+    def amount(self):
+        return Decimal(self.amount_minor) / 100
+
+    @amount.setter
+    def amount(self, value):
+        self.amount_minor = int(Decimal(str(value)) * 100)
+
+    @amount.expression
+    def amount(cls):
+        from sqlalchemy import cast
+        return cast(cls.amount_minor, Numeric(14, 2)) / 100
+
+    def to_dict(self):
+        return {'user_id': str(self.user_id), 'amount': money_to_json(self.amount),
+                'user_name': self.user.display_name if self.user else None}
 
 
 class Income(Base):

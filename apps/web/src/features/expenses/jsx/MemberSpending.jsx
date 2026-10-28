@@ -4,12 +4,13 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import CurrencyAmount from './CurrencyAmount';
 import { expensePeople } from '../utils/expensePeople';
 import ExpenseBreakdown from './ExpenseBreakdown';
+import { expensePayers, paidAmount } from '../utils/payers';
 
 export default function MemberSpending({ expenses = [], members = [], currency = 'USD', displayCurrency = currency, currentUserId }) {
   const [expanded, setExpanded] = useState(null);
   const spending = useMemo(() => expensePeople(members, expenses).map(person => {
-    const transactions = expenses.filter(e => !e.is_deleted && String(e.paid_by) === person.id);
-    return { ...person, transactions, paid: transactions.reduce((sum, e) => sum + (Number(e.amount) || 0), 0) };
+    const transactions = expenses.filter(e => !e.is_deleted && expensePayers(e).some(row => String(row.user_id) === person.id));
+    return { ...person, transactions, paid: transactions.reduce((sum, e) => sum + paidAmount(e, person.id), 0) };
   }).sort((a, b) => b.paid - a.paid || a.name.localeCompare(b.name)), [expenses, members]);
   const total = spending.reduce((sum, person) => sum + person.paid, 0);
   return <section aria-label="Member spending">

@@ -2,12 +2,14 @@
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import '../css/ExpenseDialog.css';
+import usePreventNumberWheel from '../../../hooks/usePreventNumberWheel';
 
 let openDialogs = 0;
 let previousOverflow = '';
 
 export default function ExpenseDialog({ children, label, onClose, busy = false, className = '' }) {
   const surface = useRef(null);
+  usePreventNumberWheel(surface);
   const closeRef = useRef(onClose);
   const busyRef = useRef(busy);
   closeRef.current = onClose;

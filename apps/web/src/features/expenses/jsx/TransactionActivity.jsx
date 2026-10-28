@@ -2,6 +2,7 @@
 import React from 'react';
 import { Edit2, History, Split, Trash2, Receipt, RefreshCw } from 'lucide-react';
 import ExpenseAmount from './ExpenseAmount';
+import { payerNames } from '../utils/payers';
 import { expensePermissions } from '../utils/groupPermissions';
 import DeletedTransactionActions from './DeletedTransactionActions';
 
@@ -12,7 +13,7 @@ export default function TransactionActivity({ transactions, group, currentUserId
     return <li key={id || index} className={`expense-activity-item ${expense.is_deleted ? 'is-deleted' : ''}`}>
       <span className="expense-activity-icon"><Receipt size={19} /></span>
       <div className="expense-activity-body"><div className="expense-activity-title"><h3>{expense.description || 'Expense'}</h3><strong><ExpenseAmount expense={expense} currency={currency} displayCurrency={group?.display_currency || currency} /></strong></div>
-        <p><span>{expense.paid_by_name || getMemberName(expense.paid_by)} paid</span><span>{expense.category || 'Other'}</span><time>{formatDate(expense.expense_date || expense.date)}</time></p>
+        <p><span>{payerNames(expense, getMemberName)} {expense.split_type === 'reimbursement' ? 'received refund' : 'paid'}</span><span>{expense.category || 'Other'}</span><time>{formatDate(expense.expense_date || expense.date)}</time></p>
         <div className="expense-activity-actions">{expense.is_deleted ? <><span className="deleted-badge">Deleted</span>
           <DeletedTransactionActions expense={expense} permissions={permissions} onRestore={onRestore} mode="group"
             onPermanentDelete={onPermanentDelete} busy={busy} restoring={restoringId === id} />

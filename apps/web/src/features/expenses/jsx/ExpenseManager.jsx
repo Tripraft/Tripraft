@@ -853,7 +853,7 @@ const ExpenseManager = () => {
         />
       )}
 
-      {showNewGroup && <NewExpenseGroupModal defaultCurrency={personalCurrency || 'USD'} onClose={() => { setShowNewGroup(false); if (activeGroupId) refetchGroupDetail(); }} onCreate={handleCreateGroup} />}
+      {showNewGroup && <NewExpenseGroupModal defaultCurrency={personalCurrency || 'INR'} onClose={() => { setShowNewGroup(false); if (activeGroupId) refetchGroupDetail(); }} onCreate={handleCreateGroup} />}
 
       {mode === 'personal' && showFloatingAdd && !showTransactionModal && <button
         className="btn-add-transaction expense-floating-add" onClick={handleOpenModal} disabled={mutationLoading}>

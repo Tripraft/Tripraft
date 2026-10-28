@@ -1,6 +1,7 @@
 // Purpose: Handles demo workspace requests in local state with role checks and reset support; unsupported actions fail instead of reaching live mutation endpoints.
 import { createDemoState, demoPeople } from './demoData';
 import { DEMO_STORAGE_KEY, DEMO_VIEWER_KEY } from './demoMode';
+import {expensePayers} from '../../expenses/utils/payers';
 let state;
 const uploads = new Map();
 const clone = (value) => JSON.parse(JSON.stringify(value));
@@ -82,7 +83,7 @@ function moneyGroup(trip) {
     }
   };
   for (const e of trip.expenses.filter((e) => !e.is_deleted)) {
-    add(e.paid_by, Number(e.amount));
+    expensePayers(e).forEach(payment => add(payment.user_id, Number(payment.amount)));
     for (const s of e.splits || []) add(s.user_id, -Number(s.amount));
   }
   for (const s of trip.settlements) {

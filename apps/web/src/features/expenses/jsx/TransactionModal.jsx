@@ -7,6 +7,8 @@ import ExpenseSplitEditor from './ExpenseSplitEditor';
 import { buildSplit } from '../utils/splitMethods';
 import useExchangeRate from '../../../hooks/useExchangeRate';
 import {formatMoney} from '../../../utils/money';
+import ExpensePayerEditor from './ExpensePayerEditor';
+import {buildPayers, expensePayers} from '../utils/payers';
 
 const TransactionModal = ({ 
   mode, 
@@ -25,29 +27,22 @@ const TransactionModal = ({
   const [splitError, setSplitError] = useState('');
   const [formData, setFormData] = useState({
     type: 'expense',
-    currency: (mode === 'group' && activeGroup?.display_currency) || currency || 'USD',
+    currency: (mode === 'group' && activeGroup?.display_currency) || currency || activeGroup?.currency || 'INR',
     description: '',
     amount: '',
     category: 'Food',
     date: new Date().toISOString().split('T')[0],
     paidBy: '',
+    paymentMode: 'single', payers: [],
     splitWith: [],
     splitType: 'equal', splitValues: {}, bill: { items: [], tax: '', tip: '', discount: '' },
   });
-  const ledgerCurrency = activeGroup?.currency || currency || 'USD';
+  const ledgerCurrency = activeGroup?.currency || currency || 'INR';
   const exchange = useExchangeRate(formData.currency, ledgerCurrency, 0, mode === 'group');
+  const preferredCurrency = activeGroup?.display_currency || ledgerCurrency;
+  const previewCurrency = formData.currency === preferredCurrency ? ledgerCurrency : preferredCurrency;
+  const previewExchange = useExchangeRate(formData.currency, previewCurrency, 0, mode === 'group');
   useEffect(() => { setSplitError(''); }, [formData]);
-
-  // Helper function to get member display name
-  const getMemberName = (member) => {
-    return member.user?.display_name || 
-           member.user?.username || 
-           member.user?.email ||
-           member.display_name ||
-           member.username || 
-           member.email ||
-           'Unknown User';
-  };
 
   // Helper function to get member ID
   const getMemberId = (member) => {
@@ -105,6 +100,8 @@ const TransactionModal = ({
         category: editingTransaction.category || 'Food',
         date: dateValue,
         paidBy: paidByValue,
+        paymentMode: expensePayers(editingTransaction).length > 1 ? 'multiple' : 'single',
+        payers: (receipt?.payers || expensePayers(editingTransaction)).map(row => ({user_id: String(row.user_id), amount: String(Math.abs(Number(row.amount)))})),
         splitWith: splitWithValue.map(String),
         splitType: editingSplitType,
         splitValues: Object.fromEntries(editingSplits.map(s => [String(s.user_id),
@@ -136,9 +133,9 @@ const TransactionModal = ({
     e.preventDefault();
     if (savingRef.current || editingTransaction?.is_deleted) return;
     setSplitError('');
-    let split;
+    let split, payments;
     if (mode === 'group') {
-      try { split = buildSplit(formData); }
+      try { split = buildSplit(formData); payments = buildPayers(formData); }
       catch (error) { setSplitError(error.message); return; }
     }
 
@@ -150,7 +147,8 @@ const TransactionModal = ({
       expense_date: formData.date,
       ...((mode === 'group' || !editingTransaction) && {currency: formData.currency}),
       ...(mode === 'group' && {
-        paidBy: formData.paidBy,
+        paidBy: payments[0].user_id,
+        payers: payments,
         splitWith: formData.splitWith,
         split_type: split?.split_type,
         splits: split?.splits,
@@ -245,29 +243,11 @@ const TransactionModal = ({
 
           {mode === 'group' && groupMembers.length > 0 && (
             <>
-              <div className="form-group">
-                <label htmlFor="paidBy">{formData.splitType === 'reimbursement' ? 'Refund received by' : 'Paid By'}</label>
-                <select 
-                  id="paidBy"
-                  value={formData.paidBy}
-                  onChange={(e) => setFormData(prev => ({ ...prev, paidBy: e.target.value }))}
-                  required
-                >
-                  {groupMembers.map(member => {
-                    const memberId = getMemberId(member);
-                    const memberName = getMemberName(member);
-                    return (
-                      <option key={memberId} value={memberId}>
-                        {memberName}
-                        {memberId === currentUser?.uid ? ' (You)' : ''}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
+              <ExpensePayerEditor form={formData} setForm={setFormData} members={groupMembers} currency={formData.currency}
+                previewCurrency={previewCurrency} previewRate={previewExchange.data?.rate} />
 
               <ExpenseSplitEditor form={formData} setForm={setFormData} members={groupMembers} currency={formData.currency}
-                previewCurrency={ledgerCurrency} previewRate={exchange.data?.rate} />
+                previewCurrency={previewCurrency} previewRate={previewExchange.data?.rate} />
               {splitError && <p role="alert">{splitError}</p>}
             </>
           )}

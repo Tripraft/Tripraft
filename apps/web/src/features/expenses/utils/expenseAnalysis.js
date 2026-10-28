@@ -2,6 +2,7 @@
 export const ANALYSIS_COLORS = ['#8b5cf6', '#38bdf8', '#34d399', '#fbbf24', '#f472b6', '#a78bfa', '#fb7185', '#2dd4bf'];
 import { isPersonalIncome } from './personalTransactions';
 import { expenseParticipation } from './expensePeople';
+import { paidAmount } from './payers';
 
 export function expenseDay(expense) {
   const raw = expense.expense_date || expense.income_date || expense.date;
@@ -62,7 +63,7 @@ export function analyzeExpenses(expenses, { range = 'all', scope = 'group', mode
     return {date: day, amount: dayTotals[day] || 0};
   });
   const groupTotal = active.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
-  const paid = active.filter(expense => String(expense.paid_by) === String(userId)).reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
+  const paid = active.reduce((sum, expense) => sum + paidAmount(expense, userId), 0);
   return { entries, total, incomeTotal, incomeCount: income.length, netBalance: incomeTotal - total,
     categoryData, daily, startDay: firstDay, endDay, invalidRange, dailyAverage: duration ? total / duration : 0,
     topExpenses: entries.filter(expense => expense.value > 0).sort((a, b) => b.value - a.value).slice(0, 5),

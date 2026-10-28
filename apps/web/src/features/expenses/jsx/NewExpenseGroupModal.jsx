@@ -5,7 +5,7 @@ import { Plus, Users, X } from 'lucide-react';
 import CurrencySelect from '../../../components/common/jsx/CurrencySelect';
 import expenseApi from '../../../services/expenseApi';
 
-export default function NewExpenseGroupModal({ onClose, onCreate, defaultCurrency = 'USD' }) {
+export default function NewExpenseGroupModal({ onClose, onCreate, defaultCurrency = 'INR' }) {
   const [name, setName] = useState('');
   const [currency, setCurrency] = useState(defaultCurrency);
   const [budget, setBudget] = useState('');

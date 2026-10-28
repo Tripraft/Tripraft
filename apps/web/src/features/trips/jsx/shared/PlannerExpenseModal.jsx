@@ -1,9 +1,12 @@
 ﻿// Purpose: Collects a planner expense and participant/itemized split details for the linked ledger, retaining validation and saving errors.
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Plus, X, Trash2, Receipt } from 'lucide-react';
 import { equalSplits, formatMoney } from '../../../../utils/money';
 import { itemizedSplits } from '../../utils/plannerMoney';
 import { isPlannerDemo } from '../../demo/demoMode';
+import ExpensePayerEditor from '../../../expenses/jsx/ExpensePayerEditor';
+import {buildPayers} from '../../../expenses/utils/payers';
+import usePreventNumberWheel from '../../../../hooks/usePreventNumberWheel';
 export default function PlannerExpenseModal({
   members,
   currency,
@@ -15,7 +18,7 @@ export default function PlannerExpenseModal({
   const ids = members.map((m) => m.user_id || m.id),
     [description, setDescription] = useState(itemized ? 'Shared meal' : ''),
     [amount, setAmount] = useState(''),
-    [payer, setPayer] = useState(ids.includes(currentUserId) ? currentUserId : ids[0]),
+    [payment, setPayment] = useState({paymentMode: 'single', payers: [], paidBy: String(ids.includes(currentUserId) ? currentUserId : ids[0])}),
     [date, setDate] = useState(new Date().toLocaleDateString('en-CA')),
     [category, setCategory] = useState('Food'),
     [participants, setParticipants] = useState(ids),
@@ -30,6 +33,17 @@ export default function PlannerExpenseModal({
         ]
       : [{ name: '', amount: '', members: ids }],
   );
+  const surface = useRef(null);
+  usePreventNumberWheel(surface);
+  let preview;
+  try { preview = itemized ? itemizedSplits(items) : {amount: Number(amount), splits: equalSplits(amount, participants)}; } catch { /* Incomplete draft. */ }
+  const paymentForm = {...payment, amount: preview?.amount || amount, splitType: itemized ? 'exact' : 'equal',
+    splitWith: preview?.splits.map(row => String(row.user_id)) || participants.map(String),
+    splitValues: Object.fromEntries((preview?.splits || []).map(row => [String(row.user_id), row.amount]))};
+  const setPaymentForm = transform => setPayment(previous => {
+    const next = transform({...paymentForm, ...previous});
+    return {paymentMode: next.paymentMode, payers: next.payers, paidBy: next.paidBy};
+  });
   const toggle = (list, id) => (list.includes(id) ? list.filter((v) => v !== id) : [...list, id]);
   const submit = async (e) => {
     e.preventDefault();
@@ -40,10 +54,12 @@ export default function PlannerExpenseModal({
       const money = itemized
         ? itemizedSplits(items)
         : { amount: Number(amount), splits: equalSplits(amount, participants) };
+      const payers = buildPayers({...payment, amount: money.amount});
       await onSave({
         ...money,
         description: description.trim(),
-        paid_by: payer,
+        paid_by: payers[0].user_id,
+        payers,
         expense_date: date,
         category,
         split_type: itemized ? 'exact' : 'equal',
@@ -61,6 +77,7 @@ export default function PlannerExpenseModal({
   return (
     <div className="gp-modal-overlay" onClick={() => !saving && onClose()}>
       <form
+        ref={surface}
         className={'gp-modal' + (itemized ? ' gp-receipt-modal' : '')}
         role="dialog"
         aria-modal="true"
@@ -99,20 +116,6 @@ export default function PlannerExpenseModal({
           />
         </label>
         <div className="gp-form-columns">
-          <label className="gp-field">
-            Paid by
-            <select
-              className="gp-modal-input"
-              value={payer}
-              onChange={(e) => setPayer(e.target.value)}
-            >
-              {members.map((m) => (
-                <option key={m.user_id || m.id} value={m.user_id || m.id}>
-                  {m.display_name || m.user?.display_name || m.email}
-                </option>
-              ))}
-            </select>
-          </label>
           <label className="gp-field">
             Date
             <input
@@ -263,6 +266,9 @@ export default function PlannerExpenseModal({
             {error}
           </p>
         )}
+        <fieldset disabled={saving} style={{border: 0, margin: 0, padding: 0, minWidth: 0}}>
+          <ExpensePayerEditor form={paymentForm} setForm={setPaymentForm} members={members} currency={currency} previewCurrency={currency} previewRate={1} />
+        </fieldset>
         <div className="gp-modal-actions">
           <button className="gp-modal-btn-primary" disabled={saving}>
             {saving ? 'Saving...' : itemized ? 'Save Split Expense' : 'Save Expense'}

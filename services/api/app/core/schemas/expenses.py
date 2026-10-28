@@ -27,6 +27,7 @@ class CreateExpenseSchema(Schema):
     )
     group_id = UUIDString(load_default=None, allow_none=True)
     paid_by = UUIDString(load_default=None, allow_none=True)
+    payers = fields.List(fields.Dict(), validate=validate.Length(min=1, max=100))
     split_type = fields.String(
         validate=validate.OneOf(Config.SPLIT_TYPES + [s.upper() for s in Config.SPLIT_TYPES]),
         load_default='equal',
@@ -65,6 +66,7 @@ class UpdateExpenseSchema(Schema):
         ),
     )
     paid_by = UUIDString()
+    payers = fields.List(fields.Dict(), validate=validate.Length(min=1, max=100))
     split_type = fields.String(
         validate=validate.OneOf(Config.SPLIT_TYPES + [s.upper() for s in Config.SPLIT_TYPES]),
     )

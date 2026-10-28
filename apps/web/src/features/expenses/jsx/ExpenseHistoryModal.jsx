@@ -92,6 +92,9 @@ const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', curren
     }
     
     // A custom split may include every member; display the recorded amounts.
+    if (field === 'payers' && Array.isArray(value)) {
+      return <span className="expense-history-money-rows">{value.map((payment, index) => <span className="expense-history-money-row" key={payment.user_id || index}><span>{payment.user_name || getMemberName(payment.user_id)}</span><ExpenseAmount expense={snapshot || {currency: moneyCurrency}} payment={payment} currency={moneyCurrency} displayCurrency={displayCurrency} /></span>)}</span>;
+    }
     if (field === 'splits' && Array.isArray(value)) {
       if (mode === 'group' && snapshot?.original) return <span className="expense-history-money-rows">{value.map((split, index) => <span className="expense-history-money-row" key={split.user_id || index}><span>{getMemberName(split.user_id)}</span><ExpenseAmount expense={snapshot} split={split} currency={moneyCurrency} displayCurrency={displayCurrency} /></span>)}</span>;
       if (moneyCurrency !== displayCurrency) return <span className="expense-history-money-rows">{value.map((split, index) => <span className="expense-history-money-row" key={split.user_id || index}><span>{getMemberName(split.user_id)}</span><CurrencyAmount amount={split.amount} currency={moneyCurrency} displayCurrency={displayCurrency} /></span>)}</span>;
@@ -123,6 +126,7 @@ const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', curren
       description: 'Description',
       amount: 'Amount',
       paid_by: 'Paid By',
+      payers: 'Payments',
       category: 'Category',
       notes: 'Notes',
       expense_date: 'Date',
@@ -233,7 +237,7 @@ const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', curren
                                 const newVal = change.new_value ?? change.new;
                                 const fieldName = change.field_name || change.field;
                                 // Personal ownership is not a user-editable group split.
-                                if (mode === 'personal' && ['splits', 'split_type', 'split_status', 'paid_by'].includes(fieldName)) return false;
+                                if (mode === 'personal' && ['splits', 'split_type', 'split_status', 'paid_by', 'payers'].includes(fieldName)) return false;
                                 
                                 // Amounts and participants can change while the row count stays equal.
                                 if (['splits', 'split_details', 'original'].includes(fieldName)) {

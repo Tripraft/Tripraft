@@ -17,6 +17,7 @@ import { canRecordSettlement } from '../../../expenses/utils/groupPermissions';
 import SettlementModal from '../../../expenses/jsx/SettlementModal';
 import PlannerExpenseModal from '../shared/PlannerExpenseModal';
 import useExchangeRate from '../../../../hooks/useExchangeRate';
+import {payerNames} from '../../../expenses/utils/payers';
 export default function TreasuryTab({
   groupId,
   group,
@@ -255,7 +256,7 @@ export default function TreasuryTab({
                     <div>
                       <h3>{e.description}</h3>
                       <p>
-                        {name(e.paid_by)} paid · {formatDate(e.expense_date || e.created_at)} ·{' '}
+                        {payerNames(e, name)} {e.split_type === 'reimbursement' ? 'received refund' : 'paid'} · {formatDate(e.expense_date || e.created_at)} ·{' '}
                         {e.category || 'Other'}
                       </p>
                     </div>

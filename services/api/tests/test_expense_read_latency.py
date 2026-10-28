@@ -40,7 +40,8 @@ def test_group_reads_have_bounded_round_trips_and_exact_window_totals(group_of_t
     assert summary['expense_count'] == 16
     assert summary['top_category'] == {'name': 'A', 'percentage': 50}
     assert [row['date'] for row in summary['daily_spend']] == [f'2026-10-{day:02}' for day in range(3, 17)]
-    full = read(base + '/groups/' + gid + '/full?expense_limit=3&include_deleted=true', 8)['group']
+    # Payment contributions load in one batch, independent of expense/member counts.
+    full = read(base + '/groups/' + gid + '/full?expense_limit=3&include_deleted=true', 9)['group']
     assert full['summary'] == summary
     assert len(full['expenses']) == 3  # Eager split joins must not truncate or multiply expenses.
     assert full['expense_pagination'] == {'total': 16, 'limit': 3, 'offset': 0, 'has_more': True}

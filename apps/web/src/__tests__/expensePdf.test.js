@@ -8,6 +8,16 @@ jest.mock('jspdf-autotable', () => ({__esModule: true,
 beforeEach(() => jest.clearAllMocks());
 const section = heading => autoTable.mock.calls.map(([, options]) => options).find(options => options.head[0].includes(heading));
 
+it('exports each contribution with the correct payer and both saved currencies', () => {
+  buildExpensePDF({mode: 'group', currency: 'INR', members: [{user_id: 'b', display_name: 'Bob'}], expenses: [{
+    id: 'e', description: 'Shared dinner', amount: 8000, paid_by: 'a', paid_by_user: {display_name: 'Alice'},
+    payers: [{user_id: 'a', amount: 6000}, {user_id: 'b', amount: 2000}],
+    original: {currency: 'USD', amount: '100', payers: [{user_id: 'a', amount: '75'}, {user_id: 'b', amount: '25'}]},
+  }]});
+  expect(section('Paid by').body[0][2]).toBe('Alice: INR 6,000.00 (USD 75.00)\nBob: INR 2,000.00 (USD 25.00)');
+  expect(section('Paid by').foot).toEqual([['Total', '', '', 'INR 8,000.00']]);
+});
+
 it('separates income, refunds and spending, preserving calendar dates and source money', () => {
   const doc = buildExpensePDF({mode: 'personal', currency: 'USD', expenses: [
     {id: 'a', income_date: '2026-10-01', amount: 1000, type: 'income', description: 'Salary'},
