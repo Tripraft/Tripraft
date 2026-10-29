@@ -1,5 +1,6 @@
 /* Purpose: Theme-aware split controls that fit the existing expense dialog on desktop and mobile. */
-.expense-split-editor { container-type: inline-size; min-width: 0; margin: 0 0 20px; padding: 16px; border: 1px solid var(--color-border-light, #e5e7eb); border-radius: 12px; background: var(--color-bg-primary, #fff); }
+/* Keep this interactive card in normal layout/paint flow while its amount changes. */
+.expense-split-editor { display: block; flex: none; container-type: normal; contain: none; content-visibility: visible; height: auto; min-width: 0; margin: 0 0 20px; padding: 16px; border: 1px solid var(--color-border-light, #e5e7eb); border-radius: 12px; background: var(--color-bg-primary, #fff); }
 .expense-split-editor > label { display: block; margin-bottom: 8px; font-weight: 600; }
 .expense-split-editor > select { width: 100%; padding: 10px; border: 1px solid var(--color-border-light, #d1d5db); border-radius: 8px; background: var(--color-bg-primary, #fff); color: inherit; }
 .expense-split-editor .split-help, .expense-split-editor .split-status, .expense-split-editor .split-currency-context { font-size: 13px; line-height: 1.5; color: var(--color-text-secondary, #6b7280); margin: 8px 0; }
@@ -43,14 +44,9 @@
 .expense-split-editor .split-status.is-complete { color: #166534; }
 .expense-split-editor .split-status.has-error { color: #b91c1c; }
 .expense-split-editor .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
-@media (max-width: 600px) {
-  .split-members.has-values .split-member { grid-template-columns: minmax(0, 1fr) minmax(90px, 120px); gap: 8px 12px; }
-  .split-members.has-values .split-member-name { grid-column: 1 / -1; }
-  .split-value { width: 140px; max-width: 100%; }
-}
-@media (max-width: 480px) { .expense-split-editor { padding: 12px; } }
-@container (max-width: 460px) {
-  .split-members.has-values .split-member { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+@media (max-width: 700px) {
+  .split-members.has-values .split-member { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
   .split-members.has-values .split-member-name { grid-column: 1 / -1; }
   .split-value { width: 100%; min-width: 0; }
 }
+@media (max-width: 480px) { .expense-split-editor { padding: 12px; } }

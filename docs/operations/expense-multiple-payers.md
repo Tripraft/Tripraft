@@ -20,6 +20,18 @@ visible and editable for both one-person and multiple-person payments, even
 while the draft is incomplete. The balance preview appears only once required
 details, payments and split allocations are valid. Changing any choice
 recalculates the preview; it never replaces or hides those controls.
+The interactive split card uses normal layout and paint flow, without CSS
+container containment. Responsive rows use media queries to avoid a blank,
+collapsed card during amount edits.
+
+Run `pnpm --filter @tripraft/web test:expense-layout` in a test environment with
+Playwright available. `PLAYWRIGHT_MODULE` can point to an existing Playwright
+module URL; `EXPENSE_LAYOUT_BROWSER_CHANNEL=chrome` uses installed Chrome.
+The offline fixture bundles the actual expense form and CSS, then checks card
+height, unclipped content and visible participant controls across 224 rendered
+states: four widths, both payer modes, all seven methods and repeated amount
+edits. Set `EXPENSE_LAYOUT_EVIDENCE_DIR` to save local screenshots. This browser
+check complements the jsdom behavior tests, which do not measure layout.
 
 New groups default to INR unless a saved currency preference is supplied.
 Existing groups retain their currency. Selecting USD for an INR group shows

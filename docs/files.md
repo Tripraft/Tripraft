@@ -4,6 +4,7 @@ Expense UI additions:
 
 | File | What it does |
 |---|---|
+| [apps/web/tests/expenseSplitLayout.mjs](../apps/web/tests/expenseSplitLayout.mjs) | Verifies real browser split-card geometry across amount edits, payer modes, split methods and phone/desktop widths. |
 | [apps/web/src/features/expenses/jsx/ExpenseBalancePreview.jsx](../apps/web/src/features/expenses/jsx/ExpenseBalancePreview.jsx) | Shows reconciled payer/share balance changes as the final review after expense details and allocation controls. |
 | [apps/web/src/features/expenses/jsx/ExpenseEntryAmount.jsx](../apps/web/src/features/expenses/jsx/ExpenseEntryAmount.jsx) | Shows draft amounts in the group default and entered currencies, without duplicate units or invented exchange rates. |
 | [apps/web/src/__tests__/expenseEntryCurrencies.test.jsx](../apps/web/src/__tests__/expenseEntryCurrencies.test.jsx) | Checks all seven split methods, partial drafts, payer equivalents, matching currencies and complete 14-day chart windows. |
