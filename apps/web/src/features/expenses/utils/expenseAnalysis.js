@@ -20,6 +20,20 @@ export function calendarDay(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
+// Keep the chart on a recent, complete fortnight without changing period totals or averages.
+export function dailyChartWindow(daily, endDay, startDay) {
+  const first = new Date(`${endDay}T12:00:00Z`);
+  first.setUTCDate(first.getUTCDate() - 13);
+  const firstDay = startDay && startDay > first.toISOString().slice(0, 10) ? startDay : first.toISOString().slice(0, 10);
+  const totals = new Map(daily.map(day => [day.date, day.amount]));
+  const length = Math.max(0, Math.round((new Date(`${endDay}T12:00:00Z`) - new Date(`${firstDay}T12:00:00Z`)) / 86400000) + 1);
+  return Array.from({length}, (_, index) => {
+    const date = new Date(`${firstDay}T12:00:00Z`); date.setUTCDate(date.getUTCDate() + index);
+    const day = date.toISOString().slice(0, 10);
+    return {date: day, amount: totals.get(day) || 0};
+  });
+}
+
 export function analyzeExpenses(expenses, { range = 'all', scope = 'group', mode = 'group', userId, now = new Date(), startDate, endDate } = {}) {
   const days = { week: 7, month: 30, quarter: 90, year: 365 }[range];
   const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate());

@@ -4,6 +4,7 @@ import { buildPayers, convertedPayers } from '../utils/payers';
 import { buildSplit, convertedSplitPreview } from '../utils/splitMethods';
 import { formatMoney } from '../../../utils/money';
 import CurrencyAmount from './CurrencyAmount';
+import ExpenseEntryAmount from './ExpenseEntryAmount';
 import '../css/ExpensePayerEditor.css';
 
 export default function ExpensePayerEditor({form, setForm, members, currency, previewCurrency, previewRate}) {
@@ -57,11 +58,13 @@ export default function ExpensePayerEditor({form, setForm, members, currency, pr
               value={person.id} checked={selected} onChange={() => multiple ? togglePayer(person.id) : update({paidBy: person.id})} />
             <strong>{person.name}</strong>
           </label>
-          {multiple ? <label className="payer-amount"><span className="payer-currency" aria-hidden="true">{currency}</span>
+          {multiple ? <div className="payer-contribution"><label className="payer-amount"><span className="payer-currency" aria-hidden="true">{currency}</span>
             <input type="number" aria-label={`${person.name} ${refund ? 'received' : 'paid'} amount`}
               min="0.01" step="0.01" placeholder="0.00" disabled={!selected} required={selected}
               value={selected ? form.payers[index].amount : ''} onChange={event => change(index, {amount: event.target.value})} />
-          </label> : selected && <span className="payer-single-amount">{formatMoney(form.amount || 0, currency)}</span>}
+          </label>{selected && converting && <small className="payer-equivalent">{previewRate > 0
+            ? `≈ ${formatMoney(Number(form.payers[index].amount || 0) * previewRate, previewCurrency)}` : `${previewCurrency} conversion pending`}</small>}</div>
+            : selected && <span className="payer-single-amount"><ExpenseEntryAmount amount={form.amount || 0} currency={currency} defaultCurrency={previewCurrency} rate={previewRate} /></span>}
         </div>;
       })}
     </fieldset>
@@ -72,26 +75,27 @@ export default function ExpensePayerEditor({form, setForm, members, currency, pr
         }}>Fill remaining</button>}
       </div>
       <p className={`payer-progress ${remaining < 0 ? 'has-error' : remaining === 0 && payments ? 'is-complete' : ''}`} aria-live="polite">
-        <span>{formatMoney(entered / 100, currency)} {refund ? 'received' : 'paid'}</span><span>{formatMoney(remaining, currency)} remaining</span>
+        <span>{converting ? <><span>{refund ? 'Received' : 'Paid'}</span><ExpenseEntryAmount amount={entered / 100} currency={currency} defaultCurrency={previewCurrency} rate={previewRate} /></> : `${formatMoney(entered / 100, currency)} ${refund ? 'received' : 'paid'}`}</span>
+        <span>{converting ? <><span>Remaining</span><ExpenseEntryAmount amount={remaining} currency={currency} defaultCurrency={previewCurrency} rate={previewRate} /></> : `${formatMoney(remaining, currency)} remaining`}</span>
       </p>
     </>}
     {!error && ready && ids.length > 0 && <div className="payer-preview">
       <h3>{converting ? 'Estimated balance preview' : 'Balance preview'} · {outputCurrency}</h3>
-      <div className="payer-preview-scroll"><table aria-label="Payment and balance preview"><thead><tr><th scope="col">Person</th><th scope="col">{refund ? 'Received' : 'Paid'}</th><th scope="col">{refund ? 'Refund share' : 'Cost share'}</th><th scope="col">Balance change</th></tr></thead>
-        <tbody>{ids.map(id => {
+      <ul className="payer-preview-members" aria-label="Payment and balance preview">{ids.map(id => {
           const payment = converted.find(row => row.user_id === id)?.amount || 0;
           const share = shares.find(row => row.user_id === id)?.amount || 0;
           const net = Math.round((payment * sign - share) * 100) / 100;
           const sourcePaid = payments.find(row => row.user_id === id)?.amount || 0;
           const sourceShare = split.preview.find(row => row.user_id === id)?.amount || 0;
-          return <tr key={id}><th scope="row">{name(id)}</th><td data-label={refund ? 'Received' : 'Paid'}><CurrencyAmount amount={payment} currency={outputCurrency} original={converting ? {amount: sourcePaid, currency} : undefined} /></td>
-            <td data-label={refund ? 'Refund share' : 'Cost share'}><CurrencyAmount amount={Math.abs(share)} currency={outputCurrency} original={converting ? {amount: Math.abs(sourceShare), currency} : undefined} /></td>
-            <td data-label="Balance change" className={`payer-net ${net > 0 ? 'is-credit' : net < 0 ? 'is-debit' : 'is-settled'}`}>
+          return <li key={id}><h4>{name(id)}</h4><dl>
+            <div><dt>{refund ? 'Received' : 'Paid'}</dt><dd><CurrencyAmount amount={payment} currency={outputCurrency} original={converting ? {amount: sourcePaid, currency} : undefined} /></dd></div>
+            <div><dt>{refund ? 'Refund share' : 'Cost share'}</dt><dd><CurrencyAmount amount={Math.abs(share)} currency={outputCurrency} original={converting ? {amount: Math.abs(sourceShare), currency} : undefined} /></dd></div>
+            <div className={`payer-net ${net > 0 ? 'is-credit' : net < 0 ? 'is-debit' : 'is-settled'}`}><dt>Balance change</dt><dd>
               <CurrencyAmount amount={Math.abs(net)} currency={outputCurrency}
                 original={converting ? {amount: Math.abs(sourcePaid * sign - sourceShare), currency} : undefined} />
               <small className="payer-net-status">{net > 0 ? 'Receive' : net < 0 ? 'Pay' : 'Settled'}</small>
-            </td></tr>;
-        })}</tbody></table></div>
+            </dd></div></dl></li>;
+        })}</ul>
       <p className="payer-help">Changes from this expense, before existing group balances.</p>
     </div>}
   </section>;

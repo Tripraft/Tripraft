@@ -24,15 +24,21 @@
 .payer-progress { font-size: .8rem; flex-wrap: wrap; padding: 10px; border-radius: 7px; background: var(--color-bg-secondary, #f1f5f9); }
 .payer-progress.has-error { color: #b91c1c; background: #fef2f2; }
 .payer-progress.is-complete { color: #047857; background: #ecfdf5; }
-.payer-preview { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border-light, #dce2ec); font-size: .85rem; }
+.payer-preview { container-type: inline-size; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border-light, #dce2ec); font-size: .85rem; }
 .payer-preview h3 { font-size: .9rem; font-weight: 600; margin: 0; }
-.payer-preview-scroll { overflow-x: auto; margin-top: 12px; }
-.payer-preview table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-.payer-preview th, .payer-preview td { text-align: right; padding: 12px 10px; border-bottom: 1px solid var(--color-border-light, #dce2ec); vertical-align: top; line-height: 1.4; }
-.payer-preview thead th { white-space: nowrap; font-size: .75rem; font-weight: 500; color: var(--color-text-secondary, #64748b); background: var(--color-bg-secondary, #f8fafc); }
-.payer-preview th:first-child { text-align: left; width: 32%; overflow-wrap: anywhere; }
-.payer-preview tbody th { font-weight: 500; }
-.payer-preview .expense-money-primary, .payer-preview .expense-money-original { white-space: nowrap; }
+.payer-preview-members { display: grid; gap: 10px; list-style: none; margin: 12px 0 0; padding: 0; min-width: 0; }
+.payer-preview-members > li { padding: 12px; min-width: 0; border: 1px solid var(--color-border-light, #dce2ec); border-radius: 10px; }
+.payer-preview-members h4 { margin: 0 0 12px; font-size: .85rem; font-weight: 600; overflow-wrap: anywhere; }
+.payer-preview-members dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; }
+.payer-preview-members dl > div { min-width: 0; text-align: right; }
+.payer-preview-members dt { font-size: .7rem; color: var(--color-text-secondary, #64748b); margin-bottom: 6px; }
+.payer-preview-members dd { margin: 0; min-width: 0; }
+.payer-preview .expense-money-primary, .payer-preview .expense-money-original { white-space: normal; overflow-wrap: anywhere; }
+.payer-contribution { min-width: 0; }
+.payer-equivalent { display: block; text-align: right; font-size: .75rem; color: var(--color-text-secondary, #64748b); margin-top: 5px; }
+.payer-progress > span { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.payer-progress > span:first-child .expense-money-pair { align-items: flex-start; }
+.payer-progress > span:last-child { text-align: right; }
 .payer-preview .payer-net-status { display: block; width: fit-content; margin: 5px 0 0 auto; padding: 2px 7px; border-radius: 5px; font-size: .7rem; font-weight: 500; }
 .payer-net.is-credit .payer-net-status { color: #047857; background: #ecfdf5; }
 .payer-net.is-debit .payer-net-status { color: #b45309; background: #fffbeb; }
@@ -41,17 +47,16 @@
 @media (max-width: 480px) {
   .expense-payer-editor { padding: 12px; }
   .payer-member-row { grid-template-columns: minmax(0, 1fr) 140px; gap: 8px; padding: 10px 8px; }
-  .payer-preview-scroll { overflow: visible; }
-  .payer-preview table, .payer-preview tbody { display: block; }
-  .payer-preview thead { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-  .payer-preview tbody { display: grid; gap: 10px; }
-  .payer-preview tr { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px 8px; padding: 12px; border: 1px solid var(--color-border-light, #dce2ec); border-radius: 10px; }
-  .payer-preview th, .payer-preview td { display: block; padding: 0; border: 0; min-width: 0; }
-  .payer-preview tbody th:first-child { grid-column: 1 / -1; width: auto; }
-  .payer-preview td::before { content: attr(data-label); display: block; margin-bottom: 6px; color: var(--color-text-secondary, #64748b); font-size: .65rem; white-space: nowrap; }
+
 }
 @media (max-width: 360px) {
   .payer-member-row { grid-template-columns: minmax(0, 1fr); }
-  .payer-member-row .payer-amount { margin-left: 28px; }
+  .payer-member-row .payer-contribution { margin-left: 28px; }
   .payer-single-amount { padding-left: 28px; text-align: left; }
+}
+
+@container (max-width: 340px) {
+  .payer-preview-members dl { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .payer-preview-members dl > div { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 8px; align-items: start; }
+  .payer-preview-members dt { text-align: left; }
 }

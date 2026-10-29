@@ -1,5 +1,12 @@
 # Published file guide
 
+Expense UI additions:
+
+| File | What it does |
+|---|---|
+| [apps/web/src/features/expenses/jsx/ExpenseEntryAmount.jsx](../apps/web/src/features/expenses/jsx/ExpenseEntryAmount.jsx) | Shows draft amounts in the group default and entered currencies, without duplicate units or invented exchange rates. |
+| [apps/web/src/__tests__/expenseEntryCurrencies.test.jsx](../apps/web/src/__tests__/expenseEntryCurrencies.test.jsx) | Checks all seven split methods, partial drafts, payer equivalents, matching currencies and complete 14-day chart windows. |
+
 Group planner additions on 2026-10-27 are documented in the
 [planner guide](guides/group-planner.md):
 

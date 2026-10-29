@@ -152,12 +152,12 @@ it('uses radio selection for one payer and presents labelled balance amounts bef
   fireEvent.click(screen.getByRole('radio', {name: 'Paid by Bob'}));
   expect(screen.getByRole('radio', {name: 'Paid by Bob'})).toBeChecked();
   expect(screen.getByRole('radio', {name: 'Paid by Alice'})).not.toBeChecked();
-  const table = screen.getByRole('table', {name: 'Payment and balance preview'});
-  const bob = within(table).getByRole('rowheader', {name: 'Bob'}).closest('tr');
-  const net = within(bob).getAllByRole('cell')[2];
-  expect(net).toHaveAttribute('data-label', 'Balance change');
-  expect(net).toHaveTextContent('₹50.00Receive');
-  expect(within(table).getByRole('columnheader', {name: 'Cost share'})).toBeInTheDocument();
+  const preview = screen.getByRole('list', {name: 'Payment and balance preview'});
+  const bob = within(preview).getByRole('heading', {name: 'Bob'}).closest('li');
+  const net = within(bob).getByText('Balance change').closest('div');
+  expect(net).toHaveTextContent('\u20b950.00Receive');
+  expect(within(bob).getByText('Cost share')).toBeInTheDocument();
+  expect(preview.querySelector('table')).toBeNull();
   await waitFor(() => expect(screen.getByLabelText('Currency')).toHaveValue('INR'));
 });
 
