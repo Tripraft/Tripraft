@@ -4522,6 +4522,11 @@ export interface components {
         };
         ReadExpenseNotifications: {
             ids: string[];
+        } | {
+            /** @enum {boolean} */
+            all: true;
+            /** Format: uuid */
+            group_id?: string;
         };
         ReadExpenseNotificationsResponse: {
             data: {

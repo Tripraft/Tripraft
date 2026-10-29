@@ -7,11 +7,13 @@
 }
 .expense-notification-trigger:hover, .expense-group-notifications:hover { background: var(--color-primary-50, #f5f3ff); }
 .expense-notification-badge { display: inline-flex; justify-content: center; align-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 20px; background: var(--color-primary-600, #7c3aed); color: #fff; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.expense-group-card-wrap { position: relative; min-width: 0; display: flex; flex-direction: column; }
-.expense-group-card-wrap > .expense-group-card { width: 100%; flex: 1; }
-.expense-group-card-wrap.has-notifications > .expense-group-card { padding-bottom: 84px; }
-.expense-group-card-wrap > .expense-group-notifications { position: absolute; right: 22px; bottom: 20px; color: var(--color-primary-700, #6d28d9); }
-.expense-active-notifications { display: flex; justify-content: flex-end; margin: 16px 0; }
+.expense-group-open { min-width: 0; border: 0; background: transparent; color: inherit; padding: 0; font: inherit; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
+.expense-group-open::after { content: ''; position: absolute; inset: 0; }
+.expense-group-card-title > .expense-group-notifications-compact { position: relative; z-index: 1; min-height: 36px; flex-shrink: 0; border: 0; padding: 4px; gap: 4px; }
+.expense-group-card-title > .expense-group-notifications-compact svg { opacity: 1; }
+.expense-group-card-title > svg { margin-left: auto; }
+.expense-detail-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 6px; }
+.expense-detail-heading h2 { margin-bottom: 0; }
 .expense-dialog-layer > .expense-notifications { max-width: 620px; padding: 24px; }
 .expense-inbox-header { display: flex; align-items: center; gap: 13px; margin-bottom: 22px; }
 .expense-inbox-header h2 { font-size: 23px; margin: 0 0 5px; letter-spacing: -.03em; }

@@ -5,6 +5,11 @@ the equal, exact, percentage, shares, adjustment, reimbursement and itemized spl
 methods. Contributions use the expense currency and must add up to its total.
 Refunds use the same controls to record who received the money.
 
+Edit history renders one before/after amount comparison for a financial change.
+A separate Currency row appears only when the entered currency changes; receipt
+metadata and ledger changes do not repeat the same amounts. Each side uses its
+own saved snapshot, including after later currency edits.
+
 Choose one payer using the member radio list, or tick the members who contributed
 in **Multiple people**. Unselected members' amount inputs stay disabled. There
 are no payer dropdowns or separate add/remove actions. Currency codes occupy a

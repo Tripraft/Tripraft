@@ -1,4 +1,4 @@
-// Purpose: Loads a private, paginated expense inbox and acknowledges only displayed updates.
+// Purpose: Loads a private, paginated expense inbox with single and scoped bulk acknowledgements.
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
 import expenseApi from '../services/expenseApi';
 
@@ -21,5 +21,11 @@ export default function useExpenseNotifications(userId, {groupId = null, unreadO
       await client.invalidateQueries({queryKey: ['expense-notifications', userId]});
     },
   });
-  return {...query, read};
+  const readAll = useMutation({
+    mutationFn: () => expenseApi.readAllNotifications(groupId),
+    onSuccess: async () => {
+      await client.invalidateQueries({queryKey: ['expense-notifications', userId]});
+    },
+  });
+  return {...query, read, readAll};
 }

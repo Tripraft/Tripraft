@@ -93,9 +93,14 @@ def build(application):
                 'total': {'type': 'integer'}, 'limit': {'type': 'integer'}, 'offset': {'type': 'integer'}, 'has_more': {'type': 'boolean'},
             }},
         }}),
-        'ReadExpenseNotifications': {'type': 'object', 'required': ['ids'], 'properties': {
-            'ids': {'type': 'array', 'minItems': 1, 'maxItems': 100, 'items': {'type': 'string', 'format': 'uuid'}},
-        }},
+        'ReadExpenseNotifications': {'oneOf': [
+            {'type': 'object', 'required': ['ids'], 'additionalProperties': False, 'properties': {
+                'ids': {'type': 'array', 'minItems': 1, 'maxItems': 100, 'items': {'type': 'string', 'format': 'uuid'}},
+            }},
+            {'type': 'object', 'required': ['all'], 'additionalProperties': False, 'properties': {
+                'all': {'type': 'boolean', 'enum': [True]}, 'group_id': {'type': 'string', 'format': 'uuid'},
+            }},
+        ]},
         'ReadExpenseNotificationsResponse': envelope({'type': 'object', 'required': ['marked'], 'properties': {'marked': {'type': 'integer', 'minimum': 0}}}),
         'AuditResponse': envelope(ref('AuditData')),
     }

@@ -112,10 +112,10 @@ it('shows each history side with its own saved currency even after another curre
       {field: 'amount', old: 10.53, new: 20}, {field: 'splits', old: paidExpense.splits, new: [{user_id: 'me', amount: 10}]}]}]}, isLoading: false});
   render(<ExpenseHistory expense={{...paidExpense, original: {...paidExpense.original, currency: 'GBP'}}}
     members={members} currency="USD" onClose={jest.fn()} />);
-  expect(screen.getByText('Paid in INR')).toBeInTheDocument();
-  expect(screen.getByText('Paid in EUR')).toBeInTheDocument();
-  expect(screen.getAllByText('INR 1,000.00')).toHaveLength(2);
-  expect(screen.getAllByText('EUR 18.00')).toHaveLength(2);
+  expect(screen.getByText('INR', {selector: '.old-value'})).toBeInTheDocument();
+  expect(screen.getByText('EUR', {selector: '.new-value'})).toBeInTheDocument();
+  expect(screen.getAllByText('INR 1,000.00')).toHaveLength(1);
+  expect(screen.getAllByText('EUR 18.00')).toHaveLength(1);
   expect(screen.getAllByText('INR 500.00')).toHaveLength(2);
   expect(getExchangeRate).not.toHaveBeenCalled();
 });
@@ -125,9 +125,35 @@ it('shows returning to the group currency as a paid-currency change', () => {
   useExpenseEditHistory.mockReturnValue({data: {history: [{action: 'updated', before_snapshot: paidExpense, after_snapshot: after,
     changes: [{field: 'original', old: paidExpense.original, new: null}]}]}, isLoading: false});
   render(<ExpenseHistory expense={after} currency="USD" members={members} onClose={jest.fn()} />);
-  expect(screen.getByText('Paid in INR')).toBeInTheDocument();
-  expect(screen.getByText('Paid in USD')).toBeInTheDocument();
+  expect(screen.getByText('INR', {selector: '.old-value'})).toBeInTheDocument();
+  expect(screen.getByText('USD', {selector: '.new-value'})).toBeInTheDocument();
   expect(screen.getByText('INR 1,000.00')).toBeInTheDocument();
+});
+
+it.each([false, true])('shows a same-currency money edit once without a currency row (object changes: %s)', objectChanges => {
+  const after = {...paidExpense, amount: 21.06, original: {...paidExpense.original, amount: '2000'}};
+  const changes = [{field: 'original', old: paidExpense.original, new: after.original}, {field: 'amount', old: 10.53, new: 21.06}];
+  useExpenseEditHistory.mockReturnValue({data: {history: [{action: 'updated', before_snapshot: paidExpense, after_snapshot: after,
+    changes: objectChanges ? Object.fromEntries(changes.map(({field, ...change}) => [field, change])) : changes}]}, isLoading: false});
+  const view = render(<ExpenseHistory expense={after} currency="USD" members={members} onClose={jest.fn()} />);
+  const list = view.baseElement.querySelector('.changes-list');
+  expect(within(list).getAllByText('Amount', {selector: '.field-name'})).toHaveLength(1);
+  expect(within(list).queryByText('Currency', {selector: '.field-name'})).toBeNull();
+  expect(within(list).queryByText('Paid amount and currency')).toBeNull();
+  expect(within(list).getAllByText('INR 1,000.00')).toHaveLength(1);
+  expect(within(list).getAllByText('INR 2,000.00')).toHaveLength(1);
+});
+
+it('keeps one amount comparison when the currency changes but the ledger amount stays equal', () => {
+  const after = {...paidExpense, original: {...paidExpense.original, currency: 'EUR', amount: '18'}};
+  useExpenseEditHistory.mockReturnValue({data: {history: [{action: 'updated', before_snapshot: paidExpense, after_snapshot: after,
+    changes: [{field: 'original', old: paidExpense.original, new: after.original}]}]}, isLoading: false});
+  const view = render(<ExpenseHistory expense={after} currency="USD" members={members} onClose={jest.fn()} />);
+  const list = view.baseElement.querySelector('.changes-list');
+  expect(within(list).getAllByText('Amount', {selector: '.field-name'})).toHaveLength(1);
+  expect(within(list).getAllByText('Currency', {selector: '.field-name'})).toHaveLength(1);
+  expect(within(list).getByText('INR', {selector: '.old-value'})).toBeInTheDocument();
+  expect(within(list).getByText('EUR', {selector: '.new-value'})).toBeInTheDocument();
 });
 
 it('opens the paid currency and original split values for editing and preserves a metadata-only save', async () => {

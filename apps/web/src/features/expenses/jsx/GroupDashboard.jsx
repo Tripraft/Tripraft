@@ -65,13 +65,8 @@ export default function GroupDashboard({ groups, currentUserId, loading, error, 
       </div> : <>
         <label className="expense-group-search"><Search size={18} /><input type="search" placeholder="Search groups…" aria-label="Search groups" value={search} onChange={event => setSearch(event.target.value)} /></label>
         <div className="expense-group-grid">
-          {visible.map(group => <div className={`expense-group-card-wrap ${notificationCounts[group.id || group.group_id] > 0 ? 'has-notifications' : ''}`} key={group.id || group.group_id}>
-            <ExpenseGroupCard group={group} currentUserId={currentUserId} onSelect={onSelect}/>
-            {notificationCounts[group.id || group.group_id] > 0 && <button type="button" className="expense-group-notifications" aria-haspopup="dialog"
-              aria-label={`${group.name}: ${notificationCounts[group.id || group.group_id]} unread updates`}
-              onClick={() => onNotifications?.(group.id || group.group_id)}><Bell size={15} />New updates
-              <NotificationBadge count={notificationCounts[group.id || group.group_id]} /></button>}
-          </div>)}
+          {visible.map(group => <ExpenseGroupCard key={group.id || group.group_id} group={group} currentUserId={currentUserId} onSelect={onSelect}
+            notificationCount={notificationCounts[group.id || group.group_id] || 0} onNotifications={onNotifications} />)}
           <button className="expense-new-group-card" onClick={onCreate}><span><Plus size={26} /></span><strong>Create a new group</strong><small>Bring your next adventure together</small></button>
         </div>
         {!visible.length && <p className="expense-search-empty" role="status">No groups match “{search}”. Try another name.</p>}
@@ -79,13 +74,19 @@ export default function GroupDashboard({ groups, currentUserId, loading, error, 
   </section>;
 }
 
-function ExpenseGroupCard({group, currentUserId, onSelect}) {
+function ExpenseGroupCard({group, currentUserId, onSelect, notificationCount, onNotifications}) {
             const overview = groupOverview(group, currentUserId);
             const currency = group.currency || 'USD';
             const formatMoney = useMoneyDisplay(currency, group.display_currency || currency);
             const members = group.members || [];
-            return <button type="button" className="expense-group-card" key={group.id || group.group_id} onClick={() => onSelect(group.id || group.group_id)} aria-label={`Open ${group.name}`}>
-              <span className="expense-group-card-title">{group.name}<ArrowUpRight size={18} /></span>
+            return <article className="expense-group-card">
+              <div className="expense-group-card-title">
+                <button type="button" className="expense-group-open" onClick={() => onSelect(group.id || group.group_id)} aria-label={`Open ${group.name}`}>{group.name}</button>
+                {notificationCount > 0 && <button type="button" className="expense-group-notifications expense-group-notifications-compact" aria-haspopup="dialog"
+                  aria-label={`${group.name}: ${notificationCount} unread updates`} onClick={() => onNotifications?.(group.id || group.group_id)}>
+                  <Bell size={15} /><NotificationBadge count={notificationCount} /></button>}
+                <ArrowUpRight size={18} aria-hidden="true" />
+              </div>
               <span className="expense-group-dates">{groupDateRange(group.start_date || group.trip_start_date || overview.start, group.end_date || group.trip_end_date || overview.end)}</span>
               <span className="expense-group-members"><MemberAvatars members={members} /><span>{members.length} member{members.length === 1 ? '' : 's'}</span></span>
               <SpendSparkline daily={overview.daily} />
@@ -97,6 +98,6 @@ function ExpenseGroupCard({group, currentUserId, onSelect}) {
               </span>
               <GroupPosition net={overview.net} currency={currency} displayCurrency={group.display_currency || currency} />
               <span className="expense-group-top-category">{overview.topCategory ? <>Top category: <strong>{overview.topCategory.name} · {overview.topCategory.percentage}%</strong></> : 'No spending yet. Make your first memory.'}</span>
-            </button>;
+            </article>;
 
 }

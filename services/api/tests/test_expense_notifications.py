@@ -38,6 +38,41 @@ def acknowledge_current(api):
         assert api.post(PATH + '/read', json={'ids': ids}).status_code == 200
 
 
+def test_mark_all_reads_every_page_and_respects_group_and_user_scope(group_of_two, bob):
+    owner, uid, member, member_id, gid = group_of_two
+    second = payload(owner.post('/api/v1/expenses/groups', json={'name': 'Second trip'}))['group']['id']
+    assert owner.post(f'/api/v1/expenses/groups/{second}/members', json={'email': bob[2]}).status_code == 201
+    acknowledge_current(member)
+    with get_db_session() as session:
+        for index in range(35):
+            session.add(ExpenseNotification(user_id=UUID(member_id), group_id=UUID(gid), actor_id=UUID(uid),
+                kind='expense_updated', title=f'Update {index}', body='Dinner updated'))
+        session.add(ExpenseNotification(user_id=UUID(member_id), group_id=UUID(second), actor_id=UUID(uid),
+            kind='expense_updated', title='Other group', body='Stay updated'))
+        session.add(ExpenseNotification(user_id=UUID(uid), group_id=UUID(gid), actor_id=UUID(member_id),
+            kind='expense_updated', title='Other user', body='Lunch updated'))
+        session.commit()
+    assert inbox(member, '?unread_only=true')['pagination']['has_more']
+    assert payload(member.post(PATH + '/read', json={'all': True, 'group_id': gid}))['marked'] == 35
+    assert inbox(member)['group_counts'] == {second: 1}
+    assert inbox(owner)['unread_count'] == 1
+    assert payload(member.post(PATH + '/read', json={'all': True}))['marked'] == 1
+    assert payload(member.post(PATH + '/read', json={'all': True}))['marked'] == 0
+    assert inbox(member, '?unread_only=true')['notifications'] == []
+    assert inbox(member)['pagination']['total'] >= 36  # Acknowledging never deletes history.
+
+
+def test_mark_all_rejects_invalid_scope_and_cannot_acknowledge_other_users(group_of_two, make_user):
+    owner, _, member, _, gid = group_of_two
+    outsider, _, _ = make_user('notification-outsider-all')
+    assert payload(outsider.post(PATH + '/read', json={'all': True, 'group_id': gid}))['marked'] == 0
+    assert payload(owner.post(PATH + '/read', json={'all': True, 'group_id': gid}))['marked'] == 0
+    assert inbox(member)['unread_count'] > 0
+    for body in ({'all': True, 'ids': []}, {'all': 'true'}, {'all': 1}, {'all': True, 'group_id': 'bad'},
+                 {'all': True, 'group_id': None}, {'all': True, 'group_id': ''}):
+        assert member.post(PATH + '/read', json=body).status_code == 400
+
+
 def test_missed_updates_survive_reads_and_keep_groups_and_users_independent(group_of_two, bob):
     owner, uid, member, _, gid = group_of_two
     second = payload(owner.post('/api/v1/expenses/groups', json={'name': 'Second trip'}))['group']['id']
@@ -102,6 +137,7 @@ def test_notifications_are_private_and_revoked_members_cannot_acknowledge(group_
     assert inbox(member)['unread_count'] == 0
     assert inbox(member, f'?group_id={gid}')['notifications'] == []
     assert payload(member.post(PATH + '/read', json={'ids': [nid]}))['marked'] == 0
+    assert payload(member.post(PATH + '/read', json={'all': True, 'group_id': gid}))['marked'] == 0
 
 
 def test_rollback_and_personal_changes_never_create_group_notifications(group_of_two):
@@ -129,6 +165,12 @@ def test_read_on_another_device_emits_only_a_private_invalidation(group_of_two, 
     owner_device.get_received('/expenses')
     nid = inbox(member)['notifications'][0]['id']
     assert member.post(PATH + '/read', json={'ids': [nid]}).status_code == 200
+    assert [row['name'] for row in other_device.get_received('/expenses')] == ['expenses:notifications-changed']
+    assert owner_device.get_received('/expenses') == []
+    add(owner, uid, gid, description='Another missed update')
+    other_device.get_received('/expenses')
+    owner_device.get_received('/expenses')
+    assert member.post(PATH + '/read', json={'all': True}).status_code == 200
     assert [row['name'] for row in other_device.get_received('/expenses')] == ['expenses:notifications-changed']
     assert owner_device.get_received('/expenses') == []
 

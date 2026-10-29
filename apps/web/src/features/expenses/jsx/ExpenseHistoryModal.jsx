@@ -213,25 +213,50 @@ const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', curren
                         const changesArray = Array.isArray(entry.changes) ? entry.changes : Object.entries(entry.changes || {}).map(([field, change]) => ({ ...change, field: change.field_name || change.field || field }));
                         
                         if (changesArray.length === 0) return null;
+                        const fieldOf = change => change.field_name || change.field;
+                        const valueOf = (change, side) => Object.prototype.hasOwnProperty.call(change, `${side}_value`) ? change[`${side}_value`] : change[side];
+                        const snapshotFor = side => {
+                          const recorded = entry[side === 'old' ? 'before_snapshot' : 'after_snapshot'];
+                          if (recorded) return recorded;
+                          const originalChange = changesArray.find(change => fieldOf(change) === 'original');
+                          const original = originalChange ? valueOf(originalChange, side) : null;
+                          const currencyChange = changesArray.find(change => fieldOf(change) === 'currency');
+                          const amountChange = changesArray.find(change => fieldOf(change) === 'amount');
+                          return {currency: (currencyChange && valueOf(currencyChange, side)) || original?.ledger_currency || currency,
+                            original, amount: amountChange ? valueOf(amountChange, side) : original ? Number(original.amount) * Number(original.rate) : undefined};
+                        };
+                        const before = snapshotFor('old'), after = snapshotFor('new');
+                        const oldCurrency = before.original?.currency || before.currency;
+                        const newCurrency = after.original?.currency || after.currency;
+                        const moneyFields = ['amount', 'currency', 'original'];
+                        const hasMoneyChange = changesArray.some(change => moneyFields.includes(fieldOf(change)));
+                        const currencyChanged = oldCurrency !== newCurrency;
+                        const amountChanged = Number(before.original?.amount ?? before.amount) !== Number(after.original?.amount ?? after.amount)
+                          || Number(before.amount) !== Number(after.amount);
+                        const moneyChanges = [
+                          ...(currencyChanged ? [{field: 'currency', old: oldCurrency, new: newCurrency}] : []),
+                          ...((currencyChanged || amountChanged) && before.amount != null && after.amount != null
+                            ? [{field: 'amount', old: before.amount, new: after.amount, financialChange: true}] : []),
+                        ];
+                        let moneyShown = false;
+                        const visibleChanges = mode !== 'group' || !hasMoneyChange ? changesArray : changesArray.flatMap(change => {
+                          if (!moneyFields.includes(fieldOf(change))) return [change];
+                          if (moneyShown) return [];
+                          moneyShown = true;
+                          return moneyChanges;
+                        });
                         const formatChangeValue = (field, value, side) => {
-                          // Bill/item details retain receipt units; amount and splits use ledger units.
-                          const originalChange = changesArray.find(change => (change.field_name || change.field) === 'original');
-                          const recordedValue = change => Object.prototype.hasOwnProperty.call(change, `${side}_value`) ? change[`${side}_value`] : change[side];
-                          const snapshot = entry[side === 'old' ? 'before_snapshot' : 'after_snapshot'];
-                          const original = snapshot ? snapshot.original : originalChange ? recordedValue(originalChange) : null;
-                          const currencyChange = changesArray.find(change => (change.field_name || change.field) === 'currency');
-                          const ledgerCurrency = snapshot?.currency || (currencyChange && recordedValue(currencyChange)) || currency;
-                          const amountChange = changesArray.find(change => (change.field_name || change.field) === 'amount');
-                          const recordedAmount = amountChange ? recordedValue(amountChange) : original ? Number(original.amount) * Number(original.rate) : undefined;
-                          const moneySnapshot = snapshot || {currency: ledgerCurrency, original, amount: recordedAmount};
-                          return formatValue(field, value, field === 'split_details' ? original?.currency || ledgerCurrency : ledgerCurrency, moneySnapshot);
+                          const moneySnapshot = side === 'old' ? before : after;
+                          const ledgerCurrency = moneySnapshot.currency;
+                          return formatValue(field, value, field === 'split_details' ? moneySnapshot.original?.currency || ledgerCurrency : ledgerCurrency, moneySnapshot);
                         };
 
                         
                         return (
                           <div className="changes-list">
-                            {changesArray
+                            {visibleChanges
                               .filter(change => {
+                                if (change.financialChange) return true;
                                 // Filter out unchanged values
                                 const oldVal = change.old_value ?? change.old;
                                 const newVal = change.new_value ?? change.new;

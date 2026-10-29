@@ -6,14 +6,19 @@ edited, deleted and restored; settlements recorded and deleted; group settings
 and currency changes; and membership and member role changes. Converted receipts
 include their source amount, currency and saved rate in the expense update.
 
-The expenses header shows the total unread count. Each group card shows its own
-clickable count, and a selected group has a Group updates button. The inbox offers
-all groups or one group, an unread filter, older pages, and individual update
-cards. Counts above 99 display as `99+`, with the exact count in the accessible
+The expenses header shows the total unread count. Each group card shows a bell
+and clickable count beside its name. The selected group's **Group activity**
+button opens, scrolls to and focuses the **Activity & history** tab. The inbox
+shows unread cards only, with all-groups or single-group filters and older pages.
+Counts above 99 display as `99+`, with the exact count in the accessible
 button label. Timestamps are returned in UTC and formatted in the viewer's local
 time. Viewing a ledger or opening the inbox does not clear unread state. Opening
 a notification's group acknowledges that card; users can also mark one card or
-the displayed page as read. Later arrivals remain unread.
+all unread notifications in the selected view as read. Acknowledged cards leave
+the inbox, and counters update across views/devices. Mark all covers every page
+in the selected group, or all accessible groups when no group is selected.
+Stored notifications and expense audit history are retained. Arrivals after the
+acknowledgement write remain unread.
 
 ## API
 
@@ -28,6 +33,11 @@ excluded, including during acknowledgements.
 - `POST /api/v1/expenses/groups/notifications/read`: accepts `{"ids":["uuid"]}`
   with 1–100 IDs. Marks only the caller's accessible unread rows and returns
   `marked`. Repeated acknowledgements are safe. Other users' IDs are ignored.
+  Alternatively, `{"all":true,"group_id":"uuid"}` acknowledges all unread rows
+  in one accessible group; omit `group_id` for all the caller's accessible groups.
+  The `ids` and `all` forms are mutually exclusive. A supplied group ID must be
+  valid, including when it is empty or null. Bulk updates use one database write
+  and publish only a private post-commit invalidation.
 
 Inbox rows are staged within the same database transaction as the business
 change, so failed writes and rollbacks do not produce notifications. Persistence

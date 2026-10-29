@@ -8,7 +8,7 @@ import useExpenseLiveUpdates from '../hooks/useExpenseLiveUpdates';
 import expenseApi from '../services/expenseApi';
 import {io} from 'socket.io-client';
 
-jest.mock('../services/expenseApi', () => ({__esModule: true, default: {getNotifications: jest.fn(), readNotifications: jest.fn()}}));
+jest.mock('../services/expenseApi', () => ({__esModule: true, default: {getNotifications: jest.fn(), readNotifications: jest.fn(), readAllNotifications: jest.fn()}}));
 jest.mock('socket.io-client', () => ({io: jest.fn()}));
 jest.mock('../services/sqlAuthService', () => ({__esModule: true, default: {getIdToken: jest.fn().mockResolvedValue(null)}}));
 jest.mock('../config/globalConfig', () => ({__esModule: true, default: {API_BASE_URL: '/api'}}));
@@ -35,6 +35,10 @@ beforeEach(() => {
     rows = rows.map(row => ids.includes(row.id) ? {...row, is_read: true} : row);
     return {data: {marked: ids.length}};
   });
+  expenseApi.readAllNotifications.mockReset().mockImplementation(async groupId => {
+    rows = rows.map(row => !groupId || row.group_id === groupId ? {...row, is_read: true} : row);
+    return {data: {marked: rows.length}};
+  });
   events = {};
   io.mockReset().mockReturnValue({connected: true, on: (name, fn) => {events[name] = fn;}, disconnect: jest.fn()});
 });
@@ -49,6 +53,31 @@ it('shows independent clickable group badges without nesting buttons', () => {
   expect(onSelect).not.toHaveBeenCalled();
   expect(screen.getByRole('button', {name: 'City break: 120 unread updates'})).toHaveTextContent('99+');
   expect(document.querySelector('button button')).toBeNull();
+  const badge = screen.getByRole('button', {name: 'Beach trip: 3 unread updates'});
+  expect(badge.parentElement).toHaveClass('expense-group-card-title');
+  expect(badge.parentElement).toHaveTextContent('Beach trip');
+  expect(badge).not.toHaveTextContent('New updates');
+});
+
+it('removes read cards, clears all unread pages and keeps other groups separate', async () => {
+  rows = [...Array.from({length: 35}, (_, index) => ({...rows[0], id: `beach-${index}`, title: `Beach update ${index}`})), rows[1],
+    {...rows[0], id: 'already-read', title: 'Already acknowledged', is_read: true}];
+  render(<ExpenseNotifications userId="me" groups={groups} onClose={jest.fn()} onOpenGroup={jest.fn()} />, {wrapper});
+  await screen.findByText('Beach update 0');
+  expect(screen.queryByText('Already acknowledged')).toBeNull();
+  fireEvent.click(screen.getByRole('button', {name: 'Mark Beach update 0 in Beach trip as read'}));
+  await waitFor(() => expect(screen.queryByText('Beach update 0')).toBeNull());
+  fireEvent.change(screen.getByRole('combobox'), {target: {value: 'beach'}});
+  await waitFor(() => expect(screen.getByRole('button', {name: 'Mark all as read'})).toBeEnabled());
+  fireEvent.click(screen.getByRole('button', {name: 'Mark all as read'}));
+  await screen.findByText('You’re all caught up');
+  expect(rows.filter(row => row.group_id === 'beach').every(row => row.is_read)).toBe(true);
+  expect(rows.find(row => row.id === 'b').is_read).toBe(false);
+  fireEvent.change(screen.getByRole('combobox'), {target: {value: ''}});
+  await screen.findByText('Group currency updated');
+  fireEvent.click(screen.getByRole('button', {name: 'Mark all as read'}));
+  await screen.findByText('You’re all caught up');
+  expect(rows.every(row => row.is_read)).toBe(true);
 });
 
 it('preserves unread cards until acknowledged, filters by group and renders viewer-local time', async () => {
@@ -61,12 +90,11 @@ it('preserves unread cards until acknowledged, filters by group and renders view
   expect(dateFormat.mock.calls[0][1]).not.toHaveProperty('timeZone');
   fireEvent.change(screen.getByRole('combobox'), {target: {value: 'beach'}});
   await waitFor(() => expect(screen.queryByText('Group currency updated')).toBeNull());
-  await waitFor(() => expect(screen.getByRole('button', {name: 'Mark shown as read'})).not.toBeDisabled());
-  fireEvent.click(screen.getByRole('button', {name: 'Mark shown as read'}));
+  await waitFor(() => expect(screen.getByRole('button', {name: 'Mark all as read'})).not.toBeDisabled());
+  fireEvent.click(screen.getByRole('button', {name: 'Mark all as read'}));
   await waitFor(() => expect(screen.getByText('1 unread across your groups')).toBeInTheDocument());
-  expect(expenseApi.readNotifications).toHaveBeenCalledWith(['a']);
+  expect(expenseApi.readAllNotifications).toHaveBeenCalledWith('beach');
   expect(rows.find(row => row.id === 'b').is_read).toBe(false);
-  fireEvent.click(screen.getByLabelText('Unread only'));
   expect(await screen.findByText('You’re all caught up')).toBeInTheDocument();
 });
 
@@ -83,12 +111,12 @@ it('acknowledges only the opened card and opens its group', async () => {
 
 it('keeps failures retryable without silently clearing unread updates', async () => {
   expenseApi.getNotifications.mockRejectedValueOnce(new Error('Offline'));
-  expenseApi.readNotifications.mockRejectedValueOnce(new Error('Offline'));
+  expenseApi.readAllNotifications.mockRejectedValueOnce(new Error('Offline'));
   render(<ExpenseNotifications userId="me" groups={groups} onClose={jest.fn()} onOpenGroup={jest.fn()} />, {wrapper});
   expect(await screen.findByRole('alert')).toHaveTextContent('Notifications couldn’t load');
   fireEvent.click(screen.getByRole('button', {name: 'Try again'}));
   await screen.findByText('Expense added');
-  fireEvent.click(screen.getByRole('button', {name: 'Mark shown as read'}));
+  fireEvent.click(screen.getByRole('button', {name: 'Mark all as read'}));
   expect(await screen.findByRole('alert')).toHaveTextContent('Please try again');
   expect(screen.getByText('2 unread across your groups')).toBeInTheDocument();
 });
@@ -100,7 +128,7 @@ it('paginates older updates and resets to the first page when filtering', async 
   fireEvent.click(screen.getByRole('button', {name: 'Next'}));
   expect(await screen.findByText('Update 30')).toBeInTheDocument();
   expect(screen.queryByText('Update 0')).toBeNull();
-  fireEvent.click(screen.getByLabelText('Unread only'));
+  fireEvent.change(screen.getByRole('combobox'), {target: {value: 'beach'}});
   expect(await screen.findByText('Update 0')).toBeInTheDocument();
 });
 
