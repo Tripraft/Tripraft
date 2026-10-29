@@ -5,6 +5,7 @@ import { equalSplits, formatMoney } from '../../../../utils/money';
 import { itemizedSplits } from '../../utils/plannerMoney';
 import { isPlannerDemo } from '../../demo/demoMode';
 import ExpensePayerEditor from '../../../expenses/jsx/ExpensePayerEditor';
+import ExpenseBalancePreview from '../../../expenses/jsx/ExpenseBalancePreview';
 import {buildPayers} from '../../../expenses/utils/payers';
 import usePreventNumberWheel from '../../../../hooks/usePreventNumberWheel';
 export default function PlannerExpenseModal({
@@ -269,6 +270,7 @@ export default function PlannerExpenseModal({
         <fieldset disabled={saving} style={{border: 0, margin: 0, padding: 0, minWidth: 0}}>
           <ExpensePayerEditor form={paymentForm} setForm={setPaymentForm} members={members} currency={currency} previewCurrency={currency} previewRate={1} />
         </fieldset>
+        <ExpenseBalancePreview form={paymentForm} members={members} currency={currency} previewCurrency={currency} previewRate={1} />
         <div className="gp-modal-actions">
           <button className="gp-modal-btn-primary" disabled={saving}>
             {saving ? 'Saving...' : itemized ? 'Save Split Expense' : 'Save Expense'}

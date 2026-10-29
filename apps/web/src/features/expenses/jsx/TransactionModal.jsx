@@ -8,6 +8,7 @@ import { buildSplit } from '../utils/splitMethods';
 import useExchangeRate from '../../../hooks/useExchangeRate';
 import {formatMoney} from '../../../utils/money';
 import ExpensePayerEditor from './ExpensePayerEditor';
+import ExpenseBalancePreview from './ExpenseBalancePreview';
 import {buildPayers, expensePayers} from '../utils/payers';
 
 const TransactionModal = ({ 
@@ -240,16 +241,6 @@ const TransactionModal = ({
             </div>
           </div>
 
-          {mode === 'group' && groupMembers.length > 0 && (
-            <>
-              <ExpensePayerEditor form={formData} setForm={setFormData} members={groupMembers} currency={formData.currency}
-                previewCurrency={previewCurrency} previewRate={previewExchange.data?.rate} />
-
-              <ExpenseSplitEditor form={formData} setForm={setFormData} members={groupMembers} currency={formData.currency}
-                previewCurrency={previewCurrency} previewRate={previewExchange.data?.rate} />
-              {splitError && <p role="alert">{splitError}</p>}
-            </>
-          )}
 
           <div className="form-row">
             <div className="form-group">
@@ -288,6 +279,19 @@ const TransactionModal = ({
               />
             </div>
           </div>
+
+          {mode === 'group' && groupMembers.length > 0 && (
+            <>
+              <ExpensePayerEditor form={formData} setForm={setFormData} members={groupMembers} currency={formData.currency}
+                previewCurrency={previewCurrency} previewRate={previewExchange.data?.rate} />
+
+              <ExpenseSplitEditor form={formData} setForm={setFormData} members={groupMembers} currency={formData.currency}
+                previewCurrency={previewCurrency} previewRate={previewExchange.data?.rate} />
+              {splitError && <p role="alert">{splitError}</p>}
+            </>
+          )}
+          {mode === 'group' && groupMembers.length > 0 && <ExpenseBalancePreview form={formData} members={groupMembers}
+            currency={formData.currency} previewCurrency={previewCurrency} previewRate={previewExchange.data?.rate} />}
 
           <div className="modal-actions">
             <button 

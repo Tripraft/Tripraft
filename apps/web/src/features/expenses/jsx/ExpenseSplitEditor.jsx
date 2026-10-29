@@ -49,7 +49,8 @@ export default function ExpenseSplitEditor({ form, setForm, members, currency, p
   const overAllocated = tracksAllocation && remaining < 0;
   const allocationState = overAllocated ? 'has-error' : remaining === 0 && !error ? 'is-complete' : 'is-pending';
   const allocationValue = value => kind === 'percentage' ? `${Number(value.toFixed(2))}%` : formatMoney(value, currency);
-  const money = amount => <ExpenseEntryAmount amount={amount} currency={currency} defaultCurrency={previewCurrency} rate={previewRate} />;
+  const money = (amount, showOriginal = true) => <ExpenseEntryAmount amount={amount} currency={currency} defaultCurrency={previewCurrency} rate={previewRate} showOriginal={showOriginal} />;
+  const hasMoneyInput = ['exact', 'reimbursement', 'adjustment'].includes(kind);
   const status = overAllocated
     ? `Allocated ${allocationValue(-remaining)} too much. ${kind === 'percentage' ? 'Percentages must add up to 100%.' : `Amounts must add up to ${formatMoney(target, currency)}.`}`
     : error;
@@ -79,9 +80,9 @@ export default function ExpenseSplitEditor({ form, setForm, members, currency, p
               }} /><span>{unit}</span></label>}
           {included && <output aria-label={`${name} share`}>{result
             ? converted ? <CurrencyAmount amount={converted.splits.find(s => s.user_id === id)?.amount} currency={previewCurrency}
-              original={{amount: result.preview.find(s => s.user_id === id)?.amount, currency}} /> : money(result.preview.find(s => s.user_id === id)?.amount)
+              original={hasMoneyInput ? undefined : {amount: result.preview.find(s => s.user_id === id)?.amount, currency}} /> : money(result.preview.find(s => s.user_id === id)?.amount, !hasMoneyInput)
             : money(['exact', 'reimbursement'].includes(kind) && form.splitValues[id] !== '' && form.splitValues[id] != null
-              ? Number(form.splitValues[id]) * (kind === 'reimbursement' ? -1 : 1) : null)}
+              ? Number(form.splitValues[id]) * (kind === 'reimbursement' ? -1 : 1) : null, !hasMoneyInput)}
           </output>}
         </div>;
       })}
@@ -90,13 +91,13 @@ export default function ExpenseSplitEditor({ form, setForm, members, currency, p
       {form.bill.items.map((item, index) => <fieldset className="split-bill-item" key={index}>
         <legend>Item {index + 1}</legend>
         <div className="split-item-fields"><input aria-label={`Item ${index + 1} name`} placeholder="Item name" maxLength={200} value={item.name} onChange={e => itemChange(index, { name: e.target.value })} />
-          <label className="split-item-money"><span>{currency}</span><input type="number" aria-label={`Item ${index + 1} amount`} placeholder="0.00" min="0.01" step="0.01" value={item.amount} onChange={e => itemChange(index, { amount: e.target.value })} />{currency !== previewCurrency && money(item.amount)}</label>
+          <label className="split-item-money"><span>{currency}</span><input type="number" aria-label={`Item ${index + 1} amount`} placeholder="0.00" min="0.01" step="0.01" value={item.amount} onChange={e => itemChange(index, { amount: e.target.value })} />{currency !== previewCurrency && money(item.amount, false)}</label>
           <button type="button" aria-label={`Remove item ${index + 1}`} onClick={() => update({ bill: { ...form.bill, items: form.bill.items.filter((_, i) => i !== index) } })}><Trash2 size={16} /></button></div>
         <div className="split-item-people">{members.filter(m => form.splitWith.includes(idOf(m))).map(m => <label key={idOf(m)}><input type="checkbox" checked={item.user_ids.includes(idOf(m))}
           onChange={() => itemChange(index, { user_ids: item.user_ids.includes(idOf(m)) ? item.user_ids.filter(id => id !== idOf(m)) : [...item.user_ids, idOf(m)] })} />{nameOf(m)}</label>)}</div>
       </fieldset>)}
       <button className="split-add-item" type="button" disabled={form.bill.items.length >= 100} onClick={() => update({ bill: { ...form.bill, items: [...form.bill.items, { name: '', amount: '', user_ids: [...form.splitWith] }] } })}><Plus size={16} /> Add item</button>
-      <div className="split-bill-extras">{['tax', 'tip', 'discount'].map(key => <label key={key}>{key[0].toUpperCase() + key.slice(1)} ({currency})<input aria-label={key[0].toUpperCase() + key.slice(1)} type="number" min="0" step="0.01" value={form.bill[key]} onChange={e => update({ bill: { ...form.bill, [key]: e.target.value } })} />{currency !== previewCurrency && money(form.bill[key])}</label>)}</div>
+      <div className="split-bill-extras">{['tax', 'tip', 'discount'].map(key => <label key={key}>{key[0].toUpperCase() + key.slice(1)} ({currency})<input aria-label={key[0].toUpperCase() + key.slice(1)} type="number" min="0" step="0.01" value={form.bill[key]} onChange={e => update({ bill: { ...form.bill, [key]: e.target.value } })} />{currency !== previewCurrency && money(form.bill[key], false)}</label>)}</div>
     </div>}
     <div id="split-status" className={`split-status${status ? ' has-error' : ' is-complete'}`} aria-live="polite">{status || (currency === previewCurrency
       ? `Total allocated: ${formatMoney(form.amount, currency)}${kind === 'reimbursement' ? ' refunded' : ''}`

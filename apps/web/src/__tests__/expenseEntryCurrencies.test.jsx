@@ -3,6 +3,7 @@ import React, {useState} from 'react';
 import {fireEvent, render, screen, within} from '@testing-library/react';
 import ExpenseSplitEditor from '../features/expenses/jsx/ExpenseSplitEditor';
 import ExpensePayerEditor from '../features/expenses/jsx/ExpensePayerEditor';
+import ExpenseBalancePreview from '../features/expenses/jsx/ExpenseBalancePreview';
 import ExpenseAnalysisView from '../features/expenses/jsx/ExpenseAnalysisView';
 import {dailyChartWindow} from '../features/expenses/utils/expenseAnalysis';
 
@@ -14,11 +15,14 @@ function Split({kind, currency = 'EUR', rate = 90, initial}) {
   return <ExpenseSplitEditor form={state} setForm={setState} members={members} currency={currency} previewCurrency="INR" previewRate={rate} />;
 }
 
-it.each(Object.keys(values))('shows INR and entered EUR in %s shares and totals', kind => {
+it.each(Object.keys(values))('avoids repeating entered money beside %s inputs and preserves paired totals', kind => {
   render(<Split kind={kind} />);
   const share = screen.getByLabelText('Alice share');
   expect(share.querySelector('.expense-money-primary')).toHaveTextContent('₹');
-  expect(share.querySelector('.expense-money-original')).toHaveTextContent('EUR');
+  if (['exact', 'reimbursement', 'adjustment'].includes(kind)) {
+    expect(share.querySelector('.expense-money-original')).toBeNull();
+    expect(screen.getByLabelText(`Alice ${kind}`).closest('label')).toHaveTextContent('EUR');
+  } else expect(share.querySelector('.expense-money-original')).toHaveTextContent('EUR');
   expect(document.getElementById('split-status')).toHaveTextContent('₹9,000.00EUR 100.00');
   if (['percentage', 'shares'].includes(kind)) expect(screen.getByLabelText(`Alice ${kind}`).closest('label')).toHaveTextContent(kind === 'percentage' ? '%' : 'shares');
 });
@@ -31,10 +35,12 @@ it.each(Object.keys(values))('shows only default INR for matching %s currency', 
 
 it('converts a partial exact draft before all shares are valid and updates it as the user types', () => {
   render(<Split kind="exact" initial={{...form('exact'), splitWith: ['a', 'b', 'c'], splitValues: {a: '10'}}} />);
-  expect(screen.getByLabelText('Alice share')).toHaveTextContent('₹900.00EUR 10.00');
-  expect(screen.getByLabelText('Bob share')).toHaveTextContent('INR —EUR —');
+  expect(screen.getByLabelText('Alice share')).toHaveTextContent('₹900.00');
+  expect(screen.getByLabelText('Alice share')).not.toHaveTextContent('EUR');
+  expect(screen.getByLabelText('Bob share')).toHaveTextContent('INR —');
+  expect(screen.getByLabelText('Bob share')).not.toHaveTextContent('EUR');
   fireEvent.change(screen.getByLabelText('Alice exact'), {target: {value: '20'}});
-  expect(screen.getByLabelText('Alice share')).toHaveTextContent('₹1,800.00EUR 20.00');
+  expect(screen.getByLabelText('Alice share')).toHaveTextContent('₹1,800.00');
   expect(screen.getByText('Allocated').parentElement).toHaveTextContent('₹1,800.00EUR 20.00');
 });
 
@@ -48,9 +54,27 @@ it('shows a default-currency equivalent beside each payer input and both currenc
   const view = render(<ExpensePayerEditor form={form('equal')} setForm={jest.fn()} members={members} currency="EUR" previewCurrency="INR" previewRate={90} />);
   expect(screen.getByLabelText('Alice paid amount').closest('.payer-contribution')).toHaveTextContent('EUR≈ ₹2,250.00');
   expect(view.container.querySelector('.payer-progress')).toHaveTextContent('Paid₹9,000.00EUR 100.00Remaining₹0.00EUR 0.00');
+  expect(screen.queryByRole('list', {name: 'Payment and balance preview'})).toBeNull();
+  render(<ExpenseBalancePreview form={form('equal')} members={members} currency="EUR" previewCurrency="INR" previewRate={90} />);
   const preview = screen.getByRole('list', {name: 'Payment and balance preview'});
   expect(within(preview).getAllByRole('listitem')).toHaveLength(2);
   expect(preview.querySelector('table')).toBeNull();
+});
+
+it('shows only the default currency beside item, tax, tip and discount money inputs', () => {
+  render(<Split kind="itemized" />);
+  for (const label of ['Item 1 amount', 'Tax', 'Tip', 'Discount']) {
+    const field = screen.getByLabelText(label).closest('label');
+    expect(field.querySelector('.expense-money-pair')).toHaveTextContent('₹');
+    expect(field.querySelector('.expense-money-original')).toBeNull();
+  }
+});
+
+it('keeps an exact input conversion pending in the default units without repeating source money', () => {
+  render(<Split kind="exact" rate={null} />);
+  expect(screen.getByLabelText('Alice share')).toHaveTextContent('INR conversion pending');
+  expect(screen.getByLabelText('Alice share')).not.toHaveTextContent('€');
+  expect(screen.getByLabelText('Alice share')).not.toHaveTextContent('EUR');
 });
 
 it('fills fourteen calendar days, including zeros, and keeps explicitly shorter periods', () => {

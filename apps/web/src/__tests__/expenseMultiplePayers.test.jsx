@@ -72,7 +72,7 @@ it('shows USD source contributions and INR equivalents, including when INR is a 
   fireEvent.click(screen.getByRole('button', {name: 'Multiple people'}));
   fireEvent.click(screen.getByRole('checkbox', {name: 'Paid by Bob'}));
   change('Alice paid amount', '75'); change('Bob paid amount', '25');
-  const payments = screen.getByRole('region', {name: 'Expense payments'});
+  const payments = await screen.findByRole('region', {name: 'Expense balance preview'});
   await waitFor(() => expect(within(payments).getByText('₹6,000.00')).toBeInTheDocument());
   expect(within(payments).getByText('USD 75.00')).toBeInTheDocument();
   expect(within(payments).getAllByText('₹2,000.00').length).toBeGreaterThan(0);
@@ -175,4 +175,19 @@ it.each(['INR', 'USD'])('shows only INR for an INR expense in an INR group with 
   expect(screen.queryByText(/in the group currency\./)).toBeNull();
   await waitFor(() => expect(screen.getByLabelText('Currency')).toHaveValue('INR'));
   expect(getExchangeRate).not.toHaveBeenCalled();
+});
+
+it.each(['single', 'multiple'])('puts the final balance review after all details, payer and split inputs in %s mode', paymentMode => {
+  render(<TransactionModal mode="group" members={members} currentUser={{uid: 'a'}} />);
+  change('Description', 'Dinner'); change('Amount', '100');
+  if (paymentMode === 'multiple') {
+    fireEvent.click(screen.getByRole('button', {name: 'Multiple people'}));
+    change('Alice paid amount', '100');
+  }
+  const inputs = [screen.getByLabelText('Description'), screen.getByLabelText('Amount'), screen.getByLabelText('Category'), screen.getByLabelText('Date'),
+    screen.getByRole('region', {name: 'Expense payments'}), screen.getByRole('region', {name: 'Expense split'})];
+  const preview = screen.getByRole('region', {name: 'Expense balance preview'});
+  for (const input of inputs) expect(input.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(preview.compareDocumentPosition(screen.getByRole('button', {name: 'Save'})) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(screen.getByRole('region', {name: 'Expense payments'}).contains(preview)).toBe(false);
 });

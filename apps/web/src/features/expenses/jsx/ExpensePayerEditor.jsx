@@ -1,19 +1,13 @@
-// Purpose: Simple payer choices with currency-labelled contributions and reconciled balance previews.
+// Purpose: Simple payer choices with currency-labelled contributions and default-currency equivalents.
 import React from 'react';
-import { buildPayers, convertedPayers } from '../utils/payers';
-import { buildSplit, convertedSplitPreview } from '../utils/splitMethods';
+import { buildPayers } from '../utils/payers';
 import { formatMoney } from '../../../utils/money';
-import CurrencyAmount from './CurrencyAmount';
 import ExpenseEntryAmount from './ExpenseEntryAmount';
 import '../css/ExpensePayerEditor.css';
 
-export default function ExpensePayerEditor({form, setForm, members, currency, previewCurrency, previewRate}) {
+export default function ExpensePayerEditor({form, setForm, members, currency, previewCurrency = currency, previewRate}) {
   const idOf = member => String(member.user_id || member.id);
   const nameOf = member => member.user?.display_name || member.display_name || member.user?.email || member.email || 'Member';
-  const name = id => {
-    const member = members.find(row => idOf(row) === String(id));
-    return member ? nameOf(member) : 'Former member';
-  };
   const refund = form.splitType === 'reimbursement', multiple = form.paymentMode === 'multiple';
   const update = patch => setForm(prev => ({...prev, ...patch}));
   const change = (index, patch) => update({payers: form.payers.map((row, i) => i === index ? {...row, ...patch} : row)});
@@ -26,15 +20,9 @@ export default function ExpensePayerEditor({form, setForm, members, currency, pr
     : [...form.payers, {user_id: id, amount: ''}]});
   const entered = (form.payers || []).reduce((sum, row) => sum + Math.round((Number(row.amount) || 0) * 100), 0);
   const remaining = (Math.round(Number(form.amount || 0) * 100) - entered) / 100;
-  let payments, split, error;
-  try { payments = buildPayers(form); split = buildSplit(form); } catch (e) { error = e.message; }
+  let payments;
+  try { payments = buildPayers(form); } catch { /* Incomplete payment allocation. */ }
   const converting = currency !== previewCurrency;
-  const ready = !converting || previewRate > 0;
-  const outputCurrency = converting && ready ? previewCurrency : currency;
-  const converted = payments && ready ? convertedPayers(payments, form.amount, converting ? previewRate : 1) : [];
-  const shares = split && (converting && ready ? convertedSplitPreview(split, form.amount, previewRate).splits : split.preview);
-  const sign = refund ? -1 : 1;
-  const ids = payments && shares ? [...new Set([...payments.map(row => row.user_id), ...shares.map(row => row.user_id)])] : [];
   return <section className="expense-payer-editor" aria-label={refund ? 'Refund recipients' : 'Expense payments'}>
     <div className="payer-heading"><strong>{refund ? 'Who received the refund?' : 'Who paid?'}</strong><span>{currency}{converting ? ` → ${previewCurrency}` : ''}</span></div>
     <div className="payer-mode" role="group" aria-label="Payment option">
@@ -64,7 +52,7 @@ export default function ExpensePayerEditor({form, setForm, members, currency, pr
               value={selected ? form.payers[index].amount : ''} onChange={event => change(index, {amount: event.target.value})} />
           </label>{selected && converting && <small className="payer-equivalent">{previewRate > 0
             ? `≈ ${formatMoney(Number(form.payers[index].amount || 0) * previewRate, previewCurrency)}` : `${previewCurrency} conversion pending`}</small>}</div>
-            : selected && <span className="payer-single-amount"><ExpenseEntryAmount amount={form.amount || 0} currency={currency} defaultCurrency={previewCurrency} rate={previewRate} /></span>}
+            : selected && <span className="payer-single-amount"><ExpenseEntryAmount amount={form.amount || 0} showOriginal={false} currency={currency} defaultCurrency={previewCurrency} rate={previewRate} /></span>}
         </div>;
       })}
     </fieldset>
@@ -79,24 +67,6 @@ export default function ExpensePayerEditor({form, setForm, members, currency, pr
         <span>{converting ? <><span>Remaining</span><ExpenseEntryAmount amount={remaining} currency={currency} defaultCurrency={previewCurrency} rate={previewRate} /></> : `${formatMoney(remaining, currency)} remaining`}</span>
       </p>
     </>}
-    {!error && ready && ids.length > 0 && <div className="payer-preview">
-      <h3>{converting ? 'Estimated balance preview' : 'Balance preview'} · {outputCurrency}</h3>
-      <ul className="payer-preview-members" aria-label="Payment and balance preview">{ids.map(id => {
-          const payment = converted.find(row => row.user_id === id)?.amount || 0;
-          const share = shares.find(row => row.user_id === id)?.amount || 0;
-          const net = Math.round((payment * sign - share) * 100) / 100;
-          const sourcePaid = payments.find(row => row.user_id === id)?.amount || 0;
-          const sourceShare = split.preview.find(row => row.user_id === id)?.amount || 0;
-          return <li key={id}><h4>{name(id)}</h4><dl>
-            <div><dt>{refund ? 'Received' : 'Paid'}</dt><dd><CurrencyAmount amount={payment} currency={outputCurrency} original={converting ? {amount: sourcePaid, currency} : undefined} /></dd></div>
-            <div><dt>{refund ? 'Refund share' : 'Cost share'}</dt><dd><CurrencyAmount amount={Math.abs(share)} currency={outputCurrency} original={converting ? {amount: Math.abs(sourceShare), currency} : undefined} /></dd></div>
-            <div className={`payer-net ${net > 0 ? 'is-credit' : net < 0 ? 'is-debit' : 'is-settled'}`}><dt>Balance change</dt><dd>
-              <CurrencyAmount amount={Math.abs(net)} currency={outputCurrency}
-                original={converting ? {amount: Math.abs(sourcePaid * sign - sourceShare), currency} : undefined} />
-              <small className="payer-net-status">{net > 0 ? 'Receive' : net < 0 ? 'Pay' : 'Settled'}</small>
-            </dd></div></dl></li>;
-        })}</ul>
-      <p className="payer-help">Changes from this expense, before existing group balances.</p>
-    </div>}
+
   </section>;
 }
