@@ -38,7 +38,7 @@ export default function PlannerExpenseModal({
   usePreventNumberWheel(surface);
   let preview;
   try { preview = itemized ? itemizedSplits(items) : {amount: Number(amount), splits: equalSplits(amount, participants)}; } catch { /* Incomplete draft. */ }
-  const paymentForm = {...payment, amount: preview?.amount || amount, splitType: itemized ? 'exact' : 'equal',
+  const paymentForm = {...payment, description, category, date, amount: preview?.amount || amount, splitType: itemized ? 'exact' : 'equal',
     splitWith: preview?.splits.map(row => String(row.user_id)) || participants.map(String),
     splitValues: Object.fromEntries((preview?.splits || []).map(row => [String(row.user_id), row.amount]))};
   const setPaymentForm = transform => setPayment(previous => {

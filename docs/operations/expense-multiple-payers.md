@@ -15,6 +15,11 @@ scrolling. Narrow cards place each label beside its amounts.
 The balance preview is the final review before Save, after description, amount,
 category, date, payer selection and split controls. It is separate from the
 "Who paid?" card, including in the linked trip expense form.
+The **Split with** participant checkboxes and all seven split methods stay
+visible and editable for both one-person and multiple-person payments, even
+while the draft is incomplete. The balance preview appears only once required
+details, payments and split allocations are valid. Changing any choice
+recalculates the preview; it never replaces or hides those controls.
 
 New groups default to INR unless a saved currency preference is supplied.
 Existing groups retain their currency. Selecting USD for an INR group shows

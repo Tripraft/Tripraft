@@ -65,6 +65,9 @@ export default function ExpenseSplitEditor({ form, setForm, members, currency, p
       <span className="split-allocated">{kind === 'percentage' || currency === previewCurrency ? `${allocationValue(entered)} allocated` : <><span>Allocated</span>{money(entered)}</>}</span>
       <span className="split-remaining">{kind === 'percentage' || currency === previewCurrency ? `${allocationValue(remaining)} remaining` : <><span>Remaining</span>{money(remaining)}</>}</span>
     </p>}
+    <fieldset className="split-participants">
+    <legend>Split with</legend>
+    <p className="split-participant-count" aria-live="polite">{form.splitWith.length} of {members.length} selected</p>
     <div className={`split-members${!['equal', 'itemized'].includes(kind) ? ' has-values' : ''}`}>
       {members.map(member => {
         const id = idOf(member), name = nameOf(member), included = form.splitWith.includes(id);
@@ -87,6 +90,7 @@ export default function ExpenseSplitEditor({ form, setForm, members, currency, p
         </div>;
       })}
     </div>
+    </fieldset>
     {kind === 'itemized' && <div className="split-bill">
       {form.bill.items.map((item, index) => <fieldset className="split-bill-item" key={index}>
         <legend>Item {index + 1}</legend>

@@ -11,6 +11,9 @@
 .split-progress.is-complete > span { color: #166534; background: #f0fdf4; }
 .split-progress.has-error > span { color: #b91c1c; background: #fef2f2; }
 .split-members { display: grid; gap: 4px; }
+.expense-split-editor .split-participants { min-width: 0; padding: 0; margin: 16px 0 0; border: 0; }
+.expense-split-editor .split-participants legend { padding: 0; font-size: 14px; font-weight: 600; }
+.expense-split-editor .split-participant-count { margin: 8px 0 0; font-size: 12px; color: var(--color-text-secondary, #6b7280); }
 .split-member { display: grid; grid-template-columns: minmax(0, 1fr) minmax(90px, 120px); align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--color-border-light, #e5e7eb); }
 .split-members.has-values .split-member { grid-template-columns: minmax(0, 1fr) minmax(100px, 140px) minmax(0, 130px); }
 .split-member-name { display: flex; align-items: center; min-width: 0; gap: 10px; cursor: pointer; overflow-wrap: anywhere; }

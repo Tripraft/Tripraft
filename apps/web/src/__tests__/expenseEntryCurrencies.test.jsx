@@ -9,7 +9,7 @@ import {dailyChartWindow} from '../features/expenses/utils/expenseAnalysis';
 
 const members = [{user_id: 'a', display_name: 'Alice'}, {user_id: 'b', display_name: 'Bob'}];
 const values = {equal: {}, exact: {a: '25', b: '75'}, percentage: {a: '25', b: '75'}, shares: {a: '1', b: '3'}, adjustment: {a: '-25'}, reimbursement: {a: '25', b: '75'}, itemized: {}};
-const form = kind => ({amount: '100', splitType: kind, splitWith: ['a', 'b'], splitValues: values[kind], paymentMode: 'multiple', paidBy: 'a', payers: [{user_id: 'a', amount: '25'}, {user_id: 'b', amount: '75'}], bill: {items: [{name: 'Dinner', amount: '100', user_ids: ['a', 'b']}], tax: '0', tip: '0', discount: '0'}});
+const form = kind => ({description: 'Dinner', category: 'Food', date: '2026-10-29', amount: '100', splitType: kind, splitWith: ['a', 'b'], splitValues: values[kind], paymentMode: 'multiple', paidBy: 'a', payers: [{user_id: 'a', amount: '25'}, {user_id: 'b', amount: '75'}], bill: {items: [{name: 'Dinner', amount: '100', user_ids: ['a', 'b']}], tax: '0', tip: '0', discount: '0'}});
 function Split({kind, currency = 'EUR', rate = 90, initial}) {
   const [state, setState] = useState(initial || form(kind));
   return <ExpenseSplitEditor form={state} setForm={setState} members={members} currency={currency} previewCurrency="INR" previewRate={rate} />;

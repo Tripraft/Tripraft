@@ -68,7 +68,7 @@ it('blocks incomplete contributions, fills the remainder, and switches back to o
 it('shows USD source contributions and INR equivalents, including when INR is a display preference', async () => {
   render(<TransactionModal mode="group" activeGroup={{id: 'g', currency: 'USD', display_currency: 'INR'}} members={members} currentUser={{uid: 'a'}} />);
   expect(screen.getByLabelText('Currency')).toHaveValue('INR');
-  change('Currency', 'USD'); change('Amount', '100');
+  change('Description', 'Dinner'); change('Currency', 'USD'); change('Amount', '100');
   fireEvent.click(screen.getByRole('button', {name: 'Multiple people'}));
   fireEvent.click(screen.getByRole('checkbox', {name: 'Paid by Bob'}));
   change('Alice paid amount', '75'); change('Bob paid amount', '25');
@@ -146,7 +146,7 @@ it('shows all members as checkboxes, enabling amounts only for selected payers',
 
 it('uses radio selection for one payer and presents labelled balance amounts before their status', async () => {
   render(<TransactionModal mode="group" members={members} currentUser={{uid: 'a'}} />);
-  change('Amount', '100');
+  change('Description', 'Dinner'); change('Amount', '100');
   const payments = screen.getByRole('region', {name: 'Expense payments'});
   expect(within(payments).queryByRole('combobox')).toBeNull();
   fireEvent.click(screen.getByRole('radio', {name: 'Paid by Bob'}));
@@ -164,7 +164,7 @@ it('uses radio selection for one payer and presents labelled balance amounts bef
 it.each(['INR', 'USD'])('shows only INR for an INR expense in an INR group with a %s ledger', async ledger => {
   render(<TransactionModal mode="group" activeGroup={{id: 'g', currency: ledger, display_currency: 'INR'}}
     members={members} currentUser={{uid: 'a'}} />);
-  change('Amount', '100');
+  change('Description', 'Dinner'); change('Amount', '100');
   fireEvent.click(screen.getByRole('button', {name: 'Multiple people'}));
   fireEvent.click(screen.getByRole('checkbox', {name: 'Paid by Bob'}));
   change('Alice paid amount', '75'); change('Bob paid amount', '25');
@@ -190,4 +190,63 @@ it.each(['single', 'multiple'])('puts the final balance review after all details
   for (const input of inputs) expect(input.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(preview.compareDocumentPosition(screen.getByRole('button', {name: 'Save'})) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   expect(screen.getByRole('region', {name: 'Expense payments'}).contains(preview)).toBe(false);
+});
+
+it.each(['single', 'multiple'])('keeps split options visible for incomplete and complete %s payments', paymentMode => {
+  render(<TransactionModal mode="group" members={members} currentUser={{uid: 'a'}} />);
+  if (paymentMode === 'multiple') fireEvent.click(screen.getByRole('button', {name: 'Multiple people'}));
+  change('Amount', '100');
+  const participants = screen.getByRole('group', {name: 'Split with'});
+  expect(screen.getByLabelText('Split method')).toBeEnabled();
+  expect(within(screen.getByLabelText('Split method')).getAllByRole('option')).toHaveLength(7);
+  expect(within(participants).getByRole('checkbox', {name: 'Alice'})).toBeChecked();
+  expect(within(participants).getByRole('checkbox', {name: 'Bob'})).toBeChecked();
+  expect(screen.queryByRole('region', {name: 'Expense balance preview'})).toBeNull();
+  change('Description', 'Dinner');
+  if (paymentMode === 'multiple') {
+    expect(screen.queryByRole('region', {name: 'Expense balance preview'})).toBeNull();
+    expect(screen.getByLabelText('Split method')).toBeEnabled();
+    expect(participants).toBeVisible();
+    change('Alice paid amount', '100');
+  }
+  expect(screen.getByRole('region', {name: 'Expense balance preview'})).toBeInTheDocument();
+  fireEvent.click(within(participants).getByRole('checkbox', {name: 'Alice'}));
+  fireEvent.click(within(participants).getByRole('checkbox', {name: 'Bob'}));
+  expect(participants).toHaveTextContent('0 of 2 selected');
+  expect(screen.queryByRole('region', {name: 'Expense balance preview'})).toBeNull();
+  fireEvent.click(within(participants).getByRole('checkbox', {name: 'Alice'}));
+  expect(screen.getByLabelText('Alice share')).toHaveTextContent('\u20b9100.00');
+  expect(screen.getByRole('region', {name: 'Expense balance preview'})).toBeInTheDocument();
+  change('Description', '   ');
+  expect(screen.queryByRole('region', {name: 'Expense balance preview'})).toBeNull();
+  expect(within(participants).getByRole('checkbox', {name: 'Alice'})).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', {name: paymentMode === 'single' ? 'Multiple people' : 'One person'}));
+  expect(participants).toBeVisible();
+  expect(screen.getByLabelText('Split method')).toBeEnabled();
+});
+
+it('keeps payers, participants, shares and adjustments editable after showing the preview', async () => {
+  const save = jest.fn();
+  render(<TransactionModal mode="group" members={members} currentUser={{uid: 'a'}} onSave={save} />);
+  change('Description', 'Dinner'); change('Amount', '100');
+  fireEvent.click(screen.getByRole('radio', {name: 'Paid by Bob'}));
+  const participants = screen.getByRole('group', {name: 'Split with'});
+  fireEvent.click(within(participants).getByRole('checkbox', {name: 'Bob'}));
+  let review = screen.getByRole('region', {name: 'Expense balance preview'});
+  expect(within(review).getByRole('heading', {name: 'Alice'}).closest('li')).toHaveTextContent('\u20b9100.00Pay');
+  fireEvent.click(within(participants).getByRole('checkbox', {name: 'Bob'}));
+  change('Split method', 'shares');
+  expect(screen.queryByRole('region', {name: 'Expense balance preview'})).toBeNull();
+  change('Alice shares', '1'); change('Bob shares', '3');
+  review = screen.getByRole('region', {name: 'Expense balance preview'});
+  expect(within(review).getByRole('heading', {name: 'Alice'}).closest('li')).toHaveTextContent('\u20b925.00Pay');
+  change('Split method', 'adjustment'); change('Alice adjustment', '20');
+  review = screen.getByRole('region', {name: 'Expense balance preview'});
+  expect(within(review).getByRole('heading', {name: 'Alice'}).closest('li')).toHaveTextContent('\u20b970.00Pay');
+  expect(screen.getByRole('radio', {name: 'Paid by Bob'})).toBeEnabled();
+  expect(within(participants).getByRole('checkbox', {name: 'Bob'})).toBeEnabled();
+  expect(screen.getByLabelText('Alice adjustment')).toBeEnabled();
+  fireEvent.click(screen.getByRole('button', {name: 'Save'}));
+  await waitFor(() => expect(save).toHaveBeenCalledWith(expect.objectContaining({paidBy: 'b', split_type: 'adjustment',
+    splits: [expect.objectContaining({user_id: 'a', amount: 70}), expect.objectContaining({user_id: 'b', amount: 30})]})));
 });

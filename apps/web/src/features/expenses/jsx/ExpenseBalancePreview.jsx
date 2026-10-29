@@ -6,6 +6,7 @@ import CurrencyAmount from './CurrencyAmount';
 import '../css/ExpensePayerEditor.css';
 
 export default function ExpenseBalancePreview({form, members, currency, previewCurrency = currency, previewRate}) {
+  if (!form.description?.trim() || !form.category || !form.date) return null;
   const name = id => {
     const member = members.find(row => String(row.user_id || row.id) === String(id));
     return member ? member.user?.display_name || member.display_name || member.user?.email || member.email || 'Member' : 'Former member';
@@ -37,5 +38,6 @@ export default function ExpenseBalancePreview({form, members, currency, previewC
             </dd></div></dl></li>;
         })}</ul>
       <p className="payer-help">Changes from this expense, before existing group balances.</p>
+      <p className="payer-help">You can still change who paid, split participants or the split method above before saving.</p>
   </section>;
 }
