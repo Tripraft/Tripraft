@@ -1,6 +1,7 @@
 // Purpose: Requests recovery emails and completes emailed password resets without a session.
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import useEmailLinkToken from '../utils/useEmailLinkToken';
 import authService from '../../../services/sqlAuthService';
 import { isValidEmail, passwordError } from '../utils/authForms';
 import PasswordInput from './PasswordInput';
@@ -18,9 +19,8 @@ function resetTokenExpiry(token) {
 }
 
 export default function PasswordRecovery({ reset = false }) {
-  const { token: pathToken } = useParams();
   const location = useLocation();
-  const token = pathToken || new URLSearchParams(location.hash.slice(1)).get('token');
+  const token = useEmailLinkToken('/reset-password', reset);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');
@@ -31,7 +31,8 @@ export default function PasswordRecovery({ reset = false }) {
   const submitting = useRef(false);
   const missingToken = reset && !token;
   const expiresAt = reset ? resetTokenExpiry(token) : null;
-  const expired = !message && expiresAt !== null && (expiredToken === token || expiresAt <= Date.now());
+  const expired = Boolean(reset && token && !message &&
+    (expiredToken === token || (expiresAt !== null && expiresAt <= Date.now())));
 
   useEffect(() => {
     if (expiresAt === null || message) return;
@@ -62,7 +63,10 @@ export default function PasswordRecovery({ reset = false }) {
       const result = reset ? await authService.resetPassword(token, enteredPassword) :
         await authService.requestPasswordReset(enteredEmail);
       if (result.success) setMessage(result.message || (reset ? 'Password reset successfully. Sign in with your new password.' : 'If an account exists, a reset link will arrive shortly.'));
-      else setError(result.message || 'Could not complete password recovery. Please try again.');
+      else {
+        setError(result.message || 'Could not complete password recovery. Please try again.');
+        if (reset && /expired/i.test(result.message || '')) setExpiredToken(token);
+      }
     } catch { setError('Unable to connect. Please try again.'); }
     finally { submitting.current = false; setBusy(false); }
   };
@@ -72,7 +76,7 @@ export default function PasswordRecovery({ reset = false }) {
       <div className="login-form-container">
         <h1 className="login-form-title">{reset ? 'Choose a new password' : 'Forgot password?'}</h1>
         <p className="login-form-subtitle">{reset ? 'Use a strong password to secure your account.' : 'Enter your email and we’ll send you a reset link valid for one hour.'}</p>
-        {(missingToken || expired || error) && <p role="alert" className="login-field-error">{missingToken ? 'This reset link is missing its token.' : expired ? 'This reset link has expired. Reset links are valid for one hour. Request a new link.' : error}</p>}
+        {(missingToken || expired || error) && <p role="alert" className="login-field-error">{missingToken ? 'This reset link is missing its token.' : expired && expiresAt !== null ? 'This reset link has expired. Reset links are valid for one hour. Request a new link.' : error}</p>}
         {message && <p role="status" className="auth-recovery-status">{message}</p>}
         {!missingToken && !expired && !(reset && message) && <form className="login-form" onSubmit={submit} noValidate aria-busy={busy}>
           {reset ? <>

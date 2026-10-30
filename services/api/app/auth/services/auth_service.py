@@ -26,6 +26,7 @@ from app.core.db.connection import get_db_session
 from app.notifications.email.smtp import email_service
 from app.notifications.email.background import submit_auth_email
 from app.auth.security.jwt import create_password_reset_token
+from app.auth.recovery_links import resolve_recovery_link
 
 
 logger = logging.getLogger(__name__)
@@ -57,7 +58,7 @@ class AuthService:
     @staticmethod
     def reset_password(token: str, new_password: str):
         """Consume recovery by atomically replacing the password version it names."""
-        payload = decode_token(token)
+        payload = decode_token(resolve_recovery_link(token, 'password_reset'))
         invalid = {'error': 'This reset link is invalid or has expired. Request a new link.'}
         if not payload or payload.get('type') != 'password_reset':
             return False, invalid
@@ -435,7 +436,7 @@ class AuthService:
         Returns:
             Tuple of (success, data/error)
         """
-        payload = decode_token(token)
+        payload = decode_token(resolve_recovery_link(token, 'email_verification'))
         if not payload or payload.get('type') != 'email_verify':
             return False, {'error': 'Invalid or expired verification link'}
 

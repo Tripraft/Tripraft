@@ -1,3 +1,4 @@
+import { plannerGroupPath } from '../../../../utils/publicPaths';
 // Purpose: Manages trip members, access roles, independent crew responsibilities, group settings, invitations and Scout consent controls.
 import CurrencySelect from '../../../../components/common/jsx/CurrencySelect';
 import React, { useState, useEffect, useRef } from 'react';
@@ -485,7 +486,7 @@ export default function CircleTab({ groupId, group, showToast, onInvite, onLeave
                   onClick={async () => {
                     try {
                       const link = isPlannerDemo()
-                        ? `${window.location.origin}/group-planner/${groupId}?demo=1`
+                        ? `${window.location.origin}${plannerGroupPath(groupId)}?demo=1`
                         : `${window.location.origin}/invitations/${encodeURIComponent(invitation.id || invitation.invitation_id)}`;
                       await navigator.clipboard.writeText(link);
                       showToast('Invitation link copied');

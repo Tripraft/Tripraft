@@ -19,6 +19,17 @@ beforeEach(() => {
   expenseApi.getIncomes.mockResolvedValue({incomes: []});
 });
 
+it('loads an authorized UUID bookmark so routing can replace it with the public name', async () => {
+  const { client, wrapper } = setup();
+  const legacy = '01a16f1a-7175-7425-bddc-ef80d6696509';
+  expenseApi.getGroupFull.mockResolvedValue({group: {id: 'pAb3x9K7mN2q', expenses: [{id: 'pCd4y8J6kL1r'}]}});
+  const {result, rerender, unmount} = renderHook(({id}) => useGroupDetail(id), {wrapper, initialProps: {id: legacy}});
+  await waitFor(() => expect(result.current.group?.id).toBe('pAb3x9K7mN2q'));
+  rerender({id: 'different-group'});
+  expect(result.current.group).toBeNull();
+  unmount(); client.clear();
+});
+
 it('loads income while expenses are pending and waits for both before publishing totals', async () => {
   const { client, wrapper } = setup();
   let finish;

@@ -204,7 +204,8 @@ def cache_response(
             if vary_on_user:
                 from flask import g
                 user_part = str(getattr(g, 'user_id', 'anon'))
-            key_data = f'{path}:{query}:{user_part}'
+            identifier_format = 'uuid' if request.headers.get('X-Identifier-Format') == 'uuid' else 'public'
+            key_data = f'{path}:{query}:{user_part}:{identifier_format}'
             key_hash = hashlib.md5(key_data.encode()).hexdigest()[:12]
             cache_key = f'{key_prefix}:{key_hash}'
 
@@ -228,7 +229,7 @@ def cache_response(
                     body = cached_str
                     extra_headers = {}
 
-                etag = hashlib.md5(body.encode()).hexdigest()[:16]
+                etag = hashlib.md5((body + identifier_format).encode()).hexdigest()[:16]
 
                 # Support If-None-Match -> 304
                 client_etag = request.headers.get('If-None-Match')
@@ -266,7 +267,7 @@ def cache_response(
                 redis_client.set(cache_key, cache_envelope, ex=ttl)
 
                 # Add cache headers to miss response
-                etag = hashlib.md5(body.encode()).hexdigest()[:16]
+                etag = hashlib.md5((body + identifier_format).encode()).hexdigest()[:16]
                 result.headers['X-Cache'] = 'MISS'
                 result.headers['ETag'] = f'"{etag}"'
                 result.headers['Cache-Control'] = cache_control

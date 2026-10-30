@@ -3,6 +3,7 @@ import React from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import GroupManager from '../features/expenses/jsx/GroupManager';
 import expenseApi from '../services/expenseApi';
+jest.mock('../services/currencyApi', () => ({getCurrencies: jest.fn().mockResolvedValue({currencies: [{code: 'USD', name: 'US Dollar'}]})}));
 jest.mock('../features/expenses/jsx/ExpenseFriendPicker', () => () => null);
 
 jest.mock('../services/expenseApi', () => ({

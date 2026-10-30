@@ -98,7 +98,7 @@ export default function useExpenseLiveUpdates(userId, activeGroupId) {
         socket = io(`${base}/expenses`, {
           transports: ['polling', 'websocket'], withCredentials: true, forceNew: true,
           reconnection: true, reconnectionDelay: 1000, reconnectionDelayMax: 10000,
-          ...(token ? { auth: { token } } : {}),
+          auth: { ...(token ? { token } : {}), public_ids: true },
         });
         socket.on('expenses:changed', onChange);
         socket.on('expenses:notifications-changed', () => {

@@ -143,6 +143,10 @@ def test_release_lock_and_upgrade_on_postgresql(monkeypatch, tmp_path, apply_met
                 for api_role in ('anon', 'authenticated'):
                     assert not connection.execute(text("SELECT has_table_privilege(:role,'public.friend_contacts','SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')"), {'role': api_role}).scalar_one()
                     assert not connection.execute(text("SELECT has_table_privilege(:role,'public.gp_vault_file_contents','SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')"), {'role': api_role}).scalar_one()
+                    for table in ('public_identifiers', 'auth_recovery_links'):
+                        assert not connection.execute(text(
+                            "SELECT has_table_privilege(:role, :table, 'SELECT,INSERT,UPDATE,DELETE,TRUNCATE,REFERENCES,TRIGGER')"
+                        ), {'role': api_role, 'table': table}).scalar_one()
                 assert connection.execute(text("SELECT has_table_privilege('tripraft_dev_runtime','public.gp_vault_file_contents','SELECT,INSERT,UPDATE,DELETE')")).scalar_one()
             exercise_additive_bridge(engine, requester, tmp_path, ScriptDirectory.from_config(runner.migration_config()))
     finally:

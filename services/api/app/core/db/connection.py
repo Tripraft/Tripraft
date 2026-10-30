@@ -177,6 +177,8 @@ def _import_all_models():
     """Import all ORM models so Base.metadata knows about their tables."""
     from importlib import import_module
     import_module('app.auth.models')
+    import_module('app.auth.recovery_links')
+    import_module('app.core.public_ids')
     import_module('app.employees.models')
     import_module('app.expenses.models')
     import_module('app.trips.models')

@@ -37,6 +37,11 @@ class SQLAuthService {
       const userData = localStorage.getItem(GlobalConfig.STORAGE_KEYS.CURRENT_USER);
       if (userData) {
         this.currentUser = JSON.parse(userData);
+        if (/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(this.currentUser?.id || '')) {
+          // Cookies still restore the session; discard profiles from the UUID contract.
+          this.currentUser = null;
+          localStorage.removeItem(GlobalConfig.STORAGE_KEYS.CURRENT_USER);
+        }
         if (this.currentUser?.id) this.accessToken = '__cookie__';
         else this.currentUser = null;
       }
@@ -104,7 +109,7 @@ class SQLAuthService {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), GlobalConfig.API_TIMEOUT || 30000);
     try {
-      return await fetch(url, { ...options, signal: controller.signal });
+      return await fetch(url, { ...options, headers: { ...options?.headers, 'X-Identifier-Format': 'public' }, signal: controller.signal });
     } finally {
       clearTimeout(timer);
     }
@@ -219,8 +224,9 @@ class SQLAuthService {
    * Confirm ownership using the public verification endpoint; no session required.
    */
   async verifyEmail(token) {
-    const response = await this._fetch(`${this.baseUrl}/verify-email?${new URLSearchParams({ token })}`, {
-      method: 'GET', credentials: 'omit', cache: 'no-store',
+    const response = await this._fetch(`${this.baseUrl}/verify-email`, {
+      method: 'POST', credentials: 'omit', cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token }),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || data.success !== true) {
@@ -495,7 +501,7 @@ class SQLAuthService {
    */
   async verifyWithBackend(idToken) {
     try {
-      const headers = { 'Content-Type': 'application/json' };
+      const headers = { 'Content-Type': 'application/json', 'X-Identifier-Format': 'public' };
       if (idToken && idToken !== '__cookie__') {
         headers['Authorization'] = `Bearer ${idToken}`;
       }

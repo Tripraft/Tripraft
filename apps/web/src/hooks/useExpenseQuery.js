@@ -158,7 +158,7 @@ export function useGroupsQuery(options = {}) {
 export function useGroupQuery(groupId, options = {}) {
   return useQuery({
     queryKey: queryKeys.group(groupId),
-    queryFn: async () => unwrapEnvelope(await expenseApi.getGroupFull(groupId, false)),
+    queryFn: async () => ({...unwrapEnvelope(await expenseApi.getGroupFull(groupId, false)), requestedGroupId: groupId}),
     enabled: !!groupId && (options.enabled !== false),
     staleTime: 0,
     gcTime: 5 * 60 * 1000,
@@ -1151,7 +1151,8 @@ export function useGroupDetail(groupId) {
 
   const denied = [401, 403, 404].includes(error?.status || error?.statusCode);
   const candidate = data?.group;
-  const visibleData = !denied && candidate && String(candidate.id || candidate.group_id) === String(groupId) ? data : null;
+  const legacyAlias = /^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(groupId || '') && data?.requestedGroupId === groupId;
+  const visibleData = !denied && candidate && (String(candidate.id || candidate.group_id) === String(groupId) || legacyAlias) ? data : null;
   const group = visibleData?.group || null;
   const members = visibleData?.members || group?.members || [];
   const expenses = visibleData?.expenses || group?.expenses || [];

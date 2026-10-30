@@ -97,7 +97,7 @@ it('accepts only once under StrictMode and opens the exact joined group', async 
   await act(async () => {
     jest.advanceTimersByTime(1200);
   });
-  expect(screen.getByText('/group-planner/group-id')).toBeInTheDocument();
+  expect(screen.getByText('/groups/group-id/planner')).toBeInTheDocument();
 });
 it('shows the account mismatch and does not submit acceptance', async () => {
   useAuth.mockReturnValue({ ...auth, currentUser: { uid: 'other', email: 'other@example.test' } });

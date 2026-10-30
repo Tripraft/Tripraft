@@ -629,7 +629,8 @@ export interface paths {
         /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
         get: operations["auth_verify_email_get_api_v1_auth_verify_email"];
         put?: never;
-        post?: never;
+        /** @description Registered route. Response payload is unspecified unless an explicit schema is attached. */
+        post: operations["auth_verify_email_post_api_v1_auth_verify_email"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6133,6 +6134,26 @@ export interface operations {
         };
     };
     auth_verify_email_get_api_v1_auth_verify_email: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Response */
+            default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+        };
+    };
+    auth_verify_email_post_api_v1_auth_verify_email: {
         parameters: {
             query?: never;
             header?: never;

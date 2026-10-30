@@ -1,4 +1,5 @@
 // Purpose: Restores auth before validating and accepting a trip invitation, shares StrictMode acceptance work and opens the exact joined group.
+import { plannerGroupPath } from '../../../utils/publicPaths';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -24,7 +25,7 @@ export default function InvitationAcceptPage({ invitationId: invitationIdProp })
   const loginPath = `/login?redirect=invitation&invitationId=${encodeURIComponent(invitationId || '')}&type=group`;
   const goToGroup = useCallback(
     (groupId) =>
-      navigate(groupId ? `/group-planner/${encodeURIComponent(groupId)}` : '/group-planner', {
+      navigate(groupId ? plannerGroupPath(groupId) : '/group-planner', {
         replace: true,
       }),
     [navigate],

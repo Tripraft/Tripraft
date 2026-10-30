@@ -44,7 +44,10 @@ afterEach(() => client.clear());
 async function openExpenses(mode) {
   render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[
     `/expenses/me/${mode}${mode === 'group' ? '?groupId=group' : ''}`,
-  ]}><Routes><Route path="/expenses/:userId/:mode" element={<ExpenseManager />} /></Routes></MemoryRouter></QueryClientProvider>);
+  ]}><Routes><Route path="/expenses/:userId/:mode" element={<ExpenseManager />} />
+<Route path="/expenses/:mode?" element={<ExpenseManager />} />
+    <Route path="/groups" element={<ExpenseManager />} />
+<Route path="/groups/:groupId/expenses" element={<ExpenseManager />} /></Routes></MemoryRouter></QueryClientProvider>);
   if (mode === 'group') fireEvent.click(await screen.findByRole('tab', { name: 'Activity & history' }));
   await screen.findByText('Dinner');
 }

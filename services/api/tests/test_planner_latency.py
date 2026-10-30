@@ -6,6 +6,7 @@ from pathlib import Path
 from time import perf_counter
 
 import pytest
+from flask import has_request_context
 from sqlalchemy import event
 
 from app.core.db.connection import engine
@@ -15,6 +16,7 @@ from conftest import payload
 @pytest.fixture(autouse=True)
 def no_external_email(monkeypatch):
     monkeypatch.setattr('app.notifications.email.background.submit_auth_email', lambda *args: True)
+    monkeypatch.setattr('app.auth.services.auth_service.submit_auth_email', lambda *args: True)
 
 
 def test_planner_write_query_budgets(alice, monkeypatch):
@@ -28,7 +30,10 @@ def test_planner_write_query_budgets(alice, monkeypatch):
         for operation in ('group', 'poll', 'checklist', 'invitation'):
             queries = []
             def record(_conn, _cursor, statement, _params, _context, _many):
-                queries.append(statement.split()[0])
+                # The engine is shared with background email workers. Count
+                # only SQL performed by the HTTP request being measured.
+                if has_request_context():
+                    queries.append(statement.split()[0])
             event.listen(engine, 'before_cursor_execute', record)
             started = perf_counter()
             try:
@@ -47,7 +52,7 @@ def test_planner_write_query_budgets(alice, monkeypatch):
             if operation == 'group':
                 group_id = payload(response)['id']
             samples.append({'operation': operation, 'ms': round(elapsed, 3), 'sql': len(queries)})
-            assert len(queries) <= {'group': 8, 'poll': 8, 'checklist': 8, 'invitation': 8}[operation]
+            assert len(queries) <= {'group': 8, 'poll': 8, 'checklist': 8, 'invitation': 8}[operation], (operation, queries)
     output = os.environ.get('PLANNER_LATENCY_OUTPUT')
     if output:
         Path(output).write_text(json.dumps(samples, indent=2), encoding='utf-8')

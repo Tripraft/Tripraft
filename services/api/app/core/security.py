@@ -69,7 +69,7 @@ def add_cors_fallback(response, allowed_origins):
         response.headers['Access-Control-Allow-Credentials'] = 'true'
         response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PUT, PATCH, DELETE, OPTIONS'
         response.headers['Access-Control-Allow-Headers'] = (
-            'Content-Type, Authorization, Accept, Origin, X-CSRF-Token'
+            'Content-Type, Authorization, Accept, Origin, X-CSRF-Token, Idempotency-Key, If-None-Match, X-Identifier-Format'
         )
         response.headers['Access-Control-Expose-Headers'] = 'Content-Type'
     return response

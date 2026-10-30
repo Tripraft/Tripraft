@@ -1,6 +1,7 @@
 // Purpose: Verifies a public email token with shared in-flight work under StrictMode, reports missing/expired/error states and offers explicit resend when signed in.
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import useEmailLinkToken from '../features/auth/utils/useEmailLinkToken';
 import { CheckCircle, Mail, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import authService from '../services/sqlAuthService';
@@ -8,7 +9,7 @@ import { invitationDestination } from '../features/auth/utils/authForms';
 import './styles/VerifyEmail.css';
 
 export default function VerifyEmail() {
-  const { token } = useParams();
+  const token = useEmailLinkToken('/verify-email');
   const { currentUser, loading: authLoading } = useAuth();
   const [result, setResult] = useState({ status: 'loading', message: 'Confirming your email address…' });
   const [attempt, setAttempt] = useState(0);

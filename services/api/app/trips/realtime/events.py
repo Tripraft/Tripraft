@@ -18,10 +18,12 @@ Security:
 import logging
 from datetime import datetime, timezone
 
+from app.core.public_ids import emit_public_event, internal_id, public_payload
 from app.core.json_utils import json_safe
 from app.trips.realtime.socketio_ext import socketio
 from flask import request
 from flask_socketio import ConnectionRefusedError, disconnect, emit, join_room, leave_room
+from werkzeug.exceptions import NotFound
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +35,13 @@ _PRESENCE_TTL = 300  # 5 minutes
 # dropping every presence event when Redis is temporarily unavailable.
 _LOCAL_PRESENCE = {}
 _LOCAL_SID_MAP = {}
+
+
+def _socket_id(value):
+    try:
+        return internal_id(value)
+    except NotFound:
+        return None
 
 
 def _get_redis():
@@ -244,7 +253,8 @@ def handle_connect(auth=None):
         raise ConnectionRefusedError('Authentication required')
     flask_session["ws_user_id"] = str(ws_user_id)
     flask_session["ws_email"] = payload.get("email", "")
-    join_room(_user_room(ws_user_id))
+    flask_session['ws_public_ids'] = bool((auth or {}).get('public_ids'))
+    join_room(_user_room(ws_user_id) + (':public' if flask_session['ws_public_ids'] else ''))
     logger.debug("WS connect: sid=%s user=%s", request.sid, flask_session["ws_user_id"])
 
 
@@ -275,7 +285,7 @@ def handle_disconnect():
 @socketio.on("join_group")
 def handle_join_group(data):
     """Client joins a group room.  Expects {group_id}."""
-    group_id = data.get("group_id") if isinstance(data, dict) else None
+    group_id = _socket_id(data.get("group_id")) if isinstance(data, dict) else None
     if not group_id:
         return
 
@@ -301,7 +311,7 @@ def handle_join_group(data):
 @socketio.on("leave_group")
 def handle_leave_group(data):
     """Client leaves a group room.  Expects {group_id}."""
-    group_id = data.get("group_id") if isinstance(data, dict) else None
+    group_id = _socket_id(data.get("group_id")) if isinstance(data, dict) else None
     if not group_id:
         return
 
@@ -323,14 +333,14 @@ def handle_presence_heartbeat(data):
     """Keep an active, authorized socket visible beyond the presence TTL."""
     from flask import session as flask_session
 
-    group_id = (data or {}).get('group_id')
+    group_id = _socket_id((data or {}).get('group_id'))
     user_id = flask_session.get('ws_user_id')
     if not group_id or not user_id:
         return
     if not _verify_group_membership(group_id, user_id):
         return
     if _refresh_presence(group_id, user_id, request.sid):
-        emit('presence:heartbeat_ack', {'group_id': group_id})
+        emit('presence:heartbeat_ack', public_payload({'group_id': group_id}) if flask_session.get('ws_public_ids') else {'group_id': group_id})
 
 
 # ---- Helper used by services to broadcast to a group ----
@@ -348,7 +358,7 @@ def emit_to_group(group_id: str, event: str, payload: dict):
         safe_payload = json_safe({**payload, 'group_id': str(group_id)})
         for user_id in recipients:
             if not target or str(target) == user_id:
-                socketio.emit(event, safe_payload, room=_user_room(user_id))
+                emit_public_event(event, safe_payload, room=_user_room(user_id))
     except Exception as exc:
         logger.warning("Failed to emit %s to group %s: %s", event, group_id, exc)
 
@@ -365,7 +375,7 @@ def handle_chat_typing(data):
     from flask import session as flask_session
     user_id = flask_session.get("ws_user_id")
     email = flask_session.get("ws_email", "")
-    group_id = data.get("group_id") if isinstance(data, dict) else None
+    group_id = _socket_id(data.get("group_id")) if isinstance(data, dict) else None
     if not group_id or not user_id:
         return
     if not _verify_group_membership(group_id, user_id):
@@ -383,8 +393,8 @@ def handle_chat_read(data):
     """Client marks messages as read."""
     from flask import session as flask_session
     user_id = flask_session.get("ws_user_id")
-    group_id = data.get("group_id") if isinstance(data, dict) else None
-    message_id = data.get("message_id") if isinstance(data, dict) else None
+    group_id = _socket_id(data.get("group_id")) if isinstance(data, dict) else None
+    message_id = _socket_id(data.get("message_id")) if isinstance(data, dict) else None
     if not group_id or not user_id or not message_id:
         return
     if not _verify_group_membership(group_id, user_id):

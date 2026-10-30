@@ -103,7 +103,7 @@ export default function App() {
             }
           />
           <Route
-            path="/expenses/:userId?/:mode?"
+            path="/expenses/:mode?"
             element={
               <ProtectedRoute>
                 <FeatureErrorBoundary featureName="Expenses">
@@ -112,6 +112,11 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          {['/groups', '/groups/:groupId/expenses', '/expenses/:userId/:mode'].map(path => (
+            <Route key={path} path={path} element={
+              <ProtectedRoute><FeatureErrorBoundary featureName="Expenses"><ExpensePage /></FeatureErrorBoundary></ProtectedRoute>
+            } />
+          ))}
           <Route
             path="/admin/analysis"
             element={
@@ -128,6 +133,9 @@ export default function App() {
               </FeatureErrorBoundary>
             }
           />
+          <Route path="/groups/:groupId/planner" element={
+            <FeatureErrorBoundary featureName="Group Planner"><GroupPlannerAccess /></FeatureErrorBoundary>
+          } />
         </Routes>
       </Suspense>
       {/* React Query DevTools - disabled in production for cleaner UI */}

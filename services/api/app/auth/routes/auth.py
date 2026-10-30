@@ -560,7 +560,7 @@ def mega_bootstrap():
 # Email verification
 # ---------------------------------------------------------------------------
 
-@auth_bp.route('/verify-email', methods=['GET'])
+@auth_bp.route('/verify-email', methods=['GET', 'POST'])
 def verify_email():
     """
     Verify user email via token (sent in verification email link).
@@ -568,8 +568,9 @@ def verify_email():
     Query params:
         token: JWT verification token
     """
-    token = request.args.get('token')
-    if not token:
+    data = request.get_json(silent=True) if request.method == 'POST' else request.args
+    token = data.get('token') if isinstance(data, dict) else None
+    if not isinstance(token, str) or not token or len(token) > 4096:
         return error_response('Verification token required', 400)
 
     success, result = auth_service.verify_email(token)

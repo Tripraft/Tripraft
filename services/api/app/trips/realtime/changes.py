@@ -1,5 +1,6 @@
 """Notify authorized devices about committed planner changes without sharing data."""
 import logging
+from app.core.public_ids import emit_public_event
 from collections import defaultdict
 from uuid import UUID
 
@@ -64,7 +65,7 @@ def publish(session):
             invalidate_cache(prefix)
         for group_id, change in pending['groups'].items():
             for user_id in recipients[group_id] | change['users']:
-                socketio.emit('planner:changed', {
+                emit_public_event('planner:changed', {
                     'group_id': str(group_id),
                     'access_revoked': change['archived'] or user_id in change['revoked'],
                 }, room=_user_room(user_id))

@@ -5,7 +5,8 @@
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { expensePath } from '../../../utils/publicPaths';
 import ExpenseSummary from './ExpenseSummary';
 import CurrencySelect from '../../../components/common/jsx/CurrencySelect';
 import CurrencyChangeStatus from './CurrencyChangeStatus';
@@ -53,10 +54,11 @@ const unwrapEnvelope = (r) => (r && typeof r === 'object' && 'success' in r && '
 
 const ExpenseManager = () => {
   const navigate = useNavigate();
-  const { userId: routeUserId, mode: routeMode } = useParams();
+  const { mode: routeMode, groupId: routeGroupId } = useParams();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
-  const mode = routeMode === 'group' || (!routeMode && searchParams.get('view') === 'group') ? 'group' : 'personal';
-  const activeGroupId = mode === 'group' ? searchParams.get('groupId') : null;
+  const mode = routeGroupId || location.pathname === '/groups' || routeMode === 'group' || (!routeMode && searchParams.get('view') === 'group') ? 'group' : 'personal';
+  const activeGroupId = mode === 'group' ? routeGroupId || searchParams.get('groupId') : null;
   
   // Auth state
   const { isAuthenticated, currentUser, loading: authLoading } = useAuth();
@@ -173,20 +175,18 @@ const ExpenseManager = () => {
   };
 
   const setExpenseView = useCallback((nextMode, groupId, options = {}) => {
-    const userId = currentUser?.uid || currentUser?.user_id;
-    if (!userId) return;
-    const query = nextMode === 'group' && groupId
-      ? `?${new URLSearchParams({ groupId })}` : '';
-    navigate(`/expenses/${userId}/${nextMode}${query}`, options);
-  }, [currentUser, navigate]);
+    navigate(expensePath(nextMode, groupId), options);
+  }, [navigate]);
 
   // Canonicalize legacy URLs without losing the selected invitation group.
   useEffect(() => {
     if (authLoading || !currentUser) return;
-    if (routeMode !== mode || routeUserId !== (currentUser.uid || currentUser.user_id)) {
-      setExpenseView(mode, activeGroupId, { replace: true });
+    const publicGroupId = activeGroupId ? activeGroupData?.id || activeGroupData?.group_id || activeGroupId : null;
+    const canonical = expensePath(mode, publicGroupId);
+    if (location.pathname + location.search !== canonical) {
+      setExpenseView(mode, publicGroupId, { replace: true });
     }
-  }, [routeMode, routeUserId, mode, activeGroupId, currentUser, authLoading, setExpenseView]);
+  }, [location.pathname, location.search, mode, activeGroupId, activeGroupData, currentUser, authLoading, setExpenseView]);
 
   // A pending action belongs to the group where it was opened.
   useEffect(() => {

@@ -4681,6 +4681,20 @@
             "description": "Response"
           }
         }
+      },
+      "post": {
+        "description": "Registered route. Response payload is unspecified unless an explicit schema is attached.",
+        "operationId": "auth_verify_email_post_api_v1_auth_verify_email",
+        "responses": {
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Response"
+          }
+        }
       }
     },
     "/api/v1/currencies": {

@@ -1,3 +1,4 @@
+import { plannerGroupPath } from '../../../utils/publicPaths';
 // Purpose: Handles demo workspace requests in local state with role checks and reset support; unsupported actions fail instead of reaching live mutation endpoints.
 import { createDemoState, demoPeople } from './demoData';
 import { DEMO_STORAGE_KEY, DEMO_VIEWER_KEY } from './demoMode';
@@ -272,7 +273,7 @@ export async function demoRequest(method, endpoint, { body = {}, responseType } 
         id: 'demo-' + crypto.randomUUID(),
         email: body.email,
         status: 'pending',
-        invite_link: window.location.origin + '/group-planner/' + trip.group.id + '?demo=1',
+        invite_link: window.location.origin + plannerGroupPath(trip.group.id) + '?demo=1',
       };
       trip.invitations.push(invitation);
       activity(trip, 'invitation_sent', 'Invitation for ' + body.email, 'member');

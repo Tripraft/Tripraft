@@ -116,7 +116,7 @@ export const initializeQueryPersistence = async (queryClient) => {
       queryClient,
       persister: localStoragePersister,
       maxAge: CACHE_CONFIG.MAX_AGE_MS,
-      buster: 'frontend-audit-2026-10-03',
+      buster: 'public-identifiers-v1',
       dehydrateOptions: {
         shouldDehydrateMutation: () => false,
         shouldDehydrateQuery: (query) => {
@@ -138,7 +138,7 @@ export const initializeQueryPersistence = async (queryClient) => {
       queryClient,
       persister: idbPersister,
       maxAge: CACHE_CONFIG.MAX_AGE_MS,
-      buster: 'frontend-audit-2026-10-03',
+      buster: 'public-identifiers-v1',
       dehydrateOptions: {
         shouldDehydrateMutation: () => false,
         shouldDehydrateQuery: (query) => {

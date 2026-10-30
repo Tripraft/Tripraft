@@ -26,7 +26,7 @@ function Flow({ entry = '/invitation/invite-uuid' }) {
     <Route path="/invitation/:invitationId" element={<SmartInvitationHandler />} />
     <Route path="/login" element={<Login />} />
     <Route path="/signup" element={<Signup />} />
-    <Route path="/expenses/:userId?/:mode?" element={<Destination />} />
+    <Route path="/groups/:groupId/expenses" element={<Destination />} />
     <Route path="/invitations/:invitationId" element={<p>Other invitation</p>} />
   </Routes></MemoryRouter></StrictMode>;
 }
@@ -56,11 +56,11 @@ it('resumes the same invitation after sign-in and accepts only once', async () =
   await screen.findByRole('button', { name: 'Sign In' });
   auth = { ...auth, currentUser: { uid: 'friend-uuid', email: 'friend@example.test' } };
   view.rerender(<Flow />);
-  expect(await screen.findByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
+  expect(await screen.findByText('/groups/joined-group/expenses')).toBeInTheDocument();
   expect(expenseApi.acceptInvitation).toHaveBeenCalledTimes(1);
   expect(expenseApi.acceptInvitation).toHaveBeenCalledWith('invite-uuid');
   expect(expenseApi.getInvitationDetails).not.toHaveBeenCalled();
-  expect(screen.getByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
+  expect(screen.getByText('/groups/joined-group/expenses')).toBeInTheDocument();
 });
 
 it.each(['/login', '/signup'])('keeps %s usable for an invitation without browser storage', async path => {
@@ -73,9 +73,9 @@ it.each(['/login', '/signup'])('keeps %s usable for an invitation without browse
     expect(screen.queryByRole('alert')).toBeNull();
     auth = { ...auth, currentUser: { uid: 'friend-uuid' } };
     view.rerender(<Flow entry={entry} />);
-    expect(await screen.findByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
+    expect(await screen.findByText('/groups/joined-group/expenses')).toBeInTheDocument();
     expect(expenseApi.getInvitationDetails).not.toHaveBeenCalled();
-    expect(screen.getByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
+    expect(screen.getByText('/groups/joined-group/expenses')).toBeInTheDocument();
   } finally { storage.mockRestore(); write.mockRestore(); }
 });
 
@@ -88,7 +88,7 @@ it('uses the copied expense invitation instead of a stale invitation from anothe
   expect(screen.getByLabelText('Email Address')).toHaveValue('');
   auth = { ...auth, currentUser: { uid: 'friend-uuid' } };
   view.rerender(<Flow />);
-  await screen.findByText('/expenses/friend-uuid/group?groupId=joined-group');
+  await screen.findByText('/groups/joined-group/expenses');
   expect(expenseApi.acceptInvitation).toHaveBeenCalledWith('invite-uuid');
 });
 
@@ -118,8 +118,8 @@ it('reopens an already accepted invitation at the same group', async () => {
   expenseApi.acceptInvitation.mockRejectedValue(Object.assign(new Error('Invitation is already accepted'), { status: 409 }));
   expenseApi.getInvitationDetails.mockResolvedValue({ success: true, data: { invitation: { group_id: 'joined-group' } } });
   render(<Flow />);
-  await screen.findByText('/expenses/friend-uuid/group?groupId=joined-group');
-  expect(screen.getByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
+  await screen.findByText('/groups/joined-group/expenses');
+  expect(screen.getByText('/groups/joined-group/expenses')).toBeInTheDocument();
 });
 
 it.each(['cancelled', 'declined'])('shows a %s invitation as unavailable and clears login continuation', async state => {
@@ -131,7 +131,7 @@ it.each(['cancelled', 'declined'])('shows a %s invitation as unavailable and cle
   await screen.findByText(`This invitation was ${state}. Ask the inviter to send a new invitation.`);
   act(() => jest.advanceTimersByTime(3000));
   expect(expenseApi.getInvitationDetails).not.toHaveBeenCalled();
-  expect(screen.queryByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeNull();
+  expect(screen.queryByText('/groups/joined-group/expenses')).toBeNull();
   expect(localStorage.getItem('pendingInvitation')).toBeNull();
   expect(localStorage.getItem('invitationEmail')).toBeNull();
 });

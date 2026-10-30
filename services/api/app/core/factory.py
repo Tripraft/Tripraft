@@ -49,7 +49,7 @@ def create_app():
         supports_credentials=True,
         allow_headers=["Content-Type", "Authorization", "Accept", "Origin",
                       "X-Requested-With", "X-CSRF-Token", "Idempotency-Key",
-                      "If-None-Match"],
+                      "If-None-Match", "X-Identifier-Format"],
         expose_headers=["X-Total-Count", "X-Page", "X-Per-Page", "ETag", "Content-Type",
                         "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset",
                         "X-Request-ID", "X-Cache", "Deprecation", "Sunset", "Link"],
@@ -66,7 +66,7 @@ def create_app():
         if origin in allowed_origins:
             response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin, X-Requested-With"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin, X-Requested-With, X-CSRF-Token, Idempotency-Key, If-None-Match, X-Identifier-Format"
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Max-Age"] = "86400"
         return response
@@ -94,6 +94,9 @@ def create_app():
 
     # Security middleware
     _register_middleware(app)
+
+    from app.core.public_ids import init_public_ids
+    init_public_ids(app)
 
     # Idempotency protects money-mutating HTTP operations, so it is a
     # required component rather than a best-effort middleware.
@@ -527,7 +530,7 @@ def _register_middleware(app):
             response.headers["Access-Control-Allow-Origin"] = origin
             response.headers["Access-Control-Allow-Credentials"] = "true"
             response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin, X-CSRF-Token"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin, X-CSRF-Token, Idempotency-Key, If-None-Match, X-Identifier-Format"
             response.headers["Access-Control-Expose-Headers"] = "Content-Type, X-Total-Count, X-Page, X-Per-Page, ETag, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset, X-Request-ID, X-Cache, Deprecation, Sunset, Link"
         return response
 
