@@ -189,11 +189,11 @@ const SettlementModal = ({ isOpen, onClose, settlement, groupId, members, balanc
               {!isManualMode && suggestedAmount > 0 && (
                 <div style={{ marginTop: '0.5rem' }}>
                   <small style={{ color: '#666', display: 'block' }}>
-                    Full settlement amount: {formatMoney(suggestedAmount, currency)}
+                    Full settlement amount: <CurrencyAmount amount={suggestedAmount} currency={currency} displayCurrency={group?.display_currency || currency} />
                   </small>
                   {amount < suggestedAmount && amount > 0 && (
                     <small style={{ color: '#f39c12', display: 'block', marginTop: '0.25rem', fontWeight: '500' }}>
-                       Partial payment: {formatMoney(Number(suggestedAmount) - Number(amount), currency)} will remain
+                       Partial payment: <CurrencyAmount amount={Number(suggestedAmount) - Number(amount)} currency={currency} displayCurrency={group?.display_currency || currency} /> will remain
                     </small>
                   )}
                 </div>

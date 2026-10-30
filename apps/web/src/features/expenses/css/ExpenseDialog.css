@@ -58,6 +58,16 @@
 .expense-dialog-surface .form-group .expense-amount-field input { flex: 1 1 0; width: 0; min-width: 0; border: 0; border-radius: 0; padding: 12px; box-shadow: none; background: transparent; }
 .expense-dialog-surface .expense-amount-field:focus-within { border-color: #8b5cf6; box-shadow: 0 0 0 3px #ede9fe; }
 .expense-dialog-surface .expense-amount-field input:focus-visible { outline: none; }
+/* Add and edit share one compact form/footer layout without stacked modal padding. */
+.expense-dialog-layer > .expense-transaction-dialog { padding: 0; }
+.expense-transaction-dialog > .modal-header { margin: 0; }
+.expense-transaction-dialog > .modal-header h2 { margin: 0; }
+.expense-transaction-dialog > form { padding: 20px 24px 16px; margin: 0; }
+.expense-transaction-dialog .expense-transaction-fields { border: 0; padding: 0; margin: 0; min-width: 0; }
+.expense-transaction-dialog .form-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 16px; }
+.expense-transaction-dialog .form-row > .form-group { min-width: 0; margin-bottom: 0; }
+.expense-transaction-dialog .modal-actions { display: flex; justify-content: flex-end; align-items: center; margin: 16px 0 0; padding: 0; }
+.expense-transaction-dialog .modal-actions > button { margin: 0; }
 @media (max-width: 480px) {
   .expense-dialog-layer { padding: 10px; }
   .expense-dialog-layer > .expense-dialog-surface { max-height: calc(100vh - 20px); max-height: calc(100dvh - 20px); border-radius: 16px; }
@@ -66,4 +76,6 @@
   .expense-dialog-surface .shm-header-icon { display: none; }
   .expense-dialog-surface .shm-summary { padding: 16px 8px; }
   .expense-dialog-surface .form-grid { grid-template-columns: minmax(0, 1fr); }
+  .expense-transaction-dialog > form { padding: 16px; }
+  .expense-transaction-dialog .form-row { grid-template-columns: minmax(0, 1fr); gap: 12px; }
 }

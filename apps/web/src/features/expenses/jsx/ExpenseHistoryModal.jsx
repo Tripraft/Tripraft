@@ -2,6 +2,7 @@
 import React from 'react';
 import ExpenseDialog from './ExpenseDialog';
 import CurrencyAmount from './CurrencyAmount';
+import ExpenseAmount from './ExpenseAmount';
 import { X, History, Clock, User, ArrowRight } from 'lucide-react';
 import { useExpenseEditHistory } from '../../../hooks/useExpenseQuery';
 import { formatMoney } from '../../../utils/money';
@@ -54,12 +55,14 @@ const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', curren
   };
 
   // Format field value for display
-  const formatValue = (field, value, moneyCurrency = currency) => {
+  const formatValue = (field, value, moneyCurrency = currency, snapshot) => {
+    if (field === 'original' && mode === 'group' && snapshot?.amount != null) return <span className="expense-history-money-rows"><span>Paid in {value?.currency || snapshot.currency || currency}</span><ExpenseAmount expense={snapshot} currency={currency} displayCurrency={displayCurrency} /></span>;
     if (value === null || value === undefined) return 'None';
     
     // Format amounts as currency
     if (field === 'amount') {
       const numVal = typeof value === 'number' ? value : parseFloat(value);
+      if (mode === 'group') return <ExpenseAmount expense={{...snapshot, amount: numVal, currency: moneyCurrency}} currency={moneyCurrency} displayCurrency={displayCurrency} />;
       return <CurrencyAmount amount={numVal} currency={moneyCurrency} displayCurrency={displayCurrency}
         rate={expense?.original_currency === moneyCurrency && expense?.currency === displayCurrency ? expense.display_rate : undefined} />;
     }
@@ -90,18 +93,19 @@ const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', curren
     
     // A custom split may include every member; display the recorded amounts.
     if (field === 'splits' && Array.isArray(value)) {
+      if (mode === 'group' && snapshot?.original) return <span className="expense-history-money-rows">{value.map((split, index) => <span className="expense-history-money-row" key={split.user_id || index}><span>{getMemberName(split.user_id)}</span><ExpenseAmount expense={snapshot} split={split} currency={moneyCurrency} displayCurrency={displayCurrency} /></span>)}</span>;
       if (moneyCurrency !== displayCurrency) return <span className="expense-history-money-rows">{value.map((split, index) => <span className="expense-history-money-row" key={split.user_id || index}><span>{getMemberName(split.user_id)}</span><CurrencyAmount amount={split.amount} currency={moneyCurrency} displayCurrency={displayCurrency} /></span>)}</span>;
       return value.map(split => `${getMemberName(split.user_id)}: ${formatMoney(split.amount, moneyCurrency)}`).join('; ');
     }
     if (field === 'original' && typeof value === 'object') {
-      return <span className="expense-history-money-rows"><CurrencyAmount amount={value.amount} currency={value.currency || currency} displayCurrency={displayCurrency} /><span>{value.split_type || 'equal'} split / saved source receipt</span></span>;
+      return <span className="expense-history-money-rows"><ExpenseAmount expense={snapshot || {amount: Number(value.amount) * Number(value.rate), currency: value.ledger_currency || currency, original: value}} currency={currency} displayCurrency={displayCurrency} /><span>{value.split_type || 'equal'} split / saved source receipt</span></span>;
     }
     if (field === 'split_details' && typeof value === 'object') {
-      if (moneyCurrency !== displayCurrency) {
+      if (moneyCurrency !== displayCurrency || (mode === 'group' && snapshot?.original)) {
         const rows = value.adjustments ? Object.entries(value.adjustments).map(([id, amount]) => ({label: getMemberName(id), amount}))
           : [...(value.items || []).map(item => ({label: `${item.name} (${item.user_ids.map(getMemberName).join(', ')})`, amount: item.amount})),
             ...['tax', 'tip', 'discount'].filter(key => Number(value[key])).map(key => ({label: key, amount: value[key]}))];
-        return <span className="expense-history-money-rows">{rows.map((row, index) => <span className="expense-history-money-row" key={index}><span>{row.label}</span><CurrencyAmount amount={row.amount} currency={moneyCurrency} displayCurrency={displayCurrency} /></span>)}</span>;
+        return <span className="expense-history-money-rows">{rows.map((row, index) => <span className="expense-history-money-row" key={index}><span>{row.label}</span>{snapshot?.original ? <ExpenseAmount expense={snapshot} sourceAmount={row.amount} currency={currency} displayCurrency={displayCurrency} /> : <CurrencyAmount amount={row.amount} currency={moneyCurrency} displayCurrency={displayCurrency} />}</span>)}</span>;
       }
       if (value.adjustments) return Object.entries(value.adjustments).map(([id, amount]) => `${getMemberName(id)}: ${formatMoney(amount, moneyCurrency)}`).join('; ');
       if (value.items) return [
@@ -125,7 +129,8 @@ const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', curren
       splits: 'Split With',
       split_details: 'Bill and adjustments',
       split_status: 'Split Type',
-      currency: 'Currency'
+      currency: 'Currency',
+      original: 'Paid amount and currency'
     };
     return labels[field] || field;
   };
@@ -155,8 +160,8 @@ const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', curren
 
         <div className="expense-summary">
           <h3>{expense?.description || 'Expense'}</h3>
-          <span className="amount"><CurrencyAmount amount={expense?.original_currency ? expense.original_amount : expense?.amount} currency={expense?.original_currency || expense?.currency || currency} displayCurrency={displayCurrency}
-            rate={expense?.original_currency && expense?.currency === displayCurrency ? expense.display_rate : undefined} /></span>
+          <span className="amount">{mode === 'group' ? <ExpenseAmount expense={expense} currency={currency} displayCurrency={displayCurrency} /> : <CurrencyAmount amount={expense?.original_currency ? expense.original_amount : expense?.amount} currency={expense?.original_currency || expense?.currency || currency} displayCurrency={displayCurrency}
+            rate={expense?.original_currency && expense?.currency === displayCurrency ? expense.display_rate : undefined} />}</span>
         </div>
         {currency !== displayCurrency && <p className="expense-history-currency-note">Converted amounts appear first. Saved amounts are shown underneath.</p>}
 
@@ -207,8 +212,15 @@ const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', curren
                         const formatChangeValue = (field, value, side) => {
                           // Bill/item details retain receipt units; amount and splits use ledger units.
                           const originalChange = changesArray.find(change => (change.field_name || change.field) === 'original');
-                          const original = originalChange ? (originalChange[`${side}_value`] ?? originalChange[side]) : expense?.original;
-                          return formatValue(field, value, field === 'split_details' ? original?.currency || currency : currency);
+                          const recordedValue = change => Object.prototype.hasOwnProperty.call(change, `${side}_value`) ? change[`${side}_value`] : change[side];
+                          const snapshot = entry[side === 'old' ? 'before_snapshot' : 'after_snapshot'];
+                          const original = snapshot ? snapshot.original : originalChange ? recordedValue(originalChange) : null;
+                          const currencyChange = changesArray.find(change => (change.field_name || change.field) === 'currency');
+                          const ledgerCurrency = snapshot?.currency || (currencyChange && recordedValue(currencyChange)) || currency;
+                          const amountChange = changesArray.find(change => (change.field_name || change.field) === 'amount');
+                          const recordedAmount = amountChange ? recordedValue(amountChange) : original ? Number(original.amount) * Number(original.rate) : undefined;
+                          const moneySnapshot = snapshot || {currency: ledgerCurrency, original, amount: recordedAmount};
+                          return formatValue(field, value, field === 'split_details' ? original?.currency || ledgerCurrency : ledgerCurrency, moneySnapshot);
                         };
 
                         
@@ -224,7 +236,7 @@ const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', curren
                                 if (mode === 'personal' && ['splits', 'split_type', 'split_status', 'paid_by'].includes(fieldName)) return false;
                                 
                                 // Amounts and participants can change while the row count stays equal.
-                                if (fieldName === 'splits' || fieldName === 'split_details') {
+                                if (['splits', 'split_details', 'original'].includes(fieldName)) {
                                   return JSON.stringify(oldVal) !== JSON.stringify(newVal) || Boolean(change.added_members?.length || change.removed_members?.length);
                                 }
                                 
@@ -298,7 +310,7 @@ const ExpenseHistoryModal = ({ expense, members, onClose, mode = 'group', curren
                     )}
 
                     {entry.action === 'created' && (
-                      <p className="action-description">Expense was created</p>
+                      <div className="action-description"><p>Expense was created</p>{mode === 'group' && entry.after_snapshot && <ExpenseAmount expense={entry.after_snapshot} currency={currency} displayCurrency={displayCurrency} />}</div>
                     )}
 
                     {entry.action === 'deleted' && (
