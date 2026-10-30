@@ -1456,10 +1456,9 @@ button.btn-icon.btn-delete:active {
   .expense-transaction-fields .spinning {animation:none;}
 }
 
-/* Center group actions above the bottom navigation with a clear, dark surface. */
-.expense-manager .expense-floating-actions { left: 50%; right: auto; transform: translateX(-50%); display: flex; flex-direction: row; gap: 8px; padding: 6px; border-radius: 30px; background: #fff; border: 1px solid #cbd5e1; box-shadow: 0 4px 18px rgb(15 23 42 / 22%); }
-.expense-manager .expense-floating-actions .btn-add-transaction, .expense-manager .btn-add-transaction.expense-floating-add { width: 44px; height: 44px; min-width: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: #6d28d9; background: rgb(245 243 255 / 88%); border: 1px solid #ddd6fe; box-shadow: none; }
-.expense-manager .expense-floating-actions .btn-add-transaction { color: #fff; background: #6d28d9; border-color: #5b21b6; }
+/* Right-aligned quick actions share a clear, dark surface in both expense modes. */
+.expense-manager .expense-floating-actions { display: flex; flex-direction: row; gap: 8px; padding: 6px; border-radius: 30px; background: #fff; border: 1px solid #cbd5e1; box-shadow: 0 4px 18px rgb(15 23 42 / 22%); }
+.expense-manager .expense-floating-actions .btn-add-transaction, .expense-manager .btn-add-transaction.expense-floating-add { width: 44px; height: 44px; min-width: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: #fff; background: #6d28d9; border: 1px solid #5b21b6; box-shadow: none; }
 .expense-manager .expense-floating-actions .btn-add-transaction:hover, .expense-manager .btn-add-transaction.expense-floating-add:hover { background: #5b21b6; color: #fff; }
 .expense-manager .expense-floating-actions .btn-add-transaction:focus-visible, .expense-manager .btn-add-transaction.expense-floating-add:focus-visible { outline: 3px solid #a78bfa; outline-offset: 3px; }
 .expense-manager .expense-floating-actions .sr-only, .expense-manager .expense-floating-add .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
