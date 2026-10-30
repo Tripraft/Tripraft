@@ -12,7 +12,8 @@ export default function useEmailLinkToken(page, enabled = true) {
     if (!enabled || !token) return;
     const params = new URLSearchParams(location.search);
     params.delete('token');
-    const clean = page + (params.size ? `?${params}` : '');
+    const query = params.toString();
+    const clean = page + (query ? `?${query}` : '');
     if (location.pathname + location.search + location.hash !== clean) {
       navigate(clean, { replace: true });
     }
