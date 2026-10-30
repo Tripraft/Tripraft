@@ -74,6 +74,9 @@ class ApiClient:
 
     def _headers(self, supplied):
         headers = dict(supplied or {})
+        # Existing integration fixtures deliberately exercise the legacy contract.
+        # Public identifier tests explicitly select the browser representation.
+        headers.setdefault('X-Identifier-Format', 'uuid')
         cookie = self._client.get_cookie("csrf_token")
         if cookie is not None:
             headers.setdefault(

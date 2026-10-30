@@ -33,6 +33,8 @@ from app.trips.models import (GroupActivity, ItineraryDocument,
                                              ChatSummary, MessageRead)
 from app.auth.models import (AuditLog, User,  # noqa: E402, F401
                                      UserSession)
+from app.auth.recovery_links import RecoveryLink  # noqa: E402, F401
+from app.core.public_ids import PublicIdentifier  # noqa: E402, F401
 # ---------------------------------------------------------------------------
 # Import ALL models so Base.metadata contains every table
 # ---------------------------------------------------------------------------

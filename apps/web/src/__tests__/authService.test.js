@@ -5,8 +5,10 @@ const response=(status,data)=>({ok:status<400,status,json:async()=>data});
 it('verifies an email without authentication or token persistence', async () => {
  fetch.mockResolvedValue(response(200,{success:true,data:{message:'Email verified successfully'}}));
  await expect(auth.verifyEmail('token+with/special=characters')).resolves.toEqual({success:true,message:'Email verified successfully'});
- expect(fetch.mock.calls[0][0]).toContain('/verify-email?token=token%2Bwith%2Fspecial%3Dcharacters');
- expect(fetch.mock.calls[0][1]).toMatchObject({method:'GET',credentials:'omit',cache:'no-store'});
+ expect(fetch.mock.calls[0][0]).toContain('/verify-email');
+ expect(fetch.mock.calls[0][0]).not.toContain('token=');
+ expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({token:'token+with/special=characters'});
+ expect(fetch.mock.calls[0][1]).toMatchObject({method:'POST',credentials:'omit',cache:'no-store'});
  expect(localStorage.getItem('accessToken')).toBeNull();
 });
 it('does not claim email verification for malformed responses', async () => {

@@ -103,7 +103,7 @@ export default function App() {
             }
           />
           <Route
-            path="/expenses/:userId?/:mode?"
+            path="/expenses/:mode?"
             element={
               <ProtectedRoute>
                 <FeatureErrorBoundary featureName="Expenses">
@@ -112,6 +112,11 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          {['/groups/:groupId/expenses', '/expenses/:userId/:mode'].map(path => (
+            <Route key={path} path={path} element={
+              <ProtectedRoute><FeatureErrorBoundary featureName="Expenses"><ExpensePage /></FeatureErrorBoundary></ProtectedRoute>
+            } />
+          ))}
           <Route
             path="/admin/analysis"
             element={

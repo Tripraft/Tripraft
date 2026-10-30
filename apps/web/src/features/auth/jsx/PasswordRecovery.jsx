@@ -1,6 +1,7 @@
 // Purpose: Requests recovery emails and completes emailed password resets without a session.
 import React, { useRef, useState } from 'react';
-import { Link, useLocation, useParams } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import useEmailLinkToken from '../utils/useEmailLinkToken';
 import authService from '../../../services/sqlAuthService';
 import { isValidEmail, passwordError } from '../utils/authForms';
 import PasswordInput from './PasswordInput';
@@ -8,9 +9,8 @@ import PasswordChecklist from './PasswordChecklist';
 import '../css/Login.css';
 
 export default function PasswordRecovery({ reset = false }) {
-  const { token: pathToken } = useParams();
   const location = useLocation();
-  const token = pathToken || new URLSearchParams(location.hash.slice(1)).get('token');
+  const token = useEmailLinkToken('/reset-password', reset);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmation, setConfirmation] = useState('');

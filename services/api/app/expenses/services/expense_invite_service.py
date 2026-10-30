@@ -4,7 +4,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import and_, func
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, object_session
 
 from app.core.config import Config
 from app.core.db.connection import get_db_session
@@ -37,7 +37,7 @@ def _invitation_dict(invitation):
     data = invitation.to_dict()
     data['group_currency'] = invitation.group.currency
     data['is_expired'] = _expired(invitation)
-    data['invitation_link'] = expense_invitation_link(invitation.id)
+    data['invitation_link'] = expense_invitation_link(invitation.id, session=object_session(invitation))
     return data
 
 

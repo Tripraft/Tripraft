@@ -1,5 +1,6 @@
 """Publish committed expense changes as private cache invalidations, never ledger data."""
 import logging
+from app.core.public_ids import emit_public_event
 from collections import defaultdict
 
 from flask_socketio import ConnectionRefusedError, join_room
@@ -42,7 +43,7 @@ def connect_expenses(auth=None):
         user_id = identifier(user_id)
     except Exception:
         return False
-    join_room(_user_room(user_id))
+    join_room(_user_room(user_id) + (':public' if (auth or {}).get('public_ids') else ''))
 
 
 def _capture_changes(session, flush_context):
@@ -125,13 +126,13 @@ def _publish_changes(session):
         for group_id, change in changes.items():
             contact_owners.update(recipients[group_id] | change['users'])
             for user_id in recipients[group_id] | change['users']:
-                socketio.emit('expenses:changed', {
+                emit_public_event('expenses:changed', {
                     'group_id': str(group_id),
                     'expense_ids': sorted(str(eid) for eid in change['expenses'] if eid),
                     'access_revoked': change['archived'] or user_id in change['revoked'],
                 }, room=_user_room(user_id), namespace=NAMESPACE)
         for user_id, change in personal.items():
-            socketio.emit('expenses:changed', {
+            emit_public_event('expenses:changed', {
                 'personal': True,
                 'expense_ids': sorted(str(eid) for eid in change['expenses'] if eid),
                 'currency_changed': change['currency_changed'],
@@ -139,9 +140,9 @@ def _publish_changes(session):
         for owner_id in contact_owners:
             # The client rereads only its private list. Names and email addresses
             # never travel in Socket.IO notifications or group-wide rooms.
-            socketio.emit('expenses:friends-changed', {}, room=_user_room(owner_id), namespace=NAMESPACE)
+            emit_public_event('expenses:friends-changed', {}, room=_user_room(owner_id), namespace=NAMESPACE)
         for user_id in inbox_users:
-            socketio.emit('expenses:notifications-changed', {}, room=_user_room(user_id), namespace=NAMESPACE)
+            emit_public_event('expenses:notifications-changed', {}, room=_user_room(user_id), namespace=NAMESPACE)
     except Exception:
         # A delivery outage must never turn an already-committed payment into
         # an HTTP failure that encourages the caller to submit it again.

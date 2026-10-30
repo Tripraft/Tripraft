@@ -50,9 +50,11 @@ function Location() {
   const navigate = useNavigate();
   return <><p>{location.pathname}{location.search}</p><button onClick={() => navigate(-1)}>Back</button></>;
 }
-function Page({ entry = '/expenses/friend-uuid/group?groupId=joined-group' }) {
+function Page({ entry = '/groups/joined-group/expenses' }) {
   return <QueryClientProvider client={client}><MemoryRouter initialEntries={[entry]}><Location /><Routes>
-    <Route path="/expenses/:userId?/:mode?" element={<ExpenseManager />} />
+    <Route path="/expenses/:userId/:mode" element={<ExpenseManager />} />
+    <Route path="/expenses/:mode?" element={<ExpenseManager />} />
+    <Route path="/groups/:groupId/expenses" element={<ExpenseManager />} />
   </Routes></MemoryRouter></QueryClientProvider>;
 }
 
@@ -113,7 +115,7 @@ it('opens the exact invitation group without selecting the first group or person
   render(<Page />);
   expect(screen.getByText('Group expenses: joined-group')).toBeInTheDocument();
   expect(screen.queryByText('Personal expenses')).toBeNull();
-  expect(screen.getByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
+  expect(screen.getByText('/groups/joined-group/expenses')).toBeInTheDocument();
   expect(useGroupDetail.mock.calls.every(([id]) => id === 'joined-group')).toBe(true);
   expect(screen.queryByText('Choose another currency to compare.')).toBeNull();
   expect(screen.queryByText('Calculator')).toBeNull();
@@ -180,7 +182,7 @@ it('opens a newly created group and preserves it in the URL', async () => {
   fireEvent.change(screen.getByLabelText('Group name'), { target: { value: 'New trip' } });
   fireEvent.click(screen.getByRole('button', { name: 'Create group' }));
   expect(await screen.findByText('Group expenses: new-group')).toBeInTheDocument();
-  expect(screen.getByText('/expenses/friend-uuid/group?groupId=new-group')).toBeInTheDocument();
+  expect(screen.getByText('/groups/new-group/expenses')).toBeInTheDocument();
 });
 
 it('opens the group and closes the creation dialog while its invitation is still sending', async () => {
@@ -227,7 +229,7 @@ it('opens the accepted group from the dashboard API envelope', async () => {
 
 it('preserves a legacy group query when adding the canonical path', async () => {
   render(<Page entry="/expenses?view=group&groupId=joined-group" />);
-  expect(await screen.findByText('/expenses/friend-uuid/group?groupId=joined-group')).toBeInTheDocument();
+  expect(await screen.findByText('/groups/joined-group/expenses')).toBeInTheDocument();
   expect(screen.getByText('Group expenses: joined-group')).toBeInTheDocument();
 });
 

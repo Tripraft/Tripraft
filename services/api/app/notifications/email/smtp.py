@@ -110,6 +110,8 @@ class EmailService:
             invitation_type: Type of invitation ('expense' or 'trip')
         """
         base_path = 'invitation' if invitation_type == 'expense' else 'invitations'
+        from app.core.public_ids import public_id
+        invitation_token = public_id(invitation_token)
         invite_url = f'{self._frontend_url}/{base_path}/{invitation_token}'
         safe_inviter_name = escape(inviter_name, quote=True)
         safe_group_name = escape(group_name, quote=True)
@@ -143,6 +145,8 @@ class EmailService:
 
     def send_password_reset(self, to_email: str, reset_token: str) -> bool:
         """Send password reset email."""
+        from app.auth.recovery_links import create_recovery_link
+        reset_token = create_recovery_link(reset_token, 'password_reset')
         reset_url = f'{self._frontend_url}/reset-password#token={reset_token}'
 
         subject = f'Reset your {self._from_name} password'
@@ -168,7 +172,9 @@ class EmailService:
 
     def send_verification(self, to_email: str, verification_token: str) -> bool:
         """Send email verification."""
-        verify_url = f'{self._frontend_url}/verify-email/{verification_token}'
+        from app.auth.recovery_links import create_recovery_link
+        verification_token = create_recovery_link(verification_token, 'email_verification')
+        verify_url = f'{self._frontend_url}/verify-email#token={verification_token}'
 
         subject = f'Verify your {self._from_name} email'
         html_body = f'''

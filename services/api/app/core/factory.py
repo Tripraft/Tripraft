@@ -49,7 +49,7 @@ def create_app():
         supports_credentials=True,
         allow_headers=["Content-Type", "Authorization", "Accept", "Origin",
                       "X-Requested-With", "X-CSRF-Token", "Idempotency-Key",
-                      "If-None-Match"],
+                      "If-None-Match", "X-Identifier-Format"],
         expose_headers=["X-Total-Count", "X-Page", "X-Per-Page", "ETag", "Content-Type",
                         "X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset",
                         "X-Request-ID", "X-Cache", "Deprecation", "Sunset", "Link"],
@@ -94,6 +94,9 @@ def create_app():
 
     # Security middleware
     _register_middleware(app)
+
+    from app.core.public_ids import init_public_ids
+    init_public_ids(app)
 
     # Idempotency protects money-mutating HTTP operations, so it is a
     # required component rather than a best-effort middleware.

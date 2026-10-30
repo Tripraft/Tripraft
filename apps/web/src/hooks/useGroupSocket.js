@@ -46,6 +46,7 @@ export default function useGroupSocket(groupId, userId, handlers = {}) {
 
     let presenceHeartbeat = null;
     const socket = io(SOCKET_URL, {
+      auth: { public_ids: true },
       transports: ['websocket', 'polling'],
       withCredentials: true,
       reconnectionAttempts: 10,

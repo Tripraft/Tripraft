@@ -71,6 +71,7 @@ export default function useChatSocket(groupId, userId) {
       const baseUrl = (GlobalConfig.API_BASE_URL || '/api').replace(/\/api\/?$/, '') || window.location.origin;
 
       const opts = {
+        auth: { public_ids: true },
         transports: ['polling', 'websocket'],
         withCredentials: true,
         reconnection: true,
@@ -80,7 +81,7 @@ export default function useChatSocket(groupId, userId) {
 
       // In cookie-mode auth, token is null - backend reads httpOnly cookie instead
       if (token) {
-        opts.auth = { token };
+        opts.auth = { token, public_ids: true };
       }
 
       const socket = io(baseUrl, opts);

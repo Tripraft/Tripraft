@@ -174,6 +174,12 @@ export default function GroupPlannerManager() {
 
   // -- Auto-redirect to last visited group --
   useEffect(() => {
+    if (routeGroupId && group?.id && String(group.id) !== routeGroupId) {
+      navigate(plannerPath('/group-planner/' + group.id), { replace: true });
+    }
+  }, [routeGroupId, group?.id, navigate]);
+
+  useEffect(() => {
     if (routeGroupId || authLoading || groupsLoading) return;
     const lastGroupId = localStorage.getItem(lastGroupKey);
     if (!lastGroupId) return;

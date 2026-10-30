@@ -3,6 +3,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import expenseApi from '../services/expenseApi';
+import { expensePath } from '../utils/publicPaths';
 import { rememberExpenseInvitation, removeAuthStorage } from '../features/auth/utils/authForms';
 
 export default function InvitationAccept() {
@@ -22,9 +23,7 @@ export default function InvitationAccept() {
   const initialized = useRef(false);
 
   const openJoinedGroup = (groupId) => {
-    const userId = currentUser?.uid || currentUser?.user_id;
-    const query = new URLSearchParams({ groupId });
-    navigate(`/expenses/${userId}/group?${query}`, { replace: true });
+    navigate(expensePath('group', groupId), { replace: true });
   };
 
   useEffect(() => {

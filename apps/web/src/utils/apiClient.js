@@ -55,7 +55,7 @@ export class APIClient {
         const multipart = typeof FormData !== 'undefined' && body instanceof FormData;
         const response = await fetch(url, {
           ...fetchOptions, method, credentials: 'include', signal: controller.signal,
-          headers: { ...(multipart ? {} : { 'Content-Type': 'application/json' }), ...authHeaders, ...headers },
+          headers: { ...(multipart ? {} : { 'Content-Type': 'application/json' }), ...authHeaders, ...headers, 'X-Identifier-Format': 'public' },
           body: body == null ? undefined : (multipart ? body : JSON.stringify(body)),
         });
         let data;
