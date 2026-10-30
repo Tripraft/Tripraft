@@ -9,6 +9,7 @@ from app.core.exceptions import ConflictError
 from app.expenses.models import Expense, ExpenseSplit, GroupBalance, Settlement, money_to_json
 from app.expenses.services.group_access import access, require_admin, service_result
 from app.expenses.services.ledger_math import member_balances, simplified_debts
+from app.expenses.services.payer_allocations import paid_totals
 
 
 def _expenses(session, group_id, start_date=None, end_date=None, category=None, search=None):
@@ -54,7 +55,7 @@ def group_analytics(group_id, user_id, **filters):
         query = _expenses(session, group.id, **filters).filter(Expense.currency == currency)
         amount, count = query.with_entities(func.sum(Expense.amount), func.count(Expense.id)).one()
         categories = query.with_entities(Expense.category, func.sum(Expense.amount), func.count(Expense.id)).group_by(Expense.category).order_by(Expense.category).all()
-        paid = {str(uid): amount for uid, amount in query.with_entities(Expense.paid_by, func.sum(Expense.amount)).group_by(Expense.paid_by)}
+        paid = {str(uid): amount for uid, amount in paid_totals(query)}
         shares = {str(uid): amount for uid, amount in query.join(ExpenseSplit).with_entities(ExpenseSplit.user_id, func.sum(ExpenseSplit.amount)).group_by(ExpenseSplit.user_id)}
         balances = member_balances(session, group)
         return {
@@ -97,7 +98,7 @@ def recalculate_balances(group_id, user_id):
                 totals[uid] = totals.get(uid, Decimal('0')) + sign * amount
 
         expenses = _expenses(session, group.id)
-        apply(expenses.with_entities(Expense.paid_by, func.sum(Expense.amount)).group_by(Expense.paid_by), 1)
+        apply(paid_totals(expenses), 1)
         apply(expenses.join(ExpenseSplit).with_entities(ExpenseSplit.user_id, func.sum(ExpenseSplit.amount)).group_by(ExpenseSplit.user_id), -1)
         payments = session.query(Settlement).filter_by(group_id=group.id, is_deleted=False)
         apply(payments.with_entities(Settlement.from_user_id, func.sum(Settlement.amount)).group_by(Settlement.from_user_id), 1)

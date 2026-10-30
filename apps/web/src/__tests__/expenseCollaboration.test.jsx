@@ -5,7 +5,8 @@ import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import SettlementModal from '../features/expenses/jsx/SettlementModal';
 import TransactionModal from '../features/expenses/jsx/TransactionModal';
 import GroupManager from '../features/expenses/jsx/GroupManager';
-import ExpenseConnections, {PaymentGraph} from '../features/expenses/jsx/ExpenseConnections';
+import ExpenseConnections from '../features/expenses/jsx/ExpenseConnections';
+import SettlementView from '../features/expenses/jsx/SettlementView';
 import {analyzeExpenses} from '../features/expenses/utils/expenseAnalysis';
 import {expenseInput, expensePayload} from '../utils/money';
 import useExchangeRate, {clearExchangeRateCache} from '../hooks/useExchangeRate';
@@ -101,7 +102,7 @@ it('splits the converted ledger total on the card while submitting original INR'
   fireEvent.change(screen.getByLabelText('Description'), {target: {value: 'Lunch'}});
   await waitFor(() => expect(screen.getByLabelText('Me share')).toHaveTextContent('$5.27'));
   expect(screen.getByLabelText('Friend share')).toHaveTextContent('$5.26');
-  expect(screen.getByText('Total allocated: $10.53')).toBeInTheDocument();
+  expect(document.getElementById('split-status')).toHaveTextContent('Total allocated: $10.53INR 1,000.00');
   expect(screen.queryByText('$500.00')).not.toBeInTheDocument();
   fireEvent.submit(screen.getByLabelText('Amount').closest('form'));
   await waitFor(() => expect(save).toHaveBeenCalledWith(expect.objectContaining({amount: 1000, currency: 'INR',
@@ -121,7 +122,7 @@ it('saves owner preferences together without rewriting ledger currency', async (
   expect(expenseApi.updateGroup.mock.calls[0][1]).not.toHaveProperty('currency');
 });
 
-it('shows shared-group connections and a directional payment graph', async () => {
+it('shows shared-group connections and keeps settlements focused on actionable payments', async () => {
   const client = new QueryClient({defaultOptions: {queries: {retry: false}}});
   expenseApi.getFriends.mockResolvedValue({friends: [{id: 'friend', label: 'My nickname', display_name: 'Jane', nickname: 'My nickname',
     shared_groups: [{id: 'trip', name: 'Our trip'}]}], has_more: false});
@@ -131,10 +132,11 @@ it('shows shared-group connections and a directional payment graph', async () =>
   await screen.findByRole('img', {name: 'Your friends and shared group connections'});
   expect(screen.getByRole('list', {name: 'Your friends'})).toHaveTextContent('Our trip');
   view.unmount(); client.clear();
-  render(<PaymentGraph payments={[{from: 'me', to: 'friend', fromName: 'Me', toName: 'Jane', amount: 10}]} money={amount => `$${amount}`} />);
-  const paymentDetails = screen.getByText('Who pays whom').closest('details');
-  paymentDetails.open = true; fireEvent(paymentDetails, new Event('toggle'));
-  expect(screen.getByRole('img', {name: 'Suggested group payment graph', hidden: true})).toHaveTextContent('$10');
+  render(<SettlementView group={{id: 'g', created_by: 'me'}} currentUserId="me" members={[{user_id: 'me', display_name: 'Me'}, {user_id: 'friend', display_name: 'Jane'}]}
+    balances={[{user_id: 'me', net_balance: -10}, {user_id: 'friend', net_balance: 10}]} />);
+  expect(screen.queryByText('Who pays whom')).toBeNull();
+  expect(screen.getByText('Suggested settlements (1)')).toBeInTheDocument();
+  expect(screen.getByRole('button', {name: 'Settle Up'})).toBeInTheDocument();
 });
 
 it('loads the actual personal income ledger alongside expense history', async () => {

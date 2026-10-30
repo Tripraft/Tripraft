@@ -9,6 +9,7 @@ export function expensePeople(members = [], expenses = []) {
   members.forEach(m => add(m.user_id || m.id, m.user?.display_name || m.display_name || m.user?.username || m.username || m.user?.email || m.email));
   expenses.filter(e => !e.is_deleted).forEach(e => {
     add(e.paid_by, e.paid_by_name || e.paid_by_user?.display_name);
+    (e.payers || []).forEach(p => add(p.user_id, p.user_name));
     (e.splits || []).forEach(s => add(s.user_id, s.user_name || s.display_name));
   });
   return [...people.values()];

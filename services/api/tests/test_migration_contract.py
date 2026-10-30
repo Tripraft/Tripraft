@@ -350,7 +350,8 @@ def test_fresh_install_sql_can_be_generated_without_a_database(url, monkeypatch)
     config = _config(url, monkeypatch, output)
     command.upgrade(config, 'head', sql=True)
     sql = output.getvalue()
-    assert sql.count('CREATE TABLE ') == 50  # 49 application tables plus Alembic version.
+    assert sql.count('CREATE TABLE ') == 51  # 50 application tables plus Alembic version.
+    assert 'CREATE TABLE expense_payments' in sql
     assert 'CREATE TABLE expense_notifications' in sql
     assert 'idx_expense_notifications_inbox' in sql
     assert 'CREATE TABLE gp_vault_file_contents' in sql
@@ -429,7 +430,7 @@ def test_employee_and_recovery_sibling_upgrades_preserve_data(tmp_path, monkeypa
                                {'id': user_id, 'email': 'sibling@example.test', 'password': 'unused'})
         command.upgrade(config, 'head')
         _assert_current_schema(engine, config)
-        assert ScriptDirectory.from_config(config).get_heads() == ['b17dc6e7f801']
+        assert ScriptDirectory.from_config(config).get_heads() == ['c28ed7f80912']
         with engine.connect() as connection:
             assert connection.execute(text('SELECT email, password_reset_version FROM users WHERE id=:id'),
                                       {'id': user_id}).one() == ('sibling@example.test', None)

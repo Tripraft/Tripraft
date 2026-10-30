@@ -14,7 +14,7 @@ from decimal import ROUND_DOWN, ROUND_HALF_UP, Decimal
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID
 
-from app.expenses.models import (Expense, ExpenseHistory, ExpenseSplit,
+from app.expenses.models import (Expense, ExpenseHistory, ExpenseSplit, ExpensePayment,
                                         Group, GroupBalance, GroupMember, User,
                                         money_to_json)
 from app.core.db.connection import get_db_session
@@ -23,6 +23,7 @@ from app.core.exceptions import AppError
 from app.expenses.services.group_access import access, preserve_former_member_balances
 from app.expenses.services.money_lock import lock_group, lock_money_record
 from app.expenses.services.ledger_math import member_balances
+from app.expenses.services.payer_allocations import validate_payers, ledger_payers
 from sqlalchemy import update
 from sqlalchemy.orm import joinedload, selectinload
 
@@ -55,6 +56,7 @@ class ExpenseServiceSQL:
         receipt_url: Optional[str] = None,
         currency: Optional[str] = None,
         split_details: Optional[Dict] = None,
+        payers: Optional[List[Dict]] = None,
     ) -> Tuple[bool, Dict[str, Any]]:
         """
         Create a new expense (personal or group)
@@ -64,7 +66,8 @@ class ExpenseServiceSQL:
             group_id: Group ID (None for personal expenses)
             description: Expense description
             amount: Total amount
-            paid_by: User ID who paid
+            paid_by: Legacy single payer; derived from the first entry when payers are supplied
+            payers: Independent positive contributions in the expense currency
             split_type: 'equal', 'exact', 'percentage', 'shares'
             splits: Split configuration per user
             category: Optional category
@@ -87,6 +90,8 @@ class ExpenseServiceSQL:
             with get_db_session() as session:
                 # For personal expenses (no group)
                 if group_id is None:
+                    if payers is not None:
+                        raise SplitValidationError('Multiple payers are available for group expenses only')
                     return ExpenseServiceSQL._create_personal_expense(
                         session, user_id, description, amount, paid_by,
                         category, expense_date, notes, receipt_url, currency or 'USD'
@@ -109,6 +114,8 @@ class ExpenseServiceSQL:
                 
                 require_contributor(member)
 
+                source_payers = validate_payers(ExpenseServiceSQL, session, group_id, payers, amount, paid_by)
+                paid_by = ExpenseServiceSQL._identifier(source_payers[0]['user_id'])
                 # Verify payer is a member
                 payer_member = session.query(GroupMember).filter(
                     GroupMember.group_id == group_id,
@@ -153,6 +160,11 @@ class ExpenseServiceSQL:
                     group.currency, split_type.lower(), ExpenseServiceSQL._split_details(split_type, splits, split_details),
                 )
                 amount = expense.amount
+                if expense.original:
+                    expense.original = {**expense.original, 'payers': source_payers}
+                contributions = ledger_payers(ExpenseServiceSQL, source_payers, amount)
+                expense.payments = [ExpensePayment(user_id=row['user_id'], amount=Decimal(row['amount']), position=i)
+                                    for i, row in enumerate(contributions)]
                 
                 if not expense_splits:
                     return False, {'error': 'Failed to calculate splits'}
@@ -167,7 +179,7 @@ class ExpenseServiceSQL:
                 expense.split_type = split_type.lower()
                 
                 # Update group balances
-                ExpenseServiceSQL._update_balances(session, group_id, expense_splits, paid_by, amount)
+                ExpenseServiceSQL._update_balances(session, group_id, expense_splits, paid_by, amount, contributions)
                 
                 session.flush()
                 # Record history
@@ -515,7 +527,8 @@ class ExpenseServiceSQL:
         group_id: str,
         splits: List[ExpenseSplit],
         paid_by: str,
-        total_amount: Decimal
+        total_amount: Decimal,
+        payers=None,
     ):
         """Apply a valid expense while preserving the zero-sum invariant."""
         # Credit the payer independently of the split list.  A payer may
@@ -523,7 +536,8 @@ class ExpenseServiceSQL:
         # dinner for the rest of the group); nesting this credit in the split
         # loop used to make that money disappear (audit P1-3).
         total = ExpenseServiceSQL._money(total_amount, 'Expense amount')
-        ExpenseServiceSQL._apply_balance_delta(session, group_id, paid_by, total)
+        for payment in payers or [{'user_id': paid_by, 'amount': total}]:
+            ExpenseServiceSQL._apply_balance_delta(session, group_id, payment['user_id'], Decimal(str(payment['amount'])))
 
         for split in splits:
             ExpenseServiceSQL._apply_balance_delta(
@@ -741,6 +755,7 @@ class ExpenseServiceSQL:
         receipt_url: Optional[str] = _UNSET,
         currency: Optional[str] = _UNSET,
         split_details: Optional[Dict] = _UNSET,
+        payers=_UNSET,
     ) -> Tuple[bool, Dict[str, Any]]:
         """
         Update an expense (personal or group)
@@ -769,6 +784,8 @@ class ExpenseServiceSQL:
                 
                 # Check permissions based on expense type
                 if expense.group_id is None:
+                    if payers is not _UNSET:
+                        raise SplitValidationError('Multiple payers are available for group expenses only')
                     # Personal expense - only creator can update
                     if expense.created_by != user_id:
                         return False, {'error': 'You can only edit your own personal expenses'}
@@ -835,6 +852,7 @@ class ExpenseServiceSQL:
                 before_snapshot = expense.to_dict()
                 old_amount = expense.amount
                 old_paid_by = expense.paid_by
+                old_payers = before_snapshot['payers']
                 old_description = expense.description
                 old_category = expense.category
                 old_date = expense.expense_date.strftime('%Y-%m-%d') if expense.expense_date else None
@@ -863,6 +881,19 @@ class ExpenseServiceSQL:
                 desired_payer = paid_by if paid_by is not None else old_paid_by
                 desired_split_type = (split_type or old_split_type).lower()
                 desired_amount = abs(desired_amount) * (-1 if desired_split_type == 'reimbursement' else 1)
+                source_amount = desired_amount
+                financial_change = amount is not None or splits is not None or split_type is not None or currency is not _UNSET or paid_by is not None
+                if payers is _UNSET and len(old_payers) > 1 and financial_change:
+                    # Never silently assign a changed multi-payer bill to its first payer.
+                    raise SplitValidationError('Payer amounts are required when changing a multi-payer expense')
+                source_payers = None
+                if payers is not _UNSET or (financial_change and len(old_payers) <= 1):
+                    # A payer-only edit uses the saved source total when the receipt is foreign.
+                    if amount is None and expense.original:
+                        source_amount = Decimal(expense.original['amount'])
+                    source_payers = validate_payers(ExpenseServiceSQL, session, expense.group_id,
+                        None if payers is _UNSET else payers, source_amount, desired_payer)
+                    desired_payer = ExpenseServiceSQL._identifier(source_payers[0]['user_id'])
                 if desired_split_type not in {'equal', 'exact', 'percentage', 'shares', 'adjustment', 'reimbursement', 'itemized'}:
                     raise SplitValidationError('Unsupported split type')
 
@@ -884,6 +915,10 @@ class ExpenseServiceSQL:
                     )
                 elif amount is not None or splits is not None:
                     next_original = None
+
+                if source_payers is not None and next_original:
+                    next_original = {**next_original, 'payers': source_payers}
+                new_payers = ledger_payers(ExpenseServiceSQL, source_payers, desired_amount) if source_payers is not None else old_payers
 
                 payer_member = session.query(GroupMember).filter(
                     GroupMember.group_id == expense.group_id,
@@ -930,6 +965,8 @@ class ExpenseServiceSQL:
                     new_splits = old_splits
 
                 changes = []
+                if [(str(p['user_id']), Decimal(str(p['amount']))) for p in old_payers] != [(str(p['user_id']), Decimal(str(p['amount']))) for p in new_payers]:
+                    changes.append({'field': 'payers', 'old': old_payers, 'new': new_payers})
                 if next_original != expense.original:
                     changes.append({'field': 'original', 'old': expense.original, 'new': next_original})
                     expense.original = next_original
@@ -979,8 +1016,8 @@ class ExpenseServiceSQL:
 
                 if not changes and splits is None:
                     return True, {'expense': ExpenseServiceSQL._get_expense_dict(session, expense)}
-                old_effects = ExpenseServiceSQL._balance_effects(old_splits, old_paid_by, old_amount)
-                new_effects = ExpenseServiceSQL._balance_effects(new_splits, desired_payer, desired_amount)
+                old_effects = ExpenseServiceSQL._balance_effects(old_splits, old_paid_by, old_amount, old_payers)
+                new_effects = ExpenseServiceSQL._balance_effects(new_splits, desired_payer, desired_amount, new_payers)
                 preserve_former_member_balances(session, expense.group_id, {
                     uid: new_effects.get(uid, Decimal('0')) - old_effects.get(uid, Decimal('0'))
                     for uid in old_effects.keys() | new_effects.keys()
@@ -989,7 +1026,7 @@ class ExpenseServiceSQL:
                 # The old entry is now valid to reverse; afterwards the new
                 # ledger is applied in the same transaction.
                 ExpenseServiceSQL._reverse_balances(
-                    session, expense.group_id, old_splits, old_paid_by, old_amount,
+                    session, expense.group_id, old_splits, old_paid_by, old_amount, old_payers,
                 )
                 if replace_splits:
                     session.query(ExpenseSplit).filter(
@@ -1006,8 +1043,13 @@ class ExpenseServiceSQL:
                     })
 
                 expense.updated_at = datetime.now(timezone.utc)
+                if source_payers is not None:
+                    expense.payments.clear()
+                    session.flush()
+                    expense.payments = [ExpensePayment(user_id=row['user_id'], amount=Decimal(row['amount']), position=i)
+                                        for i, row in enumerate(new_payers)]
                 ExpenseServiceSQL._update_balances(
-                    session, expense.group_id, new_splits, expense.paid_by, expense.amount,
+                    session, expense.group_id, new_splits, expense.paid_by, expense.amount, new_payers,
                 )
                 
                 session.flush()
@@ -1041,8 +1083,9 @@ class ExpenseServiceSQL:
             return False, {'error': 'Failed to update expense'}
     
     @staticmethod
-    def _balance_effects(splits, paid_by, amount):
-        effects = {str(paid_by): Decimal(str(amount))}
+    def _balance_effects(splits, paid_by, amount, payers=None):
+        effects = {str(row['user_id']): Decimal(str(row['amount']))
+                   for row in payers or [{'user_id': paid_by, 'amount': amount}]}
         for split in splits:
             uid = str(split.user_id)
             effects[uid] = effects.get(uid, Decimal('0')) - Decimal(str(split.amount))
@@ -1054,13 +1097,12 @@ class ExpenseServiceSQL:
         group_id: str,
         splits: List[ExpenseSplit],
         paid_by: str,
-        total_amount: Decimal
+        total_amount: Decimal,
+        payers=None,
     ):
         """Exactly reverse ``_update_balances`` for an existing expense."""
-        ExpenseServiceSQL._apply_balance_delta(
-            session, group_id, paid_by,
-            -ExpenseServiceSQL._money(total_amount, 'Expense amount'),
-        )
+        for payment in payers or [{'user_id': paid_by, 'amount': total_amount}]:
+            ExpenseServiceSQL._apply_balance_delta(session, group_id, payment['user_id'], -Decimal(str(payment['amount'])))
 
         for split in splits:
             ExpenseServiceSQL._apply_balance_delta(
@@ -1131,11 +1173,11 @@ class ExpenseServiceSQL:
                         ExpenseSplit.expense_id == expense_id
                     ).all()
                     
-                    effects = ExpenseServiceSQL._balance_effects(old_splits, expense.paid_by, expense.amount)
+                    effects = ExpenseServiceSQL._balance_effects(old_splits, expense.paid_by, expense.amount, expense.to_dict()['payers'])
                     preserve_former_member_balances(session, expense.group_id,
                                                    {uid: -delta for uid, delta in effects.items()})
                     ExpenseServiceSQL._reverse_balances(
-                        session, expense.group_id, old_splits, expense.paid_by, expense.amount
+                        session, expense.group_id, old_splits, expense.paid_by, expense.amount, expense.to_dict()['payers']
                     )
                 
                 # Store group_id before delete for balance retrieval
@@ -1202,9 +1244,9 @@ class ExpenseServiceSQL:
                         splits = list(expense.splits)
                         if expense.currency != group.currency or sum((row.amount for row in splits), Decimal('0')) != expense.amount:
                             return False, {'error': 'Saved expense does not match the group ledger', 'status_code': 409}
-                        effects = ExpenseServiceSQL._balance_effects(splits, expense.paid_by, expense.amount)
+                        effects = ExpenseServiceSQL._balance_effects(splits, expense.paid_by, expense.amount, expense.to_dict()['payers'])
                         preserve_former_member_balances(session, expense.group_id, effects)
-                        ExpenseServiceSQL._update_balances(session, expense.group_id, splits, expense.paid_by, expense.amount)
+                        ExpenseServiceSQL._update_balances(session, expense.group_id, splits, expense.paid_by, expense.amount, expense.to_dict()['payers'])
                     expense.is_deleted = False
                     expense.deleted_by = None
                     expense.deleted_at = None

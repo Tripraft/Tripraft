@@ -22,7 +22,7 @@ def _expense_body(row):
         field = change.get('field', '')
         if field in ('description', 'amount', 'currency', 'category', 'notes', 'expense_date', 'split_type'):
             parts.append(f'{field.replace("_", " ").capitalize()}: {_value(change.get("old"))} → {_value(change.get("new"))}')
-        elif field in ('paid_by', 'splits', 'split_details'):
+        elif field in ('paid_by', 'payers', 'splits', 'split_details'):
             parts.append(f'{field.replace("_", " ").capitalize()} updated')
     original = snapshot.get('original')
     if original:

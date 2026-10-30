@@ -35,8 +35,11 @@ it.each(cases)('saves %s from the group expense dialog with an accurate preview 
     });
     change('Tax', '10'); change('Tip', '15'); change('Discount', '5');
   }
+  expect(screen.getByRole('group', {name: 'Split with'})).toBeVisible();
+  expect(screen.getByLabelText('Split method')).toBeEnabled();
+  expect(screen.getByRole('region', {name: 'Expense balance preview'})).toBeInTheDocument();
   expect(screen.getByLabelText('Alice share')).toHaveTextContent(kind === 'reimbursement' ? '-$30.00' : `$${expected[0].toFixed(2)}`);
-  if (kind === 'reimbursement') expect(screen.getByLabelText('Refund received by')).toHaveValue('a');
+  if (kind === 'reimbursement') expect(screen.getByRole('radio', {name: 'Refund received by Alice'})).toBeChecked();
   fireEvent.click(screen.getByRole('button', { name: 'Save' }));
   await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
   const data = save.mock.calls[0][0];
@@ -51,9 +54,9 @@ it('defaults to equal, lets names toggle participants, and reallocates the full 
   render(<TransactionModal mode="group" members={members} currentUser={{ uid: 'a' }} />);
   change('Amount', '10.01');
   expect(screen.getByLabelText('Split method')).toHaveValue('equal');
-  expect(screen.getByLabelText('Alice share')).toHaveTextContent('$5.01');
+  expect(screen.getByLabelText('Alice share')).toHaveTextContent('₹5.01');
   fireEvent.click(screen.getByText('Bob', { selector: 'span' }));
-  expect(screen.getByLabelText('Alice share')).toHaveTextContent('$10.01');
+  expect(screen.getByLabelText('Alice share')).toHaveTextContent('₹10.01');
   fireEvent.click(screen.getByText('Alice', { selector: 'span' }));
   fireEvent.submit(screen.getByRole('button', { name: 'Save' }).closest('form'));
   expect(screen.getByRole('alert')).toHaveTextContent('Select at least one person');

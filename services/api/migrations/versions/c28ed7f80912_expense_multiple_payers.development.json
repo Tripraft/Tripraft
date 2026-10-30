@@ -1,0 +1,21 @@
+{
+  "revision": "c28ed7f80912",
+  "down_revision": "b17dc6e7f801",
+  "operations": [{
+    "op": "create_table",
+    "table": "expense_payments",
+    "columns": [
+      {"name": "id", "type": "uuid", "nullable": false},
+      {"name": "expense_id", "type": "uuid", "nullable": false},
+      {"name": "user_id", "type": "uuid", "nullable": false},
+      {"name": "amount_minor", "type": "bigint", "nullable": false},
+      {"name": "position", "type": "integer", "nullable": false}
+    ],
+    "primary_key": ["id"],
+    "foreign_keys": [
+      {"columns": ["expense_id"], "table": "expenses", "references": ["id"], "on_delete": "CASCADE"},
+      {"columns": ["user_id"], "table": "users", "references": ["id"], "on_delete": "NO ACTION"}
+    ],
+    "unique": [{"name": "uq_expense_payment", "columns": ["expense_id", "user_id"]}]
+  }]
+}

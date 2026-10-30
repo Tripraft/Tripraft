@@ -41,9 +41,11 @@
 .expense-analysis-panel-heading h3 { margin: 0; }
 .expense-analysis-panel-heading > span { font-size: 11px; color: #6b7280; }
 .expense-analysis-area { min-width: 0; }
-.expense-analysis-area > svg { display: block; width: 100%; height: auto; min-height: 140px; }
+.expense-analysis-area > svg { display: block; width: 100%; height: auto; max-height: 260px; min-height: 140px; }
 .expense-analysis-chart-scale, .expense-analysis-chart-dates { display: flex; justify-content: space-between; gap: 12px; color: #9ca3af; font-size: 11px; }
 .expense-analysis-chart-scale { margin-bottom: 6px; }
+.expense-analysis-chart-dates { gap: 4px; font-size: 10px; }
+@media (max-width: 480px) { .expense-analysis-chart-dates > span:nth-child(even):not(:last-child) { display: none; } }
 .expense-analysis-data { color: #6b7280; font-size: 12px; margin-top: 18px; }
 .expense-analysis-data summary { cursor: pointer; padding: 6px 0; }
 .expense-analysis-data dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px 24px; margin-top: 10px; }

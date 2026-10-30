@@ -35,6 +35,20 @@ const paidExpense = {...expense, amount: 10.53, split_type: 'equal',
   original: {amount: '1000', currency: 'INR', rate: '.01053', ledger_currency: 'USD', split_type: 'equal',
     splits: [{user_id: 'me', amount: '500'}, {user_id: 'friend', amount: '500'}]}};
 
+it('shows a saved receipt in the matching group currency once without an exchange-rate round trip', () => {
+  const {container} = render(<ExpenseAmount expense={paidExpense} currency="USD" displayCurrency="INR" />);
+  expect(screen.getByText('₹1,000.00')).toHaveClass('expense-money-primary');
+  expect(container.querySelector('.expense-money-original')).toBeNull();
+  expect(screen.queryByText(/USD/)).toBeNull();
+  expect(getExchangeRate).not.toHaveBeenCalled();
+});
+
+it('does not repeat an original amount already in the displayed currency', () => {
+  const {container} = render(<CurrencyAmount amount={500} currency="INR" displayCurrency="INR" original={{amount: 500, currency: 'INR'}} />);
+  expect(screen.getByText('₹500.00')).toBeInTheDocument();
+  expect(container.querySelector('.expense-money-original')).toBeNull();
+});
+
 it('shows the saved INR receipt under the exact USD ledger amount in activity without an FX request', () => {
   render(<TransactionActivity transactions={[paidExpense]} group={{...group, display_currency: 'USD'}} currency="USD"
     currentUserId="me" getMemberName={() => 'Me'} formatDate={() => 'Oct 26'} wasEdited={() => false} />);

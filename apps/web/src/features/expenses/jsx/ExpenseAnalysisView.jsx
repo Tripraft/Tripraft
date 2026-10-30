@@ -2,7 +2,7 @@
 import React, { useId, useMemo, useState } from 'react';
 import { ArrowLeft, ArrowUpRight, ChartNoAxesCombined, Download, Flame, Receipt, Sparkles, TrendingUp, Users } from 'lucide-react';
 import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
-import { analyzeExpenses, calendarDay, expenseDay } from '../utils/expenseAnalysis';
+import { analyzeExpenses, calendarDay, dailyChartWindow, expenseDay } from '../utils/expenseAnalysis';
 import '../css/ExpenseAnalysisView.css';
 import ExpenseBreakdown from './ExpenseBreakdown';
 import { expensePeople } from '../utils/expensePeople';
@@ -27,7 +27,7 @@ export function SpendAreaChart({ daily, currency = 'USD', displayCurrency = curr
       <polyline points={line} stroke="#8b5cf6" strokeWidth="2.5" fill="none" strokeLinejoin="round" />
       {points.map(point => <circle key={point.date} cx={point.x} cy={point.y} r="3.5" fill="white" stroke="#8b5cf6" strokeWidth="2"><title>{dayLabel(point.date)}: {formatMoney(point.amount, currency)}</title></circle>)}
     </svg>
-    <div className="expense-analysis-chart-dates"><span>{daily[0] && dayLabel(daily[0].date)}</span><span>{daily[daily.length - 1] && dayLabel(daily[daily.length - 1].date)}</span></div>
+    <div className="expense-analysis-chart-dates">{daily.filter((day, index) => index % 2 === 0 || index === daily.length - 1).map(day => <span key={day.date} title={dayLabel(day.date)}>{new Date(`${day.date}T12:00:00`).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})}</span>)}</div>
     <details className="expense-analysis-data"><summary>View daily amounts</summary><dl>{daily.map(day => <div key={day.date}><dt>{dayLabel(day.date)}</dt><dd>{formatMoney(day.amount, currency)}</dd></div>)}</dl></details>
   </div>;
 }
@@ -45,6 +45,7 @@ export default function ExpenseAnalysisView({ mode = 'personal', expenses = [], 
   const selectedName = people.find(person => person.id === String(selectedUserId))?.name || 'Member';
   const shareLabel = ownShare ? 'Your share' : `${selectedName}'s share`;
   const analysis = useMemo(() => analyzeExpenses(expenses, { range, scope, mode, userId: selectedUserId, startDate, endDate }), [expenses, range, scope, mode, selectedUserId, startDate, endDate]);
+  const chartDaily = useMemo(() => dailyChartWindow(analysis.daily, analysis.endDay, range === 'all' ? undefined : analysis.startDay), [analysis, range]);
   const periodSettlements = settlements.filter(row => {const day = expenseDay({...row, date: row.settlement_date}); return day && (range === 'all' || day >= analysis.startDay) && day <= analysis.endDay;});
   const money = useMoneyDisplay(currency, displayCurrency, {includeOriginal: false});
   const compactMoney = useMoneyDisplay(currency, displayCurrency, {includeOriginal: false, compact: true});
@@ -92,7 +93,7 @@ export default function ExpenseAnalysisView({ mode = 'personal', expenses = [], 
           <div className="expense-analysis-bars">{analysis.categoryData.map(category => <div className="expense-analysis-bar" key={category.name}><span>{category.name}</span><strong>{money(category.value)}</strong><span className="expense-analysis-bar-track"><i style={{ background: category.color, width: `${topCategory?.value > 0 ? Math.max(0, category.value) / topCategory.value * 100 : 0}%` }} /></span>{scope === 'share' && !category.involved && <small className="expense-analysis-zero-category">{ownShare ? "You weren't involved in this category." : `${selectedName} wasn't involved in this category.`}</small>}</div>)}</div>
         </article>
       </div>
-      <article className="expense-analysis-panel expense-analysis-daily"><div className="expense-analysis-panel-heading"><h3>Daily spending</h3><span>{analysis.daily.length} days ending {dayLabel(analysis.endDay)}</span></div><SpendAreaChart daily={analysis.daily} currency={currency} displayCurrency={displayCurrency} /></article>
+      <article className="expense-analysis-panel expense-analysis-daily"><div className="expense-analysis-panel-heading"><h3>Daily spending</h3><span>{chartDaily.length} days ending {dayLabel(analysis.endDay)}</span></div><SpendAreaChart daily={chartDaily} currency={currency} displayCurrency={displayCurrency} /></article>
       <article className="expense-analysis-panel"><div className="expense-analysis-panel-heading"><h3>Top expenses</h3><span>{scope === 'share' ? shareLabel : 'Largest first'}</span></div>
         <ol className="expense-analysis-top-list">{analysis.topExpenses.map((expense, index) => <li key={expense.id || expense.expense_id || index}><span className="expense-analysis-rank">{index + 1}</span><div><strong>{expense.description || 'Expense'}</strong><small>{expense.category || 'Other'}{expense.day ? `  /  ${dayLabel(expense.day)}` : ''}</small></div><b>{money(expense.value)}</b><ArrowUpRight size={16} /></li>)}</ol>
       </article>

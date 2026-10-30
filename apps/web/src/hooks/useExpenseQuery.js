@@ -4,6 +4,8 @@ import { useCallback, useEffect, useState, useRef } from 'react';
 import expenseApi from '../services/expenseApi';
 import authService from '../services/sqlAuthService';
 import GlobalConfig from '../config/globalConfig';
+import {expensePayers} from '../features/expenses/utils/payers';
+import {equalSplits} from '../utils/money';
 
 /**
  * Unwrap the standard backend response envelope.
@@ -407,15 +409,16 @@ function ensureBalance(balancesMap, membersMap, userId, defaultBalance = 0) {
 }
 
 /** Apply expense impact (credit payer, debit splits) to balance map */
-function applyExpenseToBalances(balancesMap, membersMap, paidBy, amount, splits, members, sign = 1) {
-  ensureBalance(balancesMap, membersMap, paidBy);
-  balancesMap[paidBy].balance += sign * amount;
-  balancesMap[paidBy].net_balance = balancesMap[paidBy].balance;
+function applyExpenseToBalances(balancesMap, membersMap, paidBy, amount, splits, members, sign = 1, payers) {
+  (payers || [{user_id: paidBy, amount}]).forEach(payment => {
+    ensureBalance(balancesMap, membersMap, payment.user_id);
+    balancesMap[payment.user_id].balance += sign * Number(payment.amount);
+    balancesMap[payment.user_id].net_balance = balancesMap[payment.user_id].balance;
+  });
 
   let effectiveSplits = splits || [];
   if (effectiveSplits.length === 0 && members) {
-    const splitAmount = amount / members.length;
-    effectiveSplits = members.map(m => ({ user_id: m.user_id, amount: splitAmount }));
+    effectiveSplits = equalSplits(Math.abs(amount), members.map(m => m.user_id)).map(row => ({...row, amount: row.amount * Math.sign(amount)}));
   }
 
   effectiveSplits.forEach(split => {
@@ -429,6 +432,8 @@ function applyExpenseToBalances(balancesMap, membersMap, paidBy, amount, splits,
 
 /** Merge server balance data (deltas or full) into existing balances */
 function mergeServerBalances(existingBalances, data) {
+  if (Array.isArray(data.group_balances)) return data.group_balances;
+  if (Array.isArray(data.balances)) return data.balances;
   if (data.balance_deltas) {
     return applyBalanceDeltas(existingBalances, data.balance_deltas);
   }
@@ -477,8 +482,12 @@ export function useCreateExpenseMutation() {
       const previousGroup = queryClient.getQueryData(queryKeys.group(groupId));
       const previousMega = queryClient.getQueryData(queryKeys.megaBootstrap(groupId));
 
+      const direction = expenseData.split_type === 'reimbursement' ? -1 : 1;
       const optimisticExpense = {
         ...expenseData,
+        amount: Math.abs(Number(expenseData.amount)) * direction,
+        payers: expensePayers(expenseData).map(row => ({...row, amount: Math.abs(Number(row.amount)) * direction})),
+        splits: expenseData.splits?.map(row => ({...row, amount: Math.abs(Number(row.amount)) * direction})),
         expense_id: `temp_${Date.now()}`,
         id: `temp_${Date.now()}`,
         created_at: new Date().toISOString(),
@@ -491,8 +500,8 @@ export function useCreateExpenseMutation() {
         if (!old) return old;
         const newExpenses = [optimisticExpense, ...(old.expenses || [])];
         const { balancesMap, membersMap } = buildBalanceMaps(old);
-        applyExpenseToBalances(balancesMap, membersMap, expenseData.paid_by,
-          parseFloat(expenseData.amount) || 0, expenseData.splits, old.members);
+        if (!expenseData.currency || expenseData.currency === old.currency) applyExpenseToBalances(balancesMap, membersMap, optimisticExpense.paid_by,
+          optimisticExpense.amount, optimisticExpense.splits, old.members, 1, optimisticExpense.payers);
         return { ...old, expenses: newExpenses, balances: Object.values(balancesMap) };
       });
 
@@ -505,8 +514,8 @@ export function useCreateExpenseMutation() {
         (ag.balances || []).forEach(b => { balancesMap[b.user_id] = { ...b }; });
         const membersMap = {};
         (ag.members || []).forEach(m => { membersMap[m.user_id] = m; });
-        applyExpenseToBalances(balancesMap, membersMap, expenseData.paid_by,
-          parseFloat(expenseData.amount) || 0, expenseData.splits, ag.members);
+        if (!expenseData.currency || expenseData.currency === ag.currency) applyExpenseToBalances(balancesMap, membersMap, optimisticExpense.paid_by,
+          optimisticExpense.amount, optimisticExpense.splits, ag.members, 1, optimisticExpense.payers);
         return {
           ...old,
           data: {
@@ -594,27 +603,20 @@ export function useUpdateExpenseMutation() {
         );
 
         let newBalances = [...(balances || [])];
-        if (oldExpense && (data.amount !== undefined || data.splits !== undefined || data.paid_by !== undefined)) {
-          // Reverse old expense impact
-          newBalances = newBalances.map(b => {
-            const nb = { ...b };
-            if (b.user_id === oldExpense.paid_by) nb.balance -= parseFloat(oldExpense.amount) || 0;
-            const oldSplit = (oldExpense.splits || []).find(s => s.user_id === b.user_id);
-            if (oldSplit) nb.balance += parseFloat(oldSplit.amount) || 0;
-            return nb;
-          });
-          // Apply new expense impact
-          const newAmount = parseFloat(data.amount ?? oldExpense.amount) || 0;
-          const newPaidBy = data.paid_by ?? oldExpense.paid_by;
-          const newSplits = data.splits ?? oldExpense.splits ?? [];
-          newBalances = newBalances.map(b => {
-            const nb = { ...b };
-            if (b.user_id === newPaidBy) nb.balance += newAmount;
-            const ns = newSplits.find(s => s.user_id === b.user_id);
-            if (ns) nb.balance -= parseFloat(ns.amount) || 0;
-            nb.net_balance = nb.balance;
-            return nb;
-          });
+        if (oldExpense && !oldExpense.original && (!data.currency || data.currency === oldExpense.currency)
+            && (expensePayers(oldExpense).length <= 1 || data.payers)
+            && (data.amount !== undefined || data.splits !== undefined || data.paid_by !== undefined || data.payers !== undefined)) {
+          const {balancesMap, membersMap} = buildBalanceMaps({balances, members});
+          applyExpenseToBalances(balancesMap, membersMap, oldExpense.paid_by, Number(oldExpense.amount), oldExpense.splits, members, -1, expensePayers(oldExpense));
+          const updated = {...oldExpense, ...data};
+          const direction = updated.split_type === 'reimbursement' ? -1 : 1;
+          const contributions = (data.payers || (data.paid_by || data.amount !== undefined ? [{user_id: updated.paid_by, amount: updated.amount}] : expensePayers(oldExpense)))
+            .map(row => ({...row, amount: Math.abs(Number(row.amount)) * direction}));
+          const newSplits = data.splits || (data.amount !== undefined && updated.split_type === 'equal'
+            ? equalSplits(Math.abs(Number(updated.amount)), (oldExpense.splits || []).map(row => row.user_id)) : oldExpense.splits);
+          applyExpenseToBalances(balancesMap, membersMap, updated.paid_by, Math.abs(Number(updated.amount)) * direction,
+            newSplits?.map(row => ({...row, amount: Math.abs(Number(row.amount)) * direction})), members, 1, contributions);
+          newBalances = Object.values(balancesMap);
         }
 
         return { expenses: newExpenses, balances: newBalances };

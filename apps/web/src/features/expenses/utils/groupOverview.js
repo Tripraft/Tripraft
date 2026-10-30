@@ -1,4 +1,5 @@
 // Purpose: Derives group spending, personal share, paid amounts, settlements and net position using server summaries or available ledger data.
+import { paidAmount } from './payers';
 export function groupOverview(group, userId, expenses = group?.expenses || [], balances = group?.balances) {
   const active = expenses.filter(expense => !expense.is_deleted);
   const summary = group?.summary;
@@ -12,7 +13,7 @@ export function groupOverview(group, userId, expenses = group?.expenses || [], b
   active.forEach(expense => {
     const amount = Number(expense.amount) || 0;
     total += amount;
-    if (String(expense.paid_by) === String(userId)) paid += amount;
+    paid += paidAmount(expense, userId);
     share += (expense.splits || []).filter(split => String(split.user_id) === String(userId))
       .reduce((sum, split) => sum + (Number(split.amount) || 0), 0);
     const category = expense.category || 'Other';

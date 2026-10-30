@@ -10,6 +10,7 @@ import ExpenseFriendPicker from './ExpenseFriendPicker';
 import CurrencyChangeStatus from './CurrencyChangeStatus';
 import useExchangeRate from '../../../hooks/useExchangeRate';
 import CurrencyAmount from './CurrencyAmount';
+import { paidAmount } from '../utils/payers';
 
 const unwrapEnvelope = response => response?.data ?? response;
 const invitationLink = invitation => invitation.invitation_link ||
@@ -410,7 +411,7 @@ const GroupManager = ({
     const name = member.user?.display_name || member.user?.username || member.display_name || member.username || member.user?.email || member.email || 'Unknown User';
     const isOwner = String(id) === String(activeGroup?.created_by);
     const isYou = String(id) === String(userId);
-    const paid = expenses.filter(expense => !expense.is_deleted && String(expense.paid_by) === String(id)).reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
+    const paid = expenses.filter(expense => !expense.is_deleted).reduce((sum, expense) => sum + paidAmount(expense, id), 0);
     return <li key={id}><span className={`expense-member-avatar avatar-${index % 4}`} aria-hidden="true">{name.split(/\s+/).map(part => part[0]).slice(0, 2).join('').toUpperCase()}</span>
       <div className="expense-member-identity"><strong>{name}{isYou && <small>(You)</small>}</strong><span>Paid <CurrencyAmount amount={paid} currency={activeGroup?.currency || 'USD'} displayCurrency={displayCurrency} /></span></div>
       <span className={`expense-member-role ${isOwner ? 'is-owner' : ''}`}>{isOwner ? 'Owner' : member.role === 'admin' ? 'Admin' : 'Member'}</span>

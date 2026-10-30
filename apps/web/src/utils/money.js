@@ -18,6 +18,7 @@ export function equalSplits(amount, ids) {
 export function expenseInput(expense) {
   if (!expense?.original) return expense;
   return {...expense, amount: expense.original.amount, currency: expense.original.currency,
+    payers: expense.original.payers || expense.payers,
     splits: expense.original.splits, split_type: expense.original.split_type,
     split_details: expense.original.split_details};
 }
@@ -32,6 +33,14 @@ export function expensePayload(data, { groupId, editingExpense, currency = 'USD'
   const paidBy = data.paidBy;
   if (!paidBy) throw new Error('Select a payer.');
   if (!editingExpense || String(editingExpense.paid_by || editingExpense.paidBy) !== String(paidBy)) payload.paid_by = String(paidBy);
+  if (data.payers) {
+    const saved = editingExpense?.payers || [{user_id: editingExpense?.paid_by, amount: editingExpense?.amount}];
+    const unchanged = editingExpense && (!data.currency || data.currency === editingExpense.currency)
+      && Math.round(Math.abs(Number(editingExpense.amount)) * 100) === Math.round(amount * 100)
+      && data.payers.length === saved.length && data.payers.every((row, i) =>
+        String(row.user_id) === String(saved[i].user_id) && Math.round(Number(row.amount) * 100) === Math.round(Math.abs(Number(saved[i].amount)) * 100));
+    if (!unchanged) payload.payers = data.payers;
+  }
   if (data.split_type && data.splits) {
     // A metadata edit must still work after a saved participant leaves the group.
     const saved = editingExpense?.splits || [];
@@ -49,7 +58,8 @@ export function expensePayload(data, { groupId, editingExpense, currency = 'USD'
           && (data.split_type !== 'adjustment' || Number(editingExpense.split_details?.adjustments?.[split.user_id] || 0) === Number(split.adjustment || 0));
       }) && (data.split_type !== 'itemized' || canonicalJSON(editingExpense.split_details) === canonicalJSON(data.split_details));
     if (unchanged) return payload;
-      Object.assign(payload, { amount, currency: data.currency || currency, split_type: data.split_type, splits: data.splits, split_details: data.split_details ?? null });
+      Object.assign(payload, { amount, currency: data.currency || currency, split_type: data.split_type, splits: data.splits, split_details: data.split_details ?? null,
+        ...(data.payers ? {payers: data.payers} : {}) });
     return payload;
   }
   const splitType = String(editingExpense?.split_type || 'equal').toLowerCase();

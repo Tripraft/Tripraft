@@ -4,6 +4,7 @@ import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 import ExpenseDialog from './ExpenseDialog';
 import TransactionActivity from './TransactionActivity';
 import ExpenseAmount from './ExpenseAmount';
+import { expensePayers, payerNames } from '../utils/payers';
 import {formatMoney} from '../../../utils/money';
 import DeletedTransactionActions from './DeletedTransactionActions';
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -129,7 +130,7 @@ const TransactionList = ({
   // Generate consistent color map for users
   const userColorMap = useMemo(() => {
     const colorMap = {};
-    const uniqueUserIds = [...new Set(transactions.map(t => t.paid_by || t.created_by))];
+    const uniqueUserIds = [...new Set(transactions.flatMap(t => expensePayers(t).map(row => row.user_id).concat(t.created_by || [])))];
     uniqueUserIds.forEach((userId, index) => {
       if (userId) {
         colorMap[userId] = USER_COLORS[index % USER_COLORS.length];
@@ -370,7 +371,7 @@ const TransactionList = ({
               <tbody>
                 {paginatedTransactions.map((t, index) => {
                 const isIncomeTransaction = mode === 'personal' && isPersonalIncome(t);
-                const addedByName = mode === 'group' ? getMemberName(t.paid_by) : '';
+                const addedByName = mode === 'group' ? payerNames(t, getMemberName) : '';
                 const splitType = mode === 'group' ? (t.split_type || 'EQUAL') : '';
                 const permissions = expensePermissions(t, activeGroup, currentUserId, mode);
                 const isEdited = wasEdited(t);
@@ -595,11 +596,11 @@ const TransactionList = ({
               </div>
               
               <div className="receipt-divider"></div>
-              {selectedTransaction.original && <div className="receipt-item"><span className="receipt-label">ORIGINAL RECEIPT</span><span className="receipt-value">{formatCurrency(selectedTransaction.original.amount, selectedTransaction.original.currency)} · rate {selectedTransaction.original.rate} on {selectedTransaction.original.rate_date}</span></div>}
+              {selectedTransaction.original && selectedTransaction.original.currency !== (activeGroup?.display_currency || currency) && <div className="receipt-item"><span className="receipt-label">ORIGINAL RECEIPT</span><span className="receipt-value">{formatCurrency(selectedTransaction.original.amount, selectedTransaction.original.currency)} · rate {selectedTransaction.original.rate} on {selectedTransaction.original.rate_date}</span></div>}
               
               <div className="receipt-item">
                 <span className="receipt-label">{selectedTransaction.split_type === 'reimbursement' ? 'REFUND RECEIVED BY' : 'PAID BY'}</span>
-                <span className="receipt-value">{selectedTransaction.paid_by_name || getMemberName(selectedTransaction.paid_by)}</span>
+                <span className="receipt-value">{payerNames(selectedTransaction, getMemberName)}</span>
               </div>
               
               <div className="receipt-item">
@@ -612,6 +613,9 @@ const TransactionList = ({
               <div className="receipt-divider"></div>
               
               <div className="receipt-breakdown">
+                {expensePayers(selectedTransaction).length > 1 && <><div className="receipt-label">PAYMENT BREAKDOWN</div>{expensePayers(selectedTransaction).map(payment => <div key={payment.user_id} className="receipt-split-item">
+                  <span className="split-name">{payment.user_name || getMemberName(payment.user_id)}</span><span className="split-amt"><ExpenseAmount expense={selectedTransaction} payment={payment} currency={currency} displayCurrency={activeGroup?.display_currency || currency} /></span>
+                </div>)}</>}
                 {selectedTransaction.split_type === 'itemized' && selectedTransaction.split_details?.items?.map((item, index) => <div key={`item-${index}`} className="receipt-split-item">
                   <span className="split-name">{item.name}<small style={{ display: 'block' }}>{item.user_ids.map(id => getMemberName(id)).join(', ')}</small></span>
                   <span className="split-amt"><ExpenseAmount expense={selectedTransaction} sourceAmount={item.amount} currency={currency} displayCurrency={activeGroup?.display_currency || currency} /></span>

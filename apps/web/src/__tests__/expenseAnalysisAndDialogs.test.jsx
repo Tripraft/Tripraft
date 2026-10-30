@@ -81,7 +81,7 @@ it('retains a failed new-group form and permits a corrected retry', async () => 
   expect(screen.getByLabelText('Group name')).toHaveValue('  Goa  ');
   expect(close).not.toHaveBeenCalled();
   fireEvent.click(within(screen.getByRole('dialog', { name: 'New group' })).getByRole('button', { name: 'Create group' }));
-  expect(create).toHaveBeenLastCalledWith({ name: 'Goa', currency: 'USD' });
+  expect(create).toHaveBeenLastCalledWith({ name: 'Goa', currency: 'INR' });
   await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
 });
 

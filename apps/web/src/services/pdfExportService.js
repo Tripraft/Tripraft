@@ -2,6 +2,7 @@
 import {jsPDF} from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {isPersonalIncome} from '../features/expenses/utils/personalTransactions';
+import {expensePayers} from '../features/expenses/utils/payers';
 
 const INK = [23, 37, 58], MUTED = [91, 106, 124], ACCENT = [62, 73, 153];
 const numeric = value => Number.isFinite(Number(value)) ? Number(value) : 0;
@@ -91,7 +92,10 @@ export function buildExpensePDF({mode, groupName = 'Personal', expenses = [], se
       ...(receipt ? [`Original: ${money(receipt.amount, receipt.currency)}${receipt.rate ? ` | Rate: ${receipt.rate}${receipt.rate_date ? ` (${receipt.rate_date})` : ''}` : ''}`] : [])].join('\n');
   };
   const rows = active.map(row => {
-    if (group) return [dateLabel(day(row)), description(row), row.paid_by_name || memberName(row.paid_by || row.paidBy, members, row.payer || row.paid_by_user), money(row.amount, currency)];
+    if (group) return [dateLabel(day(row)), description(row), expensePayers(row).map(payment => {
+      const source = row.original?.payers?.find(entry => String(entry.user_id) === String(payment.user_id));
+      return `${payment.user_name || memberName(payment.user_id, members, String(payment.user_id) === String(row.paid_by || row.paidBy) ? row.payer || row.paid_by_user : undefined)}${expensePayers(row).length > 1 ? `: ${money(payment.amount, currency)}${source ? ` (${money(source.amount, row.original.currency)})` : ''}` : ''}`;
+    }).join('\n'), money(row.amount, currency)];
     const credit = isPersonalIncome(row), amount = numeric(row.amount);
     runningCents += Math.round(amount * 100) * (credit ? 1 : -1);
     return [dateLabel(day(row)), description(row), credit ? '-' : money(amount, currency), credit ? money(amount, currency) : '-', money(runningCents / 100, currency)];

@@ -3,7 +3,7 @@ import secrets
 from datetime import date, datetime, timezone
 
 from marshmallow import ValidationError as SchemaError
-from sqlalchemy import Date, case, cast, func, literal, select, union_all
+from sqlalchemy import Date, cast, func, literal, select, union_all
 from sqlalchemy.orm import joinedload, selectinload, object_session
 
 from app.core.config import Config
@@ -78,8 +78,9 @@ def group_summaries(session, group_ids, user_id):
                       (category if category is not None else literal(None)).label('category'),
                       (day if day is not None else cast(literal(None), Date)).label('day')).where(*filters)
 
+    from app.expenses.services.payer_allocations import member_paid_expression
     stats = metric('stats', func.sum(Expense.amount),
-                   func.sum(case((Expense.paid_by == identifier(user_id), Expense.amount), else_=0)),
+                   func.sum(member_paid_expression(identifier(user_id))),
                    func.count(Expense.id), func.min(Expense.expense_date), func.max(Expense.expense_date)
                    ).group_by(Expense.group_id)
     shares = metric('share', func.sum(ExpenseSplit.amount)).join(

@@ -2,6 +2,7 @@
 export const ANALYSIS_COLORS = ['#8b5cf6', '#38bdf8', '#34d399', '#fbbf24', '#f472b6', '#a78bfa', '#fb7185', '#2dd4bf'];
 import { isPersonalIncome } from './personalTransactions';
 import { expenseParticipation } from './expensePeople';
+import { paidAmount } from './payers';
 
 export function expenseDay(expense) {
   const raw = expense.expense_date || expense.income_date || expense.date;
@@ -17,6 +18,20 @@ export function expenseDay(expense) {
 
 export function calendarDay(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+// Keep the chart on a recent, complete fortnight without changing period totals or averages.
+export function dailyChartWindow(daily, endDay, startDay) {
+  const first = new Date(`${endDay}T12:00:00Z`);
+  first.setUTCDate(first.getUTCDate() - 13);
+  const firstDay = startDay && startDay > first.toISOString().slice(0, 10) ? startDay : first.toISOString().slice(0, 10);
+  const totals = new Map(daily.map(day => [day.date, day.amount]));
+  const length = Math.max(0, Math.round((new Date(`${endDay}T12:00:00Z`) - new Date(`${firstDay}T12:00:00Z`)) / 86400000) + 1);
+  return Array.from({length}, (_, index) => {
+    const date = new Date(`${firstDay}T12:00:00Z`); date.setUTCDate(date.getUTCDate() + index);
+    const day = date.toISOString().slice(0, 10);
+    return {date: day, amount: totals.get(day) || 0};
+  });
 }
 
 export function analyzeExpenses(expenses, { range = 'all', scope = 'group', mode = 'group', userId, now = new Date(), startDate, endDate } = {}) {
@@ -62,7 +77,7 @@ export function analyzeExpenses(expenses, { range = 'all', scope = 'group', mode
     return {date: day, amount: dayTotals[day] || 0};
   });
   const groupTotal = active.reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
-  const paid = active.filter(expense => String(expense.paid_by) === String(userId)).reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0);
+  const paid = active.reduce((sum, expense) => sum + paidAmount(expense, userId), 0);
   return { entries, total, incomeTotal, incomeCount: income.length, netBalance: incomeTotal - total,
     categoryData, daily, startDay: firstDay, endDay, invalidRange, dailyAverage: duration ? total / duration : 0,
     topExpenses: entries.filter(expense => expense.value > 0).sort((a, b) => b.value - a.value).slice(0, 5),

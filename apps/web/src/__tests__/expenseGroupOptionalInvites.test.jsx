@@ -21,7 +21,7 @@ it('creates a group without sending any invitations when the optional field is e
   expect(screen.getByText(/spam or junk folder/)).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Create group' }));
   await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
-  expect(create).toHaveBeenCalledWith({ name: 'Weekend trip', currency: 'USD' });
+  expect(create).toHaveBeenCalledWith({ name: 'Weekend trip', currency: 'INR' });
   expect(expenseApi.sendInvitation).not.toHaveBeenCalled();
 });
 

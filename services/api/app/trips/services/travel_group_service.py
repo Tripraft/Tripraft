@@ -812,15 +812,13 @@ class GroupService:
                         per_person = total_spent / max(1, member_count)
                         
                         # Per-member spend via SQL GROUP BY instead of N+1 loop
-                        member_totals = expense_session.query(
-                            Expense.paid_by,
-                            func.sum(Expense.amount).label('total'),
-                        ).filter(
+                        from app.expenses.services.payer_allocations import paid_totals
+                        member_totals = paid_totals(expense_session.query(Expense).filter(
                             Expense.group_id == group.expense_group_id,
                             Expense.is_deleted == False,
-                        ).group_by(Expense.paid_by).all()
+                        )).all()
 
-                        payer_ids = [row.paid_by for row in member_totals]
+                        payer_ids = [uid for uid, _ in member_totals]
                         users_map = {}
                         if payer_ids:
                             users_list = expense_session.query(
@@ -830,11 +828,11 @@ class GroupService:
 
                         member_expenses = [
                             {
-                                'user_id': row.paid_by,
-                                'email': users_map.get(row.paid_by, ''),
-                                'total_spent': float(row.total),
+                                'user_id': uid,
+                                'email': users_map.get(uid, ''),
+                                'total_spent': float(total),
                             }
-                            for row in member_totals
+                            for uid, total in member_totals
                         ]
                         
                         # Get user's balance/share from expense group

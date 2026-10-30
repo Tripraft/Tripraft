@@ -2,11 +2,12 @@
 import React from 'react';
 import CurrencyAmount from './CurrencyAmount';
 
-export default function ExpenseAmount({expense, split, sourceAmount, currency = 'USD', displayCurrency = currency}) {
+export default function ExpenseAmount({expense, split, payment, sourceAmount, currency = 'USD', displayCurrency = currency}) {
   const source = expense?.original;
-  const sourceSplit = split && source?.splits?.find(row => String(row.user_id) === String(split.user_id));
-  const amount = sourceAmount != null ? Number(sourceAmount) * (source ? Number(source.rate) : 1) : split ? split.amount : expense?.amount;
-  const originalAmount = sourceAmount != null && source ? sourceAmount : split ? sourceSplit?.amount : source?.amount;
+  const allocation = payment || split;
+  const sourceSplit = allocation && (payment ? source?.payers : source?.splits)?.find(row => String(row.user_id) === String(allocation.user_id));
+  const amount = sourceAmount != null ? Number(sourceAmount) * (source ? Number(source.rate) : 1) : allocation ? allocation.amount : expense?.amount;
+  const originalAmount = sourceAmount != null && source ? sourceAmount : allocation ? sourceSplit?.amount ?? (Number(allocation.amount) === 0 && source ? 0 : undefined) : source?.amount;
   const original = originalAmount != null ? {
     currency: source.currency,
     amount: Math.abs(Number(originalAmount)) * (Number(amount) < 0 ? -1 : 1),

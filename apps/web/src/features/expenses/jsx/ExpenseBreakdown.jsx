@@ -3,6 +3,7 @@ import React from 'react';
 import { ChevronDown } from 'lucide-react';
 import useMoneyDisplay from '../../../hooks/useMoneyDisplay';
 import ExpenseAmount from './ExpenseAmount';
+import { expensePayers, payerNames } from '../utils/payers';
 import { expensePeople, expenseParticipation } from '../utils/expensePeople';
 import '../css/ExpenseBreakdown.css';
 
@@ -23,11 +24,13 @@ export default function ExpenseBreakdown({ expenses = [], members = [], currentU
       return <li key={expense.id || expense.expense_id || index}><details>
         <summary><div className="expense-breakdown-description"><strong>{expense.description || 'Expense'}</strong>
           <small>{expense.category || 'Other'}{expense.expense_date ? ` · ${String(expense.expense_date).slice(0, 10)}` : ''}{typeof where === 'string' && where ? ` · ${where}` : ''}</small>
-          <small>{expense.split_type === 'reimbursement' ? 'Refund received by' : 'Paid by'} {name(expense.paid_by)}</small>
+          <small>{expense.split_type === 'reimbursement' ? 'Refund received by' : 'Paid by'} {payerNames(expense, name)}</small>
           {selected && !share.involved && <small className="expense-not-involved">{notInvolved(selectedUserId)}</small>}
         </div><div className="expense-breakdown-amount"><strong><ExpenseAmount expense={expense} split={selected ? {user_id: selectedUserId, amount: share.amount} : undefined} currency={currency} displayCurrency={displayCurrency} /></strong>
           {selected && <small>{Number(share.percent.toFixed(2))}% · {own ? 'Your share' : `${name(selectedUserId)}'s share`}</small>}
           <small>{selected ? `Expense total: ${money(expense.amount)}` : 'View everyone’s shares'}</small></div><ChevronDown className="expense-breakdown-chevron" size={16} aria-hidden="true" /></summary>
+        {expensePayers(expense).length > 1 && <dl aria-label={`Payments for ${expense.description || 'expense'}`}>{expensePayers(expense).map(payment =>
+          <div key={payment.user_id}><dt>{name(payment.user_id)} · {expense.split_type === 'reimbursement' ? 'Received' : 'Paid'}</dt><dd><ExpenseAmount expense={expense} payment={payment} currency={currency} displayCurrency={displayCurrency} /></dd></div>)}</dl>}
         <dl aria-label={`Shares for ${expense.description || 'expense'}`}>{people.map(person => {
           const participation = expenseParticipation(expense, person.id);
           return <div key={person.id}><dt>{person.name}{String(person.id) === String(currentUserId) ? ' (You)' : ''}

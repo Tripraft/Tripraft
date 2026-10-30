@@ -1,5 +1,5 @@
 // Purpose: Shows mutual friends and shared groups without exposing anyone else's private nickname or groups.
-import React, {useId, useState} from 'react';
+import React, {useState} from 'react';
 import {useInfiniteQuery} from '@tanstack/react-query';
 import expenseApi from '../../../services/expenseApi';
 
@@ -34,19 +34,5 @@ export default function ExpenseConnections({userId}) {
         {friends.hasNextPage && <button disabled={friends.isFetchingNextPage} onClick={() => friends.fetchNextPage()}>{friends.isFetchingNextPage ? 'Loading...' : 'More friends'}</button>}
       </>}
     </div>}
-  </details>;
-}
-
-export function PaymentGraph({payments, money}) {
-  const marker = `payment-${useId().replace(/:/g, '')}`;
-  const [open, setOpen] = useState(false);
-  if (!payments.length) return null;
-  return <details className="expense-member-settings" onToggle={event => setOpen(event.currentTarget.open)}><summary>Who pays whom</summary>{open && <><p>Arrows show suggested payments from payer to recipient, based on the current outstanding balances.</p>
-    <svg viewBox={`0 0 760 ${payments.length * 65 + 30}`} role="img" aria-label="Suggested group payment graph" style={{width: '100%', maxHeight: 550}}>
-      <defs><marker id={marker} markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#8b5cf6" /></marker></defs>
-      {payments.map((payment, index) => <g key={`${payment.from}:${payment.to}`}><text x="15" y={48 + index * 65} fontSize="14">{payment.fromName.slice(0, 24)}</text>
-        <line x1="210" x2="540" y1={44 + index * 65} y2={44 + index * 65} stroke="#8b5cf6" strokeWidth="2" markerEnd={`url(#${marker})`} />
-        <text x="230" y={30 + index * 65} fontSize="12">{money(payment.amount)}</text><text x="560" y={48 + index * 65} fontSize="14">{payment.toName.slice(0, 24)}</text></g>)}
-    </svg></>}
   </details>;
 }
