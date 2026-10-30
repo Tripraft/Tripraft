@@ -430,7 +430,7 @@ def test_employee_and_recovery_sibling_upgrades_preserve_data(tmp_path, monkeypa
                                {'id': user_id, 'email': 'sibling@example.test', 'password': 'unused'})
         command.upgrade(config, 'head')
         _assert_current_schema(engine, config)
-        assert ScriptDirectory.from_config(config).get_heads() == ['c28ed7f80912']
+        assert ScriptDirectory.from_config(config).get_heads() == ['d39fe8091a23']
         with engine.connect() as connection:
             assert connection.execute(text('SELECT email, password_reset_version FROM users WHERE id=:id'),
                                       {'id': user_id}).one() == ('sibling@example.test', None)

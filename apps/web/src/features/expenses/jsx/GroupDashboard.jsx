@@ -47,21 +47,21 @@ function SpendSparkline({ daily }) {
   </svg></div>;
 }
 
-export default function GroupDashboard({ groups, currentUserId, loading, error, onSelect, onCreate, onRetry, notificationCounts = {}, onNotifications }) {
+export default function GroupDashboard({ groups, currentUserId, loading, error, onSelect, onCreate, createButtonRef, onRetry, notificationCounts = {}, onNotifications }) {
   const [search, setSearch] = useState('');
   const visible = groups.filter(group => (group.name || '').toLowerCase().includes(search.toLowerCase().trim()));
   return <section className="expense-groups-dashboard" aria-labelledby="expense-groups-title">
     <div className="expense-groups-heading">
       <div><span className="expense-eyebrow">BETTER TOGETHER</span><h2 id="expense-groups-title">Your groups</h2>
         <p>{loading ? 'Loading your groups…' : groups.length ? `${groups.length} group${groups.length === 1 ? '' : 's'} to share the journey with.` : 'Shared adventures. Simple expenses.'}</p></div>
-      {groups.length > 0 && <button className="expense-primary-button" onClick={onCreate}><Plus size={18} />New group</button>}
+      {groups.length > 0 && <button ref={createButtonRef} className="expense-primary-button" onClick={onCreate}><Plus size={18} />New group</button>}
     </div>
     {error ? <div className="expense-groups-empty" role="alert"><h3>We couldn’t load your groups</h3><p>{error}</p><button className="expense-secondary-button" onClick={onRetry}>Try again</button></div>
       : loading ? <div className="expense-group-grid" role="status" aria-label="Loading groups">{[0, 1, 2].map(id => <div className="expense-group-skeleton" key={id} />)}</div>
       : !groups.length ? <div className="expense-groups-empty">
         <span className="expense-empty-icon"><Users size={32} /></span><h3>You don’t have any groups yet</h3>
         <p>Create a group to split expenses, track balances, and settle up with your travel crew.</p>
-        <button className="expense-primary-button" onClick={onCreate}><Plus size={18} />New group</button>
+        <button ref={createButtonRef} className="expense-primary-button" onClick={onCreate}><Plus size={18} />New group</button>
       </div> : <>
         <label className="expense-group-search"><Search size={18} /><input type="search" placeholder="Search groups…" aria-label="Search groups" value={search} onChange={event => setSearch(event.target.value)} /></label>
         <div className="expense-group-grid">

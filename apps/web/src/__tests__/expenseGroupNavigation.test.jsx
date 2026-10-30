@@ -2,7 +2,7 @@
 jest.mock('../services/currencyApi', () => ({getCurrencies: jest.fn().mockResolvedValue({currencies: [{code: 'USD', name: 'US Dollar'}, {code: 'INR', name: 'Indian Rupee'}]}), getExchangeRate: jest.fn(async (base, quote) => ({base, quote, rate: base === 'USD' ? 80 : 0.0125}))}));
 import React from 'react';
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import ExpenseManager from '../features/expenses/jsx/ExpenseManager';
 jest.mock('../hooks/useExpenseLiveUpdates', () => ({ __esModule: true, default: jest.fn() }));
@@ -17,6 +17,7 @@ jest.mock('../hooks/useExpenseQuery', () => ({
 }));
 jest.mock('../services/expenseApi', () => ({ __esModule: true, default: {
   createGroup: jest.fn(), acceptInvitation: jest.fn(), createExpense: jest.fn(), getUser: jest.fn(), updateUser: jest.fn(),
+  sendInvitation: jest.fn(), getFriends: jest.fn(),
 } }));
 jest.mock('../services/pdfExportService', () => ({ generateExpensePDF: jest.fn() }));
 jest.mock('../features/expenses/jsx/GroupManager', () => function Group(props) {
@@ -69,6 +70,7 @@ beforeEach(() => {
   expenseApi.acceptInvitation.mockResolvedValue({ success: true, data: { group: { id: 'joined-group' }, groups } });
   expenseApi.getUser.mockResolvedValue({success: true, data: {user: {personal_display_currency: 'USD'}}});
   expenseApi.updateUser.mockImplementation(async updates => ({success: true, data: {user: updates}}));
+  expenseApi.getFriends.mockResolvedValue({data: {friends: [], has_more: false}});
 });
 afterEach(() => client.clear());
 
@@ -179,6 +181,23 @@ it('opens a newly created group and preserves it in the URL', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Create group' }));
   expect(await screen.findByText('Group expenses: new-group')).toBeInTheDocument();
   expect(screen.getByText('/expenses/friend-uuid/group?groupId=new-group')).toBeInTheDocument();
+});
+
+it('opens the group and closes the creation dialog while its invitation is still sending', async () => {
+  let finish;
+  expenseApi.sendInvitation.mockReturnValue(new Promise(resolve => { finish = resolve; }));
+  render(<Page />);
+  fireEvent.click(screen.getByRole('button', {name: 'New group'}));
+  fireEvent.change(screen.getByLabelText('Group name'), {target: {value: 'New trip'}});
+  fireEvent.change(screen.getByLabelText('Invite by email (optional)'), {target: {value: 'friend@example.test'}});
+  fireEvent.click(screen.getByRole('button', {name: 'Create group and invite'}));
+  expect(await screen.findByText('Group expenses: new-group')).toBeInTheDocument();
+  await waitFor(() => expect(screen.queryByRole('dialog', {name: 'New group'})).toBeNull());
+  expect(screen.getByRole('heading', {name: 'Sending invitations'})).toBeInTheDocument();
+  expect(screen.getByText('/expenses/friend-uuid/group?groupId=new-group')).toBeInTheDocument();
+  expect(expenseApi.createGroup).toHaveBeenCalledTimes(1);
+  await act(async () => finish({data: {invitation: {id: 'invite'}, email_status: 'sent'}}));
+  expect(screen.getByText('1 of 1 sent')).toBeInTheDocument();
 });
 
 it('shows the group dashboard without automatically opening the first group', () => {
@@ -294,17 +313,54 @@ it('shows group quick actions after scrolling and opens settlement or the expens
     expenses: [], balances: [], settlements: [], invitations: [], refetch: jest.fn()}));
   const original = global.IntersectionObserver;
   let observe;
-  global.IntersectionObserver = jest.fn(callback => {observe = callback; return {observe: jest.fn(), disconnect: jest.fn()};});
+  const observeButton = jest.fn();
+  global.IntersectionObserver = jest.fn(callback => {observe = callback; return {observe: observeButton, disconnect: jest.fn()};});
   try {
     render(<Page />);
+    expect(observeButton).toHaveBeenLastCalledWith(screen.getByRole('button', {name: 'Add expense'}));
     expect(screen.queryByRole('group', {name: 'Group quick actions'})).toBeNull();
-    act(() => observe([{boundingClientRect: {top: -300, bottom: -10}}]));
-    const actions = screen.getByRole('group', {name: 'Group quick actions'});
-    fireEvent.click(actions.querySelectorAll('button')[1]);
+    act(() => observe([{boundingClientRect: {top: -43, bottom: 1}}]));
+    expect(screen.queryByRole('group', {name: 'Group quick actions'})).toBeNull();
+    act(() => observe([{boundingClientRect: {top: -45, bottom: -1}}]));
+    expect(screen.getByRole('group', {name: 'Group quick actions'})).toBeInTheDocument();
+    act(() => observe([{boundingClientRect: {top: 10, bottom: 54}}]));
+    expect(screen.queryByRole('group', {name: 'Group quick actions'})).toBeNull();
+    act(() => observe([{boundingClientRect: {top: -45, bottom: -1}}]));
+    const visibleActions = screen.getByRole('group', {name: 'Group quick actions'});
+    fireEvent.click(within(visibleActions).getByRole('button', {name: 'Settle up'}));
     expect(screen.getByRole('tab', {name: 'Settle Up'})).toHaveAttribute('aria-selected', 'true');
     expect(screen.getByRole('tab', {name: 'Settle Up'})).toHaveFocus();
-    fireEvent.click(actions.querySelector('button'));
+    fireEvent.click(within(screen.getByRole('group', {name: 'Group quick actions'})).getByRole('button', {name: 'Add expense'}));
     expect(screen.getByRole('dialog', {name: 'Transaction'})).toBeInTheDocument();
     expect(screen.queryByRole('group', {name: 'Group quick actions'})).toBeNull();
+  } finally {global.IntersectionObserver = original;}
+});
+
+it.each([[groups], [[]]])('floats group creation only after its original button scrolls away (%j)', async listedGroups => {
+  useGroups.mockReturnValue({groups: listedGroups, refetch: jest.fn()});
+  const original = global.IntersectionObserver;
+  let observe;
+  const observeButton = jest.fn();
+  const disconnect = jest.fn();
+  global.IntersectionObserver = jest.fn(callback => {observe = callback; return {observe: observeButton, disconnect};});
+  try {
+    const view = render(<Page entry="/expenses/friend-uuid/group" />);
+    expect(observeButton).toHaveBeenLastCalledWith(screen.getByRole('button', {name: 'New group'}));
+    expect(screen.queryByRole('group', {name: 'Group quick actions'})).toBeNull();
+    // The primary action below the viewport must not trigger a duplicate.
+    act(() => observe([{boundingClientRect: {top: 1000, bottom: 1044}}]));
+    expect(screen.queryByRole('group', {name: 'Group quick actions'})).toBeNull();
+    act(() => observe([{boundingClientRect: {top: -45, bottom: -1}}]));
+    expect(screen.getByRole('button', {name: 'Create group'})).toBeInTheDocument();
+    act(() => observe([{boundingClientRect: {top: 10, bottom: 54}}]));
+    expect(screen.queryByRole('group', {name: 'Group quick actions'})).toBeNull();
+    act(() => observe([{boundingClientRect: {top: -45, bottom: -1}}]));
+    await act(async () => {fireEvent.click(screen.getByRole('button', {name: 'Create group'}));});
+    expect(screen.getByRole('dialog', {name: 'New group'})).toBeInTheDocument();
+    expect(screen.queryByRole('group', {name: 'Group quick actions'})).toBeNull();
+    fireEvent.click(screen.getByRole('button', {name: 'Cancel'}));
+    expect(screen.getByRole('group', {name: 'Group quick actions'})).toBeInTheDocument();
+    view.unmount();
+    expect(disconnect).toHaveBeenCalled();
   } finally {global.IntersectionObserver = original;}
 });

@@ -318,6 +318,8 @@ const GroupManager = ({
     setResendingInvitationId(id);
     try {
       const result = unwrapEnvelope(await expenseApi.resendInvitation(id));
+      if (result.invitation) setPendingInvitations(previous => previous.map(row =>
+        (row.invitation_id || row.id) === id ? {...row, ...result.invitation} : row));
       const messages = {
         sent: 'Invitation email sent.',
         queued: 'Invitation email queued.',
@@ -395,7 +397,8 @@ const GroupManager = ({
       const declined = invitation.status?.toLowerCase() === 'declined';
       const expired = invitationExpired(invitation);
       const canRetry = permissions.can_invite && (String(invitation.invited_by) === String(userId) || permissions.can_update_group);
-      return <li key={id}><div className="expense-member-invitation-heading"><strong>{invitation.invited_email || invitation.invitee_email || invitation.invited_username || 'Invited member'}</strong><span>{declined ? 'Declined' : expired ? 'Expired' : 'Pending'}</span></div>
+      const delivery = {queued: 'Email queued', failed: 'Email failed', disabled: 'Email unavailable', sent: 'Awaiting acceptance'}[invitation.email_status] || 'Delivery unconfirmed';
+      return <li key={id}><div className="expense-member-invitation-heading"><strong>{invitation.invited_email || invitation.invitee_email || invitation.invited_username || 'Invited member'}</strong><span>{declined ? 'Declined' : expired ? 'Expired' : delivery}</span></div>
         <small>Invited {formatDateLocal(invitation.created_at, { year: 'numeric', month: 'short', day: 'numeric' })}</small>
         <div className="expense-member-invitation-actions">{!declined && !expired && <button onClick={() => handleCopyInvitation(invitation)}><Link size={13} />Copy invite link</button>}
           {!declined && !expired && canRetry && <button disabled={Boolean(resendingInvitationId)} onClick={() => handleResendInvitation(invitation)}><Send size={13} />{resendingInvitationId === id ? 'Sending...' : 'Resend email'}</button>}

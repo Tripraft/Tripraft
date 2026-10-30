@@ -140,6 +140,8 @@ class InvitationServiceSQL:
             invitation.invited_by = member.user_id
             invitation.invitee_user_id = user.id if user else None
             invitation.status = 'pending'
+            invitation.email_status = 'queued'
+            invitation.email_sent_at = None
             invitation.created_at = _now()
             invitation.expires_at = _now() + timedelta(days=InvitationServiceSQL.INVITATION_EXPIRY_DAYS)
             invitation.responded_at = None
@@ -156,7 +158,9 @@ class InvitationServiceSQL:
         email_status = InvitationServiceSQL._send_invitation_email(
             invitee_email, inviter_name, group_name, invitation_id, data['created_at'],
         )
-        return {'invitation': data, 'email_status': email_status,
+        from app.notifications.email.expense_invitations import record_invitation_delivery
+        data['email_status'] = record_invitation_delivery(invitation_id, data['created_at'], email_status)
+        return {'invitation': data, 'email_status': data['email_status'],
                 'invitation_link': expense_invitation_link(invitation_id),
                 'message': 'Invitation saved successfully'}
 
@@ -177,6 +181,7 @@ class InvitationServiceSQL:
                 raise ConflictError('Only pending invitations can be resent')
             if _expired(invitation):
                 raise GoneError('Invitation has expired; create a new invitation')
+            invitation.email_status = 'queued'
             data = _invitation_dict(invitation)
             inviter_name = invitation.inviter.display_name or invitation.inviter.email.split('@')[0]
             group_name = group.name
@@ -185,7 +190,9 @@ class InvitationServiceSQL:
         email_status = InvitationServiceSQL._send_invitation_email(
             data['invitee_email'], inviter_name, group_name, data['id'], data['created_at'],
         )
-        return {'invitation': data, 'email_status': email_status}
+        from app.notifications.email.expense_invitations import record_invitation_delivery
+        data['email_status'] = record_invitation_delivery(data['id'], data['created_at'], email_status)
+        return {'invitation': data, 'email_status': data['email_status']}
 
     @staticmethod
     @service_result
@@ -196,6 +203,7 @@ class InvitationServiceSQL:
                 raise NotFoundError('User not found')
             query = session.query(Invitation).join(Group).filter(
                 func.lower(Invitation.invitee_email) == user.email.lower(), Group.is_active.is_(True),
+                Invitation.email_sent_at.isnot(None),
             ).options(joinedload(Invitation.group), joinedload(Invitation.inviter))
             if group_id is not None:
                 query = query.filter(Invitation.group_id == identifier(group_id))
@@ -218,6 +226,7 @@ class InvitationServiceSQL:
             # error while avoiding a separate user lookup round trip.
             rows = session.query(User, Invitation).outerjoin(Invitation, and_(
                 func.lower(Invitation.invitee_email) == func.lower(User.email), Invitation.status == 'pending',
+                Invitation.email_sent_at.isnot(None),
                 active, ~membership,
             )).filter(User.id == uid).options(
                 joinedload(Invitation.group), joinedload(Invitation.inviter),

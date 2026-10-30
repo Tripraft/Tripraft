@@ -20,7 +20,7 @@ def no_invitation_delivery(monkeypatch):
     from app.auth.services.auth_service import email_service
     monkeypatch.setattr(email_service, 'send_verification', lambda *args: True)
     # State-transition tests never send mail or contact a task broker.
-    monkeypatch.setattr(InvitationServiceSQL, '_send_invitation_email', lambda *args: 'disabled')
+    monkeypatch.setattr(InvitationServiceSQL, '_send_invitation_email', lambda *args: 'sent')
 
 
 def expense(api, gid, payer, amount='0.02', **extra):
