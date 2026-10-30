@@ -715,19 +715,14 @@ const ExpenseManager = () => {
         onNotifications={groupId => setNotificationView({groupId})}
         onSelect={handleGroupChange} onCreate={() => setShowNewGroup(true)} onRetry={refetchGroups}
       />}
-      {mode === 'group' && activeGroupId && !groupDetailError && <div className="expense-active-notifications">
-        <button className="expense-group-notifications" aria-haspopup="dialog"
-          aria-label={`Group updates, ${notificationSummary.data?.group_counts?.[activeGroupId] || 0} unread`}
-          onClick={() => setNotificationView({groupId: activeGroupId})}><Bell size={17} />Group updates
-          <NotificationBadge count={notificationSummary.data?.group_counts?.[activeGroupId]} /></button>
-      </div>}
       {mode === 'group' && activeGroupId && !groupDetailError && <div ref={addTransactionRef}>
         <GroupDetailHeader group={headerGroup || {name:'Group overview', currency:'USD'}} members={activeGroupData ? activeGroupMembers || [] : headerGroup?.members || []}
           overview={groupOverview(headerGroup, currentUser?.uid || currentUser?.user_id || currentUser?.id,
             activeGroupData ? getCurrentTransactions() : undefined, activeGroupData ? getCurrentBalances() : undefined)}
           loading={!headerGroup} busy={mutationLoading || groupDetailLoading || !activeGroupData}
           onBack={() => {setExpenseView('group'); refetchGroups();}} onCreate={() => setShowNewGroup(true)}
-          onAdd={handleOpenModal} onSettle={() => openGroupTab('settleup')} />
+          onAdd={handleOpenModal} onSettle={() => openGroupTab('settleup')}
+          onActivity={() => openGroupTab('transactions')} activityCount={notificationSummary.data?.group_counts?.[activeGroupId] || 0} />
       </div>}
       {mode === 'group' && activeGroupId && !activeGroupData && !groupDetailError && <GroupSummaryCards pending
         currency={headerGroup?.currency || 'USD'} displayCurrency={headerGroup?.display_currency || headerGroup?.currency || 'USD'} />}

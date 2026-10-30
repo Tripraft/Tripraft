@@ -2512,21 +2512,45 @@
         "type": "object"
       },
       "ReadExpenseNotifications": {
-        "properties": {
-          "ids": {
-            "items": {
-              "format": "uuid",
-              "type": "string"
+        "oneOf": [
+          {
+            "additionalProperties": false,
+            "properties": {
+              "ids": {
+                "items": {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                "maxItems": 100,
+                "minItems": 1,
+                "type": "array"
+              }
             },
-            "maxItems": 100,
-            "minItems": 1,
-            "type": "array"
+            "required": [
+              "ids"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": false,
+            "properties": {
+              "all": {
+                "enum": [
+                  true
+                ],
+                "type": "boolean"
+              },
+              "group_id": {
+                "format": "uuid",
+                "type": "string"
+              }
+            },
+            "required": [
+              "all"
+            ],
+            "type": "object"
           }
-        },
-        "required": [
-          "ids"
-        ],
-        "type": "object"
+        ]
       },
       "ReadExpenseNotificationsResponse": {
         "properties": {

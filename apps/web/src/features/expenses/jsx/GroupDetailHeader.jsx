@@ -1,13 +1,14 @@
 // Purpose: Renders the selected group's members, overview figures, navigation and permission-aware add/settle actions.
 import React from 'react';
-import { ArrowLeft, Plus, Handshake } from 'lucide-react';
+import { ArrowLeft, Plus, Handshake, Bell } from 'lucide-react';
 import useExchangeRate from '../../../hooks/useExchangeRate';
 import { formatMoney } from '../../../utils/money';
 import { groupDateRange } from '../utils/groupOverview';
 import { GroupPosition, MemberAvatars } from './GroupDashboard';
 import CurrencyChangeStatus from './CurrencyChangeStatus';
+import {NotificationBadge} from './ExpenseNotifications';
 
-export default function GroupDetailHeader({ group, members, overview, busy, loading = false, onBack, onCreate, onAdd, onSettle }) {
+export default function GroupDetailHeader({ group, members, overview, busy, loading = false, onBack, onCreate, onAdd, onSettle, onActivity, activityCount = 0 }) {
   const currency = group.currency || 'USD';
   const displayCurrency = group.display_currency || currency;
   const exchange = useExchangeRate(currency, displayCurrency);
@@ -17,7 +18,8 @@ export default function GroupDetailHeader({ group, members, overview, busy, load
   return <>
     <div className="expense-group-backbar">
       <button className="expense-back-button" aria-label="Back to all groups" onClick={onBack}><ArrowLeft size={20} /></button>
-      <div className="expense-detail-title"><h2>{group.name}</h2><span><MemberAvatars members={members} />{loading ? 'Loading members…' : `${members.length} member${members.length === 1 ? '' : 's'}`}</span></div>
+      <div className="expense-detail-title"><div className="expense-detail-heading"><h2>{group.name}</h2>{onActivity && <button className="expense-group-notifications" disabled={loading}
+        aria-label={`Group activity${activityCount ? `, ${activityCount} unread` : ''}`} onClick={onActivity}><Bell size={17} />Group activity<NotificationBadge count={activityCount} /></button>}</div><span><MemberAvatars members={members} />{loading ? 'Loading members…' : `${members.length} member${members.length === 1 ? '' : 's'}`}</span></div>
       <span className="expense-detail-dates">{groupDateRange(group.start_date || group.trip_start_date || overview.start, group.end_date || group.trip_end_date || overview.end)}</span>
       <button className="expense-secondary-button" onClick={onCreate}><Plus size={16} />New group</button>
     </div>

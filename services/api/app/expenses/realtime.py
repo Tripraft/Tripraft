@@ -24,6 +24,11 @@ def _user_room(user_id):
     return 'expense-user:%s' % user_id
 
 
+def stage_inbox_change(session, user_id):
+    """Bulk acknowledgements publish only after their transaction commits."""
+    session.info.setdefault(_INBOX_PENDING, set()).add(user_id)
+
+
 @socketio.on('connect', namespace=NAMESPACE)
 def connect_expenses(auth=None):
     payload = _authenticate_socket(auth)
@@ -45,7 +50,7 @@ def _capture_changes(session, flush_context):
     personal = session.info.setdefault(_PERSONAL_PENDING, {})
     for row in list(session.new) + list(session.dirty) + list(session.deleted):
         if isinstance(row, ExpenseNotification):
-            session.info.setdefault(_INBOX_PENDING, set()).add(row.user_id)
+            stage_inbox_change(session, row.user_id)
             continue
         if isinstance(row, User):
             if row in session.new or inspect(row).attrs.display_name.history.has_changes():

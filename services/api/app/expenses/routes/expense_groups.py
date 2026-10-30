@@ -120,18 +120,28 @@ def get_expense_notifications():
 @require_auth
 def read_expense_notifications():
     data = request.get_json(silent=True)
+    mark_all = isinstance(data, dict) and data.get('all') is True
     ids = data.get('ids') if isinstance(data, dict) else None
-    if not isinstance(ids, list) or not 1 <= len(ids) <= 100 or any(not isinstance(value, str) for value in ids):
+    if mark_all and 'ids' in data:
+        return error_response('Choose notification IDs or all notifications, not both', 400)
+    if not mark_all and (not isinstance(ids, list) or not 1 <= len(ids) <= 100 or any(not isinstance(value, str) for value in ids)):
         return error_response('Provide between 1 and 100 notification IDs', 400)
-    ids = [identifier(value) for value in ids]
+    ids = [identifier(value) for value in ids] if not mark_all else None
+    group_id = identifier(data['group_id']) if mark_all and 'group_id' in data else None
     with get_db_session() as session:
-        rows = _inbox_query(session, get_current_user_id()).filter(
-            ExpenseNotification.id.in_(ids), ExpenseNotification.is_read.is_(False),
-        ).all()
-        for row in rows:
-            row.is_read = True
+        eligible = _inbox_query(session, get_current_user_id()).filter(ExpenseNotification.is_read.is_(False))
+        if ids is not None:
+            eligible = eligible.filter(ExpenseNotification.id.in_(ids))
+        if group_id:
+            eligible = eligible.filter(ExpenseNotification.group_id == group_id)
+        marked = session.query(ExpenseNotification).filter(
+            ExpenseNotification.id.in_(eligible.with_entities(ExpenseNotification.id)),
+        ).update({ExpenseNotification.is_read: True}, synchronize_session=False)
+        if marked:
+            from app.expenses.realtime import stage_inbox_change
+            stage_inbox_change(session, get_current_user_id())
         session.commit()
-        return success_response(data={'marked': len(rows)})
+        return success_response(data={'marked': marked})
 
 
 @groups_sql_bp.route('/<group_id>', methods=['GET'])

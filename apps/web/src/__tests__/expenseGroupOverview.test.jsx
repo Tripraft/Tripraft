@@ -14,10 +14,11 @@ const group = { id: 'trip', name: 'Goa Getaway', currency: 'EUR', my_balance: 30
 it('shows the stored share separately from payments and outstanding balance', () => {
   const select = jest.fn();
   render(<GroupDashboard groups={[group]} currentUserId="me" onSelect={select} />);
-  const card = screen.getByRole('button', { name: 'Open Goa Getaway' });
+  const open = screen.getByRole('button', { name: 'Open Goa Getaway' });
+  const card = open.closest('.expense-group-card');
   for (const amount of ['€150.00', '€45.00', '€100.00', "You're owed €30.00"]) expect(within(card).getByText(amount)).toBeInTheDocument();
   expect(within(card).getByText('Stay · 67%')).toBeInTheDocument();
-  fireEvent.click(card);
+  fireEvent.click(open);
   expect(select).toHaveBeenCalledWith('trip');
 });
 

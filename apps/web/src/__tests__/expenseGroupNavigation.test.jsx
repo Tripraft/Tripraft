@@ -132,6 +132,24 @@ it('opens, focuses and scrolls to settlements from the summary card', () => {
   } finally { HTMLElement.prototype.scrollIntoView = original; }
 });
 
+it('opens Activity & history from Group activity instead of a notifications dialog', () => {
+  const original = HTMLElement.prototype.scrollIntoView;
+  const scroll = jest.fn();
+  HTMLElement.prototype.scrollIntoView = scroll;
+  try {
+    render(<Page />);
+    const button = screen.getByRole('button', {name: 'Group activity'});
+    expect(button.closest('.expense-detail-heading')).not.toBeNull();
+    fireEvent.click(button);
+    const tab = screen.getByRole('tab', {name: 'Activity & history'});
+    expect(tab).toHaveAttribute('aria-selected', 'true');
+    expect(tab).toHaveFocus();
+    expect(scroll).toHaveBeenCalledWith(expect.objectContaining({block: 'start'}));
+    expect(screen.queryByRole('dialog', {name: 'Expense notifications'})).toBeNull();
+    expect(screen.queryByText('Group updates')).toBeNull();
+  } finally { HTMLElement.prototype.scrollIntoView = original; }
+});
+
 it('keeps the selected group through session restoration', () => {
   auth = { ...auth, currentUser: null, loading: true };
   const view = render(<Page />);
