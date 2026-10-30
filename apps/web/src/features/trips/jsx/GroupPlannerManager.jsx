@@ -7,7 +7,8 @@
  */
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { plannerGroupPath } from '../../../utils/publicPaths';
 import { useAuth } from '../../../context/AuthContext';
 import useChatSocket from '../../../hooks/useChatSocket';
 import {
@@ -49,6 +50,7 @@ import CircleTab from './tabs/CircleTab';
 export default function GroupPlannerManager() {
   const { groupId: routeGroupId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
 
@@ -174,17 +176,17 @@ export default function GroupPlannerManager() {
 
   // -- Auto-redirect to last visited group --
   useEffect(() => {
-    if (routeGroupId && group?.id && String(group.id) !== routeGroupId) {
-      navigate(plannerPath('/group-planner/' + group.id), { replace: true });
+    if (routeGroupId && group?.id && location.pathname + location.search !== plannerPath(plannerGroupPath(group.id))) {
+      navigate(plannerPath(plannerGroupPath(group.id)), { replace: true });
     }
-  }, [routeGroupId, group?.id, navigate]);
+  }, [routeGroupId, group?.id, location.pathname, location.search, navigate]);
 
   useEffect(() => {
     if (routeGroupId || authLoading || groupsLoading) return;
     const lastGroupId = localStorage.getItem(lastGroupKey);
     if (!lastGroupId) return;
     if (groups.length > 0 && groups.some((g) => String(g.id) === lastGroupId)) {
-      navigate(plannerPath('/group-planner/' + lastGroupId), { replace: true });
+      navigate(plannerPath(plannerGroupPath(lastGroupId)), { replace: true });
     }
   }, [routeGroupId, authLoading, groupsLoading, groups, navigate]);
 
@@ -225,7 +227,7 @@ export default function GroupPlannerManager() {
       setShowInviteModal(false);
       setInviteEmail('');
       localStorage.setItem(lastGroupKey, String(id));
-      navigate(plannerPath('/group-planner/' + id));
+      navigate(plannerPath(plannerGroupPath(id)));
     },
     [navigate],
   );

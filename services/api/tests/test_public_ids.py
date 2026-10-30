@@ -2,7 +2,7 @@
 import hashlib
 import json
 from datetime import datetime, timedelta, timezone
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
@@ -13,11 +13,54 @@ from app.auth.models import User
 from app.auth.recovery_links import RecoveryLink, create_recovery_link, resolve_recovery_link
 from app.auth.security.jwt import create_email_verification_token, create_password_reset_token
 from app.core.db.connection import get_db_session
-from app.core.public_ids import PublicIdentifier, internal_id, public_id, public_payload
+from app.core.public_ids import PublicIdentifier, emit_public_event, init_public_ids, internal_id, public_id, public_payload
 from app.trips.realtime.socketio_ext import socketio
 from test_expense_split_methods import config
 
 PUBLIC = {'X-Identifier-Format': 'public'}
+
+
+def test_preflight_permits_the_browser_identifier_header(app):
+    response = app.test_client().options('/api/v1/expenses/groups', headers={
+        'Origin': 'http://127.0.0.1:5173', 'Access-Control-Request-Method': 'GET',
+        'Access-Control-Request-Headers': 'X-Identifier-Format',
+    })
+    assert response.status_code == 200
+    assert 'x-identifier-format' in response.headers['Access-Control-Allow-Headers'].lower()
+
+
+def test_cache_validators_do_not_reuse_a_uuid_representation(alice, monkeypatch):
+    from types import SimpleNamespace
+    from flask import Flask, jsonify
+    from app.core.cache import redis
+    _, uid, _ = alice
+    stored = {}
+    monkeypatch.setattr(redis, 'redis_client', SimpleNamespace(available=True,
+                        get=stored.get, set=lambda key, value, **kwargs: stored.update({key: value})))
+    mini = Flask(__name__)
+    init_public_ids(mini)
+
+    @mini.get('/api/v1/expenses/cached')
+    @redis.cache_response()
+    def cached():
+        return jsonify({'id': uid})
+
+    client = mini.test_client()
+    legacy = client.get('/api/v1/expenses/cached', headers={'X-Identifier-Format': 'uuid'})
+    current = client.get('/api/v1/expenses/cached', headers={'If-None-Match': legacy.headers['ETag']})
+    assert current.status_code == 200 and current.get_json()['id'] != uid
+    assert current.headers['ETag'] != legacy.headers['ETag']
+    unchanged = client.get('/api/v1/expenses/cached', headers={'If-None-Match': current.headers['ETag']})
+    assert unchanged.status_code == 304 and 'X-Identifier-Format' in unchanged.vary
+
+
+def test_pubsub_broadcast_reaches_remote_public_rooms(app):
+    from socketio.pubsub_manager import PubSubManager
+    with patch.object(socketio.server, 'manager', MagicMock(spec=PubSubManager)), \
+            patch.object(socketio, 'emit') as send:
+        emit_public_event('changed', {'group_id': str(uuid4())}, room='private-user')
+    assert send.call_args_list[1].kwargs['room'] == 'private-user:public'
+    assert send.call_args_list[1].args[1]['group_id'].startswith('p')
 
 
 @pytest.fixture(autouse=True)
@@ -134,7 +177,7 @@ def test_planner_checklist_chat_and_public_socket(alice, app):
         added = api.post(f'/api/v1/group-planner/groups/{gid}/checklist', headers=PUBLIC,
                          json={'text': 'Bring passport', 'assigned_to_id': public_id(uid)})
         assert added.status_code == 201, added.get_json()
-        item = payload(added).get('item') or payload(added)
+        item = payload(added)
         assert api.post(f"/api/v1/group-planner/checklist/{item['id']}/toggle", headers=PUBLIC).status_code == 200
         chat = api.post(f'/api/v1/group-planner/groups/{gid}/messages', headers=PUBLIC,
                         json={'content': 'Hello'})
@@ -171,6 +214,7 @@ def test_opaque_recovery_has_no_claims_expires_and_is_single_use(alice, app):
     with get_db_session() as session:
         stored = session.get(RecoveryLink, hashlib.sha256(secret.encode()).hexdigest())
         assert stored.token_hash != secret
+        assert stored.signed_token != signed
     anonymous = ApiClient(app)
     body = {'token': secret, 'new_password': 'Replacement1!'}
     assert anonymous.post('/api/v1/auth/reset-password', json=body).status_code == 200

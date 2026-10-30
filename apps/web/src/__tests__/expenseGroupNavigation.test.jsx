@@ -54,6 +54,7 @@ function Page({ entry = '/groups/joined-group/expenses' }) {
   return <QueryClientProvider client={client}><MemoryRouter initialEntries={[entry]}><Location /><Routes>
     <Route path="/expenses/:userId/:mode" element={<ExpenseManager />} />
     <Route path="/expenses/:mode?" element={<ExpenseManager />} />
+    <Route path="/groups" element={<ExpenseManager />} />
     <Route path="/groups/:groupId/expenses" element={<ExpenseManager />} />
   </Routes></MemoryRouter></QueryClientProvider>;
 }
@@ -196,7 +197,7 @@ it('opens the group and closes the creation dialog while its invitation is still
   expect(await screen.findByText('Group expenses: new-group')).toBeInTheDocument();
   await waitFor(() => expect(screen.queryByRole('dialog', {name: 'New group'})).toBeNull());
   expect(screen.getByRole('heading', {name: 'Sending invitations'})).toBeInTheDocument();
-  expect(screen.getByText('/expenses/friend-uuid/group?groupId=new-group')).toBeInTheDocument();
+  expect(screen.getByText('/groups/new-group/expenses')).toBeInTheDocument();
   expect(expenseApi.createGroup).toHaveBeenCalledTimes(1);
   await act(async () => finish({data: {invitation: {id: 'invite'}, email_status: 'sent'}}));
   expect(screen.getByText('1 of 1 sent')).toBeInTheDocument();

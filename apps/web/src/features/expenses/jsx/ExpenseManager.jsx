@@ -57,7 +57,7 @@ const ExpenseManager = () => {
   const { mode: routeMode, groupId: routeGroupId } = useParams();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const mode = routeGroupId || routeMode === 'group' || (!routeMode && searchParams.get('view') === 'group') ? 'group' : 'personal';
+  const mode = routeGroupId || location.pathname === '/groups' || routeMode === 'group' || (!routeMode && searchParams.get('view') === 'group') ? 'group' : 'personal';
   const activeGroupId = mode === 'group' ? routeGroupId || searchParams.get('groupId') : null;
   
   // Auth state
@@ -181,7 +181,7 @@ const ExpenseManager = () => {
   // Canonicalize legacy URLs without losing the selected invitation group.
   useEffect(() => {
     if (authLoading || !currentUser) return;
-    const publicGroupId = activeGroupData?.id || activeGroupData?.group_id || activeGroupId;
+    const publicGroupId = activeGroupId ? activeGroupData?.id || activeGroupData?.group_id || activeGroupId : null;
     const canonical = expensePath(mode, publicGroupId);
     if (location.pathname + location.search !== canonical) {
       setExpenseView(mode, publicGroupId, { replace: true });

@@ -2,8 +2,9 @@
 
 Traveler pages and API requests use public resource names instead of database
 UUIDs. Personal expenses are `/expenses/personal`; the group dashboard is
-`/expenses/group`; a selected ledger is `/groups/pAb3x9K7mN2q/expenses`.
-Planner and invitation routes retain their existing prefixes with short IDs.
+`/groups`; a selected ledger is `/groups/pAb3x9K7mN2q/expenses`.
+Selected planners use `/groups/pAb3x9K7mN2q/planner`; invitation routes retain
+their existing prefixes with short IDs. Legacy planner/expense routes redirect.
 The example ID is illustrative.
 
 ## Identifier contract
@@ -36,7 +37,8 @@ Old profile/query caches are discarded; httpOnly session cookies remain valid.
 
 New email links contain a random 256-bit opaque secret in a URL fragment, rather
 than a JWT containing an account UUID. The API stores only its SHA-256 digest
-alongside the original signed claim and purpose in private `auth_recovery_links`.
+alongside an encrypted signed claim and purpose in private `auth_recovery_links`.
+The application secret protects that claim; rotating it invalidates these links.
 Password reset links expire after one hour; verification links after 24 hours.
 The original signed token's validity and password-version checks still apply.
 Successful resets are single-use and revoke previous sessions. Expired link
@@ -54,8 +56,10 @@ must not be shortened to a guessable resource name.
 ## Release
 
 Apply migration `d39fe8a90123` using the normal reviewed database release process.
-Its additive development manifest supports the restricted startup bridge. No
-shared database has been changed by this implementation. The owner migration
+Its additive development manifest supports the restricted startup bridge. The shared
+testing Supabase database was upgraded to this revision on 2026-10-30 at the
+user's request. Revision, application schema parity and runtime CRUD permissions
+were verified; staging and production were not changed. The owner migration
 revokes public/Supabase API access and grants the existing backend development
 role CRUD on the two private tables. Other runtime roles need explicit grants
 through their reviewed provisioning process.

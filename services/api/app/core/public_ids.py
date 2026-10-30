@@ -9,7 +9,7 @@ import string
 from contextlib import nullcontext
 from uuid import UUID
 
-from flask import request
+from flask import g, has_request_context, request
 from sqlalchemy import Column, String, UniqueConstraint, select
 from sqlalchemy.exc import IntegrityError
 from werkzeug.datastructures import ImmutableMultiDict
@@ -76,9 +76,13 @@ def public_payload(value, session=None):
     if not identifiers:
         return value
     own_session = session is None
+    cached = getattr(g, '_public_identifiers', {}) if own_session and has_request_context() else {}
+    if identifiers <= cached.keys():
+        return _walk(value, lambda item: cached.get(_uuid(item), item))
     with get_db_session() if own_session else nullcontext(session) as session:
-        found = dict(session.execute(select(PublicIdentifier.entity_id, PublicIdentifier.public_id)
-                                     .where(PublicIdentifier.entity_id.in_(identifiers))).all())
+        found = {entity: cached[entity] for entity in identifiers & cached.keys()}
+        found.update(session.execute(select(PublicIdentifier.entity_id, PublicIdentifier.public_id)
+                                     .where(PublicIdentifier.entity_id.in_(identifiers - found.keys()))).all())
         for _ in range(8):
             missing = identifiers - found.keys()
             if not missing:
@@ -100,6 +104,8 @@ def public_payload(value, session=None):
             raise RuntimeError('Unable to allocate public identifier')
         if own_session:
             session.commit()
+    if own_session and has_request_context():
+        g._public_identifiers = {**cached, **found}
     return _walk(value, lambda item: found.get(_uuid(item), item))
 
 
@@ -134,7 +140,15 @@ def internal_id(value):
 def emit_public_event(event, payload, *, room, **kwargs):
     """Separate legacy and public socket rooms during client rollout."""
     from app.trips.realtime.socketio_ext import socketio
+    from socketio.pubsub_manager import PubSubManager
     socketio.emit(event, payload, room=room, **kwargs)
+    manager = socketio.server.manager
+    # With a local manager there cannot be recipients on another worker. Avoid
+    # database work when no public clients are listening. Pub/sub managers must
+    # always broadcast: another worker may own all of the public recipients.
+    if not isinstance(manager, PubSubManager) and not next(
+            manager.get_participants(kwargs.get('namespace', '/'), room + ':public'), None):
+        return
     socketio.emit(event, public_payload(payload), room=room + ':public', **kwargs)
 
 
@@ -160,8 +174,10 @@ def init_public_ids(app):
 
     @app.after_request
     def serialize_public_ids(response):
-        if request.path.startswith(_PREFIXES) and response.is_json:
-            response.vary.add('X-Identifier-Format')
+        if not request.path.startswith(_PREFIXES):
+            return response
+        response.vary.add('X-Identifier-Format')
+        if response.is_json:
             if request.headers.get('X-Identifier-Format') != 'uuid':
                 data = response.get_json()
                 # Trace IDs are operational metadata, never entity identifiers.

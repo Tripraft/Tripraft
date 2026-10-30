@@ -2,5 +2,9 @@
 export function expensePath(mode = 'personal', groupId) {
   return mode === 'group' && groupId
     ? `/groups/${encodeURIComponent(groupId)}/expenses`
-    : `/expenses/${mode === 'group' ? 'group' : 'personal'}`;
+    : mode === 'group' ? '/groups' : '/expenses/personal';
+}
+
+export function plannerGroupPath(groupId) {
+  return `/groups/${encodeURIComponent(groupId)}/planner`;
 }

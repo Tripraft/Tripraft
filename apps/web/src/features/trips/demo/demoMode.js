@@ -3,7 +3,7 @@
 export function isPlannerDemo() {
   return (
     typeof window !== 'undefined' &&
-    (window.location.pathname === '/group-planner' || window.location.pathname.startsWith('/group-planner/')) &&
+    (window.location.pathname === '/group-planner' || window.location.pathname.startsWith('/group-planner/') || /^\/groups\/[^/]+\/planner\/?$/.test(window.location.pathname)) &&
     new URLSearchParams(window.location.search).get('demo') === '1'
   );
 }

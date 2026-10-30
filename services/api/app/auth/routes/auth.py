@@ -568,7 +568,8 @@ def verify_email():
     Query params:
         token: JWT verification token
     """
-    token = (request.get_json(silent=True) or {}).get('token') if request.method == 'POST' else request.args.get('token')
+    data = request.get_json(silent=True) if request.method == 'POST' else request.args
+    token = data.get('token') if isinstance(data, dict) else None
     if not isinstance(token, str) or not token or len(token) > 4096:
         return error_response('Verification token required', 400)
 

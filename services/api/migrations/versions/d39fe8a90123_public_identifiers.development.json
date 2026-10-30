@@ -9,6 +9,7 @@
         {"name": "entity_id", "type": "uuid", "nullable": false}
       ],
       "primary_key": ["public_id"],
+      "foreign_keys": [],
       "unique": [{"name": "uq_public_identifier_entity", "columns": ["entity_id"]}]
     },
     {
@@ -19,7 +20,9 @@
         {"name": "signed_token", "type": "text", "nullable": false},
         {"name": "expires_at", "type": "timestamp", "nullable": false}
       ],
-      "primary_key": ["token_hash"]
+      "primary_key": ["token_hash"],
+      "foreign_keys": [],
+      "unique": []
     }
   ]
 }
