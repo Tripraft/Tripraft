@@ -18,6 +18,7 @@ import GroupDashboard from './GroupDashboard';
 import ExpenseDialog from './ExpenseDialog';
 import GroupDetailHeader from './GroupDetailHeader';
 import NewExpenseGroupModal from './NewExpenseGroupModal';
+import ExpenseInvitationDelivery from './ExpenseInvitationDelivery';
 import { groupOverview } from '../utils/groupOverview';
 
 import GroupSummaryCards from './GroupSummaryCards';
@@ -141,6 +142,7 @@ const ExpenseManager = () => {
   const [mutationLoading, setMutationLoading] = useState(false);
   const exportBusy = useRef(false);
   const [showNewGroup, setShowNewGroup] = useState(false);
+  const [invitationBatches, setInvitationBatches] = useState([]);
   const [groupTab, setGroupTab] = useState('balances');
   const groupTabsRef = useRef(null);
   const addTransactionRef = useRef(null);
@@ -682,6 +684,11 @@ const ExpenseManager = () => {
         </div>
       </header>
 
+      {invitationBatches.map(batch => <ExpenseInvitationDelivery key={batch.groupId} batch={batch}
+        hidden={mode !== 'group' || String(activeGroupId) !== String(batch.groupId)}
+        onUpdate={() => { if (String(activeGroupId) === String(batch.groupId)) refetchGroupDetail(); }}
+        onDismiss={() => setInvitationBatches(previous => previous.filter(row => row !== batch))} />)}
+
       {notificationView && <ExpenseNotifications key={notificationUserId} userId={notificationUserId}
         initialGroupId={notificationView.groupId} groups={groups || []} onClose={() => setNotificationView(null)}
         onOpenGroup={groupId => setExpenseView('group', groupId)} />}
@@ -848,7 +855,9 @@ const ExpenseManager = () => {
         />
       )}
 
-      {showNewGroup && <NewExpenseGroupModal defaultCurrency={personalCurrency || 'INR'} onClose={() => { setShowNewGroup(false); if (activeGroupId) refetchGroupDetail(); }} onCreate={handleCreateGroup} />}
+      {showNewGroup && <NewExpenseGroupModal defaultCurrency={personalCurrency || 'INR'} userId={currentUser?.uid || currentUser?.user_id}
+        onInvitationsReady={batch => setInvitationBatches(previous => [...previous, batch])}
+        onClose={() => { setShowNewGroup(false); if (activeGroupId) refetchGroupDetail(); }} onCreate={handleCreateGroup} />}
 
       {mode === 'personal' && showFloatingAdd && !showTransactionModal && <button
         className="btn-add-transaction expense-floating-add" onClick={handleOpenModal} disabled={mutationLoading}>

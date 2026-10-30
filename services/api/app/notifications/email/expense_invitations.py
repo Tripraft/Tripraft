@@ -11,6 +11,23 @@ from app.expenses.models import Invitation
 logger = logging.getLogger(__name__)
 
 
+def record_invitation_delivery(invitation_id, created_at, status):
+    """Ignore stale jobs and never let queue acknowledgements hide a successful send."""
+    with get_db_session() as session:
+        invitation = session.query(Invitation).filter(
+            Invitation.id == UUID(str(invitation_id)),
+        ).with_for_update().first()
+        if (invitation is None or invitation.status != 'pending'
+                or invitation.created_at.isoformat() != created_at):
+            return status
+        if not (status == 'queued' and invitation.email_status in ('sent', 'failed', 'disabled')):
+            invitation.email_status = status
+            if status == 'sent' and invitation.email_sent_at is None:
+                invitation.email_sent_at = datetime.now(timezone.utc).replace(tzinfo=None)
+            session.commit()
+        return invitation.email_status
+
+
 def deliver_pending_invitation(invitation_id, created_at=None):
     """Return True/False for SMTP, or None when this delivery is obsolete.
 
@@ -32,12 +49,19 @@ def deliver_pending_invitation(invitation_id, created_at=None):
         recipient = invitation.invitee_email
         sender = invitation.inviter.display_name or invitation.inviter.email.split('@')[0]
         group_name = invitation.group.name
+        generation = invitation.created_at.isoformat()
 
     from app.notifications.services.email_service import email_service
-    return email_service.send_group_invitation(
-        to_email=recipient, inviter_name=sender,
-        group_name=group_name, invitation_id=str(invitation_id),
-    )
+    try:
+        sent = email_service.send_group_invitation(
+            to_email=recipient, inviter_name=sender,
+            group_name=group_name, invitation_id=str(invitation_id),
+        )
+    except Exception:
+        record_invitation_delivery(invitation_id, generation, 'failed')
+        raise
+    record_invitation_delivery(invitation_id, generation, 'sent' if sent else 'failed')
+    return sent
 
 
 def deliver_pending_invitation_job(invitation_id, created_at=None):

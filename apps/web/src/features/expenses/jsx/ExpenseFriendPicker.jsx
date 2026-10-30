@@ -4,9 +4,11 @@ import {useInfiniteQuery, useQueryClient} from '@tanstack/react-query';
 import {LoaderCircle, Users} from 'lucide-react';
 import expenseApi from '../../../services/expenseApi';
 
-export default function ExpenseFriendPicker({userId, onSelect, disabled = false, revision = 0}) {
+export default function ExpenseFriendPicker({userId, onSelect, disabled = false, revision = 0, searchValue, onSearchChange, hideSearch = false}) {
   const client = useQueryClient();
-  const [search, setSearch] = useState('');
+  const [localSearch, setLocalSearch] = useState('');
+  const search = searchValue ?? localSearch;
+  const setSearch = onSearchChange || setLocalSearch;
   const [query, setQuery] = useState('');
   useEffect(() => {
     const timer = setTimeout(() => setQuery(search.trim()), 250);
@@ -28,11 +30,12 @@ export default function ExpenseFriendPicker({userId, onSelect, disabled = false,
   }, [client, userId, revision]);
   const showResults = Boolean(query && search.trim() === query);
   const rows = showResults ? friends.data?.pages.flatMap(page => page.friends || []) || [] : [];
+  if (hideSearch && !showResults) return null;
   return <section className="expense-friend-picker" aria-label="Saved friends">
-    <h4><Users size={16} aria-hidden="true" />Find a contact</h4>
+    {!hideSearch && <><h4><Users size={16} aria-hidden="true" />Find a contact</h4>
     <label htmlFor="expense-friend-search">Find a friend</label>
     <input id="expense-friend-search" type="search" placeholder="Search by name, nickname or email" maxLength={255}
-      value={search} onChange={event => setSearch(event.target.value)} disabled={disabled} />
+      value={search} onChange={event => setSearch(event.target.value)} disabled={disabled} /></>}
     {showResults && (friends.isLoading ? <p role="status"><LoaderCircle className="spinning" size={14} aria-hidden="true" />Loading friends...</p> :
       friends.isError ? <p role="alert">Unable to load friends. <button type="button" onClick={() => friends.refetch()}>Retry friends</button></p> :
       !rows.length ? <p>{query ? 'No friends found.' : 'Invite someone or save a friend to find them here next time.'}</p> :

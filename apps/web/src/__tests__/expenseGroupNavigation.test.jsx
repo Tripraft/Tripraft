@@ -17,6 +17,7 @@ jest.mock('../hooks/useExpenseQuery', () => ({
 }));
 jest.mock('../services/expenseApi', () => ({ __esModule: true, default: {
   createGroup: jest.fn(), acceptInvitation: jest.fn(), createExpense: jest.fn(), getUser: jest.fn(), updateUser: jest.fn(),
+  sendInvitation: jest.fn(), getFriends: jest.fn(),
 } }));
 jest.mock('../services/pdfExportService', () => ({ generateExpensePDF: jest.fn() }));
 jest.mock('../features/expenses/jsx/GroupManager', () => function Group(props) {
@@ -69,6 +70,7 @@ beforeEach(() => {
   expenseApi.acceptInvitation.mockResolvedValue({ success: true, data: { group: { id: 'joined-group' }, groups } });
   expenseApi.getUser.mockResolvedValue({success: true, data: {user: {personal_display_currency: 'USD'}}});
   expenseApi.updateUser.mockImplementation(async updates => ({success: true, data: {user: updates}}));
+  expenseApi.getFriends.mockResolvedValue({data: {friends: [], has_more: false}});
 });
 afterEach(() => client.clear());
 
@@ -179,6 +181,23 @@ it('opens a newly created group and preserves it in the URL', async () => {
   fireEvent.click(screen.getByRole('button', { name: 'Create group' }));
   expect(await screen.findByText('Group expenses: new-group')).toBeInTheDocument();
   expect(screen.getByText('/expenses/friend-uuid/group?groupId=new-group')).toBeInTheDocument();
+});
+
+it('opens the group and closes the creation dialog while its invitation is still sending', async () => {
+  let finish;
+  expenseApi.sendInvitation.mockReturnValue(new Promise(resolve => { finish = resolve; }));
+  render(<Page />);
+  fireEvent.click(screen.getByRole('button', {name: 'New group'}));
+  fireEvent.change(screen.getByLabelText('Group name'), {target: {value: 'New trip'}});
+  fireEvent.change(screen.getByLabelText('Invite by email (optional)'), {target: {value: 'friend@example.test'}});
+  fireEvent.click(screen.getByRole('button', {name: 'Create group and invite'}));
+  expect(await screen.findByText('Group expenses: new-group')).toBeInTheDocument();
+  await waitFor(() => expect(screen.queryByRole('dialog', {name: 'New group'})).toBeNull());
+  expect(screen.getByRole('heading', {name: 'Sending invitations'})).toBeInTheDocument();
+  expect(screen.getByText('/expenses/friend-uuid/group?groupId=new-group')).toBeInTheDocument();
+  expect(expenseApi.createGroup).toHaveBeenCalledTimes(1);
+  await act(async () => finish({data: {invitation: {id: 'invite'}, email_status: 'sent'}}));
+  expect(screen.getByText('1 of 1 sent')).toBeInTheDocument();
 });
 
 it('shows the group dashboard without automatically opening the first group', () => {

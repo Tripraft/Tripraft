@@ -1,90 +1,80 @@
-// Purpose: Verifies optional group invitations, email normalization and retries without duplicate groups or sends.
+﻿// Purpose: Verifies recipient chips, friend resolution, validation and handoff to the group page.
 import React from 'react';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import {act, fireEvent, render, screen, waitFor, within} from '@testing-library/react';
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
 import NewGroup from '../features/expenses/jsx/NewExpenseGroupModal';
 import expenseApi from '../services/expenseApi';
 jest.mock('../components/common/jsx/CurrencySelect', () => function Currency(props) { return <select {...props}><option value="USD">USD</option></select>; });
-jest.mock('../services/expenseApi', () => ({ __esModule: true, default: { sendInvitation: jest.fn(), resendInvitation: jest.fn() } }));
-const sent = { data: { invitation: { id: 'invite-id' }, email_status: 'sent' } };
-const change = (label, value) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
-function setup() {
-  const create = jest.fn().mockResolvedValue({ group: { id: 'new-group' } });
+jest.mock('../services/expenseApi', () => ({__esModule: true, default: {getFriends: jest.fn()}}));
+const change = (label, value) => fireEvent.change(screen.getByLabelText(label), {target: {value}});
+let client;
+function setup(userId) {
+  const create = jest.fn().mockResolvedValue({group: {id: 'new-group'}});
   const close = jest.fn();
-  render(<NewGroup onCreate={create} onClose={close} />);
+  const invite = jest.fn();
+  render(<QueryClientProvider client={client}><NewGroup userId={userId} onCreate={create} onClose={close} onInvitationsReady={invite} /></QueryClientProvider>);
   change('Group name', '  Weekend trip  ');
-  return { create, close };
+  return {create, close, invite};
 }
-beforeEach(() => { expenseApi.sendInvitation.mockReset().mockResolvedValue(sent); expenseApi.resendInvitation.mockReset().mockResolvedValue(sent); });
+beforeEach(() => { client = new QueryClient({defaultOptions: {queries: {retry: false}}}); });
+afterEach(() => client.clear());
 
-it('creates a group without sending any invitations when the optional field is empty', async () => {
-  const { create, close } = setup();
-  expect(screen.getByText(/spam or junk folder/)).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Create group' }));
+it('creates a group without invitations when the optional field is empty', async () => {
+  const {create, close, invite} = setup();
+  fireEvent.click(screen.getByRole('button', {name: 'Create group'}));
   await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
-  expect(create).toHaveBeenCalledWith({ name: 'Weekend trip', currency: 'INR' });
-  expect(expenseApi.sendInvitation).not.toHaveBeenCalled();
+  expect(create).toHaveBeenCalledWith({name: 'Weekend trip', currency: 'INR'});
+  expect(invite).not.toHaveBeenCalled();
 });
 
-it('creates the group then sends each unique invitation and shows delivery feedback', async () => {
-  const { create, close } = setup();
-  change('Invite by email (optional)', ' FRIEND@example.test, friend@example.test\nsecond@example.test ');
-  fireEvent.click(screen.getByRole('button', { name: 'Create group and invite' }));
-  const results = await screen.findByRole('list', { name: 'Invitation delivery' });
-  await waitFor(() => expect(within(results).getAllByRole('status')).toHaveLength(2));
+it('converts pasted addresses into unique removable chips and closes before sending', async () => {
+  const {create, close, invite} = setup();
+  fireEvent.paste(screen.getByLabelText('Invite by email (optional)'), {clipboardData: {getData: () => ' FRIEND@example.test, friend@example.test\nsecond@example.test '}});
+  expect(within(screen.getByRole('list', {name: 'Selected invitees'})).getAllByRole('listitem')).toHaveLength(2);
+  expect(screen.getByLabelText('Invite by email (optional)')).toHaveValue('');
+  fireEvent.click(screen.getByRole('button', {name: 'Create group and invite'}));
+  await waitFor(() => expect(close).toHaveBeenCalledTimes(1));
   expect(create).toHaveBeenCalledTimes(1);
-  expect(expenseApi.sendInvitation.mock.calls.map(([data]) => data)).toEqual([
-    { group_id: 'new-group', invitee_email: 'friend@example.test' }, { group_id: 'new-group', invitee_email: 'second@example.test' },
-  ]);
-  expect(close).not.toHaveBeenCalled();
-  expect(screen.queryByRole('button', { name: 'Retry invitations' })).toBeNull();
-  fireEvent.click(screen.getByRole('button', { name: 'Done' }));
-  expect(close).toHaveBeenCalledTimes(1);
+  expect(invite).toHaveBeenCalledWith({groupId: 'new-group', recipients: [
+    {email: 'friend@example.test', label: 'friend@example.test'}, {email: 'second@example.test', label: 'second@example.test'},
+  ]});
 });
 
-it('sends at most three invitations concurrently and advances without waiting for a slow recipient', async () => {
-  const pending = [];
-  expenseApi.sendInvitation.mockImplementation(() => new Promise(resolve => pending.push(resolve)));
-  setup();
-  change('Invite by email (optional)', 'one@example.test two@example.test three@example.test four@example.test');
-  fireEvent.click(screen.getByRole('button', { name: 'Create group and invite' }));
-  await waitFor(() => expect(expenseApi.sendInvitation).toHaveBeenCalledTimes(3));
-  await act(async () => pending[1](sent));
-  await waitFor(() => expect(expenseApi.sendInvitation).toHaveBeenCalledTimes(4));
-  expect(screen.getByRole('status')).toHaveTextContent('Invitation email sent');
-  await act(async () => { pending[0](sent); pending[2](sent); pending[3](sent); });
-  await waitFor(() => expect(screen.getAllByRole('status')).toHaveLength(4));
+it.each(['Enter', 'Tab', ','])('adds an address with %s without submitting the group', key => {
+  const {create} = setup();
+  change('Invite by email (optional)', 'FRIEND@example.test');
+  fireEvent.keyDown(screen.getByLabelText('Invite by email (optional)'), {key});
+  expect(screen.getByRole('button', {name: 'Remove friend@example.test'})).toBeInTheDocument();
+  expect(create).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', {name: 'Remove friend@example.test'}));
+  expect(screen.queryByRole('list', {name: 'Selected invitees'})).toBeNull();
 });
 
-it('retries a failed invitation without recreating the group or resending successful invitations', async () => {
-  expenseApi.sendInvitation.mockResolvedValueOnce(sent).mockRejectedValueOnce(new Error('Connection failed')).mockResolvedValueOnce(sent);
-  const { create } = setup();
-  change('Invite by email (optional)', 'first@example.test, second@example.test');
-  fireEvent.click(screen.getByRole('button', { name: 'Create group and invite' }));
-  expect(await screen.findByRole('alert')).toHaveTextContent('Connection failed');
-  fireEvent.click(screen.getByRole('button', { name: 'Retry invitations' }));
-  await waitFor(() => expect(screen.queryByRole('button', { name: 'Retry invitations' })).toBeNull());
-  expect(create).toHaveBeenCalledTimes(1);
-  expect(expenseApi.sendInvitation).toHaveBeenCalledTimes(3);
-  expect(expenseApi.sendInvitation).toHaveBeenLastCalledWith({ group_id: 'new-group', invitee_email: 'second@example.test' });
+it('resolves a saved friend nickname to a named chip with the correct email', async () => {
+  expenseApi.getFriends.mockResolvedValue({data: {friends: [{id: 'jane', email: 'jane@example.test', label: 'JP', display_name: 'Jane Patel', nickname: 'JP', is_registered: true}], has_more: false}});
+  const {invite} = setup('owner');
+  change('Invite by email (optional)', 'JP');
+  fireEvent.click(await screen.findByRole('button', {name: /JP Jane Patel/}));
+  expect(screen.getByRole('button', {name: 'Remove JP'})).toBeInTheDocument();
+  expect(screen.getByText('JP').closest('li')).toHaveAttribute('title', 'jane@example.test');
+  fireEvent.click(screen.getByRole('button', {name: 'Create group and invite'}));
+  await waitFor(() => expect(invite).toHaveBeenCalledWith({groupId: 'new-group', recipients: [{email: 'jane@example.test', label: 'JP'}]}));
 });
 
-it('resends an existing invitation if creation succeeded but email delivery failed', async () => {
-  expenseApi.sendInvitation.mockResolvedValueOnce({ data: { invitation: { id: 'retry-id' }, email_status: 'failed' } });
-  const { create } = setup();
-  change('Invite by email (optional)', 'friend@example.test');
-  fireEvent.click(screen.getByRole('button', { name: 'Create group and invite' }));
-  expect(await screen.findByRole('alert')).toHaveTextContent('email was not delivered');
-  fireEvent.click(screen.getByRole('button', { name: 'Retry invitations' }));
-  await waitFor(() => expect(expenseApi.resendInvitation).toHaveBeenCalledWith('retry-id'));
-  expect(create).toHaveBeenCalledTimes(1);
-  expect(expenseApi.sendInvitation).toHaveBeenCalledTimes(1);
-});
-
-it('validates addresses before creating a group and prevents duplicate submits during creation', async () => {
-  const { create } = setup();
-  change('Invite by email (optional)', 'not-an-email');
-  fireEvent.click(screen.getByRole('button', { name: 'Create group and invite' }));
+it('rejects invalid addresses and retains them for correction', () => {
+  const {create} = setup();
+  change('Invite by email (optional)', 'not-an-email,');
   expect(screen.getByRole('alert')).toHaveTextContent('valid email addresses');
+  expect(screen.getByLabelText('Invite by email (optional)')).toHaveValue('not-an-email,');
+  fireEvent.click(screen.getByRole('button', {name: 'Create group and invite'}));
+  expect(create).not.toHaveBeenCalled();
+});
+
+it('validates limits and pending draft before creating and prevents duplicate submits', async () => {
+  const {create, invite} = setup();
+  change('Invite by email (optional)', Array.from({length: 21}, (_, i) => `user${i}@example.test`).join(' '));
+  fireEvent.click(screen.getByRole('button', {name: 'Create group and invite'}));
+  expect(screen.getByRole('alert')).toHaveTextContent('up to 20');
   expect(create).not.toHaveBeenCalled();
   let finish;
   create.mockReturnValueOnce(new Promise(resolve => { finish = resolve; }));
@@ -92,30 +82,29 @@ it('validates addresses before creating a group and prevents duplicate submits d
   const form = screen.getByLabelText('Group name').closest('form');
   fireEvent.submit(form); fireEvent.submit(form);
   expect(create).toHaveBeenCalledTimes(1);
-  await act(async () => finish({ group_id: 'new-group' }));
-  expect(expenseApi.sendInvitation).toHaveBeenCalledTimes(1);
+  await act(async () => finish({group_id: 'new-group'}));
+  expect(invite).toHaveBeenCalledTimes(1);
 });
 
-it('retains a failed group creation draft and sends no invitation before a successful retry', async () => {
-  const { create } = setup();
+it('retains a failed creation draft and starts no invitations before a successful retry', async () => {
+  const {create, invite} = setup();
   create.mockRejectedValueOnce(new Error('Try again'));
   change('Invite by email (optional)', 'friend@example.test');
-  fireEvent.click(screen.getByRole('button', { name: 'Create group and invite' }));
+  fireEvent.click(screen.getByRole('button', {name: 'Create group and invite'}));
   expect(await screen.findByRole('alert')).toHaveTextContent('Try again');
-  expect(expenseApi.sendInvitation).not.toHaveBeenCalled();
+  expect(invite).not.toHaveBeenCalled();
   expect(screen.getByLabelText('Invite by email (optional)')).toHaveValue('friend@example.test');
-  fireEvent.click(screen.getByRole('button', { name: 'Create group and invite' }));
-  await waitFor(() => expect(expenseApi.sendInvitation).toHaveBeenCalledTimes(1));
+  fireEvent.click(screen.getByRole('button', {name: 'Create group and invite'}));
+  await waitFor(() => expect(invite).toHaveBeenCalledTimes(1));
 });
 
-it('does not create a duplicate group if a malformed creation response omits its ID', async () => {
-  const { create } = setup();
+it('does not create another group if a malformed response omits its ID', async () => {
+  const {create, invite} = setup();
   create.mockResolvedValueOnce({});
   change('Invite by email (optional)', 'friend@example.test');
-  fireEvent.click(screen.getByRole('button', { name: 'Create group and invite' }));
+  fireEvent.click(screen.getByRole('button', {name: 'Create group and invite'}));
   expect(await screen.findByRole('alert')).toHaveTextContent('ID was not returned');
-  expect(screen.getByRole('button', { name: 'Done' })).toBeEnabled();
   fireEvent.submit(screen.getByLabelText('Group name').closest('form'));
   expect(create).toHaveBeenCalledTimes(1);
-  expect(expenseApi.sendInvitation).not.toHaveBeenCalled();
+  expect(invite).not.toHaveBeenCalled();
 });

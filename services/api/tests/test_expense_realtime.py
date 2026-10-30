@@ -131,9 +131,13 @@ def test_invitation_recipient_and_existing_members_update_without_reloading(grou
     observer, invited = watch(member), watch(friend)
     response = owner.post('/api/v1/expenses/invitations', json={'group_id': gid, 'email': email})
     assert response.status_code == 201, response.get_json()
+    assert len(changes(observer)) >= 1
+    assert changes(invited) == []  # Disabled mail must not publish an invitation.
+    invitation_id = payload(response)['invitation']['id']
+    from app.notifications.email.expense_invitations import record_invitation_delivery
+    record_invitation_delivery(invitation_id, payload(response)['invitation']['created_at'], 'sent')
     assert len(changes(observer)) == 1
     assert len(changes(invited)) == 1
-    invitation_id = payload(response)['invitation']['id']
     assert friend.post('/api/v1/expenses/invitations/%s/accept' % invitation_id).status_code == 200
     assert len(changes(observer)) == 1
     assert len(changes(invited)) == 1

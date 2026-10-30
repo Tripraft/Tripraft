@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "test": "jest --runInBand",
     "test:expense-layout": "node tests/expenseSplitLayout.mjs",
+    "test:expense-invitations": "node tests/expenseInvitationFlow.mjs",
     "lint": "eslint src tests",
     "typecheck": "tsc --noEmit"
   },

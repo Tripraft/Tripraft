@@ -81,8 +81,10 @@ def _capture_changes(session, flush_context):
             change['users'].add(row.user_id)
             if not row.is_active:
                 change['revoked'].add(row.user_id)
-        if isinstance(row, Invitation) and row.invitee_user_id:
-            change['users'].add(row.invitee_user_id)
+        if isinstance(row, Invitation) and row.invitee_user_id and row.email_sent_at is not None:
+            state = inspect(row)
+            if state.attrs.email_sent_at.history.has_changes() or state.attrs.status.history.has_changes():
+                change['users'].add(row.invitee_user_id)
         if isinstance(row, (Expense, ExpenseHistory)):
             change['expenses'].add(row.id if isinstance(row, Expense) else row.expense_id)
 

@@ -1,0 +1,8 @@
+{
+  "revision": "d39fe8091a23",
+  "down_revision": "c28ed7f80912",
+  "operations": [
+    {"op": "add_nullable_column", "table": "invitations", "column": {"name": "email_status", "type": "varchar(20)", "nullable": true}},
+    {"op": "add_nullable_column", "table": "invitations", "column": {"name": "email_sent_at", "type": "timestamp", "nullable": true}}
+  ]
+}

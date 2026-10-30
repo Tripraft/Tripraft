@@ -113,6 +113,25 @@
 .expense-create-dialog textarea { resize: vertical; }
 .expense-create-invite-results { list-style: none; padding: 0; display: grid; gap: 12px; font-size: 12px; overflow-wrap: anywhere; }
 .expense-create-invite-results li { display: grid; gap: 5px; }
+.expense-invite-recipients { border: 1px solid var(--color-border-default, #d1d5db); border-radius: 10px; padding: 8px; }
+.expense-invite-recipients ul { display: flex; flex-wrap: wrap; gap: 6px; padding: 0; margin: 0 0 6px; list-style: none; }
+.expense-invite-recipients li { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 5px 8px; border-radius: 16px; background: var(--color-primary-100, #ede9fe); font-size: 12px; }
+.expense-invite-recipients li span { overflow-wrap: anywhere; min-width: 0; }
+.expense-invite-recipients li small { display: block; margin-top: 2px; font-size: 10px; }
+.expense-invite-recipients button { border: 0; background: transparent; color: inherit; display: inline-flex; padding: 3px; cursor: pointer; }
+.expense-create-dialog .expense-invite-recipients input { border: 0; padding: 6px; border-radius: 4px; }
+.expense-invitation-delivery { position: fixed; right: 16px; bottom: 84px; z-index: 1000; width: min(360px, calc(100vw - 32px)); box-sizing: border-box; max-height: min(65dvh, 480px); overflow-y: auto; border: 1px solid var(--color-border-default, #d1d5db); background: var(--color-bg-primary, #fff); border-radius: 14px; padding: 14px 16px; box-shadow: 0 8px 32px #1118271a; font-family: var(--font-sans, 'Inter', sans-serif); }
+.expense-invitation-delivery-heading, .expense-invitation-delivery h3 { display: flex; align-items: center; gap: 8px; }
+.expense-invitation-delivery-heading { justify-content: space-between; }
+.expense-invitation-progress-summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 8px; font-size: 12px; }
+.expense-invitation-progress-summary button { border: 0; padding: 4px 0; background: transparent; color: var(--expense-accent, #7c3aed); cursor: pointer; text-decoration: underline; }
+.expense-invitation-delivery h3 { margin: 0; font-size: 15px; }
+.expense-invitation-delivery-heading button { background: transparent; border: 0; color: inherit; cursor: pointer; }
+.expense-invitation-delivery ul { list-style: none; display: grid; gap: 10px; padding: 0; font-size: 13px; }
+.expense-invitation-delivery li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; overflow-wrap: anywhere; }
+.expense-invitation-delivery p { font-size: 12px; color: var(--color-text-secondary, #6b7280); margin-bottom: 0; }
+.expense-invitation-delivery .spinning { animation: spin 1s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .expense-invitation-delivery .spinning { animation: none; } }
 .expense-create-hint { font-size: 12px; line-height: 1.6; color: var(--color-text-tertiary, #6b7280); margin-top: 13px; }
 .expense-form-error { color: #be123c; font-size: 13px; margin-top: 12px; }
 .expense-create-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
