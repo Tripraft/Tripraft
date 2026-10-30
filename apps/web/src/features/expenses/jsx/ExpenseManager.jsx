@@ -164,7 +164,7 @@ const ExpenseManager = () => {
     window.addEventListener('scroll', update, true);
     window.addEventListener('resize', update);
     return () => { window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update); };
-  }, [mode, activeGroupId, Boolean(activeGroupData), authLoading, isAuthenticated]);
+  }, [mode, activeGroupId, Boolean(activeGroupData), groupDetailError, groupsLoading, groupsError, groups?.length, authLoading, isAuthenticated]);
   const openGroupTab = tab => {
     setGroupTab(tab);
     // The cards sit above the tab content, often outside the current viewport.
@@ -720,15 +720,15 @@ const ExpenseManager = () => {
         loading={groupsLoading} error={groupsError}
         notificationCounts={notificationSummary.data?.group_counts || {}}
         onNotifications={groupId => setNotificationView({groupId})}
-        onSelect={handleGroupChange} onCreate={() => setShowNewGroup(true)} onRetry={refetchGroups}
+        onSelect={handleGroupChange} onCreate={() => setShowNewGroup(true)} createButtonRef={addTransactionRef} onRetry={refetchGroups}
       />}
-      {mode === 'group' && activeGroupId && !groupDetailError && <div ref={addTransactionRef}>
+      {mode === 'group' && activeGroupId && !groupDetailError && <div>
         <GroupDetailHeader group={headerGroup || {name:'Group overview', currency:'USD'}} members={activeGroupData ? activeGroupMembers || [] : headerGroup?.members || []}
           overview={groupOverview(headerGroup, currentUser?.uid || currentUser?.user_id || currentUser?.id,
             activeGroupData ? getCurrentTransactions() : undefined, activeGroupData ? getCurrentBalances() : undefined)}
           loading={!headerGroup} busy={mutationLoading || groupDetailLoading || !activeGroupData}
           onBack={() => {setExpenseView('group'); refetchGroups();}} onCreate={() => setShowNewGroup(true)}
-          onAdd={handleOpenModal} onSettle={() => openGroupTab('settleup')}
+          onAdd={handleOpenModal} addButtonRef={addTransactionRef} onSettle={() => openGroupTab('settleup')}
           onActivity={() => openGroupTab('transactions')} activityCount={notificationSummary.data?.group_counts?.[activeGroupId] || 0} />
       </div>}
       {mode === 'group' && activeGroupId && !activeGroupData && !groupDetailError && <GroupSummaryCards pending
@@ -864,8 +864,16 @@ const ExpenseManager = () => {
         <PlusCircle size={20} aria-hidden="true" /><span className="sr-only">Add Transaction</span>
       </button>}
 
+      {mode === 'group' && !activeGroupId && showFloatingAdd && !showNewGroup && !notificationView
+        && !showAlertModal && !showConfirmModal &&
+        <div className="expense-floating-actions" role="group" aria-label="Group quick actions">
+          <button className="btn-add-transaction" title="Create group" onClick={() => setShowNewGroup(true)} disabled={mutationLoading}>
+            <PlusCircle size={20} aria-hidden="true" /><span className="sr-only">Create group</span>
+          </button>
+        </div>}
+
       {mode === 'group' && activeGroupId && activeGroupData && !groupDetailError && showFloatingAdd
-        && !showTransactionModal && !showNewGroup && !isHistoryModalOpen && !showAlertModal && !showConfirmModal &&
+        && !showTransactionModal && !showNewGroup && !notificationView && !isHistoryModalOpen && !showAlertModal && !showConfirmModal &&
         <div className="expense-floating-actions" role="group" aria-label="Group quick actions">
           <button className="btn-add-transaction" title="Add expense" onClick={handleOpenModal} disabled={mutationLoading || groupDetailLoading}>
             <PlusCircle size={20} aria-hidden="true" /><span className="sr-only">Add expense</span>

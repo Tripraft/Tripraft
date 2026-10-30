@@ -8,7 +8,7 @@ import { GroupPosition, MemberAvatars } from './GroupDashboard';
 import CurrencyChangeStatus from './CurrencyChangeStatus';
 import {NotificationBadge} from './ExpenseNotifications';
 
-export default function GroupDetailHeader({ group, members, overview, busy, loading = false, onBack, onCreate, onAdd, onSettle, onActivity, activityCount = 0 }) {
+export default function GroupDetailHeader({ group, members, overview, busy, loading = false, onBack, onCreate, onAdd, addButtonRef, onSettle, onActivity, activityCount = 0 }) {
   const currency = group.currency || 'USD';
   const displayCurrency = group.display_currency || currency;
   const exchange = useExchangeRate(currency, displayCurrency);
@@ -28,7 +28,7 @@ export default function GroupDetailHeader({ group, members, overview, busy, load
         <h3 className={overview.net < -0.005 ? 'is-negative' : overview.net > 0.005 ? 'is-positive' : ''}>{loading ? 'Loading balance…' : Math.abs(overview.net) < .005 ? 'All settled up' : display(Math.abs(overview.net))}</h3>
         {loading ? <span className="expense-position">Loading your position…</span> : <GroupPosition net={overview.net} currency={currency} displayCurrency={displayCurrency} />}
         <div className="expense-hero-actions"><button className="expense-primary-button" onClick={onSettle} disabled={busy}><Handshake size={18} />View settlements</button>
-          <button className="expense-secondary-button" onClick={onAdd} disabled={busy}><Plus size={18} />Add expense</button></div>
+          <button ref={addButtonRef} className="expense-secondary-button" onClick={onAdd} disabled={busy}><Plus size={18} />Add expense</button></div>
       </div>
       <dl className="expense-hero-stats">
         {group.budget != null && <div><dt>Budget remaining</dt><dd>{display(group.budget - overview.total)}</dd><small>{display(group.budget)} group budget</small></div>}
