@@ -314,7 +314,7 @@ def test_confirmed_deletion_invalidates_warmed_server_money_caches(ledger_trip, 
         assert response.status_code == 200, response.get_json()
         # Seed real response snapshots in the existing private cache contract.
         # Tuple-returning views currently skip automatic cache population.
-        cache_key = prefix + ':' + md5(f'{path}::{ctx["owner"]}'.encode()).hexdigest()[:12]
+        cache_key = prefix + ':' + md5(f'{path}::{ctx["owner"]}:uuid'.encode()).hexdigest()[:12]
         ctx['store'].set(cache_key, json.dumps({'_body': response.get_data(as_text=True)}), ex=60)
         keys.append(cache_key)
         cached = ctx['owner_api'].get(path)
