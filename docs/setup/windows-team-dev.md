@@ -101,7 +101,35 @@ settings, copy `apps/web/.env.example` to `apps/web/.env.local` and
 `VITE_API_BASE_URL=/api`; admin `VITE_API_BASE_URL=` (empty). Keep secrets in the
 backend `.env` only. Restart after changing any `.env`.
 
-## 3. Start each day
+## 3. Update and start each day
+
+Run these commands from the checkout you use to start TripRaft. First save or
+commit your work and stop its launcher with Ctrl+C (or `py -3.11 start.py --stop`).
+Then update your employee feature branch:
+
+```powershell
+git status --short --branch
+git fetch origin
+git merge origin/develop
+git log -1 --oneline
+py -3.11 start.py
+```
+
+Resolve any merge conflicts before starting. `git pull` on a feature branch only
+updates that branch from its configured upstream; it does not automatically merge
+`develop`. Updating the separate team preview also does not update your active
+checkout. Keep your personal `.env` in this checkout.
+
+If you work directly on `develop`, use `git pull --ff-only origin develop`
+after fetching instead of the merge above. A failed fast-forward needs history
+review; preserve local work.
+
+After the launcher is ready, open http://127.0.0.1:5173 and press Ctrl+Shift+R.
+This URL serves your local checkout. An already open hosted URL or another
+checkout's server can show a different version. Restarting after a pull also
+reloads dependency and environment changes.
+
+To verify tools before starting:
 
 ```powershell
 py -3.11 start.py --check
@@ -162,6 +190,7 @@ Employee Portal. Local settings, databases and logs remain on disk.
 | Port 5000, 5173 or 5174 busy | Stop your previous session in its own checkout. To identify a listener, use `Get-NetTCPConnection -LocalPort 5000,5173,5174 -State Listen`. Ask its owner before stopping anything. |
 | Admin login denied | The frontend can run without staff authorization. Request approved test access from the CTO; do not change `ADMIN_EMAILS` to grant yourself access. |
 | API unavailable / proxy 503 | Read `.tripraft/logs/api.log`, `web.log` and `admin.log`. Wait for reload or restart your launcher. Refresh before retrying writes. Redact secrets before sharing logs. |
+| Updated Add Expense UI missing after a pull | Fetch and merge `origin/develop` into the checkout serving port 5173 using the steps above, restart, then hard refresh. Run `git merge-base --is-ancestor origin/develop HEAD`; exit code 0 confirms the fetched team history is included. Share `git status --short --branch` and `git log -1 --oneline` if it still differs. |
 | Catalog-backed pages empty | Obtain a compatible approved catalog snapshot/path from the CTO. No catalog download, initialization or seed import happens at startup. |
 | Redis, email, AI or external API unavailable | These are optional integrations with separate approved dev credentials. Do not reuse production keys. |
 | `--docker` or `--migrate-native` rejected | Intentional. Shared engineer startup uses restricted personal native credentials. The container entrypoint no longer migrates; provisioning and schema releases happen separately. |

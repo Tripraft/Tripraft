@@ -13,6 +13,7 @@ htmlcov/
 .venv/
 .tripraft/
 wikidata/
+scratch/
 .env
 .env.*
 !.env.example
